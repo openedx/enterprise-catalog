@@ -1,0 +1,12 @@
+[run]
+branch = True
+data_file = .coverage
+source=enterprise_catalog
+omit =
+    enterprise_catalog/settings*
+    enterprise_catalog/conf*
+    *wsgi.py
+    *migrations*
+    *admin.py
+    *static*
+    *templates*
