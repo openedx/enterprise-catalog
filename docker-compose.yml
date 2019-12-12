@@ -1,0 +1,25 @@
+db:
+  image: mysql:5.6
+  container_name: db
+  environment:
+    MYSQL_ROOT_PASSWORD: ""
+    MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+
+memcache:
+  image: memcached:1.4.24
+  container_name: memcache
+
+enterprise_catalog:
+  # Uncomment this line to use the official enterprise_catalog base image
+  # image: enterprise_catalog:v1
+
+  # Uncomment the next two lines to build from a local configuration repo
+  build: ../configuration
+  dockerfile: docker/build/enterprise-catalog/Dockerfile
+
+  container_name: enterprise_catalog
+  volumes:
+    - .:/edx/app/enterprise_catalog/enterprise_catalog
+  command: /edx/app/enterprise_catalog/devstack.sh start
+  ports:
+    - "18160:18160" # TODO: change this to your port
