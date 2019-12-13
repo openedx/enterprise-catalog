@@ -1,4 +1,4 @@
-from enterprise_catalog.settings.base import *
+from catalog.settings.base import *
 
 DEBUG = True
 
@@ -37,7 +37,7 @@ if os.environ.get('ENABLE_DJANGO_TOOLBAR', False):
         'debug_toolbar',
     )
 
-    MIDDLEWARE_CLASSES += (
+    MIDDLEWARE += (
         'debug_toolbar.middleware.DebugToolbarMiddleware',
     )
 

@@ -1,4 +1,4 @@
-"""enterprise_catalog URL Configuration
+"""catalog URL Configuration
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/1.11/topics/http/urls/
 Examples:
@@ -21,8 +21,8 @@ from django.conf.urls import include, url
 from django.contrib import admin
 from rest_framework_swagger.views import get_swagger_view
 
-from enterprise_catalog.apps.api import urls as api_urls
-from enterprise_catalog.apps.core import views as core_views
+from catalog.apps.api import urls as api_urls
+from catalog.apps.core import views as core_views
 
 
 admin.autodiscover()
@@ -30,7 +30,7 @@ admin.autodiscover()
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^api/', include(api_urls)),
-    url(r'^api-docs/', get_swagger_view(title='enterprise_catalog API')),
+    url(r'^api-docs/', get_swagger_view(title='Enterprise Catalog API')),
     # Use the same auth views for all logins, including those originating from the browseable API.
     url(r'^api-auth/', include(oauth2_urlpatterns)),
     url(r'^auto_auth/$', core_views.AutoAuth.as_view(), name='auto_auth'),

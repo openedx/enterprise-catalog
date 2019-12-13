@@ -173,7 +173,7 @@ html_static_path = ['_static']
 # html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'enterprise_catalogdoc'
+htmlhelp_basename = 'catalogdoc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -192,7 +192,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ('index', 'enterprise_catalog.tex', u'Enterprise catalog service Documentation',
+    ('index', 'catalog.tex', u'Enterprise catalog service Documentation',
      u'edX', 'manual'),
 ]
 

@@ -1,10 +1,10 @@
 [run]
 branch = True
 data_file = .coverage
-source=enterprise_catalog
+source=catalog
 omit =
-    enterprise_catalog/settings*
-    enterprise_catalog/conf*
+    catalog/settings*
+    catalog/conf*
     *wsgi.py
     *migrations*
     *admin.py
