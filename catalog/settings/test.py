@@ -1,6 +1,6 @@
 import os
 
-from enterprise_catalog.settings.base import *
+from catalog.settings.base import *
 
 
 # IN-MEMORY TEST DATABASE

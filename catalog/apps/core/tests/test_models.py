@@ -4,7 +4,7 @@ from django.test import TestCase
 from django_dynamic_fixture import G
 from social_django.models import UserSocialAuth
 
-from enterprise_catalog.apps.core.models import User
+from catalog.apps.core.models import User
 
 
 class UserTests(TestCase):
