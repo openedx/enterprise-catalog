@@ -9,7 +9,7 @@ from django.http import Http404, JsonResponse
 from django.shortcuts import redirect
 from django.views.generic import View
 
-from enterprise_catalog.apps.core.constants import Status
+from catalog.apps.core.constants import Status
 
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ def health(_):
         HttpResponse: 503 if the service is unavailable, with JSON data indicating the health of each required service
 
     Example:
-        >>> response = requests.get('https://enterprise_catalog.edx.org/health')
+        >>> response = requests.get('https://catalog.edx.org/health')
         >>> response.status_code
         200
         >>> response.content

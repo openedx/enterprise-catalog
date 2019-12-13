@@ -65,21 +65,21 @@ coverage: clean
 	$(BROWSER) htmlcov/index.html
 
 isort_check: ## check that isort has been run
-	isort --check-only -rc enterprise_catalog/
+	isort --check-only -rc catalog/
 
 isort: ## run isort to sort imports in all Python files
-	isort --recursive --atomic enterprise_catalog/
+	isort --recursive --atomic catalog/
 
 style: ## run Python style checker
-	pylint --rcfile=pylintrc enterprise_catalog *.py
+	pylint --rcfile=pylintrc catalog *.py
 
 lint: ## run Python code linting
-	pylint --rcfile=pylintrc enterprise_catalog *.py
+	pylint --rcfile=pylintrc catalog *.py
 
 quality: style isort_check lint ## check code style and import sorting, then lint
 
 pii_check: ## check for PII annotations on all Django models
-	DJANGO_SETTINGS_MODULE=enterprise_catalog.settings.test \
+	DJANGO_SETTINGS_MODULE=catalog.settings.test \
 	code_annotations django_find_annotations --config_file .pii_annotations.yml --lint --report --coverage
 
 validate: test quality pii_check ## run tests, quality, and PII annotation checks
@@ -107,7 +107,7 @@ extract_translations: ## extract strings to be translated, outputting .mo files
 	python manage.py makemessages -l en -v1 -d djangojs
 
 dummy_translations: ## generate dummy translation (.po) files
-	cd enterprise_catalog && i18n_tool dummy
+	cd catalog && i18n_tool dummy
 
 compile_translations: # compile translation files, outputting .po files for each supported language
 	python manage.py compilemessages
@@ -124,12 +124,46 @@ start-devstack: ## run a local development copy of the server
 	docker-compose --x-networking up
 
 open-devstack: ## open a shell on the server started by start-devstack
-	docker exec -it enterprise_catalog /edx/app/enterprise_catalog/devstack.sh open
+	docker exec -it catalog /edx/app/catalog/devstack.sh open
 
-pkg-devstack: ## build the enterprise_catalog image from the latest configuration and code
-	docker build -t enterprise_catalog:latest -f docker/build/enterprise-catalog/Dockerfile git://github.com/edx/configuration
+pkg-devstack: ## build the catalog image from the latest configuration and code
+	docker build -t catalog:latest -f docker/build/enterprise-catalog/Dockerfile git://github.com/edx/configuration
 
 detect_changed_source_translations: ## check if translation files are up-to-date
-	cd enterprise_catalog && i18n_tool changed
+	cd catalog && i18n_tool changed
 
 validate_translations: fake_translations detect_changed_source_translations ## install fake translations and check if translation files are up-to-date
+
+# Docker commands below
+
+dev.provision:
+	bash ./provision-catalog.sh
+
+dev.init: dev.up dev.migrate
+
+dev.makemigrations:
+	docker exec -it catalog.app bash -c 'cd /edx/app/catalog/catalog && python manage.py makemigrations'
+
+dev.migrate: # Migrates databases. Application and DB server must be up for this to work.
+	docker exec -it catalog.app bash -c 'cd /edx/app/catalog/catalog && make migrate'
+
+dev.up: # Starts all containers
+	docker-compose up -d --build
+
+dev.down: # Kills containers and all of their data that isn't in volumes
+	docker-compose down
+
+dev.destroy: dev.down #Kills containers and destroys volumes. If you get an error after running this, also run: docker volume rm portal-designer_designer_mysql
+	docker volume rm designer_designer_mysql
+
+dev.stop: # Stops containers so they can be restarted
+	docker-compose stop
+
+%-shell: ## Run a shell on the specified service container
+	docker exec -it catalog.$* bash
+
+%-logs: ## View the logs of the specified service container
+	docker-compose logs -f --tail=500 $*
+
+attach:
+	docker attach catalog.app

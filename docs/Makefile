@@ -87,9 +87,9 @@ qthelp:
 	@echo
 	@echo "Build finished; now you can run "qcollectiongenerator" with the" \
 	      ".qhcp project file in $(BUILDDIR)/qthelp, like this:"
-	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/enterprise_catalog.qhcp"
+	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/catalog.qhcp"
 	@echo "To view the help file:"
-	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/enterprise_catalog.qhc"
+	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/catalog.qhc"
 
 applehelp:
 	$(SPHINXBUILD) -b applehelp $(ALLSPHINXOPTS) $(BUILDDIR)/applehelp
@@ -104,8 +104,8 @@ devhelp:
 	@echo
 	@echo "Build finished."
 	@echo "To view the help file:"
-	@echo "# mkdir -p $$HOME/.local/share/devhelp/enterprise_catalog"
-	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/enterprise_catalog"
+	@echo "# mkdir -p $$HOME/.local/share/devhelp/catalog"
+	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/catalog"
 	@echo "# devhelp"
 
 epub:

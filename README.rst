@@ -8,13 +8,6 @@ Enterprise catalog service  |Travis|_ |Codecov|_
 
 A Django-based microservice for handling Enterprise catalogs, associating enterprise customers with curated courses from the full course catalog.
 
-Documentation
--------------
-.. |ReadtheDocs| image:: https://readthedocs.org/projects/enterprise-catalog/badge/?version=latest
-.. _ReadtheDocs: http://enterprise_catalog.readthedocs.io/en/latest/
-
-`Documentation <https://enterprise_catalog.readthedocs.io/en/latest/>`_ is hosted on Read the Docs. The source is hosted in this repo's `docs <https://github.com/edx/enterprise_catalog/tree/master/docs>`_ directory. To contribute, please open a PR against this repo.
-
 License
 -------
 

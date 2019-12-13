@@ -1,8 +1,8 @@
 from os import environ
 import yaml
 
-from enterprise_catalog.settings.base import *
-from enterprise_catalog.settings.utils import get_env_setting
+from catalog.settings.base import *
+from catalog.settings.utils import get_env_setting
 
 
 DEBUG = False
@@ -16,7 +16,7 @@ LOGGING['handlers']['local']['level'] = 'INFO'
 # the values read from disk should UPDATE the pre-configured dicts.
 DICT_UPDATE_KEYS = ('JWT_AUTH',)
 
-# This may be overridden by the YAML in enterprise_catalog_CFG,
+# This may be overridden by the YAML in catalog_CFG,
 # but it should be here as a default.
 MEDIA_STORAGE_BACKEND = {}
 FILE_STORAGE_BACKEND = {}
