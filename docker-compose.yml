@@ -2,29 +2,29 @@ version: "2.1"
 services:
   mysql:
     image: mysql:5.6
-    container_name: catalog.mysql
+    container_name: enterprise.catalog.mysql
     environment:
       MYSQL_ROOT_PASSWORD: ""
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-      MYSQL_DATABASE: "catalog"
+      MYSQL_DATABASE: "enterprise_catalog"
     networks:
       - devstack_default
     volumes:
-      - catalog_mysql:/var/lib/mysql
+      - enterprise_catalog_mysql:/var/lib/mysql
     # Uncomment these lines to access the database from localhost
     # ports:
     #  - "3307:3306"
 
-  catalog:
+  enterprise_catalog:
     # Uncomment this line to use the official catalog base image
-    # image: edxops/catalog:devstack
+    # image: edxops/enterprise_catalog:devstack
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: catalog.app
+    container_name: enterprise.catalog.app
     volumes:
-      - .:/edx/app/catalog/catalog
-    command: bash -c 'while true; do python /edx/app/catalog/catalog/manage.py runserver 0.0.0.0:18160; sleep 2; done'
+      - .:/edx/app/enterprise_catalog/enterprise_catalog
+    command: bash -c 'while true; do python /edx/app/enterprise_catalog/enterprise_catalog/manage.py runserver 0.0.0.0:18160; sleep 2; done'
     ports:
       - "18160:18160"
     depends_on:
@@ -35,7 +35,7 @@ services:
     stdin_open: true
     tty: true
     environment:
-      DJANGO_SETTINGS_MODULE: catalog.settings.devstack
+      DJANGO_SETTINGS_MODULE: enterprise_catalog.settings.devstack
       ENABLE_DJANGO_TOOLBAR: 1
 
 
@@ -44,4 +44,4 @@ networks:
     external: true
 
 volumes:
-  catalog_mysql:
+  enterprise_catalog_mysql:

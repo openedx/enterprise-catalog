@@ -124,10 +124,10 @@ start-devstack: ## run a local development copy of the server
 	docker-compose --x-networking up
 
 open-devstack: ## open a shell on the server started by start-devstack
-	docker exec -it catalog /edx/app/catalog/devstack.sh open
+	docker exec -it enterprise_catalog /edx/app/catalog/devstack.sh open
 
 pkg-devstack: ## build the catalog image from the latest configuration and code
-	docker build -t catalog:latest -f docker/build/enterprise-catalog/Dockerfile git://github.com/edx/configuration
+	docker build -t enterprise_catalog:latest -f docker/build/enterprise_catalog/Dockerfile git://github.com/edx/configuration
 
 detect_changed_source_translations: ## check if translation files are up-to-date
 	cd catalog && i18n_tool changed
@@ -142,10 +142,10 @@ dev.provision:
 dev.init: dev.up dev.migrate
 
 dev.makemigrations:
-	docker exec -it catalog.app bash -c 'cd /edx/app/catalog/catalog && python manage.py makemigrations'
+	docker exec -it enterprise.catalog.app bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && python manage.py makemigrations'
 
 dev.migrate: # Migrates databases. Application and DB server must be up for this to work.
-	docker exec -it catalog.app bash -c 'cd /edx/app/catalog/catalog && make migrate'
+	docker exec -it enterprise.catalog.app bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && make migrate'
 
 dev.up: # Starts all containers
 	docker-compose up -d --build
@@ -154,16 +154,16 @@ dev.down: # Kills containers and all of their data that isn't in volumes
 	docker-compose down
 
 dev.destroy: dev.down #Kills containers and destroys volumes. If you get an error after running this, also run: docker volume rm portal-designer_designer_mysql
-	docker volume rm designer_designer_mysql
+	docker volume rm enterprise-catalog_enterprise_catalog_mysql
 
 dev.stop: # Stops containers so they can be restarted
 	docker-compose stop
 
 %-shell: ## Run a shell on the specified service container
-	docker exec -it catalog.$* bash
+	docker exec -it enterprise.catalog.$* bash
 
 %-logs: ## View the logs of the specified service container
 	docker-compose logs -f --tail=500 $*
 
 attach:
-	docker attach catalog.app
+	docker attach enterprise.catalog.app
