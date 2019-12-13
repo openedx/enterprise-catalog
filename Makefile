@@ -47,7 +47,7 @@ validation_requirements: ## sync to requirements for testing & code quality chec
 doc_requirements:
 	pip-sync -q requirements/doc.txt
 
-production_requirements: ## install requirements for production
+prod_requirements: ## install requirements for production
 	pip-sync -q requirements/production.txt
 
 static: ## generate static files
