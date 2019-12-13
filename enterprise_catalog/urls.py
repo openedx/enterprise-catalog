@@ -21,8 +21,8 @@ from django.conf.urls import include, url
 from django.contrib import admin
 from rest_framework_swagger.views import get_swagger_view
 
-from catalog.apps.api import urls as api_urls
-from catalog.apps.core import views as core_views
+from enterprise_catalog.apps.api import urls as api_urls
+from enterprise_catalog.apps.core import views as core_views
 
 
 admin.autodiscover()

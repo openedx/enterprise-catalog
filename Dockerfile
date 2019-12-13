@@ -1,8 +1,8 @@
 FROM python:3.6
-WORKDIR /edx/app/catalog/catalog
-ADD requirements.txt /edx/app/catalog/catalog/
-ADD Makefile /edx/app/catalog/catalog/
-ADD requirements/ /edx/app/catalog/catalog/requirements/
+WORKDIR /edx/app/enterprise_catalog/enterprise_catalog
+ADD requirements.txt /edx/app/enterprise_catalog/enterprise_catalog/
+ADD Makefile /edx/app/enterprise_catalog/enterprise_catalog/
+ADD requirements/ /edx/app/enterprise_catalog/enterprise_catalog/requirements/
 RUN make requirements
-ADD . /edx/app/catalog/catalog
+ADD . /edx/app/enterprise_catalog/enterprise_catalog
 EXPOSE 18160
