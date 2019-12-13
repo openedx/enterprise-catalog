@@ -2,7 +2,7 @@
 
 from django.test import RequestFactory, TestCase, override_settings
 
-from catalog.apps.core.context_processors import core
+from enterprise_catalog.apps.core.context_processors import core
 
 
 PLATFORM_NAME = 'Test Platform'

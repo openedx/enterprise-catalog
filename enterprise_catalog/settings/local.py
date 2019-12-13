@@ -1,4 +1,4 @@
-from catalog.settings.base import *
+from enterprise_catalog.settings.base import *
 
 DEBUG = True
 
