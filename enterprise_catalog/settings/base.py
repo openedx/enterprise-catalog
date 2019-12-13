@@ -38,8 +38,8 @@ THIRD_PARTY_APPS = (
 )
 
 PROJECT_APPS = (
-    'catalog.apps.core',
-    'catalog.apps.api',
+    'enterprise_catalog.apps.core',
+    'enterprise_catalog.apps.api',
 )
 
 INSTALLED_APPS += THIRD_PARTY_APPS
@@ -67,10 +67,10 @@ CORS_ALLOW_HEADERS = corsheaders_default_headers + (
 )
 CORS_ORIGIN_WHITELIST = []
 
-ROOT_URLCONF = 'catalog.urls'
+ROOT_URLCONF = 'enterprise_catalog.urls'
 
 # Python dotted path to the WSGI application used by Django's runserver.
-WSGI_APPLICATION = 'catalog.wsgi.application'
+WSGI_APPLICATION = 'enterprise_catalog.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
@@ -143,7 +143,7 @@ TEMPLATES = [
                 'django.template.context_processors.static',
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
-                'catalog.apps.core.context_processors.core',
+                'enterprise_catalog.apps.core.context_processors.core',
             ),
             'debug': True,  # Django will only display debug pages if the global DEBUG setting is set to True.
         }

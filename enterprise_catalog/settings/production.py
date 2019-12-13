@@ -1,8 +1,8 @@
 from os import environ
 import yaml
 
-from catalog.settings.base import *
-from catalog.settings.utils import get_env_setting
+from enterprise_catalog.settings.base import *
+from enterprise_catalog.settings.utils import get_env_setting
 
 
 DEBUG = False

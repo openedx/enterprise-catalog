@@ -1,5 +1,5 @@
 """
-WSGI config for catalog.
+WSGI config for enterprise_catalog.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -16,7 +16,7 @@ from django.core.wsgi import get_wsgi_application
 SITE_ROOT = dirname(dirname(abspath(__file__)))
 path.append(SITE_ROOT)
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "catalog.settings.local")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "enterprise_catalog.settings.local")
 
 
 application = get_wsgi_application()  # pylint: disable=invalid-name
