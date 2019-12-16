@@ -26,6 +26,7 @@ idna==2.8                 # via requests
 itypes==1.1.0             # via coreapi
 jinja2==2.10.3            # via coreschema
 markupsafe==1.1.1         # via jinja2
+mysqlclient==1.4.6
 newrelic==5.4.0.132       # via edx-django-utils
 oauthlib==3.1.0           # via requests-oauthlib, social-auth-core
 openapi-codec==1.3.2      # via django-rest-swagger
