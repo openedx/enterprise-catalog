@@ -7,14 +7,45 @@ below is executed within the virtualenv.
 .. _virtualenv: https://virtualenvwrapper.readthedocs.org/en/latest/
 
 
-Install dependencies
+Initialize and Provision
+------------------------
+    1. Start and provision the edX `devstack <https://github.com/edx/devstack>`_, as enterprise-catalog currently relies on devstack
+    2. Verify that your virtual environment is active before proceeding
+    3. Clone the enterprise-catalog repo and cd into that directory
+    4. Run *make dev.provision* to provision a new enterprise catalog environment
+    5. Run *make dev.init* to start the enterprise catalog app and run migrations
+
+Viewing Enterprise Catalog
+------------------------
+Once the server is up and running you can view the enterprise catalog at http://localhost:18160/admin.
+
+You can login with the username *edx@example.com* and password *edx*.
+
+Makefile Commands
 --------------------
-Dependencies can be installed via the command below.
+The `Makefile <../Makefile>`_ includes numerous commands to start the service, but the basic commands are the following:
+
+Start the Docker containers to run the enterprise catalog servers
 
 .. code-block:: bash
 
-    $ make requirements
+    $ make dev.up
 
+Open the shell to the enterprise catalog container for manual commands
+
+.. code-block:: bash
+
+    $ make app-shell
+
+Open the logs in the enterprise catalog container
+
+.. code-block:: bash
+
+    $ make enterprise_catalog-logs
+
+Advanced Setup Outside Docker
+=============================
+The following is provided for informational purposes only. You can likely ignore this section.
 
 Local/Private Settings
 ----------------------
