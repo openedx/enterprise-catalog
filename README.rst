@@ -8,6 +8,10 @@ Enterprise catalog service  |Travis|_ |Codecov|_
 
 A Django-based microservice for handling Enterprise catalogs, associating enterprise customers with curated courses from the full course catalog.
 
+Getting Started
+-------
+Check out the `initial steps <docs/getting_started.rst>`_ for getting started with the Enterprise catalog service.
+
 License
 -------
 
