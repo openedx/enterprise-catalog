@@ -22,3 +22,16 @@ JWT_AUTH.update({
     'JWT_ISSUER': 'http://localhost:18000/oauth2',
     'JWT_AUDIENCE': SOCIAL_AUTH_EDX_OAUTH2_KEY,
 })
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.environ.get('DB_NAME', 'enterprise_catalog'),
+        'USER': os.environ.get('DB_USER', 'root'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+        'HOST': os.environ.get('DB_HOST', 'enterprise.catalog.mysql'),
+        'PORT': os.environ.get('DB_PORT', 3306),
+        'ATOMIC_REQUESTS': False,
+        'CONN_MAX_AGE': 60,
+    }
+}
