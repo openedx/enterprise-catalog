@@ -10,3 +10,4 @@ edx-auth-backends
 edx-drf-extensions
 edx-rest-api-client==1.9.2
 pytz
+jsonfield

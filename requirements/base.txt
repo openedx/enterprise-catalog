@@ -25,6 +25,7 @@ future==0.18.2            # via pyjwkest
 idna==2.8                 # via requests
 itypes==1.1.0             # via coreapi
 jinja2==2.10.3            # via coreschema
+jsonfield==2.0.2
 markupsafe==1.1.1         # via jinja2
 newrelic==5.4.0.132       # via edx-django-utils
 oauthlib==3.1.0           # via requests-oauthlib, social-auth-core
