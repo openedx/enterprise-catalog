@@ -34,6 +34,7 @@ idna==2.8
 isort==4.3.21
 itypes==1.1.0
 jinja2==2.10.3
+jsonfield==2.0.2
 lazy-object-proxy==1.4.3  # via astroid
 markupsafe==1.1.1
 mccabe==0.6.1             # via pylint
