@@ -39,6 +39,7 @@ THIRD_PARTY_APPS = (
 
 PROJECT_APPS = (
     'enterprise_catalog.apps.core',
+    'enterprise_catalog.apps.catalog',
     'enterprise_catalog.apps.api',
 )
 
