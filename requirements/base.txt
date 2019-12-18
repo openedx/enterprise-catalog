@@ -11,6 +11,7 @@ coreschema==0.0.4         # via coreapi
 defusedxml==0.6.0         # via python3-openid, social-auth-core
 django-cors-headers==3.2.0
 django-extensions==2.2.5
+django-model-utils==3.2.0 # v4.0.0 drops Django 1.11 support
 django-rest-swagger==2.2.0
 django-waffle==0.18.0
 django==1.11.26
@@ -25,6 +26,7 @@ future==0.18.2            # via pyjwkest
 idna==2.8                 # via requests
 itypes==1.1.0             # via coreapi
 jinja2==2.10.3            # via coreschema
+jsonfield==2.0.2
 markupsafe==1.1.1         # via jinja2
 mysqlclient==1.4.6
 newrelic==5.4.0.132       # via edx-django-utils
