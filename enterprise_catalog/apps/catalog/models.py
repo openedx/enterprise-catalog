@@ -43,7 +43,7 @@ class CatalogQuery(models.Model):
         """
         Return human-readable string representation.
         """
-        return "<CatalogQuery '{title}' >".format(title=self.title)
+        return "<CatalogQuery '{title}'>".format(title=self.title)
 
 
 class EnterpriseCatalog(TimeStampedModel):
