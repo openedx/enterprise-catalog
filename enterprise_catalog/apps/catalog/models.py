@@ -105,7 +105,7 @@ class CatalogContentKey(TimeStampedModel):
         max_length=255,
         blank=False,
         help_text=_(
-            "The key that represents a piece of content, such as a course run."
+            "The key that represents a piece of content, such as a course, course run, or program."
         )
     )
 
