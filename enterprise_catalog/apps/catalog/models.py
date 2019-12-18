@@ -1,7 +1,9 @@
 import collections
+from uuid import uuid4
 
 from jsonfield.fields import JSONField
 from model_utils.models import TimeStampedModel
+from simple_history.models import HistoricalRecords
 
 from django.db import models
 from django.utils.translation import gettext as _
@@ -41,4 +43,45 @@ class CatalogQuery(models.Model):
         """
         Return human-readable string representation.
         """
-        return "<CatalogQuery '{title}' >".format(title=self.title)
+        return "<CatalogQuery '{title}'>".format(title=self.title)
+
+
+class EnterpriseCatalog(TimeStampedModel):
+    """
+    Associates a stored catalog query with an enterprise customer.
+
+    .. no_pii:
+    """
+
+    uuid = models.UUIDField(
+        primary_key=True,
+        default=uuid4,
+        editable=False
+    )
+    enterprise_uuid = models.UUIDField()
+    catalog_query = models.ForeignKey(
+        CatalogQuery,
+        blank=False,
+        null=False,
+        related_name='enterprise_catalog',
+        on_delete=models.deletion.CASCADE
+    )
+
+    history = HistoricalRecords()
+
+    class Meta(object):
+        verbose_name = _("Enterprise Catalog")
+        verbose_name_plural = _("Enterprise Catalogs")
+        app_label = 'catalog'
+
+    def __str__(self):
+        """
+        Return human-readable string representation.
+        """
+        return (
+            "<EnterpriseCatalog with UUID '{uuid}' "
+            "for EnterpriseCustomer '{enterprise_uuid}'>".format(
+                uuid=self.uuid,
+                enterprise_uuid=self.enterprise_uuid
+            )
+        )
