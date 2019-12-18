@@ -3,6 +3,7 @@
 Django>=1.11.23,<2.0          # Web application framework
 django-cors-headers
 django-extensions
+django-model-utils==3.2.0     # v4.0.0 drops Django 1.11 support
 django-rest-swagger
 django-waffle
 djangorestframework
