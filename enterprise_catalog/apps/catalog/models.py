@@ -58,15 +58,12 @@ class EnterpriseCatalog(TimeStampedModel):
         default=uuid4,
         editable=False
     )
-    enterprise_uuid = models.CharField(
-        max_length=255,
-        blank=False,
-    )
-    content_catalog_query = models.ForeignKey(
+    enterprise_uuid = models.UUIDField()
+    catalog_query = models.ForeignKey(
         CatalogQuery,
         blank=False,
         null=False,
-        related_name='content_catalog_queries',
+        related_name='enterprise_catalog',
         on_delete=models.deletion.CASCADE
     )
 

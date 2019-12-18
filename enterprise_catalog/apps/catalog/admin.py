@@ -5,7 +5,7 @@ from enterprise_catalog.apps.catalog.models import CatalogQuery, EnterpriseCatal
 
 class EnterpriseCatalogAdmin(admin.ModelAdmin):
     """ Admin configuration for the custom EnterpriseCatalog model. """
-    list_display = ('enterprise_uuid', 'content_catalog_query')
+    list_display = ('enterprise_uuid', 'catalog_query')
 
 
 admin.site.register(CatalogQuery)
