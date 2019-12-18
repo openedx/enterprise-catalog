@@ -5,6 +5,7 @@ django-cors-headers
 django-extensions
 django-model-utils==3.2.0     # v4.0.0 drops Django 1.11 support
 django-rest-swagger
+django-simple-history
 django-waffle
 djangorestframework
 edx-auth-backends
