@@ -3,17 +3,23 @@ import collections
 from jsonfield.fields import JSONField
 
 from django.db import models
+from django.utils.translation import gettext as _
 
-class ContentCatalog(TimeStampedModel):
+
+class ContentCatalogQuery(models.Model):
     """
-    Stores a re-usable content catalog query.
-
-    This stored catalog query used in `EnterpriseContentCatalog` objects to build catalog's query field.
-    This is a saved instance of `query` that can be re-used accross different catalogs.
+    Stores a re-usable catalog query.
 
     .. no_pii:
     """
-    query = JSONField(
+
+    title = models.CharField(
+        default='All Content',
+        max_length=255,
+        blank=False,
+        null=False
+    )
+    content_filter = JSONField(
         default={},
         blank=True,
         null=True,
@@ -24,4 +30,14 @@ class ContentCatalog(TimeStampedModel):
             "included in the catalog."
         )
     )
-  
+
+    class Meta(object):
+        verbose_name = _("Content Catalog Query")
+        verbose_name_plural = _("Content Catalog Queries")
+        app_label = 'catalog'
+
+    def __str__(self):
+        """
+        Return human-readable string representation.
+        """
+        return "<ContentCatalogQuery '{title}' >".format(title=self.title)
