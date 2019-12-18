@@ -63,7 +63,7 @@ class EnterpriseCatalog(TimeStampedModel):
         CatalogQuery,
         blank=False,
         null=False,
-        related_name='enterprise_catalog',
+        related_name='enterprise_catalogs',
         on_delete=models.deletion.CASCADE
     )
 
@@ -83,5 +83,48 @@ class EnterpriseCatalog(TimeStampedModel):
             "for EnterpriseCustomer '{enterprise_uuid}'>".format(
                 uuid=self.uuid,
                 enterprise_uuid=self.enterprise_uuid
+            )
+        )
+
+
+class CatalogContentKey(TimeStampedModel):
+    """
+    Associates a stored catalog query with an enterprise customer.
+
+    .. no_pii:
+    """
+
+    catalog_query = models.ForeignKey(
+        CatalogQuery,
+        blank=False,
+        null=False,
+        related_name='catalog_content_keys',
+        on_delete=models.deletion.CASCADE
+    )
+    content_key = models.CharField(
+        max_length=255,
+        blank=False,
+        help_text=_(
+            "The key that represents a piece of content, such as a course, course run, or program."
+        )
+    )
+
+    history = HistoricalRecords()
+
+    class Meta(object):
+        verbose_name = _("Catalog Content Key")
+        verbose_name_plural = _("Catalog Content Keys")
+        unique_together = (("catalog_query", "content_key"),)
+        app_label = 'catalog'
+
+    def __str__(self):
+        """
+        Return human-readable string representation.
+        """
+        return (
+            "<CatalogContentKey for CatalogQuery '{catalog_query_id}' "
+            "and content_key '{content_key}'>".format(
+                catalog_query_id=self.catalog_query.id,
+                content_key=self.content_key
             )
         )
