@@ -1,6 +1,5 @@
 from django.contrib import admin
 
-from enterprise_catalog.apps.catalog.models import ContentCatalogQuery
+from enterprise_catalog.apps.catalog.models import CatalogQuery
 
-# Register your models here.
-admin.site.register(ContentCatalogQuery)
+admin.site.register(CatalogQuery)

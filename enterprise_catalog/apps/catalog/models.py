@@ -1,12 +1,13 @@
 import collections
 
 from jsonfield.fields import JSONField
+from model_utils.models import TimeStampedModel
 
 from django.db import models
 from django.utils.translation import gettext as _
 
 
-class ContentCatalogQuery(models.Model):
+class CatalogQuery(models.Model):
     """
     Stores a re-usable catalog query.
 
@@ -32,12 +33,12 @@ class ContentCatalogQuery(models.Model):
     )
 
     class Meta(object):
-        verbose_name = _("Content Catalog Query")
-        verbose_name_plural = _("Content Catalog Queries")
+        verbose_name = _("Catalog Query")
+        verbose_name_plural = _("Catalog Queries")
         app_label = 'catalog'
 
     def __str__(self):
         """
         Return human-readable string representation.
         """
-        return "<ContentCatalogQuery '{title}' >".format(title=self.title)
+        return "<CatalogQuery '{title}' >".format(title=self.title)
