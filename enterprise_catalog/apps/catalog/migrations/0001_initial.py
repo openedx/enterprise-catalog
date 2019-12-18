@@ -14,15 +14,15 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='ContentCatalogQuery',
+            name='CatalogQuery',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('title', models.CharField(default='All Content', max_length=255)),
                 ('content_filter', jsonfield.fields.JSONField(blank=True, default={}, help_text="Query parameters which will be used to filter the discovery service's search/all endpoint results, specified as a JSON object. An empty JSON object means that all available content items will be included in the catalog.", null=True)),
             ],
             options={
-                'verbose_name': 'Content Catalog Query',
-                'verbose_name_plural': 'Content Catalog Queries',
+                'verbose_name': 'Catalog Query',
+                'verbose_name_plural': 'Catalog Queries',
             },
         ),
     ]
