@@ -20,8 +20,7 @@ class CatalogQuery(models.Model):
         default='All Content',
         max_length=255,
         blank=False,
-        null=False,
-        unique=True
+        null=False
     )
     content_filter = JSONField(
         default={},
