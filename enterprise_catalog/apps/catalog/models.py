@@ -87,6 +87,73 @@ class EnterpriseCatalog(TimeStampedModel):
         )
 
 
+class ContentMetadata(TimeStampedModel):
+    """
+    Stores the JSON metadata for a piece of content, such as a course, course run, or program.
+    The metadata is retrieved from the Discovery service /search/all endpoint.
+
+    .. no_pii:
+    """
+
+    COURSE_RUN = 'course_run'
+    COURSE = 'course'
+    PROGRAM = 'program'
+    CONTENT_TYPE_CHOICES = [
+        (COURSE_RUN, 'Course Run'),
+        (COURSE, 'Course'),
+        (PROGRAM, 'Program'),
+    ]
+
+    content_key = models.CharField(
+        max_length=255,
+        blank=False,
+        null=False,
+        unique=True,
+        help_text=_(
+            "The key that represents a piece of content, such as a course, course run, or program."
+        )
+    )
+    content_type = models.CharField(
+        max_length=255,
+        choices=CONTENT_TYPE_CHOICES,
+        blank=False,
+        null=False,
+    )
+    parent_content_key = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text=_(
+            "The key that represents this content's parent, such as a course or program."
+        )
+    )
+    json_metadata = JSONField(
+        default={},
+        blank=True,
+        null=True,
+        load_kwargs={'object_pairs_hook': collections.OrderedDict},
+        help_text=_(
+            "The metadata about a particular piece content as retrieved from the discovery service's search/all endpoint results, "
+            "specified as a JSON object."
+        )
+    )
+
+    class Meta(object):
+        verbose_name = _("Content Metadata")
+        verbose_name_plural = _("Content Metadata")
+        app_label = 'catalog'
+
+    def __str__(self):
+        """
+        Return human-readable string representation.
+        """
+        return (
+            "<ContentMetadata for '{content_key}'>".format(
+                content_key=self.content_key
+            )
+        )
+
+
 class CatalogContentKey(TimeStampedModel):
     """
     Associates a stored catalog query with an enterprise customer.
@@ -101,12 +168,14 @@ class CatalogContentKey(TimeStampedModel):
         related_name='catalog_content_keys',
         on_delete=models.deletion.CASCADE
     )
-    content_key = models.CharField(
-        max_length=255,
+    content_key = models.ForeignKey(
+        ContentMetadata,
+        to_field='content_key',
+        db_column='content_key',
         blank=False,
-        help_text=_(
-            "The key that represents a piece of content, such as a course, course run, or program."
-        )
+        null=False,
+        related_name='catalog_content_keys',
+        on_delete=models.deletion.CASCADE
     )
 
     history = HistoricalRecords()
