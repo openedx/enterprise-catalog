@@ -24,11 +24,11 @@ class User(AbstractUser):
         Assumes user has authenticated at least once with the OAuth2 provider (LMS).
         """
         try:
-            return self.social_auth.first().extra_data[u'access_token']
+            return self.social_auth.first().extra_data[u'access_token']  # pylint: disable=no-member
         except Exception:  # pylint: disable=broad-except
             return None
 
-    class Meta(object):
+    class Meta:
         get_latest_by = 'date_joined'
 
     def get_full_name(self):

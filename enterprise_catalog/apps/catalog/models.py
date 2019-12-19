@@ -34,7 +34,7 @@ class CatalogQuery(models.Model):
         )
     )
 
-    class Meta(object):
+    class Meta:
         verbose_name = _("Catalog Query")
         verbose_name_plural = _("Catalog Queries")
         app_label = 'catalog'
@@ -69,7 +69,7 @@ class EnterpriseCatalog(TimeStampedModel):
 
     history = HistoricalRecords()
 
-    class Meta(object):
+    class Meta:
         verbose_name = _("Enterprise Catalog")
         verbose_name_plural = _("Enterprise Catalogs")
         app_label = 'catalog'
@@ -180,7 +180,7 @@ class CatalogContentKey(TimeStampedModel):
 
     history = HistoricalRecords()
 
-    class Meta(object):
+    class Meta:
         verbose_name = _("Catalog Content Key")
         verbose_name_plural = _("Catalog Content Keys")
         unique_together = (("catalog_query", "content_key"),)
