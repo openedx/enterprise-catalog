@@ -1,12 +1,11 @@
 import collections
 from uuid import uuid4
 
+from django.db import models
+from django.utils.translation import gettext as _
 from jsonfield.fields import JSONField
 from model_utils.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
-
-from django.db import models
-from django.utils.translation import gettext as _
 
 
 class CatalogQuery(models.Model):
@@ -34,7 +33,7 @@ class CatalogQuery(models.Model):
         )
     )
 
-    class Meta(object):
+    class Meta:
         verbose_name = _("Catalog Query")
         verbose_name_plural = _("Catalog Queries")
         app_label = 'catalog'
@@ -69,7 +68,7 @@ class EnterpriseCatalog(TimeStampedModel):
 
     history = HistoricalRecords()
 
-    class Meta(object):
+    class Meta:
         verbose_name = _("Enterprise Catalog")
         verbose_name_plural = _("Enterprise Catalogs")
         app_label = 'catalog'
@@ -133,12 +132,12 @@ class ContentMetadata(TimeStampedModel):
         null=True,
         load_kwargs={'object_pairs_hook': collections.OrderedDict},
         help_text=_(
-            "The metadata about a particular piece content as retrieved from the discovery service's search/all endpoint results, "
-            "specified as a JSON object."
+            "The metadata about a particular piece content as retrieved from the discovery service's search/all "
+            "endpoint results, specified as a JSON object."
         )
     )
 
-    class Meta(object):
+    class Meta:
         verbose_name = _("Content Metadata")
         verbose_name_plural = _("Content Metadata")
         app_label = 'catalog'
@@ -180,7 +179,7 @@ class CatalogContentKey(TimeStampedModel):
 
     history = HistoricalRecords()
 
-    class Meta(object):
+    class Meta:
         verbose_name = _("Catalog Content Key")
         verbose_name_plural = _("Catalog Content Keys")
         unique_together = (("catalog_query", "content_key"),)
