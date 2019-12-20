@@ -5,6 +5,8 @@ from os.path import abspath, dirname, join
 
 from corsheaders.defaults import default_headers as corsheaders_default_headers
 
+from enterprise_catalog.settings.utils import get_env_setting, get_logger_config
+
 # PATH vars
 here = lambda *x: join(abspath(dirname(__file__)), *x)
 PROJECT_ROOT = here("..")
@@ -217,60 +219,4 @@ PLATFORM_NAME = 'Your Platform Name Here'
 # END OPENEDX-SPECIFIC CONFIGURATION
 
 # Set up logging for development use (logging to stdout)
-level = 'DEBUG' if DEBUG else 'INFO'
-hostname = platform.node().split(".")[0]
-
-# Use a different address for Mac OS X
-syslog_address = '/var/run/syslog' if platform.system().lower() == 'darwin' else '/dev/log'
-
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'standard': {
-            'format': '%(asctime)s %(levelname)s %(process)d '
-                      '[%(name)s] %(filename)s:%(lineno)d - %(message)s',
-        },
-    },
-    'handlers': {
-        'console': {
-            'level': level,
-            'class': 'logging.StreamHandler',
-            'formatter': 'standard',
-            'stream': 'ext://sys.stdout',
-        },
-        'local': {
-            'level': level,
-            'class': 'logging.handlers.SysLogHandler',
-            'address': syslog_address,
-            'facility': SysLogHandler.LOG_LOCAL0,
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'propagate': True,
-            'level': 'INFO'
-        },
-        'requests': {
-            'handlers': ['console'],
-            'propagate': True,
-            'level': 'WARNING'
-        },
-        'factory': {
-            'handlers': ['console'],
-            'propagate': True,
-            'level': 'WARNING'
-        },
-        'django.request': {
-            'handlers': ['console'],
-            'propagate': True,
-            'level': 'WARNING'
-        },
-        '': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False
-        },
-    }
-}
+LOGGING = get_logger_config(debug=DEBUG, dev_env=True, local_loglevel='DEBUG')
