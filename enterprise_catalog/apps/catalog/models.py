@@ -133,12 +133,12 @@ class ContentMetadata(TimeStampedModel):
         null=True,
         load_kwargs={'object_pairs_hook': collections.OrderedDict},
         help_text=_(
-            "The metadata about a particular piece content as retrieved from the discovery service's search/all endpoint results, "
-            "specified as a JSON object."
+            "The metadata about a particular piece content as retrieved from the discovery service's search/all "
+            "endpoint results, specified as a JSON object."
         )
     )
 
-    class Meta(object):
+    class Meta:
         verbose_name = _("Content Metadata")
         verbose_name_plural = _("Content Metadata")
         app_label = 'catalog'
