@@ -65,7 +65,7 @@ coverage: clean
 	$(BROWSER) htmlcov/index.html
 
 isort_check: ## check that isort has been run
-	isort --check-only -rc enterprise_catalog/
+	isort --check-only --diff -rc enterprise_catalog/
 
 isort: ## run isort to sort imports in all Python files
 	isort --recursive --atomic enterprise_catalog/

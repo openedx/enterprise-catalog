@@ -2,7 +2,11 @@ from uuid import uuid4
 
 import factory
 
-from enterprise_catalog.apps.catalog.models import CatalogContentKey, CatalogQuery, EnterpriseCatalog
+from enterprise_catalog.apps.catalog.models import (
+    CatalogContentKey,
+    CatalogQuery,
+    EnterpriseCatalog,
+)
 
 
 class CatalogQueryFactory(factory.Factory):

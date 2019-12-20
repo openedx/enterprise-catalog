@@ -1,12 +1,11 @@
 import collections
 from uuid import uuid4
 
+from django.db import models
+from django.utils.translation import gettext as _
 from jsonfield.fields import JSONField
 from model_utils.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
-
-from django.db import models
-from django.utils.translation import gettext as _
 
 
 class CatalogQuery(models.Model):
