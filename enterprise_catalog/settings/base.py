@@ -1,4 +1,6 @@
 import os
+import platform
+from logging.handlers import SysLogHandler
 from os.path import abspath, dirname, join
 
 from corsheaders.defaults import default_headers as corsheaders_default_headers
@@ -215,6 +217,12 @@ PLATFORM_NAME = 'Your Platform Name Here'
 # END OPENEDX-SPECIFIC CONFIGURATION
 
 # Set up logging for development use (logging to stdout)
+level = 'DEBUG' if DEBUG else 'INFO'
+hostname = platform.node().split(".")[0]
+
+# Use a different address for Mac OS X
+syslog_address = '/var/run/syslog' if platform.system().lower() == 'darwin' else '/dev/log'
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -226,10 +234,16 @@ LOGGING = {
     },
     'handlers': {
         'console': {
-            'level': 'INFO',
+            'level': level,
             'class': 'logging.StreamHandler',
             'formatter': 'standard',
             'stream': 'ext://sys.stdout',
+        },
+        'local': {
+            'level': level,
+            'class': 'logging.handlers.SysLogHandler',
+            'address': syslog_address,
+            'facility': SysLogHandler.LOG_LOCAL0,
         },
     },
     'loggers': {

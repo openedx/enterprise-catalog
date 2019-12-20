@@ -4,7 +4,7 @@ from enterprise_catalog.apps.catalog.models import (
     CatalogContentKey,
     CatalogQuery,
     ContentMetadata,
-    EnterpriseCatalog
+    EnterpriseCatalog,
 )
 
 

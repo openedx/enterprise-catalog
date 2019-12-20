@@ -65,21 +65,21 @@ coverage: clean
 	$(BROWSER) htmlcov/index.html
 
 isort_check: ## check that isort has been run
-	isort --check-only -rc catalog/
+	isort --check-only --diff -rc enterprise_catalog/
 
 isort: ## run isort to sort imports in all Python files
-	isort --recursive --atomic catalog/
+	isort --recursive --atomic enterprise_catalog/
 
 style: ## run Python style checker
-	pylint --rcfile=pylintrc catalog *.py
+	pylint --rcfile=pylintrc enterprise_catalog *.py
 
 lint: ## run Python code linting
-	pylint --rcfile=pylintrc catalog *.py
+	pylint --rcfile=pylintrc enterprise_catalog *.py
 
 quality: style isort_check lint ## check code style and import sorting, then lint
 
 pii_check: ## check for PII annotations on all Django models
-	DJANGO_SETTINGS_MODULE=catalog.settings.test \
+	DJANGO_SETTINGS_MODULE=enterprise_catalog.settings.test \
 	code_annotations django_find_annotations --config_file .pii_annotations.yml --lint --report --coverage
 
 validate: test quality pii_check ## run tests, quality, and PII annotation checks
@@ -107,7 +107,7 @@ extract_translations: ## extract strings to be translated, outputting .mo files
 	python manage.py makemessages -l en -v1 -d djangojs
 
 dummy_translations: ## generate dummy translation (.po) files
-	cd catalog && i18n_tool dummy
+	cd enterprise_catalog && i18n_tool dummy
 
 compile_translations: # compile translation files, outputting .po files for each supported language
 	python manage.py compilemessages
@@ -130,7 +130,7 @@ pkg-devstack: ## build the catalog image from the latest configuration and code
 	docker build -t enterprise_catalog:latest -f docker/build/enterprise_catalog/Dockerfile git://github.com/edx/configuration
 
 detect_changed_source_translations: ## check if translation files are up-to-date
-	cd catalog && i18n_tool changed
+	cd enterprise_catalog && i18n_tool changed
 
 validate_translations: fake_translations detect_changed_source_translations ## install fake translations and check if translation files are up-to-date
 

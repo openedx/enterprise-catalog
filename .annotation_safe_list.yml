@@ -13,6 +13,10 @@ auth.Group:
   ".. no_pii:": "This model has no PII"
 auth.Permission:
   ".. no_pii:": "This model has no PII"
+catalog.HistoricalCatalogContentKey:
+  ".. no_pii": "This model has no PII"
+catalog.HistoricalEnterpriseCatalog:
+  ".. no_pii": "This model has no PII"
 contenttypes.ContentType:
   ".. no_pii:": "This model has no PII"
 sessions.Session:

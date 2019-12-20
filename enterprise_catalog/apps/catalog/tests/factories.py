@@ -1,10 +1,18 @@
-import factory
 from uuid import uuid4
 
-from enterprise_catalog.apps.catalog.models import CatalogContentKey, CatalogQuery, EnterpriseCatalog
+import factory
+
+from enterprise_catalog.apps.catalog.models import (
+    CatalogContentKey,
+    CatalogQuery,
+    EnterpriseCatalog,
+)
 
 
 class CatalogQueryFactory(factory.Factory):
+    """
+    Test factory for the `CatalogQuery` model
+    """
     class Meta:
         model = CatalogQuery
 
@@ -13,6 +21,9 @@ class CatalogQueryFactory(factory.Factory):
 
 
 class EnterpriseCatalogFactory(factory.Factory):
+    """
+    Test factory for the `EnterpriseCatalog` model
+    """
     class Meta:
         model = EnterpriseCatalog
 
@@ -22,6 +33,9 @@ class EnterpriseCatalogFactory(factory.Factory):
 
 
 class CatalogContentKeyFactory(factory.Factory):
+    """
+    Test factory for the `CatalogContentKey` model
+    """
     class Meta:
         model = CatalogContentKey
 
