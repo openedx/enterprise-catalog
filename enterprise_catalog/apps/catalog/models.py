@@ -7,7 +7,9 @@ from jsonfield.fields import JSONField
 from model_utils.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
 
-from enterprise_catalog.apps.catalog.constants import json_serialized_course_modes
+from enterprise_catalog.apps.catalog.constants import (
+    json_serialized_course_modes,
+)
 
 
 class CatalogQuery(models.Model):

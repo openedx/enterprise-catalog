@@ -1,5 +1,6 @@
 import json
 
+
 # Course mode sorting based on slug
 COURSE_MODE_SORT_ORDER = ['verified', 'professional', 'no-id-professional', 'audit', 'honor']
 
