@@ -1,0 +1,10 @@
+[
+    {
+        "model": "catalog.catalogquery",
+        "pk": 1,
+        "fields": {
+            "title": "All Course Runs",
+            "content_filter": "{\"content_type\":\"courserun\"}"
+        }
+    }
+]
