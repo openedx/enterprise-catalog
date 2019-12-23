@@ -1,0 +1,15 @@
+[
+    {
+        "model": "catalog.enterprisecatalog",
+        "pk": "15adc665-b8a2-4ddc-9987-39452c43be55",
+        "fields": {
+            "created": "2019-12-23T15:06:27.320Z",
+            "modified": "2019-12-23T15:06:27.323Z",
+            "title": "Test Enterprise - All Course Runs",
+            "enterprise_uuid": "a94412c9-f91c-4d0d-87cb-1ca1c0d11457",
+            "catalog_query": 1,
+            "enabled_course_modes": "[\"verified\",\"professional\",\"no-id-professional\",\"audit\",\"honor\"]",
+            "publish_audit_enrollment_urls": false
+        }
+    }
+]

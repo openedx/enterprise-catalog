@@ -1,0 +1,14 @@
+[
+    {
+        "model": "catalog.contentmetadata",
+        "pk": 1,
+        "fields": {
+            "created": "2019-12-23T15:10:19.770Z",
+            "modified": "2019-12-23T15:10:19.770Z",
+            "content_key": "course-v1:edX+DemoX+Demo_Course",
+            "content_type": "course_run",
+            "parent_content_key": null,
+            "json_metadata": "{\"subject_uuids\":[],\"staff_uuids\":[],\"min_effort\":null,\"transcript_languages\":[],\"aggregation_key\":\"courserun:edX+DemoX\",\"published\":true,\"max_effort\":null,\"type\":\"verified\",\"image_url\":\"http://edx.devstack.lms:18000/asset-v1:edX+DemoX+Demo_Course+type@asset+block@images_course_image.jpg\",\"key\":\"course-v1:edX+DemoX+Demo_Course\",\"logo_image_urls\":[null],\"has_enrollable_seats\":true,\"first_enrollable_paid_seat_price\":149,\"org\":\"edX\",\"number\":\"DemoX\",\"level_type\":null,\"first_enrollable_paid_seat_sku\":\"8CF08E5\",\"title\":\"Demonstration Course\",\"go_live_date\":null,\"enrollment_start\":null,\"marketing_url\":\"course/demonstration-course\",\"enrollment_end\":null,\"weeks_to_complete\":null,\"content_type\":\"courserun\",\"partner\":\"edx\",\"seat_types\":[\"verified\",\"audit\"],\"program_types\":[],\"start\":\"2013-02-05T05:00:00Z\",\"end\":null,\"language\":null,\"availability\":\"Current\",\"full_description\":null,\"authoring_organization_uuids\":[\"b61a1979-8875-4956-8419-1822fe9f5373\"],\"short_description\":null,\"pacing_type\":\"instructor_paced\",\"mobile_available\":false}"
+        }
+    }
+]
