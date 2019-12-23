@@ -18,7 +18,7 @@ class CatalogContentKeyAdmin(admin.ModelAdmin):
     def get_catalog_query(self, obj):
         link = reverse("admin:catalog_catalogquery_change", args=[obj.catalog_query.id])
         return format_html('<a href="{}">{}</a>', link, obj.catalog_query.title)
-    
+
     def get_content_key(self, obj):
         link = reverse("admin:catalog_contentmetadata_change", args=[obj.content_key.id])
         return format_html('<a href="{}">{}</a>', link, obj.content_key.content_key)
