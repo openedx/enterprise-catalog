@@ -7,6 +7,11 @@ from jsonfield.fields import JSONField
 from model_utils.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
 
+from enterprise_catalog.apps.catalog.constants import (
+    CONTENT_TYPE_CHOICES,
+    json_serialized_course_modes,
+)
+
 
 class CatalogQuery(models.Model):
     """
@@ -57,6 +62,12 @@ class EnterpriseCatalog(TimeStampedModel):
         default=uuid4,
         editable=False
     )
+    title = models.CharField(
+        default='All Content',
+        max_length=255,
+        blank=False,
+        null=False
+    )
     enterprise_uuid = models.UUIDField()
     catalog_query = models.ForeignKey(
         CatalogQuery,
@@ -64,6 +75,17 @@ class EnterpriseCatalog(TimeStampedModel):
         null=False,
         related_name='enterprise_catalogs',
         on_delete=models.deletion.CASCADE
+    )
+    enabled_course_modes = JSONField(
+        default=json_serialized_course_modes,
+        help_text=_('Ordered list of enrollment modes which can be displayed to learners for course runs in'
+                    ' this catalog.'),
+    )
+    publish_audit_enrollment_urls = models.BooleanField(
+        default=False,
+        help_text=_(
+            "Specifies whether courses should be published with direct-to-audit enrollment URLs."
+        )
     )
 
     history = HistoricalRecords()
@@ -93,15 +115,6 @@ class ContentMetadata(TimeStampedModel):
 
     .. no_pii:
     """
-
-    COURSE_RUN = 'course_run'
-    COURSE = 'course'
-    PROGRAM = 'program'
-    CONTENT_TYPE_CHOICES = [
-        (COURSE_RUN, 'Course Run'),
-        (COURSE, 'Course'),
-        (PROGRAM, 'Program'),
-    ]
 
     content_key = models.CharField(
         max_length=255,
