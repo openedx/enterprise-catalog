@@ -8,6 +8,7 @@ from model_utils.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
 
 from enterprise_catalog.apps.catalog.constants import (
+    CONTENT_TYPE_CHOICES,
     json_serialized_course_modes,
 )
 
@@ -114,15 +115,6 @@ class ContentMetadata(TimeStampedModel):
 
     .. no_pii:
     """
-
-    COURSE_RUN = 'course_run'
-    COURSE = 'course'
-    PROGRAM = 'program'
-    CONTENT_TYPE_CHOICES = [
-        (COURSE_RUN, 'Course Run'),
-        (COURSE, 'Course'),
-        (PROGRAM, 'Program'),
-    ]
 
     content_key = models.CharField(
         max_length=255,
