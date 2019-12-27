@@ -65,8 +65,7 @@ class EnterpriseCatalog(TimeStampedModel):
     title = models.CharField(
         max_length=255,
         blank=False,
-        null=False,
-        unique=True
+        null=False
     )
     enterprise_uuid = models.UUIDField(
         blank=False,
