@@ -11,6 +11,7 @@ from enterprise_catalog.apps.catalog.constants import (
     CONTENT_TYPE_CHOICES,
     json_serialized_course_modes,
 )
+from enterprise_catalog.apps.catalog.utils import get_content_filter_hash
 
 
 class CatalogQuery(models.Model):
@@ -27,21 +28,30 @@ class CatalogQuery(models.Model):
         unique=True,
     )
     content_filter = JSONField(
-        default={},
-        blank=True,
-        null=True,
+        blank=False,
+        null=False,
+        default=dict,
         load_kwargs={'object_pairs_hook': collections.OrderedDict},
         help_text=_(
-            "Query parameters which will be used to filter the discovery service's search/all endpoint results, "
-            "specified as a JSON object. An empty JSON object means that all available content items will be "
-            "included in the catalog."
+            "Query parameters which will be used to filter the discovery service's search/all "
+            "endpoint results, specified as a JSON object."
         )
+    )
+    content_filter_hash = models.CharField(
+        null=True,
+        unique=True,
+        max_length=32,
+        editable=False
     )
 
     class Meta:
         verbose_name = _("Catalog Query")
         verbose_name_plural = _("Catalog Queries")
         app_label = 'catalog'
+
+    def save(self, *args, **kwargs):  # pylint: disable=arguments-differ
+        self.content_filter_hash = get_content_filter_hash(self.content_filter)
+        super(CatalogQuery, self).save(*args, **kwargs)
 
     def __str__(self):
         """
