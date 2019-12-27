@@ -26,6 +26,7 @@ django==1.11.27
 djangorestframework-jwt==1.11.0
 djangorestframework==3.11.0
 edx-auth-backends==2.0.2
+edx-django-release-util==0.3.2
 edx-django-utils==2.0.2
 edx-drf-extensions==2.4.5
 edx-lint==1.4.1
@@ -41,7 +42,7 @@ lazy-object-proxy==1.4.3  # via astroid
 markupsafe==1.1.1
 mccabe==0.6.1             # via pylint
 mysqlclient==1.4.6
-newrelic==5.4.0.132
+newrelic==5.4.1.134
 oauthlib==3.1.0
 openapi-codec==1.3.2
 packaging==19.2           # via caniusepython3
@@ -57,14 +58,15 @@ pylint-django==2.0.11     # via edx-lint
 pylint-plugin-utils==0.6  # via pylint-celery, pylint-django
 pylint==2.4.2             # via edx-lint, pylint-celery, pylint-django, pylint-plugin-utils
 pymongo==3.10.0
-pyparsing==2.4.5          # via packaging
+pyparsing==2.4.6          # via packaging
 python-dateutil==2.8.1
 python3-openid==3.1.0
 pytz==2019.3
+pyyaml==5.2
 requests-oauthlib==1.3.0
 requests==2.22.0
 rest-condition==1.0.3
-semantic-version==2.8.3
+semantic-version==2.8.4
 simplejson==3.17.0
 six==1.13.0
 slumber==0.7.1
@@ -73,7 +75,7 @@ social-auth-app-django==1.2.0
 social-auth-core[openidconnect]==1.7.0
 stevedore==1.31.0
 typed-ast==1.4.0          # via astroid
-uritemplate==3.0.0
+uritemplate==3.0.1
 urllib3==1.25.7
 wrapt==1.11.2             # via astroid
 
