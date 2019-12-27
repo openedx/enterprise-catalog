@@ -21,10 +21,10 @@ class CatalogQuery(models.Model):
     """
 
     title = models.CharField(
-        default='All Content',
         max_length=255,
         blank=False,
-        null=False
+        null=False,
+        unique=True,
     )
     content_filter = JSONField(
         default={},
@@ -68,7 +68,10 @@ class EnterpriseCatalog(TimeStampedModel):
         blank=False,
         null=False
     )
-    enterprise_uuid = models.UUIDField()
+    enterprise_uuid = models.UUIDField(
+        blank=False,
+        null=False,
+    )
     catalog_query = models.ForeignKey(
         CatalogQuery,
         blank=False,
@@ -93,6 +96,7 @@ class EnterpriseCatalog(TimeStampedModel):
     class Meta:
         verbose_name = _("Enterprise Catalog")
         verbose_name_plural = _("Enterprise Catalogs")
+        unique_together = (("enterprise_uuid", "catalog_query"),)
         app_label = 'catalog'
 
     def __str__(self):
@@ -135,6 +139,7 @@ class ContentMetadata(TimeStampedModel):
         max_length=255,
         blank=True,
         null=True,
+        db_index=True,
         help_text=_(
             "The key that represents this content's parent, such as a course or program."
         )
@@ -149,6 +154,8 @@ class ContentMetadata(TimeStampedModel):
             "endpoint results, specified as a JSON object."
         )
     )
+
+    history = HistoricalRecords()
 
     class Meta:
         verbose_name = _("Content Metadata")
