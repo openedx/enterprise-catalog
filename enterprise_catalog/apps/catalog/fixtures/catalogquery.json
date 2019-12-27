@@ -4,7 +4,8 @@
         "pk": 1,
         "fields": {
             "title": "All Course Runs",
-            "content_filter": "{\"content_type\":\"courserun\"}"
+            "content_filter": "{\"content_type\":\"courserun\"}",
+            "content_filter_hash": "58652973bc814f1a8df3942010c57c84"
         }
     }
 ]
