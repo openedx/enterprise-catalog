@@ -42,7 +42,6 @@ class CatalogQueryForm(forms.ModelForm):
         fields = ('content_filter',)
 
     def clean_content_filter(self):
-        print('clean_content_filter')
         content_filter = self.cleaned_data['content_filter']
         content_filter_hash = get_content_filter_hash(content_filter)
         if CatalogQuery.objects.filter(content_filter_hash=content_filter_hash).exists():
