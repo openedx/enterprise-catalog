@@ -39,7 +39,7 @@ class ContentMetadataAdmin(admin.ModelAdmin):
 class CatalogQueryForm(forms.ModelForm):
     class Meta:
         model = CatalogQuery
-        fields = ('content_filter',)
+        fields = ('title', 'content_filter',)
 
     def clean_content_filter(self):
         content_filter = self.cleaned_data['content_filter']
