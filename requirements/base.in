@@ -9,6 +9,7 @@ django-simple-history
 django-waffle
 djangorestframework
 edx-auth-backends
+edx-django-release-util
 edx-drf-extensions
 edx-rest-api-client==1.9.2
 mysqlclient
