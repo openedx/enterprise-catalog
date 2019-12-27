@@ -15,6 +15,8 @@ auth.Permission:
   ".. no_pii:": "This model has no PII"
 catalog.HistoricalCatalogContentKey:
   ".. no_pii": "This model has no PII"
+catalog.HistoricalContentMetadata:
+    ".. no_pii": "This model has no PII"
 catalog.HistoricalEnterpriseCatalog:
   ".. no_pii": "This model has no PII"
 contenttypes.ContentType:
