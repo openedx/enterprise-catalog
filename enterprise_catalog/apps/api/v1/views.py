@@ -11,15 +11,12 @@ from enterprise_catalog.apps.api.v1.serializers import (
 from enterprise_catalog.apps.catalog.models import CatalogQuery, EnterpriseCatalog
 
 
-class EnterpriseCatalogViewSet(viewsets.ViewSet):
+class EnterpriseCatalogViewSet(viewsets.ModelViewSet):
     """ TODO """
-    def list(self, request):
-        queryset = EnterpriseCatalog.objects.all()
-        serializer = EnterpriseCatalogSerializer(queryset, many=True)
-        return Response(serializer.data)
+    queryset = EnterpriseCatalog.objects.all()
 
-    def retrieve(self, request, pk=None):
-        queryset = EnterpriseCatalog.objects.all()
-        enterprise_catalog = get_object_or_404(queryset, pk=pk)
-        serializer = EnterpriseCatalogDetailSerializer(enterprise_catalog)
-        return Response(serializer.data)
+    def get_serializer_class(self):
+        action = getattr(self, 'action', None)
+        if action == 'retrieve':
+            return EnterpriseCatalogDetailSerializer
+        return EnterpriseCatalogSerializer

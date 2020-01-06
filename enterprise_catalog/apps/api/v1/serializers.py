@@ -51,14 +51,11 @@ class EnterpriseCatalogSerializer(QuerySerializerMixin, serializers.ModelSeriali
     """
     Serializer for the `EnterpriseCatalogModel`
     """
-    enterprise_customer = serializers.SerializerMethodField('get_enterprise_customer')
+    enterprise_customer = serializers.UUIDField(source='enterprise_uuid')
 
     class Meta:
         model = EnterpriseCatalog
         fields = ['uuid', 'title', 'enterprise_customer']
-
-    def get_enterprise_customer(self, obj):
-        return obj.enterprise_uuid
 
 
 class EnterpriseCatalogDetailSerializer(EnterpriseCatalogSerializer):

@@ -70,7 +70,7 @@ class EnterpriseCatalog(TimeStampedModel):
     uuid = models.UUIDField(
         primary_key=True,
         default=uuid4,
-        editable=False
+        editable=False,
     )
     title = models.CharField(
         max_length=255,
@@ -84,9 +84,9 @@ class EnterpriseCatalog(TimeStampedModel):
     catalog_query = models.ForeignKey(
         CatalogQuery,
         blank=False,
-        null=False,
+        null=True,
         related_name='enterprise_catalogs',
-        on_delete=models.deletion.CASCADE
+        on_delete=models.deletion.SET_NULL,
     )
     enabled_course_modes = JSONField(
         default=json_serialized_course_modes,
@@ -97,7 +97,7 @@ class EnterpriseCatalog(TimeStampedModel):
         default=False,
         help_text=_(
             "Specifies whether courses should be published with direct-to-audit enrollment URLs."
-        )
+        ),
     )
 
     history = HistoricalRecords()
