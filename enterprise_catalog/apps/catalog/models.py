@@ -108,41 +108,6 @@ class EnterpriseCatalog(TimeStampedModel):
         unique_together = (("enterprise_uuid", "catalog_query"),)
         app_label = 'catalog'
 
-    def get_paginated_content(self, query_parameters=None):
-        """
-        Return paginated content metadata results for a particular enterprise customer.
-
-        Arguments:
-            query_parameters (dict): Additional query parameters to add to the search API call, e.g. page.
-        Returns:
-            dict: The paginated discovery service search results.
-        """
-        # query_parameters = query_parameters or {}
-        # query_params = query_parameters.copy()
-        results = []
-        content_keys_queryset = CatalogContentKey.objects.filter(catalog_query=self.catalog_query)
-        content_keys_list = [c.content_key.content_key for c in content_keys_queryset]
-        content_metadata = ContentMetadata.objects.filter(content_key__in=content_keys_list)
-
-        for content in content_metadata:
-            json_metadata = content.json_metadata
-            content_type = content.content_type
-            if content_type == 'courserun' and json_metadata['has_enrollable_seats']:
-                results.append(json_metadata)
-            elif content_type == 'course':
-                results.append(json_metadata)
-            elif content_type == 'program' and json_metadata['is_program_eligible_for_one_click_purchase']:
-                results.append(json_metadata)
-
-        response = {
-            'count': len(results),
-            'next': None,
-            'previous': None,
-            'results': results,
-        }
-
-        return response
-
     def __str__(self):
         """
         Return human-readable string representation.

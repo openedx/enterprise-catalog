@@ -47,51 +47,18 @@ class CatalogContentKeySerializer(QuerySerializerMixin, serializers.ModelSeriali
         model = CatalogContentKey
         fields = ['id']
 
+
 class EnterpriseCatalogSerializer(QuerySerializerMixin, serializers.ModelSerializer):
     """
     Serializer for the `EnterpriseCatalogModel`
     """
+    # UUID should only be writable on POST
+    uuid = serializers.UUIDField(read_only=False)
     enterprise_customer = serializers.UUIDField(source='enterprise_uuid')
+    # content_filter = This is in the mgmt command WIP, but not sure if it should be part of this serializer
+    enabled_course_modes = serializers.JSONField(write_only=True)
+    publish_audit_enrollment_urls = serializers.BooleanField(write_only=True)
 
     class Meta:
         model = EnterpriseCatalog
-        fields = ['uuid', 'title', 'enterprise_customer']
-
-
-class EnterpriseCatalogDetailSerializer(EnterpriseCatalogSerializer):
-    """
-    Serializer for the `EnterpriseCatalog` model which includes
-    the catalog's discovery service search query results.
-    """
-
-    def to_representation(self, instance):
-        """
-        Serialize the EnterpriseCatalog object.
-
-        Arguments:
-            instance (EnterpriseCatalog): The EnterpriseCatalog to serialize.
-
-        Returns:
-            dict: The EnterpriseCatalog converted to a dict.
-        """
-
-        catalog_query = instance.catalog_query
-
-        representation = super(EnterpriseCatalogDetailSerializer, self).to_representation(instance)
-
-        paginated_content = instance.get_paginated_content()
-        previous_url = None
-        next_url = None
-
-        # request_uri = request.build_absolute_uri()
-        # if paginated_content['previous']:
-        #     previous_url = utils.update_query_parameters(request_uri, {'page': page - 1})
-        # if paginated_content['next']:
-        #     next_url = utils.update_query_parameters(request_uri, {'page': page + 1})
-
-        representation['count'] = paginated_content['count']
-        representation['results'] = paginated_content['results']
-        representation['previous'] = previous_url
-        representation['next'] = next_url
-
-        return representation
+        fields = ['uuid', 'title', 'enterprise_customer', 'enabled_course_modes', 'publish_audit_enrollment_urls']
