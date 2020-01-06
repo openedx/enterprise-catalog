@@ -1,6 +1,10 @@
 from rest_framework import serializers
 
-from enterprise_catalog.apps.catalog.models import CatalogQuery, EnterpriseCatalog
+from enterprise_catalog.apps.catalog.models import (
+    CatalogQuery,
+    CatalogContentKey,
+    EnterpriseCatalog
+)
 
 
 class QuerySerializerMixin:
@@ -25,22 +29,72 @@ class QuerySerializerMixin:
         return queryset
 
 
-class CatalogQuerySerializer(serializers.ModelSerializer):
+class CatalogQuerySerializer(QuerySerializerMixin, serializers.ModelSerializer):
     """
-    Serializer for the `CatalogQueryModel`
+    Serializer for the `CatalogQuery` model
     """
+
     class Meta:
         model = CatalogQuery
-        fields = ['title', 'content_filter']
+        fields = ['id', 'title']
 
+class CatalogContentKeySerializer(QuerySerializerMixin, serializers.ModelSerializer):
+    """
+    Serializer for the `CatalogContentKey` model
+    """
 
-class EnterpriseCatalogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CatalogContentKey
+        fields = ['id']
+
+class EnterpriseCatalogSerializer(QuerySerializerMixin, serializers.ModelSerializer):
     """
     Serializer for the `EnterpriseCatalogModel`
     """
-    related_fields = ['catalog_query']
-    catalog_query = CatalogQuerySerializer()
+    enterprise_customer = serializers.SerializerMethodField('get_enterprise_customer')
 
     class Meta:
         model = EnterpriseCatalog
-        fields = ['uuid', 'enterprise_uuid', 'catalog_query']
+        fields = ['uuid', 'title', 'enterprise_customer']
+
+    def get_enterprise_customer(self, obj):
+        return obj.enterprise_uuid
+
+
+class EnterpriseCatalogDetailSerializer(EnterpriseCatalogSerializer):
+    """
+    Serializer for the `EnterpriseCatalog` model which includes
+    the catalog's discovery service search query results.
+    """
+
+    def to_representation(self, instance):
+        """
+        Serialize the EnterpriseCatalog object.
+
+        Arguments:
+            instance (EnterpriseCatalog): The EnterpriseCatalog to serialize.
+
+        Returns:
+            dict: The EnterpriseCatalog converted to a dict.
+        """
+
+        catalog_query = instance.catalog_query
+
+        representation = super(EnterpriseCatalogDetailSerializer, self).to_representation(instance)
+
+        paginated_content = instance.get_paginated_content()
+        previous_url = None
+        next_url = None
+
+        # request_uri = request.build_absolute_uri()
+        # if paginated_content['previous']:
+        #     previous_url = utils.update_query_parameters(request_uri, {'page': page - 1})
+        # if paginated_content['next']:
+        #     next_url = utils.update_query_parameters(request_uri, {'page': page + 1})
+
+        representation['count'] = paginated_content['count']
+        representation['results'] = paginated_content['results']
+        representation['previous'] = previous_url
+        representation['next'] = next_url
+
+        return representation

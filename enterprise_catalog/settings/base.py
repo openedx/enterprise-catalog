@@ -92,6 +92,11 @@ DATABASES = {
     }
 }
 
+# Django Rest Framework
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema'
+}
+
 # Internationalization
 # https://docs.djangoproject.com/en/dev/topics/i18n/
 
