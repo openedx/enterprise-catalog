@@ -9,7 +9,7 @@ from enterprise_catalog.apps.catalog.models import (
 
 class QuerySerializerMixin:
     """
-    Mixin for DRY query improvements
+    Mixin for DRY query improvements. TBD if we need this or not
 
     Used by inheriting from the mixin and declaring the `related_fields` and `prefetch_fields` specific to the model
     on your serializer, and then calling `get_related_queries` when getting the queryset in your view.
