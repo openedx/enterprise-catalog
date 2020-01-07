@@ -16,4 +16,5 @@ class EnterpriseCatalogViewSet(viewsets.ModelViewSet):
         action = getattr(self, 'action', None)
         if action == 'create':
             return EnterpriseCatalogCreateSerializer
+
         return EnterpriseCatalogSerializer
