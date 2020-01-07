@@ -36,7 +36,7 @@ class CatalogQuerySerializer(QuerySerializerMixin, serializers.ModelSerializer):
 
     class Meta:
         model = CatalogQuery
-        fields = ['id', 'title']
+        fields = ['id']
 
 class CatalogContentKeySerializer(QuerySerializerMixin, serializers.ModelSerializer):
     """

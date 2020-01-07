@@ -21,12 +21,6 @@ class CatalogQuery(models.Model):
     .. no_pii:
     """
 
-    title = models.CharField(
-        max_length=255,
-        blank=False,
-        null=False,
-        unique=True,
-    )
     content_filter = JSONField(
         blank=False,
         null=False,
@@ -57,7 +51,9 @@ class CatalogQuery(models.Model):
         """
         Return human-readable string representation.
         """
-        return "<CatalogQuery '{title}'>".format(title=self.title)
+        return "<CatalogQuery with content filter hash '{content_filter_hash}'>".format(
+            content_filter_hash=self.content_filter_hash
+        )
 
 
 class EnterpriseCatalog(TimeStampedModel):

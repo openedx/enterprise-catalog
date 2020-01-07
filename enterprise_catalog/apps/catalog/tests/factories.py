@@ -23,7 +23,6 @@ class CatalogQueryFactory(factory.Factory):
     class Meta:
         model = CatalogQuery
 
-    title = factory.Faker('fake-title')
     content_filter = "{}"  # Default filter to empty object
 
 
