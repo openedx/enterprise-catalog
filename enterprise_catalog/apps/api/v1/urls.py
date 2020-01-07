@@ -6,8 +6,6 @@ from __future__ import absolute_import, unicode_literals
 
 from rest_framework.routers import DefaultRouter
 
-from django.conf.urls import url
-
 from enterprise_catalog.apps.api.v1 import views
 
 
