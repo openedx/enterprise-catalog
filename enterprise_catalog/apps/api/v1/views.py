@@ -1,8 +1,8 @@
 from rest_framework import permissions, viewsets
 
 from enterprise_catalog.apps.api.v1.serializers import (
-    EnterpriseCatalogSerializer,
     EnterpriseCatalogCreateSerializer,
+    EnterpriseCatalogSerializer,
 )
 from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
 

@@ -9,7 +9,7 @@ from simple_history.models import HistoricalRecords
 
 from enterprise_catalog.apps.catalog.constants import (
     CONTENT_TYPE_CHOICES,
-    json_serialized_course_modes
+    json_serialized_course_modes,
 )
 from enterprise_catalog.apps.catalog.utils import get_content_filter_hash
 

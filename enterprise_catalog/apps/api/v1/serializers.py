@@ -1,9 +1,9 @@
 from rest_framework import serializers
 
 from enterprise_catalog.apps.catalog.models import (
-    CatalogQuery,
     CatalogContentKey,
-    EnterpriseCatalog
+    CatalogQuery,
+    EnterpriseCatalog,
 )
 
 
