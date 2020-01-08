@@ -35,7 +35,7 @@ class CatalogQuery(models.Model):
         null=True,
         unique=True,
         max_length=32,
-        editable=False
+        editable=False,
     )
 
     class Meta:
