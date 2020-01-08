@@ -4,7 +4,6 @@ from enterprise_catalog.apps.catalog.models import (
     CatalogQuery,
     EnterpriseCatalog,
 )
-
 from enterprise_catalog.apps.catalog.utils import get_content_filter_hash
 
 
@@ -30,7 +29,9 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         content_filter = validated_data.pop('content_filter')
-        catalog_query, _ = CatalogQuery.objects.get_or_create(content_filter_hash=get_content_filter_hash(content_filter))
+        catalog_query, _ = CatalogQuery.objects.get_or_create(
+            content_filter_hash=get_content_filter_hash(content_filter),
+        )
         return EnterpriseCatalog.objects.create(**validated_data, catalog_query=catalog_query)
 
 
