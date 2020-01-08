@@ -187,12 +187,12 @@ AUTO_AUTH_USERNAME_PREFIX = 'auto_auth_'
 SOCIAL_AUTH_STRATEGY = 'auth_backends.strategies.EdxDjangoStrategy'
 
 # Set these to the correct values for your OAuth2 provider (e.g., LMS)
-SOCIAL_AUTH_EDX_OAUTH2_KEY = 'replace-me'
-SOCIAL_AUTH_EDX_OAUTH2_SECRET = 'replace-me'
-SOCIAL_AUTH_EDX_OAUTH2_URL_ROOT = 'replace-me'
-SOCIAL_AUTH_EDX_OAUTH2_LOGOUT_URL = 'replace-me'
-BACKEND_SERVICE_EDX_OAUTH2_KEY = 'replace-me'
-BACKEND_SERVICE_EDX_OAUTH2_SECRET = 'replace-me'
+SOCIAL_AUTH_EDX_OAUTH2_KEY = 'enterprise-catalog-sso-key'
+SOCIAL_AUTH_EDX_OAUTH2_SECRET = 'enterprise-catalog-sso-secret'
+SOCIAL_AUTH_EDX_OAUTH2_URL_ROOT = 'http://127.0.0.1:8000'
+SOCIAL_AUTH_EDX_OAUTH2_LOGOUT_URL = 'http://127.0.0.1:8000/logout'
+BACKEND_SERVICE_EDX_OAUTH2_KEY = 'enterprise-catalog-backend-service-key'
+BACKEND_SERVICE_EDX_OAUTH2_SECRET = 'enterprise-catalog-service-secret'
 
 JWT_AUTH = {
     'JWT_ISSUER': 'http://127.0.0.1:8000/oauth2',
