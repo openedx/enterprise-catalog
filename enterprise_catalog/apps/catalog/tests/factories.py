@@ -17,7 +17,10 @@ from enterprise_catalog.apps.catalog.models import (
 from enterprise_catalog.apps.core.models import User
 
 
-class CatalogQueryFactory(factory.Factory):
+USER_PASSWORD = 'password'
+
+
+class CatalogQueryFactory(factory.DjangoModelFactory):
     """
     Test factory for the `CatalogQuery` model
     """
@@ -27,7 +30,7 @@ class CatalogQueryFactory(factory.Factory):
     content_filter = "{}"  # Default filter to empty object
 
 
-class EnterpriseCatalogFactory(factory.Factory):
+class EnterpriseCatalogFactory(factory.DjangoModelFactory):
     """
     Test factory for the `EnterpriseCatalog` model
     """
@@ -38,11 +41,11 @@ class EnterpriseCatalogFactory(factory.Factory):
     title = factory.Faker('word')
     enterprise_uuid = factory.LazyFunction(uuid4)
     catalog_query = factory.SubFactory(CatalogQueryFactory)
-    enabled_course_modes = json_serialized_course_modes
+    enabled_course_modes = json_serialized_course_modes()
     publish_audit_enrollment_urls = False   # Default to False
 
 
-class ContentMetadataFactory(factory.Factory):
+class ContentMetadataFactory(factory.DjangoModelFactory):
     """
     Test factory for the `ContentMetadata` model
     """
@@ -55,7 +58,7 @@ class ContentMetadataFactory(factory.Factory):
     json_metadata = "{}"  # Default metadata to empty object
 
 
-class CatalogContentKeyFactory(factory.Factory):
+class CatalogContentKeyFactory(factory.DjangoModelFactory):
     """
     Test factory for the `CatalogContentKey` model
     """
@@ -68,7 +71,7 @@ class CatalogContentKeyFactory(factory.Factory):
 
 class UserFactory(factory.DjangoModelFactory):
     username = factory.Faker('user_name')
-    password = factory.Faker('password')
+    password = factory.PostGenerationMethodCall('set_password', USER_PASSWORD)
     email = factory.Faker('email')
     first_name = factory.Faker('first_name')
     last_name = factory.Faker('last_name')
@@ -77,7 +80,3 @@ class UserFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = User
-
-
-class StaffUserFactory(UserFactory):
-    is_staff = True
