@@ -13,7 +13,7 @@ app_name = 'v1'
 
 router = DefaultRouter()  # pylint: disable=invalid-name
 
-router.register("enterprise-catalog", views.EnterpriseCatalogViewSet, 'enterprise-catalog')
+router.register(r'enterprise-catalog', views.EnterpriseCatalogViewSet, basename='enterprise-catalog')
 
 urlpatterns = []
 

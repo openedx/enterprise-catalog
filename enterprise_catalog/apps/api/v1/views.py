@@ -12,6 +12,7 @@ class EnterpriseCatalogViewSet(viewsets.ModelViewSet):
     serializer_class = EnterpriseCatalogSerializer
     queryset = EnterpriseCatalog.objects.all()
     permission_classes = [permissions.IsAdminUser]
+    lookup_field = 'uuid'
 
     def get_serializer_class(self):
         action = getattr(self, 'action', None)
