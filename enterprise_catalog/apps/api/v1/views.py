@@ -1,5 +1,9 @@
-from edx_rest_framework_extensions.auth.bearer.authentication import BearerAuthentication
-from edx_rest_framework_extensions.auth.jwt.authentication import JwtAuthentication
+from edx_rest_framework_extensions.auth.bearer.authentication import (
+    BearerAuthentication,
+)
+from edx_rest_framework_extensions.auth.jwt.authentication import (
+    JwtAuthentication,
+)
 from rest_framework import permissions, viewsets
 from rest_framework.authentication import SessionAuthentication
 
