@@ -40,7 +40,8 @@ class EnterpriseCatalogFactory(factory.DjangoModelFactory):
     uuid = factory.LazyFunction(uuid4)
     title = factory.Faker('word')
     enterprise_uuid = factory.LazyFunction(uuid4)
-    catalog_query = factory.SubFactory(CatalogQueryFactory)
+    # Put in a fake content_filter to avoid duplicate content filters from multiple EnterpriseCatalogFactories
+    catalog_query = factory.SubFactory(CatalogQueryFactory, content_filter=factory.Faker('word'))
     enabled_course_modes = json_serialized_course_modes()
     publish_audit_enrollment_urls = False   # Default to False
 

@@ -105,7 +105,16 @@ class EnterpriseCatalogViewSetTests(SerializationMixin, APITestCase):
         patch_data = {'title': 'Patch title'}
         response = self.client.patch(url, patch_data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Verify that only the data we specifically patched changed
         self.assertEqual(response.data['title'], patch_data['title'])
+        patched_catalog = EnterpriseCatalog.objects.get(uuid=self.enterprise_catalog.uuid)
+        self.assertEqual(patched_catalog.catalog_query, self.enterprise_catalog.catalog_query)
+        self.assertEqual(patched_catalog.enterprise_uuid, self.enterprise_catalog.enterprise_uuid)
+        self.assertEqual(patched_catalog.enabled_course_modes, self.enterprise_catalog.enabled_course_modes)
+        self.assertEqual(
+            patched_catalog.publish_audit_enrollment_urls,
+            self.enterprise_catalog.publish_audit_enrollment_urls,
+        )
 
     def test_patch_unauthorized(self):
         """

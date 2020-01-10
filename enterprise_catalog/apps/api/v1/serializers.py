@@ -36,7 +36,11 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
         return EnterpriseCatalog.objects.create(**validated_data, catalog_query=catalog_query)
 
     def update(self, instance, validated_data):
-        content_filter = validated_data.get('content_filter', None)
+        default_content_filter = None
+        if instance.catalog_query:
+            default_content_filter = instance.catalog_query.content_filter
+
+        content_filter = validated_data.get('content_filter', default_content_filter)
         instance.catalog_query, _ = CatalogQuery.objects.get_or_create(
             content_filter=content_filter,
             content_filter_hash=get_content_filter_hash(content_filter),
