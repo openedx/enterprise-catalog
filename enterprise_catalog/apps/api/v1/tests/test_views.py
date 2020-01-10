@@ -91,4 +91,11 @@ class EnterpriseCatalogViewSetTests(SerializationMixin, APITestCase):
         """
         Verify the endpoint returns a list of all enterprise catalogs
         """
-        pass
+        url = reverse('api:v1:enterprise-catalog-list')
+        second_enterprise_catalog = EnterpriseCatalogFactory(catalog_query__content_filter='{"content_type":"course"}')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data['results'],
+            self.serialize_enterprise_catalog([self.enterprise_catalog, second_enterprise_catalog], many=True)
+        )
