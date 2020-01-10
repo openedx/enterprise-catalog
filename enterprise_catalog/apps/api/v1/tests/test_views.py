@@ -40,11 +40,11 @@ class EnterpriseCatalogViewSetTests(APITestCase):
         non_staff_user = UserFactory()
         self.client.login(username=non_staff_user.username, password=USER_PASSWORD)
 
-    def _assert_correct_new_catalog_data(self, uuid):
+    def _assert_correct_new_catalog_data(self, catalog_uuid):
         """
         Helper for verifying the data for a created/updated catalog
         """
-        new_enterprise_catalog = EnterpriseCatalog.objects.get(uuid=uuid)
+        new_enterprise_catalog = EnterpriseCatalog.objects.get(uuid=catalog_uuid)
         self.assertEqual(new_enterprise_catalog.title, self.new_catalog_data['title'])
         self.assertEqual(new_enterprise_catalog.enabled_course_modes, ['verified'])
         self.assertEqual(
