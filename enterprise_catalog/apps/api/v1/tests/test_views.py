@@ -1,11 +1,10 @@
+import uuid
 from collections import OrderedDict
-from uuid import uuid4
 
 from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
 
-from enterprise_catalog.apps.api.v1.tests.mixins import SerializationMixin
 from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
 from enterprise_catalog.apps.catalog.tests.factories import (
     USER_PASSWORD,
@@ -14,7 +13,7 @@ from enterprise_catalog.apps.catalog.tests.factories import (
 )
 
 
-class EnterpriseCatalogViewSetTests(SerializationMixin, APITestCase):
+class EnterpriseCatalogViewSetTests(APITestCase):
     """
     Tests for the EnterpriseCatalogViewSet
     """
@@ -23,11 +22,11 @@ class EnterpriseCatalogViewSetTests(SerializationMixin, APITestCase):
         self.enterprise_catalog = EnterpriseCatalogFactory()
         self.user = UserFactory(is_staff=True)
         self.client.login(username=self.user.username, password=USER_PASSWORD)
-        self.new_catalog_uuid = uuid4()
+        self.new_catalog_uuid = uuid.uuid4()
         self.new_catalog_data = {
             'uuid': self.new_catalog_uuid,
             'title': 'Test Title',
-            'enterprise_customer': uuid4(),
+            'enterprise_customer': uuid.uuid4(),
             'enabled_course_modes': '["verified"]',
             'publish_audit_enrollment_urls': True,
             'content_filter': '{"content_type":"course"}',
@@ -65,10 +64,10 @@ class EnterpriseCatalogViewSetTests(SerializationMixin, APITestCase):
         second_enterprise_catalog = EnterpriseCatalogFactory(catalog_query__content_filter='{"content_type":"course"}')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            response.data['results'],
-            self.serialize_enterprise_catalog([self.enterprise_catalog, second_enterprise_catalog], many=True)
-        )
+        self.assertEqual(response.data['count'], 2)
+        results = response.data['results']
+        self.assertEqual(uuid.UUID(results[0]['uuid']), self.enterprise_catalog.uuid)
+        self.assertEqual(uuid.UUID(results[1]['uuid']), second_enterprise_catalog.uuid)
 
     def test_list_unauthorized(self):
         """
@@ -86,7 +85,10 @@ class EnterpriseCatalogViewSetTests(SerializationMixin, APITestCase):
         url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': self.enterprise_catalog.uuid})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, self.serialize_enterprise_catalog(self.enterprise_catalog))
+        data = response.data
+        self.assertEqual(uuid.UUID(data['uuid']), self.enterprise_catalog.uuid)
+        self.assertEqual(data['title'], self.enterprise_catalog.title)
+        self.assertEqual(uuid.UUID(data['enterprise_customer']), self.enterprise_catalog.enterprise_uuid)
 
     def test_detail_unauthorized(self):
         """

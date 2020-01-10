@@ -45,16 +45,7 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
             content_filter=content_filter,
             content_filter_hash=get_content_filter_hash(content_filter),
         )
-
-        instance.title = validated_data.get('title', instance.title)
-        instance.enterprise_uuid = validated_data.get('enterprise_customer', instance.enterprise_uuid)
-        instance.enabled_course_modes = validated_data.get('enabled_course_modes', instance.enabled_course_modes)
-        instance.publish_audit_enrollment_urls = validated_data.get(
-            'publish_audit_enrollment_urls',
-            instance.publish_audit_enrollment_urls,
-        )
-        instance.save()
-        return instance
+        return super().update(instance, validated_data)
 
 
 class EnterpriseCatalogCreateSerializer(EnterpriseCatalogSerializer):
