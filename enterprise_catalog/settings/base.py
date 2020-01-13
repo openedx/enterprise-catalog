@@ -84,11 +84,12 @@ WSGI_APPLICATION = 'enterprise_catalog.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.',
-        'NAME': '',
-        'USER': '',
-        'PASSWORD': '',
-        'HOST': '',  # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
+        'NAME': 'enterprise_catalog',
+        'USER': 'entcatalog001',
+        'PASSWORD': 'password',
+        'HOST': 'localhost',  # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
         'PORT': '',  # Set to empty string for default.
+        'ATOMIC_REQUESTS': False,
     }
 }
 
