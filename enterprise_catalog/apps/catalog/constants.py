@@ -3,7 +3,7 @@ import json
 
 # ContentMetadata content_type choices
 COURSE = 'course'
-COURSE_RUN = 'course_run'
+COURSE_RUN = 'courserun'
 PROGRAM = 'program'
 CONTENT_TYPE_CHOICES = [
     (COURSE, 'Course'),

@@ -92,6 +92,13 @@ DATABASES = {
     }
 }
 
+# Django Rest Framework
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
+    'PAGE_SIZE': 10,
+}
+
 # Internationalization
 # https://docs.djangoproject.com/en/dev/topics/i18n/
 
