@@ -217,8 +217,7 @@ JWT_AUTH = {
 # Request the user's permissions in the ID token
 EXTRA_SCOPE = ['permissions']
 
-# TODO Set this to another (non-staff, ideally) path.
-LOGIN_REDIRECT_URL = '/admin/'
+LOGIN_REDIRECT_URL = '/api-docs/'
 # END AUTHENTICATION CONFIGURATION
 
 
