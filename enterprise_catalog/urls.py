@@ -30,7 +30,7 @@ admin.autodiscover()
 urlpatterns = [
     url(r'', include(oauth2_urlpatterns)),
     url(r'^admin/', admin.site.urls),
-    url(r'^api/', include(api_urls)),
+    url(r'^api/', include(api_urls), name='api'),
     url(r'^api-docs/', get_swagger_view(title='Enterprise Catalog API')),
     # Use the same auth views for all logins, including those originating from the browseable API.
     url(r'^auto_auth/$', core_views.AutoAuth.as_view(), name='auto_auth'),
