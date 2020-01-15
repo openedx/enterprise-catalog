@@ -4,6 +4,9 @@ from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.utils.html import format_html
 
+from enterprise_catalog.apps.catalog.constants import (
+    admin_model_changes_allowed,
+)
 from enterprise_catalog.apps.catalog.models import (
     CatalogQuery,
     ContentMetadata,
@@ -20,16 +23,18 @@ class UnchangeableMixin(admin.ModelAdmin):
     """
     @classmethod
     def has_add_permission(cls, request):
-        return False
+        return admin_model_changes_allowed()
 
     @classmethod
     def has_delete_permission(cls, request, obj=None):
-        return False
+        return admin_model_changes_allowed()
 
     def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
         extra_context = extra_context or {}
-        extra_context['show_save_and_continue'] = False
-        extra_context['show_save'] = False
+        if not admin_model_changes_allowed():
+            extra_context['show_save_and_continue'] = False
+            extra_context['show_save'] = False
+
         return super().changeform_view(request, object_id, extra_context=extra_context)
 
 
