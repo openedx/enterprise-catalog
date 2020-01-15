@@ -9,7 +9,6 @@ from enterprise_catalog.apps.catalog.constants import (
     json_serialized_course_modes,
 )
 from enterprise_catalog.apps.catalog.models import (
-    CatalogContentKey,
     CatalogQuery,
     ContentMetadata,
     EnterpriseCatalog,
@@ -57,17 +56,6 @@ class ContentMetadataFactory(factory.DjangoModelFactory):
     content_type = factory.Iterator([COURSE_RUN, COURSE, PROGRAM])
     parent_content_key = None   # Default to None
     json_metadata = "{}"  # Default metadata to empty object
-
-
-class CatalogContentKeyFactory(factory.DjangoModelFactory):
-    """
-    Test factory for the `CatalogContentKey` model
-    """
-    class Meta:
-        model = CatalogContentKey
-
-    catalog_query = factory.SubFactory(CatalogQueryFactory)
-    content_key = factory.SubFactory(ContentMetadataFactory)
 
 
 class UserFactory(factory.DjangoModelFactory):
