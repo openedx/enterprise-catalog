@@ -30,8 +30,8 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         content_filter = validated_data.pop('content_filter')
         catalog_query, _ = CatalogQuery.objects.get_or_create(
-            content_filter=content_filter,
             content_filter_hash=get_content_filter_hash(content_filter),
+            defaults={'content_filter': content_filter},
         )
         return EnterpriseCatalog.objects.create(**validated_data, catalog_query=catalog_query)
 
@@ -42,8 +42,8 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
 
         content_filter = validated_data.get('content_filter', default_content_filter)
         instance.catalog_query, _ = CatalogQuery.objects.get_or_create(
-            content_filter=content_filter,
             content_filter_hash=get_content_filter_hash(content_filter),
+            defaults={'content_filter': content_filter},
         )
         return super().update(instance, validated_data)
 
