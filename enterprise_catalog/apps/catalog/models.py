@@ -159,6 +159,7 @@ class ContentMetadata(TimeStampedModel):
             "endpoint results, specified as a JSON object."
         )
     )
+    catalog_queries = models.ManyToManyField(CatalogQuery)
 
     history = HistoricalRecords()
 
@@ -174,50 +175,5 @@ class ContentMetadata(TimeStampedModel):
         return (
             "<ContentMetadata for '{content_key}'>".format(
                 content_key=self.content_key
-            )
-        )
-
-
-class CatalogContentKey(TimeStampedModel):
-    """
-    Associates a stored catalog query with an enterprise customer.
-
-    .. no_pii:
-    """
-
-    catalog_query = models.ForeignKey(
-        CatalogQuery,
-        blank=False,
-        null=False,
-        related_name='catalog_content_keys',
-        on_delete=models.deletion.CASCADE
-    )
-    content_key = models.ForeignKey(
-        ContentMetadata,
-        to_field='content_key',
-        db_column='content_key',
-        blank=False,
-        null=False,
-        related_name='catalog_content_keys',
-        on_delete=models.deletion.CASCADE
-    )
-
-    history = HistoricalRecords()
-
-    class Meta:
-        verbose_name = _("Catalog Content Key")
-        verbose_name_plural = _("Catalog Content Keys")
-        unique_together = (("catalog_query", "content_key"),)
-        app_label = 'catalog'
-
-    def __str__(self):
-        """
-        Return human-readable string representation.
-        """
-        return (
-            "<CatalogContentKey for CatalogQuery '{catalog_query_id}' "
-            "and content_key '{content_key}'>".format(
-                catalog_query_id=self.catalog_query.id,
-                content_key=self.content_key.content_key
             )
         )

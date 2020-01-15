@@ -5,29 +5,11 @@ from django.urls import reverse
 from django.utils.html import format_html
 
 from enterprise_catalog.apps.catalog.models import (
-    CatalogContentKey,
     CatalogQuery,
     ContentMetadata,
     EnterpriseCatalog,
 )
 from enterprise_catalog.apps.catalog.utils import get_content_filter_hash
-
-
-@admin.register(CatalogContentKey)
-class CatalogContentKeyAdmin(admin.ModelAdmin):
-    """ Admin configuration for the custom CatalogContentKey model. """
-    list_display = ('id', 'get_catalog_query', 'get_content_key',)
-
-    def get_catalog_query(self, obj):
-        link = reverse("admin:catalog_catalogquery_change", args=[obj.catalog_query.id])
-        return format_html('<a href="{}">{}</a>', link, obj.catalog_query.content_filter_hash)
-
-    def get_content_key(self, obj):
-        link = reverse("admin:catalog_contentmetadata_change", args=[obj.content_key.id])
-        return format_html('<a href="{}">{}</a>', link, obj.content_key.content_key)
-
-    get_catalog_query.short_description = 'Catalog Query'
-    get_content_key.short_description = 'Content Key'
 
 
 @admin.register(ContentMetadata)
