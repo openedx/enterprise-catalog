@@ -84,11 +84,12 @@ WSGI_APPLICATION = 'enterprise_catalog.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.',
-        'NAME': '',
-        'USER': '',
-        'PASSWORD': '',
-        'HOST': '',  # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
+        'NAME': 'enterprise_catalog',
+        'USER': 'entcatalog001',
+        'PASSWORD': 'password',
+        'HOST': 'localhost',  # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
         'PORT': '',  # Set to empty string for default.
+        'ATOMIC_REQUESTS': False,
     }
 }
 
@@ -171,7 +172,7 @@ TEMPLATES = [
 # Detailed information at: https://docs.djangoproject.com/en/dev/ref/settings/
 SESSION_COOKIE_NAME = 'catalog_sessionid'
 CSRF_COOKIE_NAME = 'catalog_csrftoken'
-LANGUAGE_COOKIE_NAME = 'catalog_language'
+LANGUAGE_COOKIE_NAME = 'openedx-language-preference'
 # END COOKIE CONFIGURATION
 
 CSRF_COOKIE_SECURE = False
@@ -227,3 +228,27 @@ PLATFORM_NAME = 'Your Platform Name Here'
 
 # Set up logging for development use (logging to stdout)
 LOGGING = get_logger_config(debug=DEBUG, dev_env=True, local_loglevel='DEBUG')
+
+EXTRA_APPS = []
+CERTIFICATE_LANGUAGES= {
+    'en': 'English',
+    'es_419': 'Spanish'
+}
+ENTERPRISE_CATALOG_SERVICE_USER = 'enterprise_catalog_service_user'
+CELERY_ALWAYS_EAGER = False
+CELERY_BROKER_TRANSPORT = ''
+CELERY_BROKER_USER = ''
+CELERY_BROKER_PASSWORD = ''
+CELERY_BROKER_HOSTNAME = ''
+CELERY_BROKER_VHOST = ''
+CELERY_DEFAULT_EXCHANGE = 'enterprise_catalog'
+CELERY_DEFAULT_ROUTING_KEY = 'enterprise_catalog'
+CELERY_DEFAULT_QUEUE = 'enterprise_catalog.default'
+MEDIA_STORAGE_BACKEND = {
+    'DEFAULT_FILE_STORAGE': 'django.core.files.storage.FileSystemStorage',
+    'MEDIA_ROOT': MEDIA_ROOT,
+    'MEDIA_URL': MEDIA_URL
+}
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SOCIAL_AUTH_REDIRECT_IS_HTTPS = False
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
