@@ -11,6 +11,7 @@ from enterprise_catalog.apps.catalog.constants import (
     CONTENT_TYPE_CHOICES,
     json_serialized_course_modes,
 )
+from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 from enterprise_catalog.apps.catalog.utils import get_content_filter_hash
 
 
@@ -176,4 +177,24 @@ class ContentMetadata(TimeStampedModel):
             "<ContentMetadata for '{content_key}'>".format(
                 content_key=self.content_key
             )
+        )
+
+
+def update_contentmetadata_from_discovery(catalog_uuid):
+    """
+    catalog_uuid is a uuid (str)
+
+    Takes a uuid, looks up catalogquery, uses discovery service client to
+    grab fresh metadata, and then create/updates ContentMetadata objects.
+    """
+    client = DiscoveryApiClient()
+
+    catalog = EnterpriseCatalog.objects.get(uuid=catalog_uuid)
+    metadata = client.get_metadata_by_query(catalog.catalog_query.content_filter)
+
+    for entry in metadata.get('results', []):
+        defaults = {'content_key': entry['key']}
+        ContentMetadata.objects.update_or_create(
+            json_metadata=entry,
+            defaults=defaults,
         )

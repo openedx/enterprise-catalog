@@ -9,8 +9,6 @@ from urllib.parse import urljoin
 
 from edx_rest_api_client.client import OAuthAPIClient
 
-from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
-
 
 class DiscoveryApiClient(object):
     """
@@ -34,15 +32,16 @@ class DiscoveryApiClient(object):
     def oauth2_client_secret(self):
         return settings.BACKEND_SERVICE_EDX_OAUTH2_SECRET
 
-    def traverse_pagination(response, content_filter_query, query_params):
+    def traverse_pagination(self, response, content_filter_query, query_params):
         """
-        Traverse a paginated API response and extracts and concatenates "results" returned by API.
-        Arguments:
-            response (dict): API response object.
-            content_filter_query (dict): query parameters used to filter catalog results.
-            query_params (dict): query parameters used to paginate results.
-        Returns:
-            list: all the results returned by the API.
+        Traverse a paginated API response and extracts and concatenates "results"
+        returned by API.
+
+        response (dict): API response object.
+        content_filter_query (dict): query parameters used to filter catalog results.
+        query_params (dict): query parameters used to paginate results.
+
+        Return a list (all the results returned by the API).
         """
         results = response.get('results', [])
 
@@ -62,6 +61,15 @@ class DiscoveryApiClient(object):
     def get_metadata_by_query(self, content_filter_query, query_params=None, traverse_pagination=False):
         """
         Return results from the discovery service's search/all endpoint.
+
+        content_filter_query (dict): some elasticsearch filter
+            e.g. - {'aggregation_key': 'course-v1:some+key+here'}
+        query_params (dict): additional query params for the rest api endpoint
+             we're hitting. e.g. - {'page': 3}
+        traverse_pagination (bool): determine if we should iterate over all
+            pages of results for given query
+
+        Returns a dictionary.
         """
         if query_params is None:
             query_params = {}
@@ -74,12 +82,12 @@ class DiscoveryApiClient(object):
 
         if traverse_pagination:
             response['results'] = self.traverse_pagination(
-                url,
+                self.SEARCH_ALL_ENDPOINT,
                 response,
                 content_filter_query,
                 query_params
             )
+
             response['next'] = response['previous'] = None
 
         return response
-
