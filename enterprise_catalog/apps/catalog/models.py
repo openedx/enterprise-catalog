@@ -117,6 +117,36 @@ class EnterpriseCatalog(TimeStampedModel):
             )
         )
 
+    def contains_content_keys(self, content_keys):
+        """
+        Return True if catalog contains the courses/course runs/programs specified by the given content keys, else False
+
+        Note that content is also part of the catalog if its parent is part of the catalog. Assumes that we have a
+        ContentMetadata entry for every content id for proper parent/child lookup, but does not error if that is false.
+        """
+        if not self.catalog_query:
+            return False
+
+        content_keys = set(content_keys)
+        associated_metadata_content_keys = {metadata_chunk.content_key for metadata_chunk
+                                            in self.catalog_query.contentmetadata_set.all()}
+        contained_in_catalog = True
+        for content_key in content_keys:
+            try:
+                parent_content_key = ContentMetadata.objects.get(content_key=content_key).parent_content_key
+            except ContentMetadata.DoesNotExist:
+                parent_content_key = None
+
+            # The content key is contained in the catalog if its key is explictly part of the associated metadata, or
+            # its parent's key is.
+            contained_in_catalog = contained_in_catalog and (content_key in associated_metadata_content_keys
+                or parent_content_key in associated_metadata_content_keys)
+            # Break early as soon as we find a key that is not contained in the catalog
+            if not contained_in_catalog:
+                return False
+
+        return contained_in_catalog
+
 
 class ContentMetadata(TimeStampedModel):
     """
