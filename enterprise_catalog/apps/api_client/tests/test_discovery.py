@@ -43,7 +43,6 @@ class TestDiscoveryApiClient(TestCase):
         }
         self.assertDictEqual(actual_response, expected_response)
 
-
     @mock.patch('enterprise_catalog.apps.api_client.discovery.DiscoveryApiClient.traverse_pagination')
     @mock.patch('enterprise_catalog.apps.api_client.discovery.OAuthAPIClient')
     def test_get_metadata_by_query_without_traverse(self, mock_oauth_client, mock_traverse):
