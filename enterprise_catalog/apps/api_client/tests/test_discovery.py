@@ -1,7 +1,7 @@
 """ Tests for discovery api client. """
 
-from django.test import TestCase
 import mock
+from django.test import TestCase
 
 from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 

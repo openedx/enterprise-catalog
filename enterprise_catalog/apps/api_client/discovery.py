@@ -3,14 +3,13 @@
 Discovery service api client code.
 """
 
-from django.conf import settings
-
 from urllib.parse import urljoin
 
+from django.conf import settings
 from edx_rest_api_client.client import OAuthAPIClient
 
 
-class DiscoveryApiClient(object):
+class DiscoveryApiClient:
     """
     Object builds an API client to make calls to the the Discovery Service.
     """
@@ -82,7 +81,6 @@ class DiscoveryApiClient(object):
 
         if traverse_pagination:
             response['results'] = self.traverse_pagination(
-                self.SEARCH_ALL_ENDPOINT,
                 response,
                 content_filter_query,
                 query_params

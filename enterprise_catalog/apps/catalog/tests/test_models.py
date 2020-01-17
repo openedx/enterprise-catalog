@@ -1,7 +1,7 @@
 """ Tests for catalog models. """
 
-from django.test import TestCase
 import mock
+from django.test import TestCase
 
 from enterprise_catalog.apps.catalog.models import (
     ContentMetadata,
