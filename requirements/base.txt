@@ -4,6 +4,9 @@
 #
 #    make upgrade
 #
+amqp==2.5.2               # via kombu
+billiard==3.6.1.0         # via celery
+celery==4.4.0
 certifi==2019.11.28       # via requests
 chardet==3.0.4            # via requests
 coreapi==2.3.3            # via django-rest-swagger, openapi-codec
@@ -19,17 +22,20 @@ django==1.11.27
 djangorestframework-jwt==1.11.0  # via edx-drf-extensions
 djangorestframework==3.11.0
 edx-auth-backends==2.0.2
-edx-django-release-util==0.3.3
+edx-django-release-util==0.3.5
 edx-django-utils==2.0.3   # via edx-drf-extensions
 edx-drf-extensions==2.4.5
 edx-opaque-keys==2.0.1    # via edx-drf-extensions
 edx-rest-api-client==1.9.2
 future==0.18.2            # via pyjwkest
 idna==2.8                 # via requests
+importlib-metadata==1.4.0  # via kombu
 itypes==1.1.0             # via coreapi
 jinja2==2.10.3            # via coreschema
 jsonfield==2.0.2
+kombu==4.6.7              # via celery
 markupsafe==1.1.1         # via jinja2
+more-itertools==8.1.0     # via zipp
 mysqlclient==1.4.6
 newrelic==5.4.1.134       # via edx-django-utils
 oauthlib==3.1.0           # via requests-oauthlib, social-auth-core
@@ -56,3 +62,5 @@ social-auth-core[openidconnect]==1.7.0  # via edx-auth-backends, social-auth-app
 stevedore==1.31.0         # via edx-opaque-keys
 uritemplate==3.0.1        # via coreapi
 urllib3==1.25.8           # via requests
+vine==1.3.0               # via amqp, celery
+zipp==2.0.1               # via importlib-metadata

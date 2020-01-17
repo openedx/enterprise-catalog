@@ -1,3 +1,4 @@
+from celery import task
 from django.utils.decorators import method_decorator
 from edx_rest_framework_extensions.auth.bearer.authentication import (
     BearerAuthentication,
@@ -10,6 +11,9 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from six.moves.urllib.parse import quote_plus, unquote
+from rest_framework.response import Response
+from rest_framework.status import HTTP_200_OK
+from rest_framework.views import APIView
 
 from enterprise_catalog.apps.api.v1.decorators import (
     require_at_least_one_query_parameter,
@@ -18,7 +22,10 @@ from enterprise_catalog.apps.api.v1.serializers import (
     EnterpriseCatalogCreateSerializer,
     EnterpriseCatalogSerializer,
 )
-from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
+from enterprise_catalog.apps.catalog.models import (
+    EnterpriseCatalog,
+    update_contentmetadata_from_discovery,
+)
 
 
 class EnterpriseCatalogViewSet(viewsets.ModelViewSet):
@@ -50,3 +57,20 @@ class EnterpriseCatalogViewSet(viewsets.ModelViewSet):
         enterprise_catalog = self.get_object()
         contains_content_items = enterprise_catalog.contains_content_keys(course_run_ids + program_uuids)
         return Response({'contains_content_items': contains_content_items})
+
+
+class EnterpriseCatalogRefreshDataFromDiscovery(APIView):
+    """
+    View to update metadata in Catalog with most recent data from Discovery service
+    """
+
+    def get(self, request):
+        resp = str(dir(self))
+        return Response(resp, status=HTTP_200_OK)
+
+    @task(bind=True)
+    def post(self, request):
+        uuid = request.data.get("uuid")
+        # call update function
+        update_contentmetadata_from_discovery(uuid)
+        return Response(uuid, status=HTTP_200_OK)
