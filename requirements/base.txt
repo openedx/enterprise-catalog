@@ -10,6 +10,7 @@ coreapi==2.3.3            # via django-rest-swagger, openapi-codec
 coreschema==0.0.4         # via coreapi
 defusedxml==0.6.0         # via python3-openid, social-auth-core
 django-cors-headers==3.2.1
+django-crum==0.7.5
 django-extensions==2.2.5
 django-model-utils==3.2.0
 django-rest-swagger==2.2.0
@@ -23,6 +24,7 @@ edx-django-release-util==0.3.3
 edx-django-utils==2.0.3   # via edx-drf-extensions
 edx-drf-extensions==2.4.5
 edx-opaque-keys==2.0.1    # via edx-drf-extensions
+edx-rbac==1.0.5
 edx-rest-api-client==1.9.2
 future==0.18.2            # via pyjwkest
 idna==2.8                 # via requests
