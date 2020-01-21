@@ -1,8 +1,11 @@
 import collections
 from uuid import uuid4
+from logging import getLogger
 
+from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext as _
+from edx_rbac.models import UserRole, UserRoleAssignment
 from jsonfield.fields import JSONField
 from model_utils.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
@@ -18,6 +21,8 @@ from enterprise_catalog.apps.catalog.utils import (
     get_content_type,
     get_parent_content_key,
 )
+
+LOGGER = getLogger(__name__)
 
 
 class CatalogQuery(models.Model):
@@ -214,6 +219,53 @@ class ContentMetadata(TimeStampedModel):
                 content_key=self.content_key
             )
         )
+
+
+class EnterpriseCatalogFeatureRole(UserRole):
+    """
+    User role definitions specific to the enterprise catalog service
+
+    .. no_pii:
+    """
+
+    def __str__(self):
+        """
+        Return human-readable string representation.
+        """
+        return "<EnterpriseCatalogFeatureRole ({role})>".format(role=self.name)
+
+    def __repr__(self):
+        """
+        Return uniquely identifying string representation.
+        """
+        return self.__str__()
+
+
+class EnterpriseCatalogUserRoleAssignment(UserRoleAssignment):
+    """
+    Model to map users to an EnterpriseCatalogFeatureRole.
+
+    .. no_pii:
+    """
+
+    role_class = EnterpriseCatalogFeatureRole
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, db_index=True, on_delete=models.CASCADE)
+    enterprise_id = models.UUIDField(blank=True, null=True, verbose_name='Enterprise Customer UUID')
+
+    def __str__(self):
+        """
+        Return human-readable string representation.
+        """
+        return "<EnterpriseCatalogUserRoleAssignment for User {user} assigned to role {role}>".format(
+            user=self.user.username,
+            role=self.role.name
+        )
+
+    def __repr__(self):
+        """
+        Return uniquely identifying string representation.
+        """
+        return self.__str__()
 
 
 def update_contentmetadata_from_discovery(catalog_uuid):

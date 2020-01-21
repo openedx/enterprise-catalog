@@ -20,6 +20,7 @@ coreschema==0.0.4
 defusedxml==0.6.0
 distlib==0.3.0            # via caniusepython3
 django-cors-headers==3.2.1
+django-crum==0.7.5
 django-extensions==2.2.6
 django-model-utils==3.2.0
 django-rest-swagger==2.2.0
@@ -35,6 +36,7 @@ edx-django-utils==2.0.3
 edx-drf-extensions==2.4.5
 edx-lint==1.4.1
 edx-opaque-keys==2.0.1
+edx-rbac==1.0.5
 edx-rest-api-client==1.9.2
 future==0.18.2
 idna==2.8
