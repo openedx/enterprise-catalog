@@ -104,4 +104,4 @@ class TestDiscoveryApiClient(TestCase):
             {'item2': 'is from the second page'},
         ]
 
-        assert actual_results == expected_results
+        self.assertEqual(actual_results, expected_results)
