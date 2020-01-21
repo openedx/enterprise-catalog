@@ -5,6 +5,11 @@ from os.path import abspath, dirname, join
 
 from corsheaders.defaults import default_headers as corsheaders_default_headers
 
+from enterprise_catalog.apps.catalog.constants import (
+    ENTERPRISE_CATALOG_ADMIN_ROLE,
+    SYSTEM_ENTERPRISE_ADMIN_ROLE,
+    SYSTEM_ENTERPRISE_OPERATOR_ROLE,
+)
 from enterprise_catalog.settings.utils import get_env_setting, get_logger_config
 
 # PATH vars
@@ -234,7 +239,7 @@ PLATFORM_NAME = 'Your Platform Name Here'
 LOGGING = get_logger_config(debug=DEBUG, dev_env=True, local_loglevel='DEBUG')
 
 EXTRA_APPS = []
-CERTIFICATE_LANGUAGES= {
+CERTIFICATE_LANGUAGES = {
     'en': 'English',
     'es_419': 'Spanish'
 }
@@ -303,3 +308,8 @@ SOCIAL_AUTH_REDIRECT_IS_HTTPS = False
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 DISCOVERY_SERVICE_API_URL = os.environ.get('DISCOVERY_SERVICE_API_URL', '')
+
+# Set up system-to-feature roles mapping for edx-rbac
+SYSTEM_TO_FEATURE_ROLE_MAPPING = {
+    SYSTEM_ENTERPRISE_CATALOG_ADMIN_ROLE: [ENTERPRISE_CATALOG_ADMIN_ROLE],
+}

@@ -19,6 +19,13 @@ CONTENT_TYPE_CHOICES = [
 # Course mode sorting based on slug
 COURSE_MODE_SORT_ORDER = ['verified', 'professional', 'no-id-professional', 'audit', 'honor']
 
+ENTERPRISE_CATALOG_ADMIN_ROLE = 'catalog_admin'
+
+SYSTEM_ENTERPRISE_ADMIN_ROLE = 'enterprise_admin'
+SYSTEM_ENTERPRISE_CATALOG_ADMIN_ROLE = 'enterprise_catalog_admin'
+SYSTEM_ENTERPRISE_OPERATOR_ROLE = 'enterprise_openedx_operator'
+
+
 def json_serialized_course_modes():
     """
     :return: serialized course modes.
