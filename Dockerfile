@@ -1,4 +1,4 @@
-FROM python:3.6
+FROM python:3.5
 WORKDIR /edx/app/enterprise_catalog/enterprise_catalog
 ADD requirements.txt /edx/app/enterprise_catalog/enterprise_catalog/
 ADD Makefile /edx/app/enterprise_catalog/enterprise_catalog/
