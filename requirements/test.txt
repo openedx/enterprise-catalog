@@ -89,4 +89,4 @@ uritemplate==3.0.1
 urllib3==1.25.8
 wcwidth==0.1.8            # via pytest
 wrapt==1.11.2             # via astroid
-zipp==2.0.0               # via importlib-metadata
+zipp==1.0.0               # via importlib-metadata
