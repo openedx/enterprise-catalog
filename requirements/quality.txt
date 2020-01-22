@@ -17,7 +17,7 @@ coreschema==0.0.4
 defusedxml==0.6.0
 distlib==0.3.0            # via caniusepython3
 django-cors-headers==3.2.1
-django-extensions==2.2.5
+django-extensions==2.2.6
 django-model-utils==3.2.0
 django-rest-swagger==2.2.0
 django-simple-history==2.8.0
@@ -76,7 +76,7 @@ social-auth-core[openidconnect]==1.7.0
 stevedore==1.31.0
 typed-ast==1.4.1          # via astroid
 uritemplate==3.0.1
-urllib3==1.25.7
+urllib3==1.25.8
 wrapt==1.11.2             # via astroid
 
 # The following packages are considered to be unsafe in a requirements file:
