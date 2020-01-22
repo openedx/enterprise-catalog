@@ -52,8 +52,10 @@ class TestModels(TestCase):
         mock_client.assert_called_once()
         assert ContentMetadata.objects.count() == 3
 
+        # Assert values in json_metadata are correct
         for metadata in metadata_list:
             cm = ContentMetadata.objects.get(
                 content_key=metadata['key']
             )
-            self.assertDictEqual(cm.json_metadata, metadata)
+            assert metadata['key'] == cm.json_metadata['key']
+            assert metadata['title'] == cm.json_metadata['title']
