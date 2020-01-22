@@ -19,7 +19,7 @@ class UserTests(TestCase):
         self.assertIsNone(user.access_token)
 
         access_token = 'My voice is my passport. Verify me.'
-        social_auth.extra_data['access_token'] = access_token  # pylint: disable=unsupported-assignment-operation
+        social_auth.extra_data['access_token'] = access_token
         social_auth.save()
         self.assertEqual(user.access_token, access_token)
 
