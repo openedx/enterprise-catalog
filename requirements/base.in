@@ -16,3 +16,4 @@ mysqlclient
 pytz
 jsonfield
 celery
+zipp<2.0
