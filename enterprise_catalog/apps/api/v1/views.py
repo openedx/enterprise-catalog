@@ -10,10 +10,9 @@ from rest_framework import permissions, viewsets
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from six.moves.urllib.parse import quote_plus, unquote
-from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK
 from rest_framework.views import APIView
+from six.moves.urllib.parse import quote_plus, unquote
 
 from enterprise_catalog.apps.api.v1.decorators import (
     require_at_least_one_query_parameter,
