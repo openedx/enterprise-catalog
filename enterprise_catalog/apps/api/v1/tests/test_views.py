@@ -8,6 +8,7 @@ from rest_framework.test import APITestCase
 from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
 from enterprise_catalog.apps.catalog.tests.factories import (
     USER_PASSWORD,
+    ContentMetadataFactory,
     EnterpriseCatalogFactory,
     UserFactory,
 )
@@ -58,10 +59,10 @@ class EnterpriseCatalogViewSetTests(APITestCase):
 
     def test_list(self):
         """
-        Verify the endpoint returns a list of all enterprise catalogs
+        Verify the viewset returns a list of all enterprise catalogs
         """
         url = reverse('api:v1:enterprise-catalog-list')
-        second_enterprise_catalog = EnterpriseCatalogFactory(catalog_query__content_filter='{"content_type":"course"}')
+        second_enterprise_catalog = EnterpriseCatalogFactory()
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 2)
@@ -71,7 +72,7 @@ class EnterpriseCatalogViewSetTests(APITestCase):
 
     def test_list_unauthorized(self):
         """
-        Verify the endpoint rejects list for non-staff users
+        Verify the viewset rejects list for non-staff users
         """
         self._set_up_non_staff()
         url = reverse('api:v1:enterprise-catalog-list')
@@ -80,7 +81,7 @@ class EnterpriseCatalogViewSetTests(APITestCase):
 
     def test_detail(self):
         """
-        Verify the endpoint returns the details for a single enterprise catalog
+        Verify the viewset returns the details for a single enterprise catalog
         """
         url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': self.enterprise_catalog.uuid})
         response = self.client.get(url)
@@ -92,7 +93,7 @@ class EnterpriseCatalogViewSetTests(APITestCase):
 
     def test_detail_unauthorized(self):
         """
-        Verify the endpoint rejects non-staff users for the detail route
+        Verify the viewset rejects non-staff users for the detail route
         """
         self._set_up_non_staff()
         url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': self.enterprise_catalog.uuid})
@@ -101,7 +102,7 @@ class EnterpriseCatalogViewSetTests(APITestCase):
 
     def test_patch(self):
         """
-        Verify the endpoint handles patching an enterprise catalog
+        Verify the viewset handles patching an enterprise catalog
         """
         url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': self.enterprise_catalog.uuid})
         patch_data = {'title': 'Patch title'}
@@ -120,7 +121,7 @@ class EnterpriseCatalogViewSetTests(APITestCase):
 
     def test_patch_unauthorized(self):
         """
-        Verify the endpoint rejects patch for non-staff users
+        Verify the viewset rejects patch for non-staff users
         """
         self._set_up_non_staff()
         url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': self.enterprise_catalog.uuid})
@@ -130,7 +131,7 @@ class EnterpriseCatalogViewSetTests(APITestCase):
 
     def test_put(self):
         """
-        Verify the endpoint handles replacing an enterprise catalog
+        Verify the viewset handles replacing an enterprise catalog
         """
         url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': self.enterprise_catalog.uuid})
         response = self.client.put(url, self.new_catalog_data)
@@ -139,7 +140,7 @@ class EnterpriseCatalogViewSetTests(APITestCase):
 
     def test_put_unauthorized(self):
         """
-        Verify the endpoint rejects put for non-staff users
+        Verify the viewset rejects put for non-staff users
         """
         self._set_up_non_staff()
         url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': self.enterprise_catalog.uuid})
@@ -148,7 +149,7 @@ class EnterpriseCatalogViewSetTests(APITestCase):
 
     def test_post(self):
         """
-        Verify the endpoint handles creating an enterprise catalog
+        Verify the viewset handles creating an enterprise catalog
         """
         url = reverse('api:v1:enterprise-catalog-list')
         response = self.client.post(url, self.new_catalog_data)
@@ -157,9 +158,72 @@ class EnterpriseCatalogViewSetTests(APITestCase):
 
     def test_post_unauthorized(self):
         """
-        Verify the endpoint rejects post for non-staff users
+        Verify the viewset rejects post for non-staff users
         """
         self._set_up_non_staff()
         url = reverse('api:v1:enterprise-catalog-list')
         response = self.client.post(url, self.new_catalog_data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def _get_contains_content_base_url(self, enterprise_catalog):
+        """
+        Helper to construct the base url for the contains_content_items endpoint
+        """
+        return reverse('api:v1:enterprise-catalog-contains-content-items', kwargs={'uuid': enterprise_catalog.uuid})
+
+    def _assert_correct_response(self, url, expected_value):
+        """
+        Helper to assert that the contains_content_items endpoint specified by the url returns the correct value
+        """
+        response = self.client.get(url)
+        self.assertEqual(response.json()['contains_content_items'], expected_value)
+
+    def test_contains_content_items_no_params(self):
+        """
+        Verify the contains_content_items endpoint errors if no parameters are provided
+        """
+        response = self.client.get(self._get_contains_content_base_url(self.enterprise_catalog))
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_contains_content_items_no_catalog_query(self):
+        """
+        Verify the contains_content_items endpoint returns False if there is no associated catalog query
+        """
+        no_catalog_query_catalog = EnterpriseCatalogFactory(catalog_query=None)
+        url = self._get_contains_content_base_url(no_catalog_query_catalog) + '?program_uuids=test-uuid'
+        self._assert_correct_response(url, False)
+
+    def test_contains_content_items_keys_in_catalog(self):
+        """
+        Verify the contains_content_items endpoint returns True if the keys are explicitly in the catalog
+        """
+        content_key = 'test-key'
+        associated_metadata = ContentMetadataFactory(content_key=content_key)
+        # Link the catalog to the metadata it should be associated with
+        self.enterprise_catalog.catalog_query.contentmetadata_set.add(associated_metadata)
+
+        url = self._get_contains_content_base_url(self.enterprise_catalog) + '?course_run_ids=' + content_key
+        self._assert_correct_response(url, True)
+
+    def test_contains_content_items_parent_keys_in_catalog(self):
+        """
+        Verify the contains_content_items endpoint returns True if the parent's key is in the catalog
+        """
+        child_key = 'child-key'
+        parent_metadata = ContentMetadataFactory(content_key='parent-key')
+        ContentMetadataFactory(content_key=child_key, parent_content_key=parent_metadata.content_key)
+        # Link the catalog to the parent metadata
+        self.enterprise_catalog.catalog_query.contentmetadata_set.add(parent_metadata)
+
+        url = self._get_contains_content_base_url(self.enterprise_catalog) + '?course_run_ids=' + child_key
+        self._assert_correct_response(url, True)
+
+    def test_contains_content_items_keys_not_in_catalog(self):
+        """
+        Verify the contains_content_items endpoint returns False if neither it or its parent's keys are in the catalog
+        """
+        associated_metadata = ContentMetadataFactory(content_key='some-unrelated-key')
+        self.enterprise_catalog.catalog_query.contentmetadata_set.add(associated_metadata)
+
+        url = self._get_contains_content_base_url(self.enterprise_catalog) + '?course_run_ids=' + 'test-key'
+        self._assert_correct_response(url, False)

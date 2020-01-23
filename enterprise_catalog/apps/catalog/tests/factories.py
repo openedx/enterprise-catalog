@@ -26,7 +26,7 @@ class CatalogQueryFactory(factory.DjangoModelFactory):
     class Meta:
         model = CatalogQuery
 
-    content_filter = "{}"  # Default filter to empty object
+    content_filter = factory.Dict({'content_type': factory.Faker('word')})
 
 
 class EnterpriseCatalogFactory(factory.DjangoModelFactory):
@@ -39,8 +39,7 @@ class EnterpriseCatalogFactory(factory.DjangoModelFactory):
     uuid = factory.LazyFunction(uuid4)
     title = factory.Faker('word')
     enterprise_uuid = factory.LazyFunction(uuid4)
-    # Put in a fake content_filter to avoid duplicate content filters from multiple EnterpriseCatalogFactories
-    catalog_query = factory.SubFactory(CatalogQueryFactory, content_filter=factory.Faker('word'))
+    catalog_query = factory.SubFactory(CatalogQueryFactory)
     enabled_course_modes = json_serialized_course_modes()
     publish_audit_enrollment_urls = False   # Default to False
 
