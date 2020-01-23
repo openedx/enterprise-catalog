@@ -227,3 +227,40 @@ class EnterpriseCatalogViewSetTests(APITestCase):
 
         url = self._get_contains_content_base_url(self.enterprise_catalog) + '?course_run_ids=' + 'test-key'
         self._assert_correct_response(url, False)
+
+    def _get_content_metadata_url(self, enterprise_catalog):
+        """
+        Helper to get the get_content_metadata endpoint url for a given catalog
+        """
+        return reverse('api:v1:enterprise-catalog-get-content-metadata', kwargs={'uuid': enterprise_catalog.uuid})
+
+    def test_get_content_metadata_no_catalog_query(self):
+        """
+        Verify the get_content_metadata endpoint returns no results if the catalog has no catalog query
+        """
+        no_catalog_query_catalog = EnterpriseCatalogFactory(catalog_query=None)
+        url = self._get_content_metadata_url(no_catalog_query_catalog)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()['results'], [])
+
+    def test_get_content_metadata(self):
+        """
+        Verify the get_content_metadata endpoint returns all the metadata associated with a particular catalog
+        """
+        # Associate two pieces of metadata with the catalog, making sure the content keys are ordered for testing
+        json_metadata_1 = {'content': 'fake'}
+        metadata_1 = ContentMetadataFactory(json_metadata=json_metadata_1, content_key='first')
+        self.enterprise_catalog.catalog_query.contentmetadata_set.add(metadata_1)
+        json_metadata_2 = {'content': 'fake2'}
+        metadata_2 = ContentMetadataFactory(json_metadata=json_metadata_2, content_key='second')
+        self.enterprise_catalog.catalog_query.contentmetadata_set.add(metadata_2)
+
+        url = self._get_content_metadata_url(self.enterprise_catalog)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(uuid.UUID(response.json()['uuid']), self.enterprise_catalog.uuid)
+        self.assertEqual((response.json()['count']), 2)
+        self.assertEqual(response.json()['title'], self.enterprise_catalog.title)
+        self.assertEqual(uuid.UUID(response.json()['enterprise_customer']), self.enterprise_catalog.enterprise_uuid)
+        self.assertEqual(response.json()['results'], [json_metadata_1, json_metadata_2])

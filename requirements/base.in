@@ -8,6 +8,7 @@ django-rest-swagger
 django-simple-history
 django-waffle
 djangorestframework
+djangorestframework-xml
 edx-auth-backends
 edx-django-release-util
 edx-drf-extensions
