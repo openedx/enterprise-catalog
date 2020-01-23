@@ -63,14 +63,11 @@ class EnterpriseCatalogRefreshDataFromDiscovery(APIView):
     """
     View to update metadata in Catalog with most recent data from Discovery service
     """
-
-    def get(self, request):
-        resp = str(dir(self))
-        return Response(resp, status=HTTP_200_OK)
-
     @task(bind=True)
     def post(self, request):
         uuid = request.data.get("uuid")
         # call update function
         update_contentmetadata_from_discovery(uuid)
-        return Response(uuid, status=HTTP_200_OK)
+        response_string = "Successfully updated metadata for catalog UUID "
+        response_string += str(uuid)
+        return Response(response_string, status=HTTP_200_OK)
