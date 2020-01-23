@@ -173,7 +173,7 @@ class EnterpriseCatalogViewSetTests(APITestCase):
 
     def _assert_correct_response(self, url, expected_value):
         """
-        Helper to asssert that the contains_content_items endpoint specified by the url returns the correct value
+        Helper to assert that the contains_content_items endpoint specified by the url returns the correct value
         """
         response = self.client.get(url)
         self.assertEqual(response.json()['contains_content_items'], expected_value)
@@ -211,7 +211,7 @@ class EnterpriseCatalogViewSetTests(APITestCase):
         """
         child_key = 'child-key'
         parent_metadata = ContentMetadataFactory(content_key='parent-key')
-        ContentMetadataFactory(content_key='child-key', parent_content_key=parent_metadata.content_key)
+        ContentMetadataFactory(content_key=child_key, parent_content_key=parent_metadata.content_key)
         # Link the catalog to the parent metadata
         self.enterprise_catalog.catalog_query.contentmetadata_set.add(parent_metadata)
 
