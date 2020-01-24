@@ -223,7 +223,8 @@ def update_contentmetadata_from_discovery(catalog_uuid):
     metadata = client.get_metadata_by_query(catalog.catalog_query.content_filter)
 
     for entry in metadata.get('results', []):
-        defaults = {'content_key': entry['key']}
+        # Try to get the course/course run key as the content key, falling back to uuid for programs
+        defaults = {'content_key': entry.get('key') or entry.get('uuid')}
         ContentMetadata.objects.update_or_create(
             json_metadata=entry,
             defaults=defaults,
