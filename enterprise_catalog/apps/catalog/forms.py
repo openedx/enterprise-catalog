@@ -6,12 +6,8 @@ from __future__ import absolute_import, unicode_literals
 
 from django import forms
 from django.core.exceptions import ValidationError
-from edx_rbac.admin.forms import UserRoleAssignmentAdminForm
 
-from enterprise_catalog.apps.catalog.models import (
-  CatalogQuery,
-  EnterpriseCatalogUserRoleAssignment,
-)
+from enterprise_catalog.apps.catalog.models import CatalogQuery
 from enterprise_catalog.apps.catalog.utils import get_content_filter_hash
 
 
@@ -26,17 +22,3 @@ class CatalogQueryForm(forms.ModelForm):
         if CatalogQuery.objects.filter(content_filter_hash=content_filter_hash).exists():
             raise ValidationError('Catalog Query with this Content filter already exists.')
         return content_filter
-
-
-class EnterpriseCatalogUserRoleAssignmentAdminForm(UserRoleAssignmentAdminForm):
-    """
-    Admin form for EnterpriseCatalogUserRoleAssignmentAdmin
-    """
-
-    class Meta(object):
-        """
-        Meta class for EcommerceFeatureRoleAssignmentAdminForm.
-        """
-
-        model = EnterpriseCatalogUserRoleAssignment
-        fields = '__all__'

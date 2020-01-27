@@ -221,53 +221,6 @@ class ContentMetadata(TimeStampedModel):
         )
 
 
-class EnterpriseCatalogFeatureRole(UserRole):
-    """
-    User role definitions specific to the enterprise catalog service
-
-    .. no_pii:
-    """
-
-    def __str__(self):
-        """
-        Return human-readable string representation.
-        """
-        return "<EnterpriseCatalogFeatureRole ({role})>".format(role=self.name)
-
-    def __repr__(self):
-        """
-        Return uniquely identifying string representation.
-        """
-        return self.__str__()
-
-
-class EnterpriseCatalogUserRoleAssignment(UserRoleAssignment):
-    """
-    Model to map users to an EnterpriseCatalogFeatureRole.
-
-    .. no_pii:
-    """
-
-    role_class = EnterpriseCatalogFeatureRole
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, db_index=True, on_delete=models.CASCADE)
-    enterprise_id = models.UUIDField(blank=True, null=True, verbose_name='Enterprise Customer UUID')
-
-    def __str__(self):
-        """
-        Return human-readable string representation.
-        """
-        return "<EnterpriseCatalogUserRoleAssignment for User {user} assigned to role {role}>".format(
-            user=self.user.username,
-            role=self.role.name
-        )
-
-    def __repr__(self):
-        """
-        Return uniquely identifying string representation.
-        """
-        return self.__str__()
-
-
 def update_contentmetadata_from_discovery(catalog_uuid):
     """
     catalog_uuid is a uuid (str)
