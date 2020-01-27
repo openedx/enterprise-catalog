@@ -51,7 +51,7 @@ class ContentMetadataFactory(factory.DjangoModelFactory):
     class Meta:
         model = ContentMetadata
 
-    content_key = factory.Faker('course-v1:fake+content+key')
+    content_key = factory.Faker('word')
     content_type = factory.Iterator([COURSE_RUN, COURSE, PROGRAM])
     parent_content_key = None   # Default to None
     json_metadata = "{}"  # Default metadata to empty object
