@@ -68,7 +68,7 @@ class EnterpriseCatalogViewSet(viewsets.ModelViewSet):
             'title': enterprise_catalog.title,
             'enterprise_customer': enterprise_catalog.enterprise_uuid,
             'count': 0,
-            'previous': None, 'next': None,  # Currently unsure how to handle these pieces of metadata
+            'previous': None, 'next': None,  # Kept for parity with edx-enterprise
             'results': [],
         }
 
