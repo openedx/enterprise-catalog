@@ -9,16 +9,13 @@ from edx_rbac.utils import request_user_has_implicit_access_via_jwt, user_has_ac
 from edx_rest_framework_extensions.auth.jwt.authentication import get_decoded_jwt_from_auth
 from edx_rest_framework_extensions.auth.jwt.cookies import get_decoded_jwt
 
-from catalog.constants import (
-    ENTERPRISE_CATALOG_ADMIN_ROLE,
-)
-from catalog.models import EnterpriseCatalogUserRoleAssignment
+from enterprise_catalog.apps.catalog.constants import ENTERPRISE_CATALOG_ADMIN_ROLE
 
 
 @rules.predicate
 def has_implicit_access_to_catalog(user, obj):  # pylint: disable=unused-argument
     """
-    Check that if request user has implicit access to `ENTERPRISE_CATALOG_ADMIN_ROLE` feature role.
+    Check that if request user has implicit access to `ENTERPRISE_CATALOG_ADMIN_ROLE` role.
 
     Returns:
         boolean: whether the request user has access or not
@@ -28,23 +25,4 @@ def has_implicit_access_to_catalog(user, obj):  # pylint: disable=unused-argumen
     return request_user_has_implicit_access_via_jwt(decoded_jwt, ENTERPRISE_CATALOG_ADMIN_ROLE, obj)
 
 
-@rules.predicate
-def has_explicit_access_to_catalog(user, obj):
-    """
-    Check that if request user has explicit access to `ENTERPRISE_CATALOG_ADMIN_ROLE` feature role.
-
-    Returns:
-        boolean: whether the request user has access or not
-    """
-    return user_has_access_via_database(
-        user,
-        ENTERPRISE_CATALOG_ADMIN_ROLE,
-        EnterpriseCatalogUserRoleAssignment,
-        obj
-    )
-
-
-rules.add_perm(
-  'enterprise.can_view_catalog',
-  has_implicit_access_to_catalog | has_explicit_access_to_catalog
-)
+rules.add_perm('catalog.has_admin_access', has_implicit_access_to_catalog)

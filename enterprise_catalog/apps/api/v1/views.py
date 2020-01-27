@@ -1,12 +1,8 @@
 from django.utils.decorators import method_decorator
 from edx_rbac.mixins import PermissionRequiredMixin
-from edx_rest_framework_extensions.auth.bearer.authentication import (
-    BearerAuthentication,
-)
-from edx_rest_framework_extensions.auth.jwt.authentication import (
-    JwtAuthentication,
-)
-from rest_framework import viewsets
+from edx_rest_framework_extensions.auth.bearer.authentication import BearerAuthentication
+from edx_rest_framework_extensions.auth.jwt.authentication import JwtAuthentication
+from rest_framework import permissions, viewsets
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
 from rest_framework.renderers import JSONRenderer
@@ -29,9 +25,21 @@ from enterprise_catalog.apps.catalog.models import (
     EnterpriseCatalog,
 )
 
+import crum
+from edx_rbac.utils import request_user_has_implicit_access_via_jwt, user_has_access_via_database
+from edx_rest_framework_extensions.auth.jwt.authentication import get_decoded_jwt_from_auth
+from edx_rest_framework_extensions.auth.jwt.cookies import get_decoded_jwt
 
-# class EnterpriseCatalogViewSet(viewsets.ModelViewSet):
-class EnterpriseCatalogViewSet(PermissionRequiredMixin, viewsets.ModelViewSet):
+
+class EnterpriseCatalogBaseViewSet(PermissionRequiredMixin, viewsets.ViewSet):
+    """
+    Base class for all enterprise catalog view sets.
+    """
+    authentication_classes = (JwtAuthentication,)
+    permission_required = 'catalog.has_admin_access'
+
+
+class EnterpriseCatalogViewSet(EnterpriseCatalogBaseViewSet, viewsets.ModelViewSet):
     """ View for CRUD operations on Enterprise Catalogs """
     queryset = EnterpriseCatalog.objects.all().order_by('created')
     authentication_classes = [JwtAuthentication, BearerAuthentication, SessionAuthentication]

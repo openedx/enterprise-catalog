@@ -5,11 +5,7 @@ from os.path import abspath, dirname, join
 
 from corsheaders.defaults import default_headers as corsheaders_default_headers
 
-from enterprise_catalog.apps.catalog.constants import (
-    ENTERPRISE_CATALOG_ADMIN_ROLE,
-    SYSTEM_ENTERPRISE_ADMIN_ROLE,
-    SYSTEM_ENTERPRISE_OPERATOR_ROLE,
-)
+from enterprise_catalog.apps.catalog.constants import ENTERPRISE_CATALOG_ADMIN_ROLE
 from enterprise_catalog.settings.utils import get_env_setting, get_logger_config
 
 # PATH vars
@@ -45,6 +41,7 @@ THIRD_PARTY_APPS = (
     'social_django',
     'waffle',
     'release_util',
+    'rules.apps.AutodiscoverRulesConfig',
 )
 
 PROJECT_APPS = (
@@ -68,6 +65,7 @@ MIDDLEWARE = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'social_django.middleware.SocialAuthExceptionMiddleware',
+    'crum.CurrentRequestUserMiddleware',
     'waffle.middleware.WaffleMiddleware',
 )
 
@@ -195,6 +193,7 @@ AUTH_USER_MODEL = 'core.User'
 
 AUTHENTICATION_BACKENDS = (
     'auth_backends.backends.EdXOAuth2',
+    'rules.permissions.ObjectPermissionBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
 
@@ -311,5 +310,5 @@ DISCOVERY_SERVICE_API_URL = os.environ.get('DISCOVERY_SERVICE_API_URL', '')
 
 # Set up system-to-feature roles mapping for edx-rbac
 SYSTEM_TO_FEATURE_ROLE_MAPPING = {
-    SYSTEM_ENTERPRISE_CATALOG_ADMIN_ROLE: [ENTERPRISE_CATALOG_ADMIN_ROLE],
+    ENTERPRISE_CATALOG_ADMIN_ROLE: [ENTERPRISE_CATALOG_ADMIN_ROLE],
 }
