@@ -13,7 +13,6 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND
 from rest_framework.views import APIView
 from rest_framework_xml.renderers import XMLRenderer
-from six.moves.urllib.parse import quote_plus, unquote
 
 from enterprise_catalog.apps.api.tasks import update_catalog_metadata_task
 from enterprise_catalog.apps.api.v1.decorators import (
@@ -23,6 +22,7 @@ from enterprise_catalog.apps.api.v1.serializers import (
     EnterpriseCatalogCreateSerializer,
     EnterpriseCatalogSerializer,
 )
+from enterprise_catalog.apps.api.v1.utils import unquote_course_keys
 from enterprise_catalog.apps.catalog.models import (
     ContentMetadata,
     EnterpriseCatalog,
@@ -53,8 +53,7 @@ class EnterpriseCatalogViewSet(viewsets.ModelViewSet):
         Multiple course_run_ids and/or program_uuids query parameters can be sent to this view to check for their
         existence in the specified enterprise catalog.
         """
-        # Maintain plus characters in course run keys
-        course_run_ids = [unquote(quote_plus(course_run_id)) for course_run_id in course_run_ids]
+        course_run_ids = unquote_course_keys(course_run_ids)
 
         enterprise_catalog = self.get_object()
         contains_content_items = enterprise_catalog.contains_content_keys(course_run_ids + program_uuids)
@@ -100,3 +99,35 @@ class EnterpriseCatalogRefreshDataFromDiscovery(APIView):
         # call update function and respond
         async_task = update_catalog_metadata_task.delay(catalog_uuid=uuid)
         return Response({'async_task_id': async_task.task_id}, status=HTTP_200_OK)
+
+
+class EnterpriseCustomerViewSet(viewsets.ViewSet):
+    """
+    Viewset for operations on enterprise customers.
+
+    Although we don't have a specific EnterpriseCustomer model, this viewset handles operations that use an enterprise
+    identifier to perform operations on their associated catalogs, etc.
+    """
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+    authentication_classes = [JwtAuthentication, BearerAuthentication, SessionAuthentication]
+
+    # Just a convenience so that `enterprise_uuid` becomes an argument on our detail routes
+    lookup_field = 'enterprise_uuid'
+
+    @method_decorator(require_at_least_one_query_parameter('course_run_ids', 'program_uuids'))
+    @action(detail=True)
+    def contains_content_items(self, request, enterprise_uuid, course_run_ids, program_uuids, **kwargs):
+        """
+        Returns whether or not the specified content is available for the given enterprise.
+        """
+        course_run_ids = unquote_course_keys(course_run_ids)
+
+        customer_catalogs = EnterpriseCatalog.objects.filter(enterprise_uuid=enterprise_uuid)
+        contains_content_items = False
+        for catalog in customer_catalogs:
+            contains_content_items = catalog.contains_content_keys(course_run_ids + program_uuids)
+            # Break as soon as we find a catalog that contains the specified content
+            if contains_content_items:
+                break
+
+        return Response({'contains_content_items': contains_content_items})
