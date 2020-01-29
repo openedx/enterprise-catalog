@@ -235,15 +235,64 @@ CERTIFICATE_LANGUAGES= {
     'es_419': 'Spanish'
 }
 ENTERPRISE_CATALOG_SERVICE_USER = 'enterprise_catalog_service_user'
-CELERY_ALWAYS_EAGER = False
-CELERY_BROKER_TRANSPORT = ''
-CELERY_BROKER_USER = ''
-CELERY_BROKER_PASSWORD = ''
-CELERY_BROKER_HOSTNAME = ''
-CELERY_BROKER_VHOST = ''
-CELERY_DEFAULT_EXCHANGE = 'enterprise_catalog'
-CELERY_DEFAULT_ROUTING_KEY = 'enterprise_catalog'
-CELERY_DEFAULT_QUEUE = 'enterprise_catalog.default'
+
+"""############################# BEGIN CELERY ##################################"""
+
+# Message configuration
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_MESSAGE_COMPRESSION = 'gzip'
+
+# Results configuration
+CELERY_IGNORE_RESULT = False
+CELERY_STORE_ERRORS_EVEN_IF_IGNORED = True
+
+# Events configuration
+CELERY_TRACK_STARTED = True
+CELERY_SEND_EVENTS = True
+CELERY_SEND_TASK_SENT_EVENT = True
+
+# let logging work as configured:
+CELERYD_HIJACK_ROOT_LOGGER = False
+
+# Celery task routing configuration.
+# Only registrar workers should receive registrar tasks.
+# Explicitly define these to avoid name collisions with other services
+# using the same broker and the standard default queue name of "celery".
+CELERY_DEFAULT_EXCHANGE = os.environ.get('CELERY_DEFAULT_EXCHANGE', 'enterprise_catalog')
+CELERY_DEFAULT_ROUTING_KEY = os.environ.get('CELERY_DEFAULT_ROUTING_KEY', 'enterprise_catalog')
+CELERY_DEFAULT_QUEUE = os.environ.get('CELERY_DEFAULT_QUEUE', 'enterprise_catalog.default')
+
+# Celery Broker
+# These settings need not be set if CELERY_ALWAYS_EAGER == True, like in Standalone.
+# Devstack overrides these in its docker-compose.yml.
+# Production environments can override these to be whatever they want.
+CELERY_BROKER_TRANSPORT = os.environ.get('CELERY_BROKER_TRANSPORT', '')
+CELERY_BROKER_HOSTNAME = os.environ.get('CELERY_BROKER_HOSTNAME', '')
+CELERY_BROKER_VHOST = os.environ.get('CELERY_BROKER_VHOST', '')
+CELERY_BROKER_USER = os.environ.get('CELERY_BROKER_USER', '')
+CELERY_BROKER_PASSWORD = os.environ.get('CELERY_BROKER_PASSWORD', '')
+CELERY_BROKER_URL = '{0}://{1}:{2}@{3}/{4}'.format(
+    CELERY_BROKER_TRANSPORT,
+    CELERY_BROKER_USER,
+    CELERY_BROKER_PASSWORD,
+    CELERY_BROKER_HOSTNAME,
+    CELERY_BROKER_VHOST
+)
+
+# Celery task time limits.
+# Tasks will be asked to quit after four minutes, and un-gracefully killed
+# after five.
+# This should prevent UserTasks from getting stuck indefinitely in an
+# In-Progress/Pending state, which in the case of enrollment-writing tasks,
+# would block any other enrollment-writing tasks for the associated program
+# from ever starting.
+CELERY_TASK_SOFT_TIME_LIMIT = 240
+CELERY_TASK_TIME_LIMIT = 300
+
+"""############################# END CELERY ##################################"""
+
 MEDIA_STORAGE_BACKEND = {
     'DEFAULT_FILE_STORAGE': 'django.core.files.storage.FileSystemStorage',
     'MEDIA_ROOT': MEDIA_ROOT,

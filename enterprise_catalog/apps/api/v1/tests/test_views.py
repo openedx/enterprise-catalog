@@ -1,6 +1,7 @@
 import uuid
 from collections import OrderedDict
 
+from django.test import override_settings
 from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
@@ -227,3 +228,30 @@ class EnterpriseCatalogViewSetTests(APITestCase):
 
         url = self._get_contains_content_base_url(self.enterprise_catalog) + '?course_run_ids=' + 'test-key'
         self._assert_correct_response(url, False)
+
+    @override_settings(task_always_eager=True)
+    def test_refresh_catalog_on_post_returns_200_ok(self):
+        """
+        Verify the refresh_metadata endpoint successfully updates the catalog metadata with a post request
+        """
+        url = reverse('api:v1:update-ent-catalog', kwargs={'uuid': self.enterprise_catalog.uuid})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_refresh_catalog_on_get_returns_405_not_allowed(self):
+        """
+        Verify the refresh_metadata endpoint does not update the catalog metadata with a get request
+        """
+        url = reverse('api:v1:update-ent-catalog', kwargs={'uuid': self.enterprise_catalog.uuid})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_refresh_catalog_on_invalid_uuid_returns_400_bad_request(self):
+        """
+        Verify the refresh_metadata endpoint returns an HTTP_400_BAD_REQUEST status when passed an invalid ID
+        """
+        catalog_uuid = self.enterprise_catalog.uuid
+        EnterpriseCatalog.objects.all().delete()
+        url = reverse('api:v1:update-ent-catalog', kwargs={'uuid': catalog_uuid})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

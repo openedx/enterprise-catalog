@@ -16,4 +16,5 @@ mysqlclient
 pytz
 jsonfield
 celery
+redis
 zipp<2.0
