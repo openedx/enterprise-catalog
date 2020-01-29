@@ -77,6 +77,7 @@ class EnterpriseCatalog(TimeStampedModel):
     enterprise_uuid = models.UUIDField(
         blank=False,
         null=False,
+        db_index=True,
     )
     catalog_query = models.ForeignKey(
         CatalogQuery,
