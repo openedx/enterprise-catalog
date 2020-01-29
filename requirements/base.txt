@@ -30,7 +30,7 @@ edx-opaque-keys==2.0.1    # via edx-drf-extensions
 edx-rest-api-client==1.9.2
 future==0.18.2            # via pyjwkest
 idna==2.8                 # via requests
-importlib-metadata==1.4.0  # via kombu
+importlib-metadata==1.5.0  # via kombu
 itypes==1.1.0             # via coreapi
 jinja2==2.11.0            # via coreschema
 jsonfield==2.0.2

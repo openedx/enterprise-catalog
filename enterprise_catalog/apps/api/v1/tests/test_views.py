@@ -265,7 +265,7 @@ class EnterpriseCatalogViewSetTests(APITestCase):
         self.assertEqual(response.json()['title'], self.enterprise_catalog.title)
         self.assertEqual(uuid.UUID(response.json()['enterprise_customer']), self.enterprise_catalog.enterprise_uuid)
         self.assertEqual(response.json()['results'], [json_metadata_1, json_metadata_2])
-    
+
     @override_settings(task_always_eager=True)
     def test_refresh_catalog_on_post_returns_200_ok(self):
         """

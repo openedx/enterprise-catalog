@@ -100,4 +100,3 @@ class EnterpriseCatalogRefreshDataFromDiscovery(APIView):
         # call update function and respond
         async_task = update_catalog_metadata_task.delay(catalog_uuid=uuid)
         return Response({'async_task_id': async_task.task_id}, status=HTTP_200_OK)
-
