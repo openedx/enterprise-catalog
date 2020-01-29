@@ -10,7 +10,7 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND
 from rest_framework.views import APIView
 from rest_framework_xml.renderers import XMLRenderer
 from six.moves.urllib.parse import quote_plus, unquote
@@ -96,7 +96,7 @@ class EnterpriseCatalogRefreshDataFromDiscovery(APIView):
         # ensure catalog exists before starting celery task
         if not EnterpriseCatalog.objects.filter(uuid=uuid):
             # respond with 400 status if catalog doesn't exist
-            return Response(status=HTTP_400_BAD_REQUEST)
+            return Response(status=HTTP_404_NOT_FOUND)
         # call update function and respond
         async_task = update_catalog_metadata_task.delay(catalog_uuid=uuid)
         return Response({'async_task_id': async_task.task_id}, status=HTTP_200_OK)

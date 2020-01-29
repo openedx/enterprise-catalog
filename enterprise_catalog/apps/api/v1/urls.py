@@ -19,7 +19,7 @@ urlpatterns = [
     url(
         r'^enterprise-catalog/(?P<uuid>[\S]+)/refresh_metadata',
         views.EnterpriseCatalogRefreshDataFromDiscovery.as_view(),
-        name='update-ent-catalog'
+        name='update-enterprise-catalog'
     ),
 ]
 urlpatterns += router.urls
