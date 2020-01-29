@@ -46,3 +46,9 @@ DATABASES = {
 ALLOWED_HOSTS = ['*']
 
 DISCOVERY_SERVICE_API_URL = 'http://edx.devstack.discovery:18381/api/v1/'
+
+CELERY_ALWAYS_EAGER = (
+    os.environ.get("CELERY_ALWAYS_EAGER", "false").lower() == "true"
+)
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://:password@redis:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://:password@redis:6379/0')

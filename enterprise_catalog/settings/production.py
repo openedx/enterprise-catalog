@@ -40,7 +40,6 @@ with open(CONFIG_FILE, encoding='utf-8') as f:
     # of Django settings.
     vars().update(FILE_STORAGE_BACKEND)
     vars().update(MEDIA_STORAGE_BACKEND)
-2
 
 DB_OVERRIDES = dict(
     PASSWORD=environ.get('DB_MIGRATION_PASS', DATABASES['default']['PASSWORD']),
@@ -49,6 +48,14 @@ DB_OVERRIDES = dict(
     NAME=environ.get('DB_MIGRATION_NAME', DATABASES['default']['NAME']),
     HOST=environ.get('DB_MIGRATION_HOST', DATABASES['default']['HOST']),
     PORT=environ.get('DB_MIGRATION_PORT', DATABASES['default']['PORT']),
+)
+
+BROKER_URL = "{0}://{1}:{2}@{3}/{4}".format(
+    CELERY_BROKER_TRANSPORT,
+    CELERY_BROKER_USER,
+    CELERY_BROKER_PASSWORD,
+    CELERY_BROKER_HOSTNAME,
+    CELERY_BROKER_VHOST
 )
 
 for override, value in DB_OVERRIDES.items():
