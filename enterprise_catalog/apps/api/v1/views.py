@@ -25,26 +25,20 @@ from enterprise_catalog.apps.catalog.models import (
     EnterpriseCatalog,
 )
 
-import crum
-from edx_rbac.utils import request_user_has_implicit_access_via_jwt, user_has_access_via_database
-from edx_rest_framework_extensions.auth.jwt.authentication import get_decoded_jwt_from_auth
-from edx_rest_framework_extensions.auth.jwt.cookies import get_decoded_jwt
-
 
 class EnterpriseCatalogBaseViewSet(PermissionRequiredMixin, viewsets.ViewSet):
     """
     Base class for all enterprise catalog view sets.
     """
-    authentication_classes = (JwtAuthentication,)
+    authentication_classes = [JwtAuthentication, BearerAuthentication, SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
     permission_required = 'catalog.has_admin_access'
 
 
 class EnterpriseCatalogViewSet(EnterpriseCatalogBaseViewSet, viewsets.ModelViewSet):
     """ View for CRUD operations on Enterprise Catalogs """
     queryset = EnterpriseCatalog.objects.all().order_by('created')
-    authentication_classes = [JwtAuthentication, BearerAuthentication, SessionAuthentication]
     renderer_classes = [JSONRenderer, XMLRenderer]
-    permission_required = 'enterprise.can_view_catalog'
     lookup_field = 'uuid'
 
     def get_serializer_class(self):
@@ -97,7 +91,7 @@ class EnterpriseCatalogViewSet(EnterpriseCatalogBaseViewSet, viewsets.ModelViewS
         return Response(metadata)
 
 
-class EnterpriseCatalogRefreshDataFromDiscovery(APIView):
+class EnterpriseCatalogRefreshDataFromDiscovery(EnterpriseCatalogBaseViewSet, APIView):
     """
     View to update metadata in Catalog with most recent data from Discovery service
     """
@@ -111,15 +105,13 @@ class EnterpriseCatalogRefreshDataFromDiscovery(APIView):
         return Response({'async_task_id': async_task.task_id}, status=HTTP_200_OK)
 
 
-class EnterpriseCustomerViewSet(viewsets.ViewSet):
+class EnterpriseCustomerViewSet(EnterpriseCatalogBaseViewSet, viewsets.ViewSet):
     """
     Viewset for operations on enterprise customers.
 
     Although we don't have a specific EnterpriseCustomer model, this viewset handles operations that use an enterprise
     identifier to perform operations on their associated catalogs, etc.
     """
-    authentication_classes = [JwtAuthentication, BearerAuthentication, SessionAuthentication]
-
     # Just a convenience so that `enterprise_uuid` becomes an argument on our detail routes
     lookup_field = 'enterprise_uuid'
 

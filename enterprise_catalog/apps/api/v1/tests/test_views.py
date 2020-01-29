@@ -6,7 +6,7 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.reverse import reverse
 
-from enterprise_catalog.apps.api.v1.tests.utils import APITestMixin
+from enterprise_catalog.apps.api.v1.tests.mixins import APITestMixin
 from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
 from enterprise_catalog.apps.catalog.tests.factories import (
     ContentMetadataFactory,

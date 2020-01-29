@@ -15,6 +15,7 @@ app_name = 'v1'
 router = DefaultRouter()  # pylint: disable=invalid-name
 router.register(r'enterprise-catalog', views.EnterpriseCatalogViewSet, basename='enterprise-catalog')
 router.register(r'enterprise-customer', views.EnterpriseCustomerViewSet, basename='enterprise-customer')
+# router.register(r'enterprise-catalog/(?P<uuid>[\S]+)/refresh_metadata', views.EnterpriseCatalogRefreshDataFromDiscovery, basename='update-enterprise-catalog')
 
 urlpatterns = [
     url(
