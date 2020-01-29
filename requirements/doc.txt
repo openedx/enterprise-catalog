@@ -30,6 +30,7 @@ django-simple-history==2.8.0
 django-waffle==0.19.0
 django==1.11.27
 djangorestframework-jwt==1.11.0
+djangorestframework-xml==1.4.0
 djangorestframework==3.11.0
 doc8==0.8.0
 docutils==0.16            # via doc8, readme-renderer, restructuredtext-lint, sphinx
