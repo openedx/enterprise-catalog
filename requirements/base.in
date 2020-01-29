@@ -16,3 +16,6 @@ edx-rest-api-client==1.9.2
 mysqlclient
 pytz
 jsonfield
+celery
+redis
+zipp<2.0

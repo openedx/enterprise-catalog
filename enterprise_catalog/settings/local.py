@@ -62,6 +62,8 @@ JWT_AUTH.update({
 
 ENABLE_AUTO_AUTH = True
 
+CELERY_ALWAYS_EAGER = True
+
 #####################################################################
 # Lastly, see if the developer has any local overrides.
 if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):

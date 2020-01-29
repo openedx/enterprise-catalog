@@ -15,6 +15,9 @@ services:
     # ports:
     #  - "3307:3306"
 
+  redis:
+    image: "redis:alpine"
+
   enterprise_catalog:
     # Uncomment this line to use the official catalog base image
     # image: edxops/enterprise_catalog:devstack
@@ -29,6 +32,7 @@ services:
       - "18160:18160"
     depends_on:
       - mysql
+      - redis
     networks:
       - devstack_default
     # Allows attachment to this container using 'docker attach <containerID>'.
@@ -38,6 +42,14 @@ services:
       DJANGO_SETTINGS_MODULE: enterprise_catalog.settings.devstack
       ENABLE_DJANGO_TOOLBAR: 1
 
+  celery:
+    build: .
+    command: celery -A enterprise_catalog worker -l info
+    volumes:
+      - .:/code
+    depends_on:
+      - mysql
+      - redis
 
 networks:
   devstack_default:
