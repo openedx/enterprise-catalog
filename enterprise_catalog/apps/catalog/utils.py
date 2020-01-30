@@ -26,6 +26,8 @@ def get_content_key(metadata):
 def _partition_aggregation_key(aggregation_key):
     """
     Partitions the aggregation_key field from discovery to return the type and key of the content it represents
+
+    Note that the content_key for a course run refers to a course rather than itself
     """
     content_type, _, content_key = aggregation_key.partition(':')
     return content_type, content_key
