@@ -2,6 +2,7 @@
 
 Django>=1.11.23,<2.0          # Web application framework
 django-cors-headers
+django-crum
 django-extensions
 django-model-utils==3.2.0     # v4.0.0 drops Django 1.11 support
 django-rest-swagger
@@ -12,10 +13,12 @@ djangorestframework-xml
 edx-auth-backends
 edx-django-release-util
 edx-drf-extensions
+edx_rbac
 edx-rest-api-client==1.9.2
 mysqlclient
 pytz
 jsonfield
 celery
 redis
+rules
 zipp<2.0
