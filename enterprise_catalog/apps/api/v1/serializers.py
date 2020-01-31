@@ -1,3 +1,6 @@
+import logging
+
+from django.db import IntegrityError
 from rest_framework import serializers
 
 from enterprise_catalog.apps.catalog.models import (
@@ -5,6 +8,9 @@ from enterprise_catalog.apps.catalog.models import (
     EnterpriseCatalog,
 )
 from enterprise_catalog.apps.catalog.utils import get_content_filter_hash
+
+
+logger = logging.getLogger(__name__)
 
 
 class EnterpriseCatalogSerializer(serializers.ModelSerializer):
@@ -33,7 +39,17 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
             content_filter_hash=get_content_filter_hash(content_filter),
             defaults={'content_filter': content_filter},
         )
-        return EnterpriseCatalog.objects.create(**validated_data, catalog_query=catalog_query)
+        try:
+            return EnterpriseCatalog.objects.create(**validated_data, catalog_query=catalog_query)
+        except IntegrityError as exc:
+            message = (
+                'Encountered the following error in the create serializer: %s | '
+                'content_filter: %s | '
+                'catalog_query id: %s | '
+                'validated_data: %s'
+            )
+            logger.error(message, (exc, content_filter, catalog_query.id, validated_data))
+            raise
 
     def update(self, instance, validated_data):
         default_content_filter = None
