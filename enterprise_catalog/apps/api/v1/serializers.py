@@ -48,7 +48,7 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
                 'catalog_query id: %s | '
                 'validated_data: %s'
             )
-            logger.error(message, (exc, content_filter, catalog_query.id, validated_data))
+            logger.error(message, exc, content_filter, catalog_query.id, validated_data)
             raise
 
     def update(self, instance, validated_data):

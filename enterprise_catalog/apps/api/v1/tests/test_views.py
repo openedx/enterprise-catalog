@@ -1,6 +1,7 @@
 import uuid
 from collections import OrderedDict
 
+from django.db import IntegrityError
 from django.test import override_settings
 from rest_framework import status
 from rest_framework.reverse import reverse
@@ -145,6 +146,15 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
         response = self.client.post(url, self.new_catalog_data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self._assert_correct_new_catalog_data(self.new_catalog_uuid)
+
+    def test_post_integrity_error(self):
+        """
+        Verify the viewset raises error when creating a duplicate enterprise catalog
+        """
+        url = reverse('api:v1:enterprise-catalog-list')
+        self.client.post(url, self.new_catalog_data)
+        with self.assertRaises(IntegrityError):
+            self.client.post(url, self.new_catalog_data)
 
     def test_post_unauthorized(self):
         """
