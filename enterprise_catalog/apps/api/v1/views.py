@@ -5,7 +5,7 @@ from edx_rest_framework_extensions.auth.bearer.authentication import (
 from edx_rest_framework_extensions.auth.jwt.authentication import (
     JwtAuthentication,
 )
-from rest_framework import permissions, viewsets
+from rest_framework import viewsets
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
 from rest_framework.renderers import JSONRenderer
