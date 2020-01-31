@@ -5,7 +5,7 @@ from edx_rest_framework_extensions.auth.bearer.authentication import (
 from edx_rest_framework_extensions.auth.jwt.authentication import (
     JwtAuthentication,
 )
-from rest_framework import permissions, viewsets
+from rest_framework import viewsets
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
 from rest_framework.renderers import JSONRenderer
@@ -32,7 +32,6 @@ from enterprise_catalog.apps.catalog.models import (
 class EnterpriseCatalogViewSet(viewsets.ModelViewSet):
     """ View for CRUD operations on Enterprise Catalogs """
     queryset = EnterpriseCatalog.objects.all().order_by('created')
-    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
     authentication_classes = [JwtAuthentication, BearerAuthentication, SessionAuthentication]
     renderer_classes = [JSONRenderer, XMLRenderer]
     lookup_field = 'uuid'
@@ -108,7 +107,6 @@ class EnterpriseCustomerViewSet(viewsets.ViewSet):
     Although we don't have a specific EnterpriseCustomer model, this viewset handles operations that use an enterprise
     identifier to perform operations on their associated catalogs, etc.
     """
-    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
     authentication_classes = [JwtAuthentication, BearerAuthentication, SessionAuthentication]
 
     # Just a convenience so that `enterprise_uuid` becomes an argument on our detail routes
