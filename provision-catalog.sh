@@ -26,7 +26,6 @@ docker exec -t enterprise.catalog.app bash -c "echo 'from django.contrib.auth im
 # Provision IDA User in LMS
 echo -e "${GREEN}Provisioning ${name}_worker in LMS...${NC}"
 docker exec -t edx.devstack.lms  bash -c "source /edx/app/edxapp/edxapp_env && python /edx/app/edxapp/edx-platform/manage.py lms --settings=devstack_docker manage_user ${name}_worker ${name}_worker@example.com --staff --superuser"
-docker exec -t edx.devstack.lms  bash -c "source /edx/app/edxapp/edxapp_env && python /edx/app/edxapp/edx-platform/manage.py lms --settings=devstack_docker create_oauth2_client 'http://localhost:${port}' 'http://localhost:${port}/complete/edx-oidc/' confidential --client_name ${name} --client_id '${name}-key' --client_secret '${name}-secret' --trusted --logout_uri 'http://localhost:${port}/logout/' --username ${name}_worker"
 
 # Create the DOT applications - one for single sign-on and one for backend service IDA-to-IDA authentication.
 docker exec -t edx.devstack.lms  bash -c "source /edx/app/edxapp/edxapp_env && python /edx/app/edxapp/edx-platform/manage.py lms --settings=devstack_docker create_dot_application --grant-type authorization-code --skip-authorization --redirect-uris 'http://localhost:${port}/complete/edx-oauth2/' --client-id '${name}-sso-key' --client-secret '${name}-sso-secret' --scopes 'user_id' ${name}-sso ${name}_worker"
