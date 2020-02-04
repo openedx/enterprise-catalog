@@ -1,7 +1,11 @@
 from django.utils.decorators import method_decorator
 from edx_rbac.mixins import PermissionRequiredMixin
-from edx_rest_framework_extensions.auth.bearer.authentication import BearerAuthentication
-from edx_rest_framework_extensions.auth.jwt.authentication import JwtAuthentication
+from edx_rest_framework_extensions.auth.bearer.authentication import (
+    BearerAuthentication,
+)
+from edx_rest_framework_extensions.auth.jwt.authentication import (
+    JwtAuthentication,
+)
 from rest_framework import permissions, viewsets
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
