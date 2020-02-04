@@ -35,7 +35,7 @@ class BaseViewSet(PermissionRequiredMixin, viewsets.ViewSet):
     Base class for all enterprise catalog view sets.
     """
     authentication_classes = [JwtAuthentication, BearerAuthentication, SessionAuthentication]
-    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+    permission_classes = [permissions.IsAuthenticated]
     permission_required = 'catalog.has_admin_access'
 
 
