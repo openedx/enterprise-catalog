@@ -89,9 +89,6 @@ class APITestMixin(JwtMixin, APITestCase):
         """
         Helpr for logging in as a user that does not have the appropriate role(s) in the JWT
         """
-        self.client.logout()
-        non_staff_user = UserFactory()
-        self.client.login(username=non_staff_user.username, password=USER_PASSWORD)
         self.set_jwt_cookie('invalid_role')
 
     def assert_correct_contains_response(self, url, expected_value):
