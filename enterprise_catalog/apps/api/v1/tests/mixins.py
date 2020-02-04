@@ -38,13 +38,13 @@ class JwtMixin():
         """
         payload = generate_unversioned_payload(self.user)
         if system_wide_role:
+            role_data = '{system_wide_role}'.format(system_wide_role=system_wide_role)
+            if context is not None:
+                role_data += ':{context}'.format(context=context)
             payload.update({
-                'roles': [
-                    '{system_wide_role}:{context}'.format(system_wide_role=system_wide_role, context=context)
-                ]
+                'roles': [role_data]
             })
         jwt_token = generate_jwt_token(payload)
-
         request = RequestFactory().get('/')
         request.COOKIES[jwt_cookie_name()] = jwt_token
         return request
