@@ -72,7 +72,7 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
 
     def test_list_unauthorized_non_catalog_admin(self):
         """
-        Verify the viewset rejects list for non-catalog admin users
+        Verify the viewset rejects list for users that are not catalog admins
         """
         self.set_up_non_catalog_admin()
         url = reverse('api:v1:enterprise-catalog-list')
@@ -102,7 +102,7 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
 
     def test_detail_unauthorized_non_catalog_admin(self):
         """
-        Verify the viewset rejects non-staff users for the detail route
+        Verify the viewset rejects users that are not catalog admins for the detail route
         """
         self.set_up_non_catalog_admin()
         url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': self.enterprise_catalog.uuid})
@@ -140,7 +140,7 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
 
     def test_patch_unauthorized_non_catalog_admin(self):
         """
-        Verify the viewset rejects patch for non-staff users
+        Verify the viewset rejects patch for users that are not catalog admins
         """
         self.set_up_non_catalog_admin()
         url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': self.enterprise_catalog.uuid})
@@ -168,7 +168,7 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
 
     def test_put_unauthorized_non_catalog_admin(self):
         """
-        Verify the viewset rejects put for non-staff users
+        Verify the viewset rejects put for users that are not catalog admins
         """
         self.set_up_non_catalog_admin()
         url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': self.enterprise_catalog.uuid})
@@ -204,7 +204,7 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
 
     def test_post_unauthorized_non_catalog_admin(self):
         """
-        Verify the viewset rejects post for non-staff users
+        Verify the viewset rejects post for users that are not catalog admins
         """
         self.set_up_non_catalog_admin()
         url = reverse('api:v1:enterprise-catalog-list')
@@ -358,7 +358,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
 
     def test_contains_content_items_unauthorized_non_catalog_admin(self):
         """
-        Verify the contains_content_items endpoint rejects non-staff users
+        Verify the contains_content_items endpoint rejects users that are not catalog admins
         """
         self.set_up_non_catalog_admin()
         response = self.client.get(self._get_contains_content_base_url())
