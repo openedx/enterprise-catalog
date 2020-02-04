@@ -5,6 +5,11 @@ from os.path import abspath, dirname, join
 
 from corsheaders.defaults import default_headers as corsheaders_default_headers
 
+from enterprise_catalog.apps.catalog.constants import (
+    ENTERPRISE_CATALOG_ADMIN_ROLE,
+    ENTERPRISE_ADMIN_ROLE,
+    ENTERPRISE_OPERATOR_ROLE,
+)
 from enterprise_catalog.settings.utils import get_env_setting, get_logger_config
 
 # PATH vars
@@ -40,6 +45,7 @@ THIRD_PARTY_APPS = (
     'social_django',
     'waffle',
     'release_util',
+    'rules.apps.AutodiscoverRulesConfig',
 )
 
 PROJECT_APPS = (
@@ -63,6 +69,7 @@ MIDDLEWARE = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'social_django.middleware.SocialAuthExceptionMiddleware',
+    'crum.CurrentRequestUserMiddleware',
     'waffle.middleware.WaffleMiddleware',
 )
 
@@ -98,7 +105,6 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
-        'rest_framework.permissions.IsAdminUser',
     ),
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
     'PAGE_SIZE': 10,
@@ -190,6 +196,7 @@ AUTH_USER_MODEL = 'core.User'
 
 AUTHENTICATION_BACKENDS = (
     'auth_backends.backends.EdXOAuth2',
+    'rules.permissions.ObjectPermissionBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
 
@@ -207,7 +214,7 @@ BACKEND_SERVICE_EDX_OAUTH2_KEY = 'enterprise-catalog-backend-service-key'
 BACKEND_SERVICE_EDX_OAUTH2_SECRET = 'enterprise-catalog-service-secret'
 
 JWT_AUTH = {
-    'JWT_ISSUER': 'http://127.0.0.1:8000/oauth2',
+    'JWT_ISSUER': 'http://127.0.0.1:18000/oauth2',
     'JWT_ALGORITHM': 'HS256',
     'JWT_VERIFY_EXPIRATION': True,
     'JWT_PAYLOAD_GET_USERNAME_HANDLER': lambda d: d.get('preferred_username'),
@@ -217,6 +224,17 @@ JWT_AUTH = {
     'JWT_AUTH_COOKIE_HEADER_PAYLOAD': 'edx-jwt-cookie-header-payload',
     'JWT_AUTH_COOKIE_SIGNATURE': 'edx-jwt-cookie-signature',
     'JWT_AUTH_REFRESH_COOKIE': 'edx-jwt-refresh-cookie',
+    'JWT_SECRET_KEY': 'SET-ME-PLEASE',
+    # JWT_ISSUERS enables token decoding for multiple issuers (Note: This is not a native DRF-JWT field)
+    # We use it to allow different values for the 'ISSUER' field, but keep the same SECRET_KEY and
+    # AUDIENCE values across all issuers.
+    'JWT_ISSUERS': [
+        {
+            'AUDIENCE': 'SET-ME-PLEASE',
+            'ISSUER': 'http://localhost:18000/oauth2',
+            'SECRET_KEY': 'SET-ME-PLEASE'
+        },
+    ],
 }
 
 # Request the user's permissions in the ID token
@@ -234,7 +252,7 @@ PLATFORM_NAME = 'Your Platform Name Here'
 LOGGING = get_logger_config(debug=DEBUG, dev_env=True, local_loglevel='DEBUG')
 
 EXTRA_APPS = []
-CERTIFICATE_LANGUAGES= {
+CERTIFICATE_LANGUAGES = {
     'en': 'English',
     'es_419': 'Spanish'
 }
@@ -303,3 +321,10 @@ SOCIAL_AUTH_REDIRECT_IS_HTTPS = False
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 DISCOVERY_SERVICE_API_URL = os.environ.get('DISCOVERY_SERVICE_API_URL', '')
+
+# Set up system-to-feature roles mapping for edx-rbac
+SYSTEM_TO_FEATURE_ROLE_MAPPING = {
+    ENTERPRISE_CATALOG_ADMIN_ROLE: [ENTERPRISE_CATALOG_ADMIN_ROLE],
+    ENTERPRISE_ADMIN_ROLE: [ENTERPRISE_CATALOG_ADMIN_ROLE],
+    ENTERPRISE_OPERATOR_ROLE: [ENTERPRISE_CATALOG_ADMIN_ROLE],
+}
