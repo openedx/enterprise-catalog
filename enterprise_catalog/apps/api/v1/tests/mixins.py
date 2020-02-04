@@ -5,6 +5,7 @@ from __future__ import absolute_import
 import jwt 
 
 from django.conf import settings
+from django.test.client import RequestFactory
 from edx_rest_framework_extensions.auth.jwt.cookies import jwt_cookie_name
 from edx_rest_framework_extensions.auth.jwt.tests.utils import generate_jwt_token, generate_unversioned_payload
 from rest_framework.test import APITestCase
@@ -26,7 +27,24 @@ class JwtMixin(object):
         token = jwt.encode(dict(payload, iss=self.issuer), secret).decode('utf-8')
         return token
 
-    def set_jwt_cookie(self, system_wide_role=ENTERPRISE_CATALOG_ADMIN_ROLE, context='some_context'):
+    def get_request_with_jwt_cookie(self, system_wide_role=None, context=None):
+        """
+        Set jwt token in cookies.
+        """
+        payload = generate_unversioned_payload(self.user)
+        if system_wide_role:
+            payload.update({
+                'roles': [
+                    '{system_wide_role}:{context}'.format(system_wide_role=system_wide_role, context=context)
+                ]
+            })
+        jwt_token = generate_jwt_token(payload)
+
+        request = RequestFactory().get('/')
+        request.COOKIES[jwt_cookie_name()] = jwt_token
+        return request
+
+    def set_jwt_cookie(self, system_wide_role=None, context=None):
         """
         Set jwt token in cookies
         """
@@ -52,6 +70,7 @@ class APITestMixin(JwtMixin, APITestCase):
         super(APITestMixin, self).setUp()
         self.user = UserFactory(is_staff=True)
         self.client.login(username=self.user.username, password=USER_PASSWORD)
+        self.set_jwt_cookie(ENTERPRISE_CATALOG_ADMIN_ROLE)
 
     def set_up_non_staff(self):
         """
@@ -60,6 +79,15 @@ class APITestMixin(JwtMixin, APITestCase):
         self.client.logout()
         non_staff_user = UserFactory()
         self.client.login(username=non_staff_user.username, password=USER_PASSWORD)
+
+    def set_up_non_catalog_admin(self):
+        """
+        Helpr for logging in as a user that does not have the appropriate role(s) in the JWT
+        """
+        self.client.logout()
+        non_staff_user = UserFactory()
+        self.client.login(username=non_staff_user.username, password=USER_PASSWORD)
+        self.set_jwt_cookie('invalid_role')
 
     def assert_correct_contains_response(self, url, expected_value):
         """

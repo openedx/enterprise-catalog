@@ -5,7 +5,11 @@ from os.path import abspath, dirname, join
 
 from corsheaders.defaults import default_headers as corsheaders_default_headers
 
-from enterprise_catalog.apps.catalog.constants import ENTERPRISE_CATALOG_ADMIN_ROLE
+from enterprise_catalog.apps.catalog.constants import (
+    ENTERPRISE_CATALOG_ADMIN_ROLE,
+    ENTERPRISE_ADMIN_ROLE,
+    ENTERPRISE_OPERATOR_ROLE,
+)
 from enterprise_catalog.settings.utils import get_env_setting, get_logger_config
 
 # PATH vars
@@ -211,7 +215,7 @@ BACKEND_SERVICE_EDX_OAUTH2_KEY = 'enterprise-catalog-backend-service-key'
 BACKEND_SERVICE_EDX_OAUTH2_SECRET = 'enterprise-catalog-service-secret'
 
 JWT_AUTH = {
-    'JWT_ISSUER': 'http://127.0.0.1:8000/oauth2',
+    'JWT_ISSUER': 'http://127.0.0.1:18000/oauth2',
     'JWT_ALGORITHM': 'HS256',
     'JWT_VERIFY_EXPIRATION': True,
     'JWT_PAYLOAD_GET_USERNAME_HANDLER': lambda d: d.get('preferred_username'),
@@ -221,6 +225,17 @@ JWT_AUTH = {
     'JWT_AUTH_COOKIE_HEADER_PAYLOAD': 'edx-jwt-cookie-header-payload',
     'JWT_AUTH_COOKIE_SIGNATURE': 'edx-jwt-cookie-signature',
     'JWT_AUTH_REFRESH_COOKIE': 'edx-jwt-refresh-cookie',
+    'JWT_SECRET_KEY': 'SET-ME-PLEASE',
+    # JWT_ISSUERS enables token decoding for multiple issuers (Note: This is not a native DRF-JWT field)
+    # We use it to allow different values for the 'ISSUER' field, but keep the same SECRET_KEY and
+    # AUDIENCE values across all issuers.
+    'JWT_ISSUERS': [
+        {
+            'AUDIENCE': 'SET-ME-PLEASE',
+            'ISSUER': 'http://localhost:18000/oauth2',
+            'SECRET_KEY': 'SET-ME-PLEASE'
+        },
+    ],
 }
 
 # Request the user's permissions in the ID token
@@ -311,4 +326,6 @@ DISCOVERY_SERVICE_API_URL = os.environ.get('DISCOVERY_SERVICE_API_URL', '')
 # Set up system-to-feature roles mapping for edx-rbac
 SYSTEM_TO_FEATURE_ROLE_MAPPING = {
     ENTERPRISE_CATALOG_ADMIN_ROLE: [ENTERPRISE_CATALOG_ADMIN_ROLE],
+    ENTERPRISE_ADMIN_ROLE: [ENTERPRISE_CATALOG_ADMIN_ROLE],
+    ENTERPRISE_OPERATOR_ROLE: [ENTERPRISE_CATALOG_ADMIN_ROLE],
 }
