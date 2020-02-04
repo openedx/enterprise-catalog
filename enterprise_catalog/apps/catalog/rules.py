@@ -5,11 +5,15 @@ from __future__ import absolute_import, unicode_literals
 
 import crum
 import rules
-from edx_rbac.utils import request_user_has_implicit_access_via_jwt, user_has_access_via_database
-from edx_rest_framework_extensions.auth.jwt.authentication import get_decoded_jwt_from_auth
+from edx_rbac.utils import request_user_has_implicit_access_via_jwt
+from edx_rest_framework_extensions.auth.jwt.authentication import (
+    get_decoded_jwt_from_auth,
+)
 from edx_rest_framework_extensions.auth.jwt.cookies import get_decoded_jwt
 
-from enterprise_catalog.apps.catalog.constants import ENTERPRISE_CATALOG_ADMIN_ROLE
+from enterprise_catalog.apps.catalog.constants import (
+    ENTERPRISE_CATALOG_ADMIN_ROLE,
+)
 
 
 @rules.predicate

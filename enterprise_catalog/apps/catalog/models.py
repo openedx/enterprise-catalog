@@ -1,11 +1,9 @@
 import collections
-from uuid import uuid4
 from logging import getLogger
+from uuid import uuid4
 
-from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext as _
-from edx_rbac.models import UserRole, UserRoleAssignment
 from jsonfield.fields import JSONField
 from model_utils.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
@@ -21,6 +19,7 @@ from enterprise_catalog.apps.catalog.utils import (
     get_content_type,
     get_parent_content_key,
 )
+
 
 LOGGER = getLogger(__name__)
 

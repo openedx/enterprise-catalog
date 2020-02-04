@@ -2,21 +2,26 @@
 """Broadly-useful mixins for use in automated tests."""
 from __future__ import absolute_import
 
-import jwt 
-
+import jwt
 from django.conf import settings
 from django.test.client import RequestFactory
 from edx_rest_framework_extensions.auth.jwt.cookies import jwt_cookie_name
-from edx_rest_framework_extensions.auth.jwt.tests.utils import generate_jwt_token, generate_unversioned_payload
+from edx_rest_framework_extensions.auth.jwt.tests.utils import (
+    generate_jwt_token,
+    generate_unversioned_payload,
+)
 from rest_framework.test import APITestCase
 
-from enterprise_catalog.apps.catalog.constants import ENTERPRISE_CATALOG_ADMIN_ROLE
+from enterprise_catalog.apps.catalog.constants import (
+    ENTERPRISE_CATALOG_ADMIN_ROLE,
+)
 from enterprise_catalog.apps.catalog.tests.factories import (
     USER_PASSWORD,
     UserFactory,
 )
 
-class JwtMixin(object):
+
+class JwtMixin():
     """ Mixin with JWT-related helper functions. """
     JWT_SECRET_KEY = settings.JWT_AUTH['JWT_SECRET_KEY']
     issuer = settings.JWT_AUTH['JWT_ISSUERS'][0]['ISSUER']

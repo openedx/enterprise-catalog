@@ -202,7 +202,7 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
         response = self.client.post(url, self.new_catalog_data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_post_unauthorized_non_staff(self):
+    def test_post_unauthorized_non_catalog_admin(self):
         """
         Verify the viewset rejects post for non-staff users
         """
