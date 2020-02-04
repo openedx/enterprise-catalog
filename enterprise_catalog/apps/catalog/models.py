@@ -1,4 +1,5 @@
 import collections
+from logging import getLogger
 from uuid import uuid4
 
 from django.db import models
@@ -18,6 +19,9 @@ from enterprise_catalog.apps.catalog.utils import (
     get_content_type,
     get_parent_content_key,
 )
+
+
+LOGGER = getLogger(__name__)
 
 
 class CatalogQuery(models.Model):

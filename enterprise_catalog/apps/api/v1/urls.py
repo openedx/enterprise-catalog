@@ -2,8 +2,6 @@
 """
 URL definitions for enterprise catalog API version 1.
 """
-from __future__ import absolute_import, unicode_literals
-
 from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 
@@ -19,8 +17,9 @@ router.register(r'enterprise-customer', views.EnterpriseCustomerViewSet, basenam
 urlpatterns = [
     url(
         r'^enterprise-catalog/(?P<uuid>[\S]+)/refresh_metadata',
-        views.EnterpriseCatalogRefreshDataFromDiscovery.as_view(),
+        views.EnterpriseCatalogRefreshDataFromDiscovery.as_view({'post': 'post'}),
         name='update-enterprise-catalog'
     ),
 ]
+
 urlpatterns += router.urls

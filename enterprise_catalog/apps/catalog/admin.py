@@ -1,18 +1,16 @@
-from django import forms
 from django.contrib import admin
-from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.utils.html import format_html
 
 from enterprise_catalog.apps.catalog.constants import (
     admin_model_changes_allowed,
 )
+from enterprise_catalog.apps.catalog.forms import CatalogQueryForm
 from enterprise_catalog.apps.catalog.models import (
     CatalogQuery,
     ContentMetadata,
     EnterpriseCatalog,
 )
-from enterprise_catalog.apps.catalog.utils import get_content_filter_hash
 
 
 class UnchangeableMixin(admin.ModelAdmin):
@@ -42,19 +40,6 @@ class UnchangeableMixin(admin.ModelAdmin):
 class ContentMetadataAdmin(UnchangeableMixin):
     """ Admin configuration for the custom ContentMetadata model. """
     list_display = ('id', 'content_key', 'content_type',)
-
-
-class CatalogQueryForm(forms.ModelForm):
-    class Meta:
-        model = CatalogQuery
-        fields = ('content_filter',)
-
-    def clean_content_filter(self):
-        content_filter = self.cleaned_data['content_filter']
-        content_filter_hash = get_content_filter_hash(content_filter)
-        if CatalogQuery.objects.filter(content_filter_hash=content_filter_hash).exists():
-            raise ValidationError('Catalog Query with this Content filter already exists.')
-        return content_filter
 
 
 @admin.register(CatalogQuery)

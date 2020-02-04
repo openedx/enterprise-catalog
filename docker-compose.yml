@@ -27,6 +27,7 @@ services:
     container_name: enterprise.catalog.app
     volumes:
       - .:/edx/app/enterprise_catalog/enterprise_catalog
+      - ../src:/edx/src:cached
     command: bash -c 'while true; do python /edx/app/enterprise_catalog/enterprise_catalog/manage.py runserver 0.0.0.0:18160; sleep 2; done'
     ports:
       - "18160:18160"
