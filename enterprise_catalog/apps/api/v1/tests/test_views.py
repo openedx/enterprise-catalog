@@ -310,23 +310,23 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
         response = self.client.post(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    # def test_refresh_catalog_on_get_returns_405_not_allowed(self):
-    #     """
-    #     Verify the refresh_metadata endpoint does not update the catalog metadata with a get request
-    #     """
-    #     url = reverse('api:v1:update-enterprise-catalog', kwargs={'uuid': self.enterprise_catalog.uuid})
-    #     response = self.client.get(url)
-    #     self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+    def test_refresh_catalog_on_get_returns_405_not_allowed(self):
+        """
+        Verify the refresh_metadata endpoint does not update the catalog metadata with a get request
+        """
+        url = reverse('api:v1:update-enterprise-catalog', kwargs={'uuid': self.enterprise_catalog.uuid})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    # def test_refresh_catalog_on_invalid_uuid_returns_400_bad_request(self):
-    #     """
-    #     Verify the refresh_metadata endpoint returns an HTTP_400_BAD_REQUEST status when passed an invalid ID
-    #     """
-    #     catalog_uuid = self.enterprise_catalog.uuid
-    #     EnterpriseCatalog.objects.all().delete()
-    #     url = reverse('api:v1:update-enterprise-catalog', kwargs={'uuid': catalog_uuid})
-    #     response = self.client.post(url)
-    #     self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+    def test_refresh_catalog_on_invalid_uuid_returns_400_bad_request(self):
+        """
+        Verify the refresh_metadata endpoint returns an HTTP_400_BAD_REQUEST status when passed an invalid ID
+        """
+        catalog_uuid = self.enterprise_catalog.uuid
+        EnterpriseCatalog.objects.all().delete()
+        url = reverse('api:v1:update-enterprise-catalog', kwargs={'uuid': catalog_uuid})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
 class EnterpriseCustomerViewSetTests(APITestMixin):
