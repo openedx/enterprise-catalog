@@ -1,8 +1,6 @@
 """
 Rules needed to restrict access to the enterprise catalog service.
 """
-from __future__ import absolute_import, unicode_literals
-
 import crum
 import rules
 from edx_rbac.utils import request_user_has_implicit_access_via_jwt
