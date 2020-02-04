@@ -109,7 +109,7 @@ class EnterpriseCatalogRefreshDataFromDiscovery(BaseViewSet, APIView):
         return Response({'async_task_id': async_task.task_id}, status=HTTP_200_OK)
 
 
-class EnterpriseCustomerViewSet(BaseViewSet, viewsets.ViewSet):
+class EnterpriseCustomerViewSet(BaseViewSet):
     """
     Viewset for operations on enterprise customers.
 
