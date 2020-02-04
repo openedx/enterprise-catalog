@@ -26,7 +26,7 @@ from enterprise_catalog.apps.catalog.models import (
 )
 
 
-class EnterpriseCatalogBaseViewSet(PermissionRequiredMixin, viewsets.ViewSet):
+class BaseViewSet(PermissionRequiredMixin, viewsets.ViewSet):
     """
     Base class for all enterprise catalog view sets.
     """
@@ -35,7 +35,7 @@ class EnterpriseCatalogBaseViewSet(PermissionRequiredMixin, viewsets.ViewSet):
     permission_required = 'catalog.has_admin_access'
 
 
-class EnterpriseCatalogViewSet(EnterpriseCatalogBaseViewSet, viewsets.ModelViewSet):
+class EnterpriseCatalogViewSet(BaseViewSet, viewsets.ModelViewSet):
     """ View for CRUD operations on Enterprise Catalogs """
     queryset = EnterpriseCatalog.objects.all().order_by('created')
     renderer_classes = [JSONRenderer, XMLRenderer]
@@ -91,7 +91,7 @@ class EnterpriseCatalogViewSet(EnterpriseCatalogBaseViewSet, viewsets.ModelViewS
         return Response(metadata)
 
 
-class EnterpriseCatalogRefreshDataFromDiscovery(EnterpriseCatalogBaseViewSet, APIView):
+class EnterpriseCatalogRefreshDataFromDiscovery(BaseViewSet, APIView):
     """
     View to update metadata in Catalog with most recent data from Discovery service
     """
@@ -105,7 +105,7 @@ class EnterpriseCatalogRefreshDataFromDiscovery(EnterpriseCatalogBaseViewSet, AP
         return Response({'async_task_id': async_task.task_id}, status=HTTP_200_OK)
 
 
-class EnterpriseCustomerViewSet(EnterpriseCatalogBaseViewSet, viewsets.ViewSet):
+class EnterpriseCustomerViewSet(BaseViewSet, viewsets.ViewSet):
     """
     Viewset for operations on enterprise customers.
 
