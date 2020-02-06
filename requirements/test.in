@@ -11,4 +11,3 @@ mock<4
 pytest-cov
 pytest-django
 ddt
-pathlib2

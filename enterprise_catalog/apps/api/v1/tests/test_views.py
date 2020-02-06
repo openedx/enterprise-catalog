@@ -301,7 +301,7 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
         self.assertEqual(uuid.UUID(response.json()['enterprise_customer']), self.enterprise_catalog.enterprise_uuid)
         self.assertEqual(response.json()['results'], [json_metadata_1, json_metadata_2])
 
-    @override_settings(CELERY_ALWAYS_EAGER=True)
+    @override_settings(task_always_eager=True)
     def test_refresh_catalog_on_post_returns_200_ok(self):
         """
         Verify the refresh_metadata endpoint successfully updates the catalog metadata with a post request
