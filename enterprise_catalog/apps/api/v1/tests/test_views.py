@@ -306,6 +306,8 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
         """
         Verify the refresh_metadata endpoint successfully updates the catalog metadata with a post request
         """
+        import celery
+        print(celery.VERSION_BANNER)
         url = reverse('api:v1:update-enterprise-catalog', kwargs={'uuid': self.enterprise_catalog.uuid})
         response = self.client.post(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
