@@ -38,7 +38,7 @@ django==1.11.28
 djangorestframework-jwt==1.11.0
 djangorestframework-xml==1.4.0
 djangorestframework==3.11.0
-edx-auth-backends==3.0.0
+edx-auth-backends==3.0.2
 edx-django-release-util==0.3.6
 edx-django-utils==2.0.4
 edx-drf-extensions==2.4.6
@@ -62,7 +62,7 @@ kombu==3.0.37
 lazy-object-proxy==1.4.3
 markupsafe==1.1.1
 mccabe==0.6.1
-mock==4.0.1
+mock==3.0.5
 more-itertools==8.2.0
 mysqlclient==1.4.6
 newrelic==5.6.0.135
