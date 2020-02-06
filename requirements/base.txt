@@ -4,9 +4,10 @@
 #
 #    make upgrade
 #
-amqp==2.5.2               # via kombu
-billiard==3.6.2.0         # via celery
-celery==4.4.0
+amqp==1.4.9               # via kombu
+anyjson==0.3.3            # via kombu
+billiard==3.3.0.23        # via celery
+celery==3.1.26.post2
 certifi==2019.11.28       # via requests
 chardet==3.0.4            # via requests
 coreapi==2.3.3            # via django-rest-swagger, openapi-codec
@@ -23,7 +24,7 @@ django==1.11.28
 djangorestframework-jwt==1.11.0  # via edx-drf-extensions
 djangorestframework-xml==1.4.0
 djangorestframework==3.11.0
-edx-auth-backends==2.0.2
+edx-auth-backends==3.0.0
 edx-django-release-util==0.3.6
 edx-django-utils==2.0.4   # via edx-drf-extensions
 edx-drf-extensions==2.4.6
@@ -32,11 +33,10 @@ edx-rbac==1.0.5
 edx-rest-api-client==1.9.2
 future==0.18.2            # via pyjwkest
 idna==2.8                 # via requests
-importlib-metadata==1.5.0  # via kombu
 itypes==1.1.0             # via coreapi
 jinja2==2.11.1            # via coreschema
 jsonfield==2.0.2
-kombu==4.6.7              # via celery
+kombu==3.0.37             # via celery
 markupsafe==1.1.1         # via jinja2
 mysqlclient==1.4.6
 newrelic==5.6.0.135       # via edx-django-utils
@@ -45,7 +45,7 @@ openapi-codec==1.3.2      # via django-rest-swagger
 pbr==5.4.4                # via stevedore
 psutil==1.2.1             # via edx-django-utils, edx-drf-extensions
 pycryptodomex==3.9.6      # via pyjwkest
-pyjwkest==1.3.2           # via edx-drf-extensions, social-auth-core
+pyjwkest==1.3.2           # via edx-drf-extensions
 pyjwt==1.7.1              # via djangorestframework-jwt, edx-auth-backends, edx-rest-api-client, social-auth-core
 pymongo==3.10.1           # via edx-opaque-keys
 python-dateutil==2.8.1    # via edx-drf-extensions
@@ -61,10 +61,9 @@ semantic-version==2.8.4   # via edx-drf-extensions
 simplejson==3.17.0        # via django-rest-swagger
 six==1.14.0               # via django-extensions, django-simple-history, django-waffle, edx-auth-backends, edx-django-release-util, edx-drf-extensions, edx-opaque-keys, edx-rbac, pyjwkest, python-dateutil, social-auth-app-django, social-auth-core, stevedore
 slumber==0.7.1            # via edx-rest-api-client
-social-auth-app-django==1.2.0  # via edx-auth-backends
-social-auth-core[openidconnect]==1.7.0  # via edx-auth-backends, social-auth-app-django
+social-auth-app-django==3.1.0  # via edx-auth-backends
+social-auth-core==3.2.0   # via edx-auth-backends, social-auth-app-django
 stevedore==1.31.0         # via edx-opaque-keys
 uritemplate==3.0.1        # via coreapi
 urllib3==1.25.8           # via requests
-vine==1.3.0               # via amqp, celery
 zipp==1.1.0
