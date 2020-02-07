@@ -3,7 +3,6 @@ from collections import OrderedDict
 from unittest import mock
 
 from django.db import IntegrityError
-# from django.test import override_settings
 from rest_framework import status
 from rest_framework.reverse import reverse
 
@@ -302,7 +301,6 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
         self.assertEqual(uuid.UUID(response.json()['enterprise_customer']), self.enterprise_catalog.enterprise_uuid)
         self.assertEqual(response.json()['results'], [json_metadata_1, json_metadata_2])
 
-    # @override_settings(CELERY_ALWAYS_EAGER=True, BROKER_BACKEND='memory')
     @mock.patch('enterprise_catalog.apps.api.v1.views.update_catalog_metadata_task.delay')
     def test_refresh_catalog_on_post_returns_200_ok(self, mock_task):
         """
