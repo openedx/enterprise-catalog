@@ -15,7 +15,7 @@ coreschema==0.0.4         # via coreapi
 defusedxml==0.6.0         # via djangorestframework-xml, python3-openid, social-auth-core
 django-cors-headers==3.2.1
 django-crum==0.7.5
-django-extensions==2.2.6
+django-extensions==2.2.7
 django-model-utils==3.2.0
 django-rest-swagger==2.2.0
 django-simple-history==2.8.0
@@ -24,7 +24,7 @@ django==1.11.28
 djangorestframework-jwt==1.11.0  # via edx-drf-extensions
 djangorestframework-xml==1.4.0
 djangorestframework==3.11.0
-edx-auth-backends==3.0.0
+edx-auth-backends==3.0.2
 edx-django-release-util==0.3.6
 edx-django-utils==2.0.4   # via edx-drf-extensions
 edx-drf-extensions==2.4.6
