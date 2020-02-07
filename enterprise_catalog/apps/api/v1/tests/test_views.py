@@ -1,8 +1,9 @@
 import uuid
 from collections import OrderedDict
+from unittest import mock
 
 from django.db import IntegrityError
-from django.test import override_settings
+# from django.test import override_settings
 from rest_framework import status
 from rest_framework.reverse import reverse
 
@@ -301,11 +302,14 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
         self.assertEqual(uuid.UUID(response.json()['enterprise_customer']), self.enterprise_catalog.enterprise_uuid)
         self.assertEqual(response.json()['results'], [json_metadata_1, json_metadata_2])
 
-    @override_settings(CELERY_ALWAYS_EAGER=True, BROKER_BACKEND='memory')
-    def test_refresh_catalog_on_post_returns_200_ok(self):
+    # @override_settings(CELERY_ALWAYS_EAGER=True, BROKER_BACKEND='memory')
+    @mock.patch('enterprise_catalog.apps.api.v1.views.update_catalog_metadata_task.delay')
+    def test_refresh_catalog_on_post_returns_200_ok(self, mock_task):
         """
         Verify the refresh_metadata endpoint successfully updates the catalog metadata with a post request
         """
+        mock_task.return_value = mock.Mock()
+        mock_task.return_value.task_id = 'deadbeef-0123456789-deadbeef'
         url = reverse('api:v1:update-enterprise-catalog', kwargs={'uuid': self.enterprise_catalog.uuid})
         response = self.client.post(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
