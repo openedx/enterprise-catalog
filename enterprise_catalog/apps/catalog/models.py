@@ -219,6 +219,57 @@ class ContentMetadata(TimeStampedModel):
             )
         )
 
+def associate_content_metadata_with_query(metadata, catalog_query):
+    """
+    get_or_create a content metadata object for entry in metadata
+    and then associate that object with the catalog_query provided.
+
+    metadata: Dictionary containing metadata
+    catalog_query: CatalogQuery object
+
+    Returns set of content_keys
+    """
+    content_keys = set()
+    for entry in metadata.get('results', []):
+        content_key = get_content_key(entry)
+        defaults = {
+            'content_key': content_key,
+            'parent_content_key': get_parent_content_key(entry),
+            'content_type': get_content_type(entry),
+        }
+        cm, __ = ContentMetadata.objects.update_or_create(
+            json_metadata=entry,
+            defaults=defaults,
+        )
+        LOGGER.info(
+            'Associating content_metadata %s with catalog_query %s.',
+            cm,
+            catalog_query
+        )
+        catalog_query.contentmetadata_set.add(cm)
+        content_keys.add(content_key)
+    return content_keys
+
+
+def unassociate_content_metadata_from_catalog_query(content_keys, catalog_query):
+    """
+    content_keys: Set of content keys
+    catalog_query: CatalogQuery object
+
+    Remove association of content_metadata objects from catalog_query if
+    the content_metadata object does not have a content_key included in the
+    content_keys set provided.
+    """
+
+    for cm in catalog_query.contentmetadata_set.all():
+        if cm.content_key not in content_keys:
+            LOGGER.info(
+                'Removing association for content_metadata %s with catalog_query %s.',
+                cm,
+                catalog_query
+            )
+            catalog_query.contentmetadata_set.remove(cm)
+
 
 def update_contentmetadata_from_discovery(catalog_uuid):
     """
@@ -230,15 +281,12 @@ def update_contentmetadata_from_discovery(catalog_uuid):
     client = DiscoveryApiClient()
 
     catalog = EnterpriseCatalog.objects.get(uuid=catalog_uuid)
-    metadata = client.get_metadata_by_query(catalog.catalog_query.content_filter)
+    catalog_query = catalog.catalog_query
+    metadata = client.get_metadata_by_query(catalog_query.content_filter)
 
-    for entry in metadata.get('results', []):
-        defaults = {
-            'content_key': get_content_key(entry),
-            'parent_content_key': get_parent_content_key(entry),
-            'content_type': get_content_type(entry),
-        }
-        ContentMetadata.objects.update_or_create(
-            json_metadata=entry,
-            defaults=defaults,
-        )
+    content_keys = associate_content_metadata_with_query(metadata, catalog_query)
+
+    unassociate_content_metadata_from_catalog_query(content_keys, catalog_query)
+    
+
+
