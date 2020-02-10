@@ -4,8 +4,12 @@ from django.db import IntegrityError
 from rest_framework import serializers
 
 from enterprise_catalog.apps.api.tasks import update_catalog_metadata_task
-from enterprise_catalog.apps.catalog.models import CatalogQuery, EnterpriseCatalog
+from enterprise_catalog.apps.catalog.models import (
+    CatalogQuery,
+    EnterpriseCatalog,
+)
 from enterprise_catalog.apps.catalog.utils import get_content_filter_hash
+
 
 logger = logging.getLogger(__name__)
 

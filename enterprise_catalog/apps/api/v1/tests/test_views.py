@@ -1,15 +1,18 @@
 import uuid
 from collections import OrderedDict
 
+import mock
 from django.db import IntegrityError
 #from django.test import override_settings
 from rest_framework import status
 from rest_framework.reverse import reverse
 
-import mock
 from enterprise_catalog.apps.api.v1.tests.mixins import APITestMixin
 from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
-from enterprise_catalog.apps.catalog.tests.factories import ContentMetadataFactory, EnterpriseCatalogFactory
+from enterprise_catalog.apps.catalog.tests.factories import (
+    ContentMetadataFactory,
+    EnterpriseCatalogFactory,
+)
 
 
 class EnterpriseCatalogViewSetTests(APITestMixin):
