@@ -234,11 +234,12 @@ def associate_content_metadata_with_query(metadata, catalog_query):
         content_key = get_content_key(entry)
         defaults = {
             'content_key': content_key,
+            'json_metadata': entry,
             'parent_content_key': get_parent_content_key(entry),
             'content_type': get_content_type(entry),
         }
         cm, __ = ContentMetadata.objects.update_or_create(
-            json_metadata=entry,
+            content_key=content_key,
             defaults=defaults,
         )
         LOGGER.info(
