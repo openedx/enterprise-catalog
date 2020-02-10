@@ -287,6 +287,3 @@ def update_contentmetadata_from_discovery(catalog_uuid):
     content_keys = associate_content_metadata_with_query(metadata, catalog_query)
 
     unassociate_content_metadata_from_catalog_query(content_keys, catalog_query)
-    
-
-
