@@ -1,8 +1,6 @@
 import crum
-from django.contrib.auth import mixins
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
-from edx_rbac.decorators import permission_required
 from edx_rbac.mixins import PermissionRequiredMixin
 from edx_rest_framework_extensions.auth.jwt.authentication import (
     JwtAuthentication,
@@ -24,11 +22,7 @@ from enterprise_catalog.apps.api.v1.serializers import (
     EnterpriseCatalogCreateSerializer,
     EnterpriseCatalogSerializer,
 )
-from enterprise_catalog.apps.api.v1.utils import (
-    unquote_course_keys,
-    get_enterprise_uuid_by_catalog_uuid,
-    get_enterprise_uuid_from_request_data,
-)
+from enterprise_catalog.apps.api.v1.utils import unquote_course_keys
 from enterprise_catalog.apps.catalog.models import (
     ContentMetadata,
     EnterpriseCatalog,

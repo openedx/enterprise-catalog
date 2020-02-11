@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 """Broadly-useful mixins for use in automated tests."""
 
-import jwt
 import uuid
-from django.conf import settings
+
 from django.test.client import RequestFactory
 from edx_rest_framework_extensions.auth.jwt.cookies import jwt_cookie_name
 from edx_rest_framework_extensions.auth.jwt.tests.utils import (
@@ -13,17 +12,17 @@ from edx_rest_framework_extensions.auth.jwt.tests.utils import (
 from rest_framework.test import APITestCase
 
 from enterprise_catalog.apps.catalog.constants import (
-    SYSTEM_ENTERPRISE_ADMIN_ROLE,
     ENTERPRISE_CATALOG_ADMIN_ROLE,
-)
-from enterprise_catalog.apps.catalog.tests.factories import (
-    EnterpriseCatalogRoleAssignmentFactory,
-    USER_PASSWORD,
-    UserFactory,
+    SYSTEM_ENTERPRISE_ADMIN_ROLE,
 )
 from enterprise_catalog.apps.catalog.models import (
     EnterpriseCatalogFeatureRole,
     EnterpriseCatalogRoleAssignment,
+)
+from enterprise_catalog.apps.catalog.tests.factories import (
+    USER_PASSWORD,
+    EnterpriseCatalogRoleAssignmentFactory,
+    UserFactory,
 )
 
 

@@ -9,13 +9,7 @@ from rest_framework import status
 from rest_framework.reverse import reverse
 
 from enterprise_catalog.apps.api.v1.tests.mixins import APITestMixin
-from enterprise_catalog.apps.catalog.constants import (
-    SYSTEM_ENTERPRISE_ADMIN_ROLE
-)
-from enterprise_catalog.apps.catalog.models import (
-    EnterpriseCatalog,
-    EnterpriseCatalogRoleAssignment,
-)
+from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
 from enterprise_catalog.apps.catalog.tests.factories import (
     ContentMetadataFactory,
     EnterpriseCatalogFactory,
@@ -70,10 +64,10 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
         results = response.data['results']
         self.assertEqual(uuid.UUID(results[0]['uuid']), self.enterprise_catalog.uuid)
         self.assertEqual(uuid.UUID(results[1]['uuid']), second_enterprise_catalog.uuid)
-    
+
     def test_list_unauthorized(self):
         """
-        Verify the viewset rejects list for all users other than superusers 
+        Verify the viewset rejects list for all users other than superusers
         """
         url = reverse('api:v1:enterprise-catalog-list')
         response = self.client.get(url)
@@ -307,13 +301,13 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
 
     def test_contains_content_items_implicit_access(self):
         """
-        Verify the contains_content_items endpoint responds with 200 OK for 
+        Verify the contains_content_items endpoint responds with 200 OK for
         user with implicit JWT access
         """
         self.remove_role_assignments()
         url = self._get_contains_content_base_url(self.enterprise_catalog) + '?course_run_ids=fakeX'
         self.assert_correct_contains_response(url, False)
-    
+
     def test_contains_content_items_no_catalog_query(self):
         """
         Verify the contains_content_items endpoint returns False if there is no associated catalog query
@@ -385,14 +379,14 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
 
     def test_get_content_metadata_implicit_access(self):
         """
-        Verify the get_content_metadata endpoint responds with 200 OK for 
+        Verify the get_content_metadata endpoint responds with 200 OK for
         user with implicit JWT access
         """
         self.remove_role_assignments()
         url = self._get_content_metadata_url(self.enterprise_catalog)
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-    
+
     def test_get_content_metadata_no_catalog_query(self):
         """
         Verify the get_content_metadata endpoint returns no results if the catalog has no catalog query
@@ -500,7 +494,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
 
     def test_contains_content_items_implicit_access(self):
         """
-        Verify the contains_content_items endpoint responds with 200 OK for 
+        Verify the contains_content_items endpoint responds with 200 OK for
         user with implicit JWT access
         """
         self.remove_role_assignments()
