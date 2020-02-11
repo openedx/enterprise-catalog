@@ -278,7 +278,7 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
         Helper to construct the base url for the contains_content_items endpoint
         """
         return reverse('api:v1:enterprise-catalog-contains-content-items', kwargs={'uuid': enterprise_catalog.uuid})
-    
+
     def test_contains_content_items_no_params(self):
         """
         Verify the contains_content_items endpoint errors if no parameters are provided
