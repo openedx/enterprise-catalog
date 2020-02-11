@@ -1,15 +1,20 @@
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
+from edx_rbac.admin import UserRoleAssignmentAdmin
 
 from enterprise_catalog.apps.catalog.constants import (
     admin_model_changes_allowed,
 )
-from enterprise_catalog.apps.catalog.forms import CatalogQueryForm
+from enterprise_catalog.apps.catalog.forms import (
+    CatalogQueryForm,
+    EnterpriseCatalogRoleAssignmentAdminForm,
+)
 from enterprise_catalog.apps.catalog.models import (
     CatalogQuery,
     ContentMetadata,
     EnterpriseCatalog,
+    EnterpriseCatalogRoleAssignment,
 )
 
 
@@ -59,3 +64,26 @@ class EnterpriseCatalogAdmin(UnchangeableMixin):
         return format_html('<a href="{}">{}</a>', link, obj.catalog_query.content_filter_hash)
 
     get_catalog_query.short_description = 'Catalog Query'
+
+
+@admin.register(EnterpriseCatalogRoleAssignment)
+class EnterpriseDataRoleAssignmentAdmin(UnchangeableMixin, UserRoleAssignmentAdmin):
+    """
+    Django admin for EnterpriseCatalogRoleAssignment Model.
+    """
+    list_display = ('get_username', 'role', 'enterprise_id',)
+
+    def get_username(self, obj):
+        return obj.user.username
+
+    class Meta:
+        """
+        Meta class for EnterpriseDataRoleAssignmentAdmin.
+        """
+
+        model = EnterpriseCatalogRoleAssignment
+
+    fields = ('user', 'role', 'enterprise_id')
+    form = EnterpriseCatalogRoleAssignmentAdminForm
+
+    get_username.short_description = 'User'
