@@ -26,11 +26,11 @@ services:
       dockerfile: Dockerfile
     container_name: enterprise.catalog.app
     volumes:
-      - .:/edx/app/enterprise_catalog/enterprise_catalog
+      - .:/edx/app/enterprise_catalog
       - ../src:/edx/src:cached
-    command: bash -c 'while true; do python /edx/app/enterprise_catalog/enterprise_catalog/manage.py runserver 0.0.0.0:18160; sleep 2; done'
+    command: bash -c 'while true; do python /edx/app/enterprise_catalog/manage.py runserver 0.0.0.0:8160; sleep 2; done'
     ports:
-      - "18160:18160"
+      - "8160:8160"
     depends_on:
       - mysql
       - redis
@@ -39,6 +39,7 @@ services:
     # Allows attachment to this container using 'docker attach <containerID>'.
     stdin_open: true
     tty: true
+    user: root
     environment:
       DJANGO_SETTINGS_MODULE: enterprise_catalog.settings.devstack
       ENABLE_DJANGO_TOOLBAR: 1
