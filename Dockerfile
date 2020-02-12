@@ -10,7 +10,7 @@ EXPOSE 8160
 RUN useradd -m --shell /bin/false app
 USER app
 
-CMD gunicorn -c /edx/app/enterprise_catalog/docker_gunicorn_config.py enterprise_catalog.wsgi:application
+CMD gunicorn --bind=0.0.0.0:8000 --workers 2 --max-requests=1000 -c /edx/app/enterprise_catalog/docker_gunicorn_config.py enterprise_catalog.wsgi:application
 ADD . /edx/app/enterprise_catalog
 
 FROM app as worker
