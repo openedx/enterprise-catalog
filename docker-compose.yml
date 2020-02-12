@@ -28,9 +28,9 @@ services:
     volumes:
       - .:/edx/app/enterprise_catalog
       - ../src:/edx/src:cached
-    command: bash -c 'while true; do python /edx/app/enterprise_catalog/manage.py runserver 0.0.0.0:8160; sleep 2; done'
+    command: bash -c 'while true; do python /edx/app/enterprise_catalog/manage.py runserver 0.0.0.0:18160; sleep 2; done'
     ports:
-      - "8160:8160"
+      - "18160:18160"
     depends_on:
       - mysql
       - redis
