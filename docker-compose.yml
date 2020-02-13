@@ -43,14 +43,13 @@ services:
       CELERY_BROKER_HOSTNAME: edx.devstack.redis:6379
       CELERY_BROKER_VHOST: 0
       CELERY_BROKER_PASSWORD: password
-      CELERY_BROKER_URL: redis://:password@edx.devstack.redis:6379/0
       DJANGO_SETTINGS_MODULE: enterprise_catalog.settings.devstack
       ENABLE_DJANGO_TOOLBAR: 1
 
   worker:
     build:
       context: .
-    command: bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && celery -A enterprise_catalog worker -l info'
+    command: bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && celery -A enterprise_catalog worker -l debug'
     container_name: enterprise.catalog.worker
     depends_on:
       - mysql
@@ -60,7 +59,6 @@ services:
       CELERY_BROKER_HOSTNAME: edx.devstack.redis:6379
       CELERY_BROKER_VHOST: 0
       CELERY_BROKER_PASSWORD: password
-      CELERY_BROKER_URL: redis://:password@edx.devstack.redis:6379/0
       DJANGO_SETTINGS_MODULE: enterprise_catalog.settings.devstack
     networks:
       - devstack_default
@@ -86,7 +84,6 @@ services:
       CELERY_BROKER_HOSTNAME: edx.devstack.redis:6379
       CELERY_BROKER_VHOST: 0
       CELERY_BROKER_PASSWORD: password
-      CELERY_BROKER_URL: redis://:password@edx.devstack.redis:6379/0
       DJANGO_SETTINGS_MODULE: enterprise_catalog.settings.devstack
     networks:
       - devstack_default

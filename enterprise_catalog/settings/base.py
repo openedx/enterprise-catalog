@@ -279,7 +279,7 @@ CELERY_SEND_TASK_SENT_EVENT = True
 CELERYD_HIJACK_ROOT_LOGGER = False
 
 # Celery task routing configuration.
-# Only registrar workers should receive registrar tasks.
+# Only the enterprise-catalog worker should receive enterprise-catalog tasks.
 # Explicitly define these to avoid name collisions with other services
 # using the same broker and the standard default queue name of "celery".
 CELERY_DEFAULT_EXCHANGE = os.environ.get('CELERY_DEFAULT_EXCHANGE', 'enterprise_catalog')
@@ -295,7 +295,7 @@ CELERY_BROKER_HOSTNAME = os.environ.get('CELERY_BROKER_HOSTNAME', '')
 CELERY_BROKER_VHOST = os.environ.get('CELERY_BROKER_VHOST', '')
 CELERY_BROKER_USER = os.environ.get('CELERY_BROKER_USER', '')
 CELERY_BROKER_PASSWORD = os.environ.get('CELERY_BROKER_PASSWORD', '')
-CELERY_BROKER_URL = '{0}://{1}:{2}@{3}/{4}'.format(
+BROKER_URL = '{0}://{1}:{2}@{3}/{4}'.format(
     CELERY_BROKER_TRANSPORT,
     CELERY_BROKER_USER,
     CELERY_BROKER_PASSWORD,
