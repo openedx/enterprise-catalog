@@ -74,7 +74,7 @@ services:
   consumer:
     build:
       context: .
-    command: bash -c 'python3 /edx/app/enterprise_catalog/enterprise_catalog/manage.py run_consumer'
+    command: bash -c 'python3 /edx/app/enterprise_catalog/enterprise_catalog/apps/catalog/management/commands/run_consumer.py run_consumer'
     container_name: enterprise.catalog.consumer
     depends_on:
       - mysql
