@@ -27,6 +27,20 @@ class CatalogConsumer(ConsumerMixin):
         ]
 
     def on_message(self, body, message):
-        print(message)
-        print('RECEIVED MESSAGE: {0!r}'.format(body))
+        payload = message.payload
+        if message.delivery_info['routing_key'] == 'catalog.program.create':
+            print('CREATED PROGRAM!')
+            print(payload)
+        elif message.delivery_info['routing_key'] == 'catalog.program.update':
+            print('UPDATED PROGRAM!')
+            print(payload)
+        elif message.delivery_info['routing_key'] == 'catalog.program.delete':
+            print('DELETED PROGRAM!')
+            print(payload)
+        elif message.delivery_info['routing_key'] == 'catalog.course.update':
+            print('UPDATED COURSE!')
+            print(payload)
+        elif message.delivery_info['routing_key'] == 'catalog.courserun.update':
+            print('UPDATED COURSE RUN!')
+            print(payload)
         message.ack()

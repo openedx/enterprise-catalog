@@ -6,3 +6,5 @@ ADD requirements/ /edx/app/enterprise_catalog/enterprise_catalog/requirements/
 RUN make requirements
 ADD . /edx/app/enterprise_catalog/enterprise_catalog
 EXPOSE 18160
+EXPOSE 18161
+EXPOSE 18162

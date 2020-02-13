@@ -49,6 +49,7 @@ services:
   worker:
     build:
       context: .
+      dockerfile: Dockerfile
     command: bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && celery -A enterprise_catalog worker -l debug'
     container_name: enterprise.catalog.worker
     depends_on:
@@ -74,6 +75,7 @@ services:
   consumer:
     build:
       context: .
+      dockerfile: Dockerfile
     command: bash -c 'python3 /edx/app/enterprise_catalog/enterprise_catalog/manage.py run_consumer'
     container_name: enterprise.catalog.consumer
     depends_on:
@@ -89,6 +91,7 @@ services:
       - devstack_default
     ports:
       - "18162:18162"
+    # Allows attachment to this container using 'docker attach <containerID>'.
     stdin_open: true
     tty: true
     volumes:
