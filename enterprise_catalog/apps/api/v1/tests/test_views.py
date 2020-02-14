@@ -1,6 +1,7 @@
 import uuid
 from collections import OrderedDict
 
+import mock
 from django.db import IntegrityError
 #from django.test import override_settings
 from rest_framework import status
@@ -109,7 +110,8 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_patch(self):
+    @mock.patch('enterprise_catalog.apps.api.v1.serializers.update_catalog_metadata_task.delay')
+    def test_patch(self, mock_async_task):
         """
         Verify the viewset handles patching an enterprise catalog
         """
@@ -127,6 +129,7 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
             patched_catalog.publish_audit_enrollment_urls,
             self.enterprise_catalog.publish_audit_enrollment_urls,
         )
+        mock_async_task.assert_called_once()
 
     def test_patch_unauthorized_non_staff(self):
         """
@@ -148,7 +151,8 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
         response = self.client.patch(url, patch_data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_put(self):
+    @mock.patch('enterprise_catalog.apps.api.v1.serializers.update_catalog_metadata_task.delay')
+    def test_put(self, mock_async_task):
         """
         Verify the viewset handles replacing an enterprise catalog
         """
@@ -156,6 +160,7 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
         response = self.client.put(url, self.new_catalog_data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self._assert_correct_new_catalog_data(self.enterprise_catalog.uuid)  # The UUID should not have changed
+        mock_async_task.assert_called_once()
 
     def test_put_unauthorized_non_staff(self):
         """
@@ -175,7 +180,8 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
         response = self.client.put(url, self.new_catalog_data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_post(self):
+    @mock.patch('enterprise_catalog.apps.api.v1.serializers.update_catalog_metadata_task.delay')
+    def test_post(self, mock_async_task):
         """
         Verify the viewset handles creating an enterprise catalog
         """
@@ -183,8 +189,10 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
         response = self.client.post(url, self.new_catalog_data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self._assert_correct_new_catalog_data(self.new_catalog_uuid)
+        mock_async_task.assert_called_once()
 
-    def test_post_integrity_error(self):
+    @mock.patch('enterprise_catalog.apps.api.v1.serializers.update_catalog_metadata_task.delay')
+    def test_post_integrity_error(self, mock_async_task):
         """
         Verify the viewset raises error when creating a duplicate enterprise catalog
         """
@@ -192,6 +200,10 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
         self.client.post(url, self.new_catalog_data)
         with self.assertRaises(IntegrityError):
             self.client.post(url, self.new_catalog_data)
+        # Note: we're hitting the endpoint twice here, but this task should
+        # only be run once, as we should error from an integrity error the
+        # second time through
+        mock_async_task.assert_called_once()
 
     def test_post_unauthorized_non_staff(self):
         """
