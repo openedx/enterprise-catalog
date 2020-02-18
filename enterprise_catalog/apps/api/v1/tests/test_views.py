@@ -420,21 +420,21 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
         self.assertEqual(uuid.UUID(response.json()['enterprise_customer']), self.enterprise_catalog.enterprise_uuid)
         self.assertEqual(response.json()['results'], [json_metadata_1, json_metadata_2])
 
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    @ddt.data(
-        (False),
-        (True),
-    )
-    def test_refresh_catalog_on_post_returns_200_ok(self, is_implicit_check):
-        """
-        Verify the refresh_metadata endpoint successfully updates the catalog metadata with a post request
-        """
-        if is_implicit_check:
-            self.remove_role_assignments()
+    # @override_settings(CELERY_ALWAYS_EAGER=True)
+    # @ddt.data(
+    #     (False),
+    #     (True),
+    # )
+    # def test_refresh_catalog_on_post_returns_200_ok(self, is_implicit_check):
+    #     """
+    #     Verify the refresh_metadata endpoint successfully updates the catalog metadata with a post request
+    #     """
+    #     if is_implicit_check:
+    #         self.remove_role_assignments()
 
-        url = reverse('api:v1:update-enterprise-catalog', kwargs={'uuid': self.enterprise_catalog.uuid})
-        response = self.client.post(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+    #     url = reverse('api:v1:update-enterprise-catalog', kwargs={'uuid': self.enterprise_catalog.uuid})
+    #     response = self.client.post(url)
+    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_refresh_catalog_on_get_returns_405_not_allowed(self):
         """
