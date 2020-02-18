@@ -276,7 +276,7 @@ CELERY_SEND_EVENTS = True
 CELERY_SEND_TASK_SENT_EVENT = True
 
 # let logging work as configured:
-CELERYD_HIJACK_ROOT_LOGGER = False
+CELERYD_HIJACK_ROOT_LOGGER = True
 
 # Celery task routing configuration.
 # Only the enterprise-catalog worker should receive enterprise-catalog tasks.

@@ -22,6 +22,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: enterprise.catalog.app
+    hostname: app.catalog.enterprise
     volumes:
       - .:/edx/app/enterprise_catalog/enterprise_catalog
       - ../src:/edx/src:cached
@@ -50,7 +51,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && celery -A enterprise_catalog worker -l debug'
+    command: bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && celery -A enterprise_catalog worker -l DEBUG'
     container_name: enterprise.catalog.worker
     depends_on:
       - mysql
@@ -61,6 +62,7 @@ services:
       CELERY_BROKER_VHOST: 0
       CELERY_BROKER_PASSWORD: password
       DJANGO_SETTINGS_MODULE: enterprise_catalog.settings.devstack
+    hostname: worker.catalog.enterprise
     networks:
       - devstack_default
     ports:
@@ -87,6 +89,7 @@ services:
       CELERY_BROKER_VHOST: 0
       CELERY_BROKER_PASSWORD: password
       DJANGO_SETTINGS_MODULE: enterprise_catalog.settings.devstack
+    hostname: consumer.catalog.enterprise
     networks:
       - devstack_default
     ports:
