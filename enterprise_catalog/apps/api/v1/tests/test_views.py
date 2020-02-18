@@ -496,12 +496,13 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
     @mock.patch('enterprise_catalog.apps.api.v1.views.update_catalog_metadata_task.delay')
     def test_refresh_catalog_on_post_returns_200_ok(self, mock_task):
         """
-        Verify the refresh_metadata endpoint successfully updates the catalog metadata with a post request
+        Verify the refresh_metadata endpoint returns a status of 200 OK when hit with a valid UUID
         """
         mock_task.return_value = mock.Mock()
         mock_task.return_value.task_id = 'deadbeef-0123456789-deadbeef'
         url = reverse('api:v1:update-enterprise-catalog', kwargs={'uuid': self.enterprise_catalog.uuid})
         response = self.client.post(url)
+        mock_task.assert_called()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_refresh_catalog_on_get_returns_405_not_allowed(self):
