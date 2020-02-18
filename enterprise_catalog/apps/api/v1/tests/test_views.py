@@ -4,7 +4,7 @@ from collections import OrderedDict
 import ddt
 import mock
 from django.db import IntegrityError
-from django.test.utils import override_settings
+# from django.test.utils import override_settings
 from rest_framework import status
 from rest_framework.reverse import reverse
 
