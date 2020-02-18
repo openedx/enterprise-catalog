@@ -2,6 +2,7 @@
 """
 Tests for the edx-rbac rules predicates.
 """
+import uuid
 import ddt
 import mock
 
@@ -53,6 +54,16 @@ class TestCatalogRBACPermissions(APITestMixin):
     @ddt.unpack
     def test_has_implicit_access_no_context(self, permission, system_wide_role, get_current_request_mock):
         get_current_request_mock.return_value = self.get_request_with_jwt_cookie(system_wide_role)
+        assert not self.user.has_perm(permission, TEST_ENTERPRISE_UUID)
+
+    @mock.patch('enterprise_catalog.apps.catalog.rules.crum.get_current_request')
+    @ddt.data(
+        ('catalog.has_admin_access', SYSTEM_ENTERPRISE_CATALOG_ADMIN_ROLE),
+        ('catalog.has_admin_access', SYSTEM_ENTERPRISE_OPERATOR_ROLE),
+    )
+    @ddt.unpack
+    def test_has_implicit_access_incorrent_context(self, permission, system_wide_role, get_current_request_mock):
+        get_current_request_mock.return_value = self.get_request_with_jwt_cookie(system_wide_role, uuid.uuid4())
         assert not self.user.has_perm(permission, TEST_ENTERPRISE_UUID)
 
     @mock.patch('enterprise_catalog.apps.catalog.rules.crum.get_current_request')

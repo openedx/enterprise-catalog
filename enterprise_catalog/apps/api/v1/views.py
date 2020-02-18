@@ -53,7 +53,7 @@ class EnterpriseCatalogViewSet(BaseViewSet, viewsets.ModelViewSet):
         """
         Retrieves the apporpriate object to use during edx-rbac's permission checks.
 
-        This object is passed to the the rule predicate(s).
+        This object is passed to the rule predicate(s).
         """
         request_action = getattr(self, 'action', None)
         if request_action == 'create':
@@ -117,7 +117,7 @@ class EnterpriseCatalogRefreshDataFromDiscovery(BaseViewSet, APIView):
         """
         Retrieves the apporpriate object to use during edx-rbac's permission checks.
 
-        This object is passed to the the rule predicate(s).
+        This object is passed to the rule predicate(s).
         """
         uuid = self.kwargs.get('uuid')
         enterprise_catalog = get_object_or_404(EnterpriseCatalog, uuid=uuid)
@@ -142,7 +142,7 @@ class EnterpriseCustomerViewSet(BaseViewSet):
         """
         Retrieves the apporpriate object to use during edx-rbac's permission checks.
 
-        This object is passed to the the rule predicate(s).
+        This object is passed to the rule predicate(s).
         """
         return self.kwargs.get('enterprise_uuid')
 
