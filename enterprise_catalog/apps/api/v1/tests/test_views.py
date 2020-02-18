@@ -1,8 +1,8 @@
-import ddt
 import uuid
-import mock
-
 from collections import OrderedDict
+
+import ddt
+import mock
 from django.db import IntegrityError
 from django.test.utils import override_settings
 from rest_framework import status

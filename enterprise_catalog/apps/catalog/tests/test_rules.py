@@ -8,8 +8,8 @@ import mock
 from enterprise_catalog.apps.api.v1.tests.mixins import APITestMixin
 from enterprise_catalog.apps.catalog.constants import (
     SYSTEM_ENTERPRISE_ADMIN_ROLE,
-    SYSTEM_ENTERPRISE_OPERATOR_ROLE,
     SYSTEM_ENTERPRISE_CATALOG_ADMIN_ROLE,
+    SYSTEM_ENTERPRISE_OPERATOR_ROLE,
 )
 
 
