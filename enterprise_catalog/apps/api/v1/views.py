@@ -50,6 +50,11 @@ class EnterpriseCatalogViewSet(BaseViewSet, viewsets.ModelViewSet):
         return EnterpriseCatalogSerializer
 
     def get_permission_object(self):
+        """
+        Retrieves the apporpriate object to use during edx-rbac's permission checks.
+
+        This object is passed to the the rule predicate(s).
+        """
         request_action = getattr(self, 'action', None)
         if request_action == 'create':
             request = crum.get_current_request()
@@ -109,6 +114,11 @@ class EnterpriseCatalogRefreshDataFromDiscovery(BaseViewSet, APIView):
     View to update metadata in Catalog with most recent data from Discovery service
     """
     def get_permission_object(self):
+        """
+        Retrieves the apporpriate object to use during edx-rbac's permission checks.
+
+        This object is passed to the the rule predicate(s).
+        """
         uuid = self.kwargs.get('uuid')
         enterprise_catalog = get_object_or_404(EnterpriseCatalog, uuid=uuid)
         return str(enterprise_catalog.enterprise_uuid)
@@ -129,6 +139,11 @@ class EnterpriseCustomerViewSet(BaseViewSet):
     lookup_field = 'enterprise_uuid'
 
     def get_permission_object(self):
+        """
+        Retrieves the apporpriate object to use during edx-rbac's permission checks.
+
+        This object is passed to the the rule predicate(s).
+        """
         return self.kwargs.get('enterprise_uuid')
 
     @method_decorator(require_at_least_one_query_parameter('course_run_ids', 'program_uuids'))
