@@ -3,6 +3,7 @@
 Tests for the edx-rbac rules predicates.
 """
 import uuid
+
 import ddt
 import mock
 
