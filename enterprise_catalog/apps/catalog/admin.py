@@ -67,7 +67,7 @@ class EnterpriseCatalogAdmin(UnchangeableMixin):
 
 
 @admin.register(EnterpriseCatalogRoleAssignment)
-class EnterpriseDataRoleAssignmentAdmin(UnchangeableMixin, UserRoleAssignmentAdmin):
+class EnterpriseDataRoleAssignmentAdmin(UserRoleAssignmentAdmin):
     """
     Django admin for EnterpriseCatalogRoleAssignment Model.
     """

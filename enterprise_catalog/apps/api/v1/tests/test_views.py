@@ -576,7 +576,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         """
         self.remove_role_assignments()
         base_url = self._get_contains_content_base_url(enterprise_uuid=uuid.uuid4())
-        url =  base_url + '?course_run_ids=fakeX'
+        url = base_url + '?course_run_ids=fakeX'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 

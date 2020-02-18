@@ -62,7 +62,11 @@ class TestCatalogRBACPermissions(APITestMixin):
         ('catalog.has_admin_access', SYSTEM_ENTERPRISE_OPERATOR_ROLE),
     )
     @ddt.unpack
-    def test_has_implicit_access_incorrent_context(self, permission, system_wide_role, get_current_request_mock):
+    def test_has_implicit_access_incorrect_context(self, permission, system_wide_role, get_current_request_mock):
+        """
+        Verify the implicit permissions check fails when the JWT context (i.e., enterprise uuid) does not match
+        the context provided to `self.user.has_perm`.
+        """
         get_current_request_mock.return_value = self.get_request_with_jwt_cookie(system_wide_role, uuid.uuid4())
         assert not self.user.has_perm(permission, TEST_ENTERPRISE_UUID)
 
