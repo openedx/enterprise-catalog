@@ -11,7 +11,7 @@ from edx_rest_api_client.client import OAuthAPIClient
 
 class DiscoveryApiClient:
     """
-    Object builds an API client to make calls to the the Discovery Service.
+    Object builds an API client to make calls to the Discovery Service.
     """
     SEARCH_ALL_EXTENSION = 'search/all/'
     SEARCH_ALL_ENDPOINT = urljoin(settings.DISCOVERY_SERVICE_API_URL, SEARCH_ALL_EXTENSION)
