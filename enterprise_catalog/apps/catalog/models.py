@@ -4,6 +4,7 @@ from uuid import uuid4
 
 from django.db import models
 from django.utils.translation import gettext as _
+from edx_rbac.models import UserRole, UserRoleAssignment
 from jsonfield.fields import JSONField
 from model_utils.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
@@ -270,6 +271,60 @@ def unassociate_content_metadata_from_catalog_query(content_keys, catalog_query)
                 catalog_query
             )
             catalog_query.contentmetadata_set.remove(cm)
+
+
+class EnterpriseCatalogFeatureRole(UserRole):
+    """
+    User role definitions specific to Enterprise Catalog.
+     .. no_pii:
+    """
+
+    def __str__(self):
+        """
+        Return human-readable string representation.
+        """
+        return "EnterpriseCatalogFeatureRole(name={name})".format(name=self.name)
+
+    def __repr__(self):
+        """
+        Return uniquely identifying string representation.
+        """
+        return self.__str__()
+
+
+class EnterpriseCatalogRoleAssignment(UserRoleAssignment):
+    """
+    Model to map users to an EnterpriseCatalogFeatureRole.
+     .. no_pii:
+    """
+
+    role_class = EnterpriseCatalogFeatureRole
+    enterprise_id = models.UUIDField(blank=True, null=True, verbose_name='Enterprise Customer UUID')
+
+    def get_context(self):
+        """
+        Return the enterprise customer id or `*` if the user has access to all resources.
+        """
+        enterprise_id = '*'
+        if self.enterprise_id:
+            # converting the UUID('ee5e6b3a-069a-4947-bb8d-d2dbc323396c') to 'ee5e6b3a-069a-4947-bb8d-d2dbc323396c'
+            enterprise_id = str(self.enterprise_id)
+        return enterprise_id
+
+    def __str__(self):
+        """
+        Return human-readable string representation.
+        """
+        return "EnterpriseCatalogRoleAssignment(name={name}, user={user})".format(
+            name=self.role.name,  # pylint: disable=no-member
+            user=self.user.id,
+        )
+
+    def __repr__(self):
+        """
+        Return uniquely identifying string representation.
+        """
+        return self.__str__()
 
 
 def update_contentmetadata_from_discovery(catalog_uuid):
