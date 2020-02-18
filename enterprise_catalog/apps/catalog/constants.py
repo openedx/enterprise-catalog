@@ -20,6 +20,7 @@ CONTENT_TYPE_CHOICES = [
 COURSE_MODE_SORT_ORDER = ['verified', 'professional', 'no-id-professional', 'audit', 'honor']
 
 ENTERPRISE_CATALOG_ADMIN_ROLE = 'enterprise_catalog_admin'
+SYSTEM_ENTERPRISE_CATALOG_ADMIN_ROLE = 'enterprise_catalog_admin'
 SYSTEM_ENTERPRISE_ADMIN_ROLE = 'enterprise_admin'
 SYSTEM_ENTERPRISE_OPERATOR_ROLE = 'enterprise_openedx_operator'
 

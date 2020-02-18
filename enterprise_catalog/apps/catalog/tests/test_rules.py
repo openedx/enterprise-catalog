@@ -9,6 +9,7 @@ from enterprise_catalog.apps.api.v1.tests.mixins import APITestMixin
 from enterprise_catalog.apps.catalog.constants import (
     SYSTEM_ENTERPRISE_ADMIN_ROLE,
     SYSTEM_ENTERPRISE_OPERATOR_ROLE,
+    SYSTEM_ENTERPRISE_CATALOG_ADMIN_ROLE,
 )
 
 
@@ -25,8 +26,18 @@ class TestCatalogRBACPermissions(APITestMixin):
     @mock.patch('enterprise_catalog.apps.catalog.rules.crum.get_current_request')
     @ddt.data(
         ('catalog.has_admin_access', SYSTEM_ENTERPRISE_ADMIN_ROLE, TEST_ENTERPRISE_UUID),
-        ('catalog.has_admin_access', SYSTEM_ENTERPRISE_OPERATOR_ROLE, TEST_ENTERPRISE_UUID),
         ('catalog.has_admin_access', SYSTEM_ENTERPRISE_ADMIN_ROLE, ALL_ACCESS_CONTEXT),
+    )
+    @ddt.unpack
+    def test_has_no_implicit_access(self, permission, system_wide_role, context, get_current_request_mock):
+        get_current_request_mock.return_value = self.get_request_with_jwt_cookie(system_wide_role, context)
+        assert not self.user.has_perm(permission, TEST_ENTERPRISE_UUID)
+
+    @mock.patch('enterprise_catalog.apps.catalog.rules.crum.get_current_request')
+    @ddt.data(
+        ('catalog.has_admin_access', SYSTEM_ENTERPRISE_CATALOG_ADMIN_ROLE, TEST_ENTERPRISE_UUID),
+        ('catalog.has_admin_access', SYSTEM_ENTERPRISE_OPERATOR_ROLE, TEST_ENTERPRISE_UUID),
+        ('catalog.has_admin_access', SYSTEM_ENTERPRISE_CATALOG_ADMIN_ROLE, ALL_ACCESS_CONTEXT),
         ('catalog.has_admin_access', SYSTEM_ENTERPRISE_OPERATOR_ROLE, ALL_ACCESS_CONTEXT),
     )
     @ddt.unpack
@@ -36,7 +47,7 @@ class TestCatalogRBACPermissions(APITestMixin):
 
     @mock.patch('enterprise_catalog.apps.catalog.rules.crum.get_current_request')
     @ddt.data(
-        ('catalog.has_admin_access', SYSTEM_ENTERPRISE_ADMIN_ROLE),
+        ('catalog.has_admin_access', SYSTEM_ENTERPRISE_CATALOG_ADMIN_ROLE),
         ('catalog.has_admin_access', SYSTEM_ENTERPRISE_OPERATOR_ROLE),
     )
     @ddt.unpack

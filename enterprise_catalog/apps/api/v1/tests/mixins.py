@@ -13,7 +13,6 @@ from rest_framework.test import APITestCase
 
 from enterprise_catalog.apps.catalog.constants import (
     ENTERPRISE_CATALOG_ADMIN_ROLE,
-    SYSTEM_ENTERPRISE_ADMIN_ROLE,
 )
 from enterprise_catalog.apps.catalog.models import (
     EnterpriseCatalogFeatureRole,
@@ -78,7 +77,7 @@ class APITestMixin(JwtMixin, APITestCase):
             user=self.user,
             enterprise_id=self.enterprise_uuid
         )
-        self.set_jwt_cookie(SYSTEM_ENTERPRISE_ADMIN_ROLE, self.enterprise_uuid)
+        self.set_jwt_cookie(ENTERPRISE_CATALOG_ADMIN_ROLE, self.enterprise_uuid)
 
     def set_up_non_staff(self):
         """
