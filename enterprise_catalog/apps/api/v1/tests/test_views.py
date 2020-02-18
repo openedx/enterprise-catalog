@@ -542,12 +542,9 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         """
         Helper to construct the base url for the contains_content_items endpoint
         """
-        uuid = self.enterprise_uuid
-        if enterprise_uuid:
-            uuid = enterprise_uuid
         return reverse(
             'api:v1:enterprise-customer-contains-content-items',
-            kwargs={'enterprise_uuid': uuid},
+            kwargs={'enterprise_uuid': enterprise_uuid or self.enterprise_uuid},
         )
 
     def test_contains_content_items_unauthorized_non_staff(self):
