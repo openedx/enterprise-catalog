@@ -1,6 +1,5 @@
 import uuid
 from collections import OrderedDict
-from unittest import mock
 
 import ddt
 import mock
