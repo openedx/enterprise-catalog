@@ -63,8 +63,10 @@ class EnterpriseCatalogViewSet(BaseViewSet, viewsets.ModelViewSet):
             # `django-rules` only supports object-level permissions, i.e. does not filter the
             # objects in querysets; returning `None` here forces the permissions check to fail.
             return None
-        enterprise_catalog = self.get_object()
-        return str(enterprise_catalog.enterprise_uuid)
+        if self.kwargs.get('uuid'):
+            enterprise_catalog = self.get_object()
+            return str(enterprise_catalog.enterprise_uuid)
+        return None
 
     @method_decorator(require_at_least_one_query_parameter('course_run_ids', 'program_uuids'))
     @action(detail=True)
