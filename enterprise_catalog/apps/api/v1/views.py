@@ -1,8 +1,7 @@
+import crum
+from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from edx_rbac.mixins import PermissionRequiredMixin
-from edx_rest_framework_extensions.auth.bearer.authentication import (
-    BearerAuthentication,
-)
 from edx_rest_framework_extensions.auth.jwt.authentication import (
     JwtAuthentication,
 )
@@ -11,7 +10,7 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND
+from rest_framework.status import HTTP_200_OK
 from rest_framework.views import APIView
 from rest_framework_xml.renderers import XMLRenderer
 
@@ -34,10 +33,9 @@ class BaseViewSet(PermissionRequiredMixin, viewsets.ViewSet):
     """
     Base class for all enterprise catalog view sets.
     """
-    authentication_classes = [JwtAuthentication, BearerAuthentication, SessionAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [JwtAuthentication, SessionAuthentication,]
+    permission_classes = [permissions.IsAuthenticated,]
     permission_required = 'catalog.has_admin_access'
-
 
 class EnterpriseCatalogViewSet(BaseViewSet, viewsets.ModelViewSet):
     """ View for CRUD operations on Enterprise Catalogs """
@@ -49,8 +47,26 @@ class EnterpriseCatalogViewSet(BaseViewSet, viewsets.ModelViewSet):
         request_action = getattr(self, 'action', None)
         if request_action == 'create':
             return EnterpriseCatalogCreateSerializer
-
         return EnterpriseCatalogSerializer
+
+    def get_permission_object(self):
+        """
+        Retrieves the apporpriate object to use during edx-rbac's permission checks.
+
+        This object is passed to the rule predicate(s).
+        """
+        request_action = getattr(self, 'action', None)
+        if request_action == 'create':
+            request = crum.get_current_request()
+            return request.data.get('enterprise_customer', None)
+        elif request_action == 'list':
+            # `django-rules` only supports object-level permissions, i.e. does not filter the
+            # objects in querysets; returning `None` here forces the permissions check to fail.
+            return None
+        if self.kwargs.get('uuid'):
+            enterprise_catalog = self.get_object()
+            return str(enterprise_catalog.enterprise_uuid)
+        return None
 
     @method_decorator(require_at_least_one_query_parameter('course_run_ids', 'program_uuids'))
     @action(detail=True)
@@ -99,12 +115,17 @@ class EnterpriseCatalogRefreshDataFromDiscovery(BaseViewSet, APIView):
     """
     View to update metadata in Catalog with most recent data from Discovery service
     """
+    def get_permission_object(self):
+        """
+        Retrieves the apporpriate object to use during edx-rbac's permission checks.
+
+        This object is passed to the rule predicate(s).
+        """
+        uuid = self.kwargs.get('uuid')
+        enterprise_catalog = get_object_or_404(EnterpriseCatalog, uuid=uuid)
+        return str(enterprise_catalog.enterprise_uuid)
+
     def post(self, request, uuid):
-        # ensure catalog exists before starting celery task
-        if not EnterpriseCatalog.objects.filter(uuid=uuid):
-            # respond with 400 status if catalog doesn't exist
-            return Response(status=HTTP_404_NOT_FOUND)
-        # call update function and respond
         async_task = update_catalog_metadata_task.delay(catalog_uuid=uuid)
         return Response({'async_task_id': async_task.task_id}, status=HTTP_200_OK)
 
@@ -118,6 +139,14 @@ class EnterpriseCustomerViewSet(BaseViewSet):
     """
     # Just a convenience so that `enterprise_uuid` becomes an argument on our detail routes
     lookup_field = 'enterprise_uuid'
+
+    def get_permission_object(self):
+        """
+        Retrieves the apporpriate object to use during edx-rbac's permission checks.
+
+        This object is passed to the rule predicate(s).
+        """
+        return self.kwargs.get('enterprise_uuid')
 
     @method_decorator(require_at_least_one_query_parameter('course_run_ids', 'program_uuids'))
     @action(detail=True)

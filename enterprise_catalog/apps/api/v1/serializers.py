@@ -3,6 +3,7 @@ import logging
 from django.db import IntegrityError
 from rest_framework import serializers
 
+from enterprise_catalog.apps.api.tasks import update_catalog_metadata_task
 from enterprise_catalog.apps.catalog.models import (
     CatalogQuery,
     EnterpriseCatalog,
@@ -40,7 +41,10 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
             defaults={'content_filter': content_filter},
         )
         try:
-            return EnterpriseCatalog.objects.create(**validated_data, catalog_query=catalog_query)
+            catalog = EnterpriseCatalog.objects.create(
+                **validated_data,
+                catalog_query=catalog_query
+            )
         except IntegrityError as exc:
             message = (
                 'Encountered the following error in the create serializer: %s | '
@@ -50,6 +54,15 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
             )
             logger.error(message, exc, content_filter, catalog_query.id, validated_data)
             raise
+
+        message = (
+            'Spinning off update_catalog_metadata_task from create serializer '
+            'to update content_metadata for catalog %s'
+        )
+        logger.info(message, catalog)
+        update_catalog_metadata_task.delay(catalog_uuid=str(catalog.uuid))
+
+        return catalog
 
     def update(self, instance, validated_data):
         default_content_filter = None
@@ -61,6 +74,14 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
             content_filter_hash=get_content_filter_hash(content_filter),
             defaults={'content_filter': content_filter},
         )
+
+        message = (
+            'Spinning off update_catalog_metadata_task from update serializer '
+            'to update content_metadata for catalog %s'
+        )
+        logger.info(message, instance)
+        update_catalog_metadata_task.delay(catalog_uuid=str(instance.uuid))
+
         return super().update(instance, validated_data)
 
 

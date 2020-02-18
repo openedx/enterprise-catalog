@@ -12,12 +12,13 @@ from enterprise_catalog.apps.catalog.models import (
     CatalogQuery,
     ContentMetadata,
     EnterpriseCatalog,
+    EnterpriseCatalogFeatureRole,
+    EnterpriseCatalogRoleAssignment,
 )
 from enterprise_catalog.apps.core.models import User
 
 
 USER_PASSWORD = 'password'
-
 
 class CatalogQueryFactory(factory.DjangoModelFactory):
     """
@@ -65,6 +66,28 @@ class UserFactory(factory.DjangoModelFactory):
     last_name = factory.Faker('last_name')
     is_active = True
     is_staff = False
+    is_superuser = False
 
     class Meta:
         model = User
+
+
+class EnterpriseCatalogFeatureRoleFactory(factory.DjangoModelFactory):
+    """
+    Test factory for the `EnterpriseCatalogFeatureRole` model.
+    """
+    name = factory.Faker('word')
+
+    class Meta:
+        model = EnterpriseCatalogFeatureRole
+
+
+class EnterpriseCatalogRoleAssignmentFactory(factory.DjangoModelFactory):
+    """
+    Test factory for the `EnterpriseCatalogRoleAssignment` model.
+    """
+    role = factory.SubFactory(EnterpriseCatalogFeatureRoleFactory)
+    enterprise_id = factory.LazyFunction(uuid4)
+
+    class Meta:
+        model = EnterpriseCatalogRoleAssignment

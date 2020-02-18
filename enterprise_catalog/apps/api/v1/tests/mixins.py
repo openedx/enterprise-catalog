@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Broadly-useful mixins for use in automated tests."""
 
-import jwt
-from django.conf import settings
+import uuid
+
 from django.test.client import RequestFactory
 from edx_rest_framework_extensions.auth.jwt.cookies import jwt_cookie_name
 from edx_rest_framework_extensions.auth.jwt.tests.utils import (
@@ -14,23 +14,19 @@ from rest_framework.test import APITestCase
 from enterprise_catalog.apps.catalog.constants import (
     ENTERPRISE_CATALOG_ADMIN_ROLE,
 )
+from enterprise_catalog.apps.catalog.models import (
+    EnterpriseCatalogFeatureRole,
+    EnterpriseCatalogRoleAssignment,
+)
 from enterprise_catalog.apps.catalog.tests.factories import (
     USER_PASSWORD,
+    EnterpriseCatalogRoleAssignmentFactory,
     UserFactory,
 )
 
 
 class JwtMixin():
     """ Mixin with JWT-related helper functions. """
-    JWT_SECRET_KEY = settings.JWT_AUTH['JWT_SECRET_KEY']
-    issuer = settings.JWT_AUTH['JWT_ISSUERS'][0]['ISSUER']
-
-    def generate_token(self, payload, secret=None):
-        """Generate a JWT token with the provided payload."""
-        secret = secret or self.JWT_SECRET_KEY
-        token = jwt.encode(dict(payload, iss=self.issuer), secret).decode('utf-8')
-        return token
-
     def get_request_with_jwt_cookie(self, system_wide_role=None, context=None):
         """
         Set jwt token in cookies.
@@ -74,7 +70,14 @@ class APITestMixin(JwtMixin, APITestCase):
         super(APITestMixin, self).setUp()
         self.user = UserFactory(is_staff=True)
         self.client.login(username=self.user.username, password=USER_PASSWORD)
-        self.set_jwt_cookie(ENTERPRISE_CATALOG_ADMIN_ROLE)
+        self.enterprise_uuid = uuid.uuid4()
+        self.role = EnterpriseCatalogFeatureRole.objects.get(name=ENTERPRISE_CATALOG_ADMIN_ROLE)
+        self.role_assignment = EnterpriseCatalogRoleAssignmentFactory(
+            role=self.role,
+            user=self.user,
+            enterprise_id=self.enterprise_uuid
+        )
+        self.set_jwt_cookie(ENTERPRISE_CATALOG_ADMIN_ROLE, self.enterprise_uuid)
 
     def set_up_non_staff(self):
         """
@@ -84,11 +87,26 @@ class APITestMixin(JwtMixin, APITestCase):
         non_staff_user = UserFactory()
         self.client.login(username=non_staff_user.username, password=USER_PASSWORD)
 
+    def set_up_superuser(self):
+        """
+        Helper for logging in as a superuser
+        """
+        self.client.logout()
+        superuser = UserFactory(is_superuser=True)
+        self.client.login(username=superuser.username, password=USER_PASSWORD)
+
     def set_up_non_catalog_admin(self):
         """
-        Helpr for logging in as a user that does not have the appropriate role(s) in the JWT
+        Helper for logging in as a user that does not have the appropriate role(s) in the JWT
         """
         self.set_jwt_cookie('invalid_role')
+
+    def remove_role_assignments(self):
+        """
+        Helper for removing any existing `EnterpriseCatalogRoleAssignment` objects in order
+        to test implicit JWT access.
+        """
+        EnterpriseCatalogRoleAssignment.objects.all().delete()
 
     def assert_correct_contains_response(self, url, expected_value):
         """
