@@ -15,9 +15,6 @@ services:
     # ports:
     #  - "3307:3306"
 
-  redis:
-    image: "redis:alpine"
-
   enterprise_catalog:
     # Uncomment this line to use the official catalog base image
     # image: edxops/enterprise_catalog:devstack
@@ -25,6 +22,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: enterprise.catalog.app
+    hostname: app.catalog.enterprise
     volumes:
       - .:/edx/app/enterprise_catalog/enterprise_catalog
       - ../src:/edx/src:cached
@@ -33,24 +31,47 @@ services:
       - "18160:18160"
     depends_on:
       - mysql
-      - redis
+      - worker
     networks:
       - devstack_default
     # Allows attachment to this container using 'docker attach <containerID>'.
     stdin_open: true
     tty: true
     environment:
+      CELERY_ALWAYS_EAGER: 'false'
+      CELERY_BROKER_TRANSPORT: redis
+      CELERY_BROKER_HOSTNAME: edx.devstack.redis:6379
+      CELERY_BROKER_VHOST: 0
+      CELERY_BROKER_PASSWORD: password
       DJANGO_SETTINGS_MODULE: enterprise_catalog.settings.devstack
       ENABLE_DJANGO_TOOLBAR: 1
 
-  celery:
-    build: .
-    command: celery -A enterprise_catalog worker -l info
-    volumes:
-      - .:/code
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && celery -A enterprise_catalog worker -l DEBUG'
+    container_name: enterprise.catalog.worker
     depends_on:
       - mysql
-      - redis
+    environment:
+      CELERY_ALWAYS_EAGER: 'false'
+      CELERY_BROKER_TRANSPORT: redis
+      CELERY_BROKER_HOSTNAME: edx.devstack.redis:6379
+      CELERY_BROKER_VHOST: 0
+      CELERY_BROKER_PASSWORD: password
+      DJANGO_SETTINGS_MODULE: enterprise_catalog.settings.devstack
+    hostname: worker.catalog.enterprise
+    networks:
+      - devstack_default
+    ports:
+      - "18161:18161"
+    restart: always
+    # Allows attachment to this container using 'docker attach <containerID>'.
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/edx/app/enterprise_catalog/enterprise_catalog
 
 networks:
   devstack_default:
