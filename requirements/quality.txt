@@ -22,22 +22,22 @@ defusedxml==0.6.0
 distlib==0.3.0            # via caniusepython3
 django-cors-headers==3.2.1
 django-crum==0.7.5
-django-extensions==2.2.6
+django-extensions==2.2.8
 django-model-utils==3.2.0
 django-rest-swagger==2.2.0
 django-simple-history==2.8.0
-django-waffle==0.19.0
+django-waffle==0.20.0
 django==1.11.28
 djangorestframework-jwt==1.11.0
 djangorestframework-xml==1.4.0
 djangorestframework==3.11.0
 edx-auth-backends==3.0.2
 edx-django-release-util==0.3.6
-edx-django-utils==2.0.4
+edx-django-utils==3.0
 edx-drf-extensions==2.4.6
 edx-lint==1.4.1
 edx-opaque-keys==2.0.1
-edx-rbac==1.0.5
+edx-rbac==1.1.0
 edx-rest-api-client==1.9.2
 future==0.18.2
 idna==2.8
@@ -83,12 +83,12 @@ slumber==0.7.1
 snowballstemmer==2.0.0    # via pydocstyle
 social-auth-app-django==3.1.0
 social-auth-core==3.2.0
-stevedore==1.31.0
+stevedore==1.32.0
 typed-ast==1.4.1          # via astroid
 uritemplate==3.0.1
 urllib3==1.25.8
 wrapt==1.11.2             # via astroid
-zipp==1.1.0
+zipp==1.2.0
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
