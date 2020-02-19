@@ -50,6 +50,8 @@ DB_OVERRIDES = dict(
     PORT=environ.get('DB_MIGRATION_PORT', DATABASES['default']['PORT']),
 )
 
+CELERYD_HIJACK_ROOT_LOGGER = False
+
 BROKER_URL = "{0}://{1}:{2}@{3}/{4}".format(
     CELERY_BROKER_TRANSPORT,
     CELERY_BROKER_USER,
