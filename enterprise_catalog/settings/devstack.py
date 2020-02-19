@@ -47,6 +47,7 @@ ALLOWED_HOSTS = ['*']
 
 DISCOVERY_SERVICE_API_URL = 'http://edx.devstack.discovery:18381/api/v1/'
 
+CELERYD_HIJACK_ROOT_LOGGER = True
 CELERY_ALWAYS_EAGER = (
     os.environ.get("CELERY_ALWAYS_EAGER", "false").lower() == "true"
 )
