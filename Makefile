@@ -57,7 +57,7 @@ shell: ## run Django shell
 	python manage.py shell
 
 test: clean ## run tests and generate coverage report
-	pytest
+	python -Wd -m pytest
 
 # To be run from CI context
 coverage: clean
