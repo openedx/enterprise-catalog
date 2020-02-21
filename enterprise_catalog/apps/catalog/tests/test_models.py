@@ -41,7 +41,8 @@ class TestModels(TestCase):
             ('title', 'test program'),
             ('uuid', 'fake-uuid'),
         ])
-        mock_client.return_value.get_metadata_by_query.side_effect = [{
+        mock_client.return_value.get_metadata_by_query.side_effect = [
+            {
                 'count': 3,
                 'previous': None,
                 'next': None,

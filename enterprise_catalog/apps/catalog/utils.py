@@ -13,6 +13,7 @@ def get_content_filter_hash(content_filter):
     content_filter_hash = hashlib.md5(content_filter_sorted_keys).hexdigest()
     return content_filter_hash
 
+
 def get_content_key(metadata):
     """
     Returns the content key of a piece of metadata
@@ -20,6 +21,7 @@ def get_content_key(metadata):
     Try to get the course/course run key as the content key, falling back to uuid for programs
     """
     return metadata.get('key') or metadata.get('uuid')
+
 
 def _partition_aggregation_key(aggregation_key):
     """
@@ -29,6 +31,7 @@ def _partition_aggregation_key(aggregation_key):
     """
     content_type, _, content_key = aggregation_key.partition(':')
     return content_type, content_key
+
 
 def get_parent_content_key(metadata):
     """
@@ -44,6 +47,7 @@ def get_parent_content_key(metadata):
         parent_content_key = content_key
 
     return parent_content_key
+
 
 def get_content_type(metadata):
     """
