@@ -18,5 +18,5 @@ class EnterpriseCatalogCeleryTaskTests(TestCase):
 
     @mock.patch('enterprise_catalog.apps.api.tasks.update_contentmetadata_from_discovery')
     def test_refresh_metadata(self, update_contentmetadata_from_discovery_mock):
-        tasks.update_catalog_metadata_task(self.enterprise_catalog.uuid) # pylint: disable=no-value-for-parameter
+        tasks.update_catalog_metadata_task(self.enterprise_catalog.uuid)  # pylint: disable=no-value-for-parameter
         update_contentmetadata_from_discovery_mock.assert_called_with(self.enterprise_catalog.uuid)

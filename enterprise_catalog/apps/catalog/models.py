@@ -150,8 +150,10 @@ class EnterpriseCatalog(TimeStampedModel):
 
             # The content key is contained in the catalog if its key is explictly part of the associated metadata, or
             # its parent's key is.
-            contained_in_catalog = contained_in_catalog and (content_key in associated_metadata_content_keys
-                or parent_content_key in associated_metadata_content_keys)
+            contained_in_catalog = contained_in_catalog and (
+                # pylint: disable=line-too-long
+                content_key in associated_metadata_content_keys or parent_content_key in associated_metadata_content_keys
+            )
             # Break early as soon as we find a key that is not contained in the catalog
             if not contained_in_catalog:
                 return False
@@ -219,6 +221,7 @@ class ContentMetadata(TimeStampedModel):
                 content_key=self.content_key
             )
         )
+
 
 def associate_content_metadata_with_query(metadata, catalog_query):
     """

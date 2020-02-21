@@ -1,8 +1,8 @@
 .DEFAULT_GOAL := test
 
-.PHONY: help clean piptools requirements ci_requirements dev_requirements \
-        validation_requirements doc_requirementsprod_requirements static shell \
-        test coverage isort_check isort style lint quality pii_check validate \
+.PHONY: help clean piptools requirements dev_requirements \
+        doc_requirementsprod_requirements static shell test coverage \
+        isort_check isort style lint quality pii_check validate \
         migrate html_coverage upgrade extract_translation dummy_translations \
         compile_translations fake_translations  pull_translations \
         push_translations start-devstack open-devstack  pkg-devstack \
@@ -36,13 +36,8 @@ piptools: ## install pinned version of pip-compile and pip-sync
 
 requirements: piptools dev_requirements ## sync to default requirements
 
-ci_requirements: validation_requirements ## sync to requirements needed for CI checks
-
 dev_requirements: ## sync to requirements for local development
 	pip-sync -q requirements/dev.txt
-
-validation_requirements: ## sync to requirements for testing & code quality checking
-	pip-sync -q requirements/validation.txt
 
 doc_requirements:
 	pip-sync -q requirements/doc.txt
@@ -71,7 +66,7 @@ isort: ## run isort to sort imports in all Python files
 	isort --recursive --atomic enterprise_catalog/
 
 style: ## run Python style checker
-	pylint --rcfile=pylintrc enterprise_catalog *.py
+	pycodestyle enterprise_catalog *.py
 
 lint: ## run Python code linting
 	pylint --rcfile=pylintrc enterprise_catalog *.py
@@ -95,12 +90,15 @@ upgrade: piptools ## update the requirements/*.txt files with the latest package
 	# Make sure to compile files after any other files they include!
 	pip-compile --upgrade -o requirements/pip-tools.txt requirements/pip-tools.in
 	pip-compile --upgrade -o requirements/base.txt requirements/base.in
+	pip-compile --upgrade -o requirements/quality.txt requirements/quality.in
 	pip-compile --upgrade -o requirements/test.txt requirements/test.in
 	pip-compile --upgrade -o requirements/doc.txt requirements/doc.in
-	pip-compile --upgrade -o requirements/quality.txt requirements/quality.in
-	pip-compile --upgrade -o requirements/validation.txt requirements/validation.in
+	pip-compile --upgrade -o requirements/tox.txt requirements/tox.in
 	pip-compile --upgrade -o requirements/dev.txt requirements/dev.in
 	pip-compile --upgrade -o requirements/production.txt requirements/production.in
+	grep -e "^django==" requirements/base.txt > requirements/django.txt
+	sed '/^[dD]jango==/d' requirements/test.txt > requirements/test.tmp
+	mv requirements/test.tmp requirements/test.txt
 
 extract_translations: ## extract strings to be translated, outputting .mo files
 	python manage.py makemessages -l en -v1 -d django

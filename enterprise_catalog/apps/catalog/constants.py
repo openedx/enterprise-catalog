@@ -31,6 +31,7 @@ def json_serialized_course_modes():
     """
     return json.dumps(COURSE_MODE_SORT_ORDER)
 
+
 def admin_model_changes_allowed():
     """
     Returns whether changes are allowed to a model based off the disable_model_admin_changes switch
