@@ -1,5 +1,7 @@
 # Core requirements for using this application
 
+-r github.in              # Forks and other dependencies not yet on PyPI
+
 Django>=1.11.23,<2.0          # Web application framework
 django-cors-headers
 django-crum
