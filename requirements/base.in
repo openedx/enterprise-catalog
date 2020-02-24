@@ -19,7 +19,7 @@ edx_rbac
 edx-rest-api-client==1.9.2
 mysqlclient
 pytz
-jsonfield==2.0.2
+jsonfield2==3.0.3
 celery==3.1.26.post2
 redis==2.8
 rules

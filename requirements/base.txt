@@ -35,7 +35,7 @@ future==0.18.2            # via pyjwkest
 idna==2.9                 # via requests
 itypes==1.1.0             # via coreapi
 jinja2==2.11.1            # via coreschema
-jsonfield==2.0.2          # via -r requirements/base.in (line 22)
+jsonfield2==3.0.3         # via -r requirements/base.in (line 20)
 kombu==3.0.37             # via celery
 markupsafe==1.1.1         # via jinja2
 mysqlclient==1.4.6        # via -r requirements/base.in (line 20)

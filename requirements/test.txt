@@ -47,7 +47,7 @@ importlib-metadata==1.5.0  # via pluggy, pytest
 isort==4.3.21             # via pylint
 itypes==1.1.0             # via -r requirements/base.txt (line 36), coreapi
 jinja2==2.11.1            # via -r requirements/base.txt (line 37), code-annotations, coreschema
-jsonfield==2.0.2          # via -r requirements/base.txt (line 38)
+jsonfield2==3.0.3         # via -r requirements/base.txt (line 38)
 kombu==3.0.37             # via -r requirements/base.txt (line 39), celery
 lazy-object-proxy==1.4.3  # via astroid
 markupsafe==1.1.1         # via -r requirements/base.txt (line 40), jinja2
