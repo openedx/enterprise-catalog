@@ -20,6 +20,7 @@ from enterprise_catalog.apps.core.models import User
 
 USER_PASSWORD = 'password'
 
+
 class CatalogQueryFactory(factory.DjangoModelFactory):
     """
     Test factory for the `CatalogQuery` model

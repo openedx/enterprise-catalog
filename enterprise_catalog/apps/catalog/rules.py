@@ -34,6 +34,7 @@ def has_implicit_access_to_catalog(user, context):  # pylint: disable=unused-arg
     decoded_jwt = get_decoded_jwt(request) or get_decoded_jwt_from_auth(request)
     return request_user_has_implicit_access_via_jwt(decoded_jwt, ENTERPRISE_CATALOG_ADMIN_ROLE, context)
 
+
 @rules.predicate
 def has_explicit_access_to_catalog(user, context):
     """
