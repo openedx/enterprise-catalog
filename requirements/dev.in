@@ -2,6 +2,7 @@
 
 -r pip-tools.txt          # pip-tools and its deps, for managing requirements files
 -r validation.txt         # Core, testing, and quality check dependencies
+-r github.in              # Forks and other dependencies not yet on PyPI
 
 diff-cover                # Changeset diff test coverage
 edx-i18n-tools            # For i18n_tool dummy
