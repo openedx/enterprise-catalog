@@ -57,7 +57,7 @@ isort==4.3.21             # via -r requirements/quality.txt (line 44), -r requir
 itypes==1.1.0             # via -r requirements/quality.txt (line 45), -r requirements/test.txt (line 49), coreapi
 jinja2-pluralize==0.3.0   # via diff-cover
 jinja2==2.11.1            # via -r requirements/quality.txt (line 46), -r requirements/test.txt (line 50), code-annotations, coreschema, diff-cover, jinja2-pluralize
-jsonfield==2.0.2          # via -r requirements/quality.txt (line 47), -r requirements/test.txt (line 51)
+jsonfield2==3.0.3         # via -r requirements/validation.txt (line 55)
 kombu==3.0.37             # via -r requirements/quality.txt (line 48), -r requirements/test.txt (line 52), celery
 lazy-object-proxy==1.4.3  # via -r requirements/quality.txt (line 49), -r requirements/test.txt (line 53), astroid
 markupsafe==1.1.1         # via -r requirements/quality.txt (line 50), -r requirements/test.txt (line 54), jinja2
