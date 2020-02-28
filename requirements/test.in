@@ -11,3 +11,4 @@ factory-boy
 mock<4
 pytest-cov
 pytest-django
+tox

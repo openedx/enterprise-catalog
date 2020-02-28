@@ -1,6 +1,27 @@
 language: python
-python:
-    - 3.5
+
+matrix:
+  include:
+    - python: 3.5
+      env: TOXENV=django111
+      script: make test
+    - python: 3.5
+      env: TOXENV=django20
+      script: make test
+    - python: 3.5
+      env: TOXENV=django21
+      script: make test
+    - python: 3.5
+      env: TOXENV=django22
+      script: make test
+    - python: 3.5
+      env: TESTNAME=quality
+      script:
+        - make quality
+        - make pii_check
+    - python: 3.5
+      env: TESTNAME=translations
+      script: make validate_translations
 sudo: false
 branches:
   only:
@@ -10,11 +31,5 @@ cache: pip
 install:
     - pip install -U pip wheel codecov
     - make requirements
-script:
-    - make validate_translations
-    - make validate
-    - make pii_check
-    - make quality
-    - make test
 after_success:
     - codecov
