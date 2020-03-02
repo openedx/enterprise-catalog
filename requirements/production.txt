@@ -20,7 +20,7 @@ django-model-utils==3.2.0  # via -r requirements/base.txt (line 19), edx-rbac
 django-rest-swagger==2.2.0  # via -r requirements/base.txt (line 20)
 django-simple-history==2.8.0  # via -r requirements/base.txt (line 21)
 django-waffle==0.20.0     # via -r requirements/base.txt (line 22), edx-django-utils, edx-drf-extensions
-django==1.11.28           # via -r requirements/base.txt (line 23), django-cors-headers, django-crum, django-model-utils, djangorestframework, edx-auth-backends, edx-django-release-util, edx-django-utils, edx-drf-extensions, edx-rbac, jsonfield, rest-condition
+django==1.11.28           # via -r requirements/base.txt (line 23), django-cors-headers, django-crum, django-model-utils, djangorestframework, edx-auth-backends, edx-django-release-util, edx-django-utils, edx-drf-extensions, edx-rbac, jsonfield2, rest-condition
 djangorestframework-jwt==1.11.0  # via -r requirements/base.txt (line 24), edx-drf-extensions
 djangorestframework-xml==1.4.0  # via -r requirements/base.txt (line 25)
 djangorestframework==3.11.0  # via -r requirements/base.txt (line 26), django-rest-swagger, edx-drf-extensions, rest-condition
@@ -29,7 +29,7 @@ edx-django-release-util==0.3.6  # via -r requirements/base.txt (line 28)
 edx-django-utils==3.0     # via -r requirements/base.txt (line 29), edx-drf-extensions
 edx-drf-extensions==3.0.0  # via -r requirements/base.txt (line 30), edx-rbac
 edx-opaque-keys==2.0.1    # via -r requirements/base.txt (line 31), edx-drf-extensions
-edx-rbac==1.1.0           # via -r requirements/base.txt (line 32)
+edx-rbac==1.1.1           # via -r requirements/base.txt (line 32)
 edx-rest-api-client==1.9.2  # via -r requirements/base.txt (line 33)
 future==0.18.2            # via -r requirements/base.txt (line 34), pyjwkest
 gevent==1.4.0             # via -r requirements/production.in (line 4)
