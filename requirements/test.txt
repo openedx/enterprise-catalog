@@ -22,7 +22,7 @@ ddt==1.2.2                # via -r requirements/test.in (line 7)
 defusedxml==0.6.0         # via -r requirements/base.txt (line 15), djangorestframework-xml, python3-openid, social-auth-core
 django-cors-headers==3.2.1  # via -r requirements/base.txt (line 16)
 django-crum==0.7.5        # via -r requirements/base.txt (line 17), edx-rbac
-django-dynamic-fixture==3.0.2  # via -r requirements/test.in (line 8)
+django-dynamic-fixture==3.0.3  # via -r requirements/test.in (line 8)
 django-extensions==2.2.8  # via -r requirements/base.txt (line 18)
 django-model-utils==3.2.0  # via -r requirements/base.txt (line 19), edx-rbac
 django-rest-swagger==2.2.0  # via -r requirements/base.txt (line 20)
@@ -37,7 +37,7 @@ edx-django-utils==3.0     # via -r requirements/base.txt (line 29), edx-drf-exte
 edx-drf-extensions==3.0.0  # via -r requirements/base.txt (line 30), edx-rbac
 edx-lint==1.4.1           # via -r requirements/test.in (line 9)
 edx-opaque-keys==2.0.1    # via -r requirements/base.txt (line 31), edx-drf-extensions
-edx-rbac==1.1.0           # via -r requirements/base.txt (line 32)
+edx-rbac==1.1.1           # via -r requirements/base.txt (line 32)
 edx-rest-api-client==1.9.2  # via -r requirements/base.txt (line 33)
 factory-boy==2.12.0       # via -r requirements/test.in (line 10)
 faker==4.0.1              # via factory-boy
