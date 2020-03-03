@@ -20,6 +20,6 @@ class Command(BaseCommand):
             update_catalog_metadata_task.delay(catalog_uuid=str(catalog.uuid))
             message = (
                 'Spinning off update_catalog_metadata_task from update_content_metadata command'
-                'to update content_metadata for catalog %s'
+                ' to update content_metadata for catalog %s'
             )
             logger.info(message, catalog)
