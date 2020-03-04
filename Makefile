@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := test
-
+TOX = ''
 .PHONY: help clean piptools requirements dev_requirements \
         doc_requirementsprod_requirements static shell test coverage \
         isort_check isort style lint quality pii_check validate \
@@ -19,6 +19,10 @@ webbrowser.open("file://" + pathname2url(os.path.abspath(sys.argv[1])))
 endef
 export BROWSER_PYSCRIPT
 BROWSER := python -c "$$BROWSER_PYSCRIPT"
+
+ifdef TOXENV
+TOX := tox -- #to isolate each tox environment if TOXENV is defined
+endif
 
 # Generates a help message. Borrowed from https://github.com/pydanny/cookiecutter-djangopackage.
 help: ## display this help message
@@ -52,7 +56,7 @@ shell: ## run Django shell
 	python manage.py shell
 
 test: clean ## run tests and generate coverage report
-	python -Wd -m pytest
+	$(TOX)python -Wd -m pytest
 
 # To be run from CI context
 coverage: clean
