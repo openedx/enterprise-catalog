@@ -1,1 +1,1 @@
-django==1.11.28           # via -r requirements/base.in, django-cors-headers, django-crum, django-model-utils, djangorestframework, edx-auth-backends, edx-django-release-util, edx-django-utils, edx-drf-extensions, edx-rbac, jsonfield2, rest-condition
+django==1.11.29           # via -r requirements/base.in, django-cors-headers, django-crum, django-model-utils, djangorestframework, drf-jwt, edx-auth-backends, edx-django-release-util, edx-django-utils, edx-drf-extensions, edx-rbac, jsonfield2, rest-condition

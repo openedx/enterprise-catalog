@@ -12,6 +12,7 @@ django-simple-history
 django-waffle
 djangorestframework
 djangorestframework-xml
+drf-jwt==1.14.0
 edx-auth-backends
 edx-django-release-util
 edx-drf-extensions
