@@ -8,6 +8,8 @@ TOX = ''
         push_translations start-devstack open-devstack  pkg-devstack \
         detect_changed_source_translations validate_translations
 
+include .travis/docker.mk
+
 define BROWSER_PYSCRIPT
 import os, webbrowser, sys
 try:
