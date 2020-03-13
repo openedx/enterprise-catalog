@@ -213,6 +213,7 @@ BACKEND_SERVICE_EDX_OAUTH2_KEY = 'enterprise-catalog-backend-service-key'
 BACKEND_SERVICE_EDX_OAUTH2_SECRET = 'enterprise-catalog-service-secret'
 
 JWT_AUTH = {
+    'JWT_AUTH_HEADER_PREFIX': 'JWT',
     'JWT_ISSUER': 'http://127.0.0.1:18000/oauth2',
     'JWT_ALGORITHM': 'HS256',
     'JWT_VERIFY_EXPIRATION': True,
