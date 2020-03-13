@@ -88,7 +88,7 @@ pymongo==3.10.1           # via -r requirements/test.txt, edx-opaque-keys
 pyparsing==2.4.6          # via -r requirements/test.txt, packaging
 pytest-cov==2.8.1         # via -r requirements/test.txt
 pytest-django==3.8.0      # via -r requirements/test.txt
-pytest==5.3.5             # via -r requirements/test.txt, pytest-cov, pytest-django
+pytest==5.4.0             # via -r requirements/test.txt, pytest-cov, pytest-django
 python-dateutil==2.8.1    # via -r requirements/test.txt, edx-drf-extensions, faker
 python-slugify==4.0.0     # via -r requirements/test.txt, code-annotations
 python3-openid==3.1.0     # via -r requirements/test.txt, social-auth-core

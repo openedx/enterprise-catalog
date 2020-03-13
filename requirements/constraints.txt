@@ -9,5 +9,6 @@
 # linking to it here is good.
 
 
+drf-jwt==1.14.0
 # jsonfield2 > 3.0.3 dropped support for python 3.5
 jsonfield2==3.0.3
