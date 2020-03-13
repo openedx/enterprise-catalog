@@ -23,7 +23,7 @@ django-waffle==0.20.0     # via -r requirements/base.in, edx-django-utils, edx-d
 django==1.11.29           # via -r requirements/base.in, django-cors-headers, django-crum, django-model-utils, djangorestframework, drf-jwt, edx-auth-backends, edx-django-release-util, edx-django-utils, edx-drf-extensions, edx-rbac, jsonfield2, rest-condition
 djangorestframework-xml==1.4.0  # via -r requirements/base.in
 djangorestframework==3.11.0  # via -r requirements/base.in, django-rest-swagger, drf-jwt, edx-drf-extensions, rest-condition
-drf-jwt==1.14.0           # via -r requirements/base.in, edx-drf-extensions
+drf-jwt==1.14.0           # via -c requirements/constraints.txt, edx-drf-extensions
 edx-auth-backends==3.0.2  # via -r requirements/base.in
 edx-django-release-util==0.3.6  # via -r requirements/base.in
 edx-django-utils==3.0     # via edx-drf-extensions
@@ -35,7 +35,7 @@ future==0.18.2            # via pyjwkest
 idna==2.9                 # via requests
 itypes==1.1.0             # via coreapi
 jinja2==2.11.1            # via coreschema
-jsonfield2==3.0.3         # via -r requirements/base.in
+jsonfield2==3.0.3         # via -c requirements/constraints.txt, -r requirements/base.in
 kombu==3.0.37             # via celery
 markupsafe==1.1.1         # via jinja2
 mysqlclient==1.4.6        # via -r requirements/base.in
