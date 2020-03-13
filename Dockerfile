@@ -2,21 +2,22 @@ FROM ubuntu:xenial as app
 LABEL maintainer="devops@edx.org"
 
 # Packages installed:
-# git; Used to pull in particular requirements from github rather than pypi, 
-# and to check the sha of the code checkout.
-
-# language-pack-en locales; ubuntu locale support so that system utilities have a consistent
-# language and time zone.
-
-# python; ubuntu doesnt ship with python, so this is the python we will use to run the application
-
-# python3-pip; install pip to install application requirements.txt files
-
-# libssl-dev; # mysqlclient wont install without this.
-
-# libmysqlclient-dev; to install header files needed to use native C implementation for 
-# MySQL-python for performance gains.
-
+# git
+#     Used to pull in particular requirements from github rather than pypi,
+#     and to check the sha of the code checkout.
+# language-pack-en locales
+#     ubuntu locale support so that system utilities have a consistent
+#     language and time zone.
+# python3.5
+#     ubuntu doesnt ship with python, so this is the python we will use to run the
+#     application
+# python3-pip
+#     install pip to install application requirements.txt files
+# libssl-dev
+#     mysqlclient wont install without this.
+# libmysqlclient-dev
+#     to install header files needed to use native C implementation for
+#     MySQL-python for performance gains.
 
 # If you add a package here please include a comment above describing what it is used for
 RUN apt-get update && apt-get upgrade -qy && apt-get install language-pack-en locales git python3.5 python3-pip \
