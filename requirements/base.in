@@ -1,5 +1,6 @@
 # Core requirements for using this application
 
+-c constraints.txt
 -r github.in              # Forks and other dependencies not yet on PyPI
 
 Django>=1.11.23,<2.0          # Web application framework
