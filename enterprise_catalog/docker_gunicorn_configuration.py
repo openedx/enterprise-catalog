@@ -5,9 +5,10 @@ import multiprocessing
 
 preload_app = True
 timeout = 300
-bind = "0.0.0.0:8160"
+bind = "localhost:8160"
 
 workers = 2
+
 
 def pre_request(worker, req):
     worker.log.info("%s %s" % (req.method, req.path))
