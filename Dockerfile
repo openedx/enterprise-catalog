@@ -30,9 +30,13 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
+# Dev ports
 EXPOSE 18160
 EXPOSE 18161
-EXPOSE 18162
+# Prod ports
+EXPOSE 8160
+EXPOSE 8161
+
 RUN useradd -m --shell /bin/false app
 
 WORKDIR /edx/app/enterprise_catalog/enterprise_catalog
