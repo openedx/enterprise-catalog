@@ -51,6 +51,3 @@ CELERYD_HIJACK_ROOT_LOGGER = True
 CELERY_ALWAYS_EAGER = (
     os.environ.get("CELERY_ALWAYS_EAGER", "false").lower() == "true"
 )
-
-if 'console' not in LOGGING['loggers']['django']['handlers']:
-    LOGGING['loggers']['django']['handlers'].append('console')
