@@ -25,6 +25,9 @@ python3-pip libmysqlclient-dev libssl-dev python3-dev -qy && \
 pip3 install --upgrade pip setuptools && \
 rm -rf /var/lib/apt/lists/*
 
+RUN ln -s /usr/bin/pip3 /usr/bin/pip
+RUN ln -s /usr/bin/python3 /usr/bin/python
+
 RUN locale-gen en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
