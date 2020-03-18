@@ -30,9 +30,6 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
-# Dev ports
-EXPOSE 18160
-EXPOSE 18161
 # Prod ports
 EXPOSE 8160
 EXPOSE 8161
@@ -41,11 +38,9 @@ RUN useradd -m --shell /bin/false app
 
 WORKDIR /edx/app/enterprise_catalog/enterprise_catalog
 
-COPY requirements.txt /edx/app/enterprise_catalog/enterprise_catalog/
-COPY Makefile /edx/app/enterprise_catalog/enterprise_catalog/
-COPY .travis/ /edx/app/enterprise_catalog/enterprise_catalog/.travis
 COPY requirements/ /edx/app/enterprise_catalog/enterprise_catalog/requirements/
-RUN make production-requirements
+RUN pip3 install -r /edx/app/enterprise_catalog/enterprise_catalog/requirements/base.txt
+RUN pip3 install -r /edx/app/enterprise_catalog/enterprise_catalog/requirements/production.txt
 
 # Code is owned by root so it cannot be modified by the application user.
 # So we copy it before changing users.
@@ -61,3 +56,12 @@ COPY . /edx/app/enterprise_catalog/enterprise_catalog
 FROM app as newrelic
 RUN pip3 install newrelic
 CMD newrelic-admin run-program gunicorn --workers=2 --name enterprise_catalog -c /edx/app/enterprise_catalog/enterprise_catalog/enterprise_catalog/docker_gunicorn_configuration.py --log-file - --max-requests=1000 enterprise_catalog.wsgi:application
+
+FROM app as devapp
+# Dev ports
+EXPOSE 18160
+EXPOSE 18161
+USER root
+RUN pip3 install -r /edx/app/enterprise_catalog/enterprise_catalog/requirements/dev.txt
+USER app
+CMD gunicorn --workers=2 --name enterprise_catalog -b :18160 -c /edx/app/enterprise_catalog/enterprise_catalog/enterprise_catalog/docker_gunicorn_configuration.py --log-file - --max-requests=1000 enterprise_catalog.wsgi:application
