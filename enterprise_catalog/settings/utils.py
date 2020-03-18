@@ -47,7 +47,7 @@ def get_logger_config(log_dir='/var/tmp',
     if debug:
         handlers = ['console']
     else:
-        handlers = ['console'. 'local']
+        handlers = ['console', 'local']
 
     logger_config = {
         'version': 1,
