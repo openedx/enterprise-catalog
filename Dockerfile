@@ -64,4 +64,4 @@ EXPOSE 18161
 USER root
 RUN pip3 install -r /edx/app/enterprise_catalog/enterprise_catalog/requirements/dev.txt
 USER app
-CMD gunicorn --workers=2 --name enterprise_catalog -b :18160 -c /edx/app/enterprise_catalog/enterprise_catalog/enterprise_catalog/docker_gunicorn_configuration.py --log-file - --max-requests=1000 enterprise_catalog.wsgi:application
+CMD gunicorn --reload --workers=2 --name enterprise_catalog -b :18160 -c /edx/app/enterprise_catalog/enterprise_catalog/enterprise_catalog/docker_gunicorn_configuration.py --log-file - --max-requests=1000 enterprise_catalog.wsgi:application
