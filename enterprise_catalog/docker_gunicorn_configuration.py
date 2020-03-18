@@ -6,7 +6,7 @@ import multiprocessing
 
 preload_app = True
 timeout = 300
-bind = "localhost:8160"
+bind = "0.0.0.0:8160"
 
 workers = 2
 
