@@ -170,12 +170,12 @@ dev.stop: # Stops containers so they can be restarted
 attach:
 	docker attach enterprise.catalog.app
 
-travis_docker_auth:
-	echo "$$DOCKER_PASSWORD" | docker login -u "$$DOCKER_USERNAME" --password-stdin
-
 docker_build:
 	docker build . --target app -t "openedx/enterprise-catalog:latest"
 	docker build . --target newrelic -t "openedx/enterprise-catalog:latest-newrelic"
+
+travis_docker_auth:
+	echo "$$DOCKER_PASSWORD" | docker login -u "$$DOCKER_USERNAME" --password-stdin
 
 travis_docker_tag: docker_build
 	docker build . --target app -t "openedx/enterprise-catalog:$$TRAVIS_COMMIT"
