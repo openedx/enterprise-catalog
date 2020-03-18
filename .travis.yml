@@ -1,26 +1,19 @@
-language: python
+python: 3.5
+script:
+  - make test
 matrix:
   include:
-  - python: 3.5
-    env: TOXENV=django111
-    script: make test
-  - python: 3.5
-    env: TOXENV=django20
-    script: make test
-  - python: 3.5
-    env: TOXENV=django21
-    script: make test
-  - python: 3.5
-    env: TOXENV=django22
-    script: make test
-  - python: 3.5
-    env: TESTNAME=quality
-    script:
-    - make quality
-    - make pii_check
-  - python: 3.5
-    env: TESTNAME=translations
-    script: make validate_translations
+    - env: TOXENV=django111
+    - env: TOXENV=django20
+    - env: TOXENV=django21
+    - env: TOXENV=django22
+    - env: TESTNAME=quality
+      script:
+        - make quality
+        - make pii_check
+    - env: TESTNAME=translations
+      script:
+        - make validate_translations
 sudo: false
 branches:
   only:
