@@ -1,7 +1,7 @@
 """
 gunicorn configuration file: http://docs.gunicorn.org/en/develop/configure.html
 """
-import multiprocessing
+import multiprocessing  # pylint: disable=unused-import
 
 
 preload_app = True
@@ -27,7 +27,7 @@ def close_all_caches():
     if hasattr(django_cache, 'caches'):
         get_cache = django_cache.caches.__getitem__
     else:
-        get_cache = django_cache.get_cache
+        get_cache = django_cache.get_cache  # pylint: disable=no-member
     for cache_name in settings.CACHES:
         cache = get_cache(cache_name)
         if hasattr(cache, 'close'):
@@ -43,5 +43,5 @@ def close_all_caches():
         cache.close()
 
 
-def post_fork(server, worker):
+def post_fork(server, worker):  # pylint: disable=unused-argument
     close_all_caches()
