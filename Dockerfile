@@ -42,7 +42,6 @@ RUN useradd -m --shell /bin/false app
 WORKDIR /edx/app/enterprise_catalog/enterprise_catalog
 
 COPY requirements/ /edx/app/enterprise_catalog/enterprise_catalog/requirements/
-RUN pip3 install -r /edx/app/enterprise_catalog/enterprise_catalog/requirements/base.txt
 RUN pip3 install -r /edx/app/enterprise_catalog/enterprise_catalog/requirements/production.txt
 
 # Code is owned by root so it cannot be modified by the application user.
