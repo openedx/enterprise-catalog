@@ -18,7 +18,7 @@ except:
 webbrowser.open("file://" + pathname2url(os.path.abspath(sys.argv[1])))
 endef
 export BROWSER_PYSCRIPT
-BROWSER := python -c "$$BROWSER_PYSCRIPT"
+BROWSER := python3 -c "$$BROWSER_PYSCRIPT"
 
 ifdef TOXENV
 TOX := tox -- #to isolate each tox environment if TOXENV is defined
@@ -50,13 +50,13 @@ production-requirements: piptools ## install requirements for production
 	pip-sync -q requirements/production.txt
 
 static: ## generate static files
-	python manage.py collectstatic --noinput
+	python3 manage.py collectstatic --noinput
 
 shell: ## run Django shell
-	python manage.py shell
+	python3 manage.py shell
 
 test: clean ## run tests and generate coverage report
-	$(TOX)python -Wd -m pytest
+	$(TOX)python3 -Wd -m pytest
 
 # To be run from CI context
 coverage: clean
@@ -84,7 +84,7 @@ pii_check: ## check for PII annotations on all Django models
 validate: test quality pii_check ## run tests, quality, and PII annotation checks
 
 migrate: ## apply database migrations
-	python manage.py migrate
+	python3 manage.py migrate
 
 html_coverage: ## generate and view HTML coverage report
 	coverage html && open htmlcov/index.html
@@ -105,14 +105,14 @@ upgrade: piptools ## update the requirements/*.txt files with the latest package
 	mv requirements/test.tmp requirements/test.txt
 
 extract_translations: ## extract strings to be translated, outputting .mo files
-	python manage.py makemessages -l en -v1 -d django
-	python manage.py makemessages -l en -v1 -d djangojs
+	python3 manage.py makemessages -l en -v1 -d django
+	python3 manage.py makemessages -l en -v1 -d djangojs
 
 dummy_translations: ## generate dummy translation (.po) files
 	cd enterprise_catalog && i18n_tool dummy
 
 compile_translations: # compile translation files, outputting .po files for each supported language
-	python manage.py compilemessages
+	python3 manage.py compilemessages
 
 fake_translations: ## generate and compile dummy translation files
 
@@ -144,7 +144,7 @@ dev.provision:
 dev.init: dev.up dev.migrate
 
 dev.makemigrations:
-	docker exec -it enterprise.catalog.app bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && python manage.py makemigrations'
+	docker exec -it enterprise.catalog.app bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && python3 manage.py makemigrations'
 
 dev.migrate: # Migrates databases. Application and DB server must be up for this to work.
 	docker exec -it enterprise.catalog.app bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && make migrate'
@@ -169,3 +169,20 @@ dev.stop: # Stops containers so they can be restarted
 
 attach:
 	docker attach enterprise.catalog.app
+
+docker_build:
+	docker build . --target app -t "openedx/enterprise-catalog:latest"
+	docker build . --target newrelic -t "openedx/enterprise-catalog:latest-newrelic"
+
+travis_docker_auth:
+	echo "$$DOCKER_PASSWORD" | docker login -u "$$DOCKER_USERNAME" --password-stdin
+
+travis_docker_tag: docker_build
+	docker build . --target app -t "openedx/enterprise-catalog:$$TRAVIS_COMMIT"
+	docker build . --target newrelic -t "openedx/enterprise-catalog:$$TRAVIS_COMMIT-newrelic"
+
+travis_docker_push: travis_docker_tag travis_docker_auth ## push to docker hub
+	docker push "openedx/enterprise-catalog:latest"
+	docker push "openedx/enterprise-catalog:$$TRAVIS_COMMIT"
+	docker push "openedx/enterprise-catalog:latest-newrelic"
+	docker push "openedx/enterprise-catalog:$$TRAVIS_COMMIT-newrelic"
