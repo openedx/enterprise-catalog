@@ -7,8 +7,10 @@ from corsheaders.defaults import default_headers as corsheaders_default_headers
 
 from enterprise_catalog.apps.catalog.constants import (
     ENTERPRISE_CATALOG_ADMIN_ROLE,
+    ENTERPRISE_CATALOG_LEARNER_ROLE,
     SYSTEM_ENTERPRISE_CATALOG_ADMIN_ROLE,
     SYSTEM_ENTERPRISE_OPERATOR_ROLE,
+    SYSTEM_ENTERPRISE_LEARNER_ROLE,
 )
 from enterprise_catalog.settings.utils import get_env_setting, get_logger_config
 
@@ -323,4 +325,5 @@ DISCOVERY_SERVICE_API_URL = os.environ.get('DISCOVERY_SERVICE_API_URL', '')
 SYSTEM_TO_FEATURE_ROLE_MAPPING = {
     SYSTEM_ENTERPRISE_CATALOG_ADMIN_ROLE: [ENTERPRISE_CATALOG_ADMIN_ROLE],
     SYSTEM_ENTERPRISE_OPERATOR_ROLE: [ENTERPRISE_CATALOG_ADMIN_ROLE],
+    SYSTEM_ENTERPRISE_LEARNER_ROLE: [ENTERPRISE_CATALOG_LEARNER_ROLE],
 }

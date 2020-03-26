@@ -16,13 +16,14 @@ from enterprise_catalog.apps.catalog.tests.factories import (
 
 
 @ddt.ddt
-class EnterpriseCatalogViewSetTests(APITestMixin):
+class EnterpriseCatalogCRUDViewSetTests(APITestMixin):
     """
-    Tests for the EnterpriseCatalogViewSet
+    Tests for the EnterpriseCatalogCRUDViewSet
     """
 
     def setUp(self):
-        super(EnterpriseCatalogViewSetTests, self).setUp()
+        super(EnterpriseCatalogCRUDViewSetTests, self).setUp()
+        self.set_up_staff()
         self.enterprise_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
         self.new_catalog_uuid = uuid.uuid4()
         self.new_catalog_data = {
@@ -64,31 +65,60 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
         self.assertEqual(uuid.UUID(results[0]['uuid']), self.enterprise_catalog.uuid)
         self.assertEqual(uuid.UUID(results[1]['uuid']), second_enterprise_catalog.uuid)
 
-    def test_list_unauthorized(self):
-        """
-        Verify the viewset rejects list for all users other than superusers
-        """
-        url = reverse('api:v1:enterprise-catalog-list')
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_list_unauthorized_non_staff(self):
-        """
-        Verify the viewset rejects list for non-staff users
-        """
-        self.set_up_non_staff()
-        url = reverse('api:v1:enterprise-catalog-list')
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
     def test_list_unauthorized_non_catalog_admin(self):
         """
         Verify the viewset rejects list for users that are not catalog admins
         """
-        self.set_up_non_catalog_admin()
+        self.set_up_invalid_jwt_role()
         self.remove_role_assignments()
         url = reverse('api:v1:enterprise-catalog-list')
         response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_list_unauthorized_catalog_learner(self):
+        """
+        Verify the viewset rejects list for catalog learners
+        """
+        self.set_up_catalog_learner()
+        url = reverse('api:v1:enterprise-catalog-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_detail_unauthorized_catalog_learner(self):
+        """
+        Verify the viewset rejects catalog learners for the detail route
+        """
+        self.set_up_catalog_learner()
+        url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': self.enterprise_catalog.uuid})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_patch_unauthorized_catalog_learner(self):
+        """
+        Verify the viewset rejects patch for catalog learners
+        """
+        self.set_up_catalog_learner()
+        url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': self.enterprise_catalog.uuid})
+        patch_data = {'title': 'Patch title'}
+        response = self.client.patch(url, patch_data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_put_unauthorized_catalog_learner(self):
+        """
+        Verify the viewset rejects put for catalog learners
+        """
+        self.set_up_catalog_learner()
+        url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': self.enterprise_catalog.uuid})
+        response = self.client.put(url, self.new_catalog_data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_post_unauthorized_catalog_learner(self):
+        """
+        Verify the viewset rejects post for catalog learners
+        """
+        self.set_up_catalog_learner()
+        url = reverse('api:v1:enterprise-catalog-list')
+        response = self.client.post(url, self.new_catalog_data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @ddt.data(
@@ -110,20 +140,11 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
         self.assertEqual(data['title'], self.enterprise_catalog.title)
         self.assertEqual(uuid.UUID(data['enterprise_customer']), self.enterprise_catalog.enterprise_uuid)
 
-    def test_detail_unauthorized_non_staff(self):
-        """
-        Verify the viewset rejects non-staff users for the detail route
-        """
-        self.set_up_non_staff()
-        url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': self.enterprise_catalog.uuid})
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
     def test_detail_unauthorized_non_catalog_admin(self):
         """
         Verify the viewset rejects users that are not catalog admins for the detail route
         """
-        self.set_up_non_catalog_admin()
+        self.set_up_invalid_jwt_role()
         self.remove_role_assignments()
         url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': self.enterprise_catalog.uuid})
         response = self.client.get(url)
@@ -168,21 +189,11 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
         )
         mock_async_task.assert_called_once()
 
-    def test_patch_unauthorized_non_staff(self):
-        """
-        Verify the viewset rejects patch for non-staff users
-        """
-        self.set_up_non_staff()
-        url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': self.enterprise_catalog.uuid})
-        patch_data = {'title': 'Patch title'}
-        response = self.client.patch(url, patch_data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
     def test_patch_unauthorized_non_catalog_admin(self):
         """
         Verify the viewset rejects patch for users that are not catalog admins
         """
-        self.set_up_non_catalog_admin()
+        self.set_up_invalid_jwt_role()
         self.remove_role_assignments()
         url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': self.enterprise_catalog.uuid})
         patch_data = {'title': 'Patch title'}
@@ -219,20 +230,11 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
         self._assert_correct_new_catalog_data(self.enterprise_catalog.uuid)  # The UUID should not have changed
         mock_async_task.assert_called_once()
 
-    def test_put_unauthorized_non_staff(self):
-        """
-        Verify the viewset rejects put for non-staff users
-        """
-        self.set_up_non_staff()
-        url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': self.enterprise_catalog.uuid})
-        response = self.client.put(url, self.new_catalog_data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
     def test_put_unauthorized_non_catalog_admin(self):
         """
         Verify the viewset rejects put for users that are not catalog admins
         """
-        self.set_up_non_catalog_admin()
+        self.set_up_invalid_jwt_role()
         self.remove_role_assignments()
         url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': self.enterprise_catalog.uuid})
         response = self.client.put(url, self.new_catalog_data)
@@ -281,20 +283,11 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
         # second time through
         mock_async_task.assert_called_once()
 
-    def test_post_unauthorized_non_staff(self):
-        """
-        Verify the viewset rejects post for non-staff users
-        """
-        self.set_up_non_staff()
-        url = reverse('api:v1:enterprise-catalog-list')
-        response = self.client.post(url, self.new_catalog_data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
     def test_post_unauthorized_non_catalog_admin(self):
         """
         Verify the viewset rejects post for users that are not catalog admins
         """
-        self.set_up_non_catalog_admin()
+        self.set_up_invalid_jwt_role()
         self.remove_role_assignments()
         url = reverse('api:v1:enterprise-catalog-list')
         response = self.client.post(url, self.new_catalog_data)
@@ -318,11 +311,29 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
         response = self.client.post(url, catalog_data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+
+class EnterpriseCatalogActionViewSetTests(APITestMixin):
+    """
+    Tests on the EnterpriseCatalogActionViewSet
+    """
+
+    def setUp(self):
+        super(EnterpriseCatalogActionViewSetTests, self).setUp()
+        # Set up catalog.has_learner_access permissions
+        self.set_up_catalog_learner()
+        self.enterprise_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
+
     def _get_contains_content_base_url(self, enterprise_catalog):
         """
         Helper to construct the base url for the contains_content_items endpoint
         """
         return reverse('api:v1:enterprise-catalog-contains-content-items', kwargs={'uuid': enterprise_catalog.uuid})
+
+    def _get_content_metadata_url(self, enterprise_catalog):
+        """
+        Helper to get the get_content_metadata endpoint url for a given catalog
+        """
+        return reverse('api:v1:enterprise-catalog-get-content-metadata', kwargs={'uuid': enterprise_catalog.uuid})
 
     def test_contains_content_items_no_params(self):
         """
@@ -331,29 +342,9 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
         response = self.client.get(self._get_contains_content_base_url(self.enterprise_catalog))
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_contains_content_items_unauthorized_non_staff_user(self):
-        """
-        Verify the contains_content_items endpoint rejects non-staff users
-        """
-        self.set_up_non_staff()
-        url = self._get_contains_content_base_url(self.enterprise_catalog) + '?program_uuids=test-uuid'
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_contains_content_items_unauthorized_non_catalog_admin(self):
-        """
-        Verify the contains_content_items endpoint rejects non-staff users
-        """
-        self.set_up_non_catalog_admin()
-        self.remove_role_assignments()
-        url = self._get_contains_content_base_url(self.enterprise_catalog) + '?program_uuids=test-uuid'
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
     def test_contains_content_items_unauthorized_incorrect_jwt_context(self):
         """
-        Verify the contains_content_items endpoint rejects catalog admin user with
-        an invalid JWT context (i.e., enterprise uuid)
+        Verify the contains_content_items endpoint rejects users with an invalid JWT context (i.e., enterprise uuid)
         """
         enterprise_catalog = EnterpriseCatalogFactory()
         self.remove_role_assignments()
@@ -363,8 +354,7 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
 
     def test_contains_content_items_implicit_access(self):
         """
-        Verify the contains_content_items endpoint responds with 200 OK for
-        user with implicit JWT access
+        Verify the contains_content_items endpoint responds with 200 OK for user with implicit JWT access
         """
         self.remove_role_assignments()
         url = self._get_contains_content_base_url(self.enterprise_catalog) + '?course_run_ids=fakeX'
@@ -414,26 +404,11 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
         url = self._get_contains_content_base_url(self.enterprise_catalog) + '?course_run_ids=' + 'test-key'
         self.assert_correct_contains_response(url, False)
 
-    def _get_content_metadata_url(self, enterprise_catalog):
+    def test_get_content_metadata_unauthorized_invalid_permissions(self):
         """
-        Helper to get the get_content_metadata endpoint url for a given catalog
+        Verify the get_content_metadata endpoint rejects users with invalid permissions
         """
-        return reverse('api:v1:enterprise-catalog-get-content-metadata', kwargs={'uuid': enterprise_catalog.uuid})
-
-    def test_get_content_metadata_unauthorized_non_staff_user(self):
-        """
-        Verify the get_content_metadata endpoint rejects non-staff users
-        """
-        self.set_up_non_staff()
-        url = self._get_content_metadata_url(self.enterprise_catalog)
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_get_content_metadata_unauthorized_non_catalog_admin(self):
-        """
-        Verify the get_content_metadata endpoint rejects non-staff users
-        """
-        self.set_up_non_catalog_admin()
+        self.set_up_invalid_jwt_role()
         self.remove_role_assignments()
         url = self._get_content_metadata_url(self.enterprise_catalog)
         response = self.client.get(url)
@@ -441,7 +416,7 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
 
     def test_get_content_metadata_unauthorized_incorrect_jwt_context(self):
         """
-        Verify the get_content_metadata endpoint rejects catalog admin users
+        Verify the get_content_metadata endpoint rejects catalog learners
         with an incorrect JWT context (i.e., enterprise uuid)
         """
         enterprise_catalog = EnterpriseCatalogFactory()
@@ -493,6 +468,17 @@ class EnterpriseCatalogViewSetTests(APITestMixin):
         self.assertEqual(uuid.UUID(response.json()['enterprise_customer']), self.enterprise_catalog.enterprise_uuid)
         self.assertEqual(response.json()['results'], [json_metadata_1, json_metadata_2])
 
+
+class EnterpriseCatalogRefreshDataFromDiscoveryTests(APITestMixin):
+    """
+    Tests for the update catalog metadata view
+    """
+
+    def setUp(self):
+        super(EnterpriseCatalogRefreshDataFromDiscoveryTests, self).setUp()
+        self.set_up_staff()
+        self.enterprise_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
+
     @mock.patch('enterprise_catalog.apps.api.v1.views.update_catalog_metadata_task.delay')
     def test_refresh_catalog_on_post_returns_200_ok(self, mock_task):
         """
@@ -532,6 +518,8 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
     def setUp(self):
         super(EnterpriseCustomerViewSetTests, self).setUp()
         self.enterprise_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
+        # Set up catalog.has_learner_access permissions
+        self.set_up_catalog_learner()
 
     def _get_contains_content_base_url(self, enterprise_uuid=None):
         """
@@ -542,20 +530,11 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
             kwargs={'enterprise_uuid': enterprise_uuid or self.enterprise_uuid},
         )
 
-    def test_contains_content_items_unauthorized_non_staff(self):
+    def test_contains_content_items_unauthorized_non_catalog_learner(self):
         """
-        Verify the contains_content_items endpoint rejects non-staff users
+        Verify the contains_content_items endpoint rejects users that are not catalog learners
         """
-        self.set_up_non_staff()
-        url = self._get_contains_content_base_url() + '?course_run_ids=fakeX'
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_contains_content_items_unauthorized_non_catalog_admin(self):
-        """
-        Verify the contains_content_items endpoint rejects users that are not catalog admins
-        """
-        self.set_up_non_catalog_admin()
+        self.set_up_invalid_jwt_role()
         self.remove_role_assignments()
         url = self._get_contains_content_base_url() + '?course_run_ids=fakeX'
         response = self.client.get(url)
@@ -563,7 +542,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
 
     def test_contains_content_items_unauthorized_incorrect_jwt_context(self):
         """
-        Verify the contains_content_items endpoint rejects users that are catalog admins
+        Verify the contains_content_items endpoint rejects users that are catalog learners
         with an incorrect JWT context (i.e., enterprise uuid)
         """
         self.remove_role_assignments()

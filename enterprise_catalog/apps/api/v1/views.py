@@ -35,13 +35,13 @@ class BaseViewSet(PermissionRequiredMixin, viewsets.ViewSet):
     """
     authentication_classes = [JwtAuthentication, SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
-    permission_required = 'catalog.has_admin_access'
 
 
-class EnterpriseCatalogViewSet(BaseViewSet, viewsets.ModelViewSet):
+class EnterpriseCatalogCRUDViewSet(BaseViewSet, viewsets.ModelViewSet):
     """ View for CRUD operations on Enterprise Catalogs """
     queryset = EnterpriseCatalog.objects.all().order_by('created')
     renderer_classes = [JSONRenderer, XMLRenderer]
+    permission_required = 'catalog.has_admin_access'
     lookup_field = 'uuid'
 
     def get_serializer_class(self):
@@ -64,6 +64,27 @@ class EnterpriseCatalogViewSet(BaseViewSet, viewsets.ModelViewSet):
             # `django-rules` only supports object-level permissions, i.e. does not filter the
             # objects in querysets; returning `None` here forces the permissions check to fail.
             return None
+        if self.kwargs.get('uuid'):
+            enterprise_catalog = self.get_object()
+            return str(enterprise_catalog.enterprise_uuid)
+        return None
+
+
+class EnterpriseCatalogActionViewSet(BaseViewSet, viewsets.ModelViewSet):
+    """
+    Viewset for special actions on enterprise catalogs
+    """
+    queryset = EnterpriseCatalog.objects.all().order_by('created')
+    renderer_classes = [JSONRenderer, XMLRenderer]
+    permission_required = 'catalog.has_learner_access'
+    lookup_field = 'uuid'
+
+    def get_permission_object(self):
+        """
+        Retrieves the apporpriate object to use during edx-rbac's permission checks.
+
+        This object is passed to the rule predicate(s).
+        """
         if self.kwargs.get('uuid'):
             enterprise_catalog = self.get_object()
             return str(enterprise_catalog.enterprise_uuid)
@@ -116,6 +137,8 @@ class EnterpriseCatalogRefreshDataFromDiscovery(BaseViewSet, APIView):
     """
     View to update metadata in Catalog with most recent data from Discovery service
     """
+    permission_required = 'catalog.has_admin_access'
+
     def get_permission_object(self):
         """
         Retrieves the apporpriate object to use during edx-rbac's permission checks.
@@ -138,6 +161,7 @@ class EnterpriseCustomerViewSet(BaseViewSet):
     Although we don't have a specific EnterpriseCustomer model, this viewset handles operations that use an enterprise
     identifier to perform operations on their associated catalogs, etc.
     """
+    permission_required = 'catalog.has_learner_access'
     # Just a convenience so that `enterprise_uuid` becomes an argument on our detail routes
     lookup_field = 'enterprise_uuid'
 
