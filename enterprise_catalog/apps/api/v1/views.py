@@ -76,6 +76,7 @@ class EnterpriseCatalogActionViewSet(BaseViewSet, viewsets.ModelViewSet):
     """
     queryset = EnterpriseCatalog.objects.all().order_by('created')
     renderer_classes = [JSONRenderer, XMLRenderer]
+    serializer_class = EnterpriseCatalogSerializer
     permission_required = 'catalog.has_learner_access'
     lookup_field = 'uuid'
 
