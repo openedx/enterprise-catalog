@@ -13,6 +13,7 @@ from rest_framework.test import APITestCase
 
 from enterprise_catalog.apps.catalog.constants import (
     ENTERPRISE_CATALOG_ADMIN_ROLE,
+    ENTERPRISE_CATALOG_LEARNER_ROLE,
 )
 from enterprise_catalog.apps.catalog.models import (
     EnterpriseCatalogFeatureRole,
@@ -68,9 +69,14 @@ class APITestMixin(JwtMixin, APITestCase):
 
     def setUp(self):
         super(APITestMixin, self).setUp()
+        self.enterprise_uuid = uuid.uuid4()
+
+    def set_up_staff(self):
+        """
+        Helper for setting up tests as a staff user
+        """
         self.user = UserFactory(is_staff=True)
         self.client.login(username=self.user.username, password=USER_PASSWORD)
-        self.enterprise_uuid = uuid.uuid4()
         self.role = EnterpriseCatalogFeatureRole.objects.get(name=ENTERPRISE_CATALOG_ADMIN_ROLE)
         self.role_assignment = EnterpriseCatalogRoleAssignmentFactory(
             role=self.role,
@@ -79,23 +85,28 @@ class APITestMixin(JwtMixin, APITestCase):
         )
         self.set_jwt_cookie(ENTERPRISE_CATALOG_ADMIN_ROLE, self.enterprise_uuid)
 
-    def set_up_non_staff(self):
+    def set_up_catalog_learner(self):
         """
-        Helper for logging in as a non-staff user
+        Helper for setting up tests as a catalog learner
         """
-        self.client.logout()
-        non_staff_user = UserFactory()
-        self.client.login(username=non_staff_user.username, password=USER_PASSWORD)
+        self.user = UserFactory()
+        self.client.login(username=self.user.username, password=USER_PASSWORD)
+        self.role = EnterpriseCatalogFeatureRole.objects.get(name=ENTERPRISE_CATALOG_LEARNER_ROLE)
+        self.role_assignment = EnterpriseCatalogRoleAssignmentFactory(
+            role=self.role,
+            user=self.user,
+            enterprise_id=self.enterprise_uuid
+        )
+        self.set_jwt_cookie(ENTERPRISE_CATALOG_LEARNER_ROLE, self.enterprise_uuid)
 
     def set_up_superuser(self):
         """
         Helper for logging in as a superuser
         """
-        self.client.logout()
         superuser = UserFactory(is_superuser=True)
         self.client.login(username=superuser.username, password=USER_PASSWORD)
 
-    def set_up_non_catalog_admin(self):
+    def set_up_invalid_jwt_role(self):
         """
         Helper for logging in as a user that does not have the appropriate role(s) in the JWT
         """
