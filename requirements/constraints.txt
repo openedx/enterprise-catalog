@@ -13,3 +13,6 @@ drf-jwt==1.14.0
 
 # jsonfield2 > 3.0.3 dropped support for python 3.5
 jsonfield2==3.0.3
+
+# 3.3.0 updates models with data from get_user_details(), which overrides is_superuser
+social-auth-core<3.3.0
