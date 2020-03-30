@@ -21,8 +21,8 @@ click==7.1.1              # via -r requirements/pip-tools.txt, -r requirements/q
 code-annotations==0.3.3   # via -r requirements/test.txt
 coreapi==2.3.3            # via -r requirements/quality.txt, -r requirements/test.txt, django-rest-swagger, openapi-codec
 coreschema==0.0.4         # via -r requirements/quality.txt, -r requirements/test.txt, coreapi
-coverage==5.0.3           # via -r requirements/test.txt, pytest-cov
-ddt==1.3.0                # via -r requirements/dev.in, -r requirements/test.txt
+coverage==5.0.4           # via -r requirements/test.txt, pytest-cov
+ddt==1.3.1                # via -r requirements/dev.in, -r requirements/test.txt
 defusedxml==0.6.0         # via -r requirements/quality.txt, -r requirements/test.txt, djangorestframework-xml, python3-openid, social-auth-core
 diff-cover==2.6.0         # via -r requirements/dev.in
 distlib==0.3.0            # via -r requirements/quality.txt, -r requirements/test.txt, caniusepython3, virtualenv
@@ -30,7 +30,7 @@ django-cors-headers==3.2.1  # via -r requirements/quality.txt, -r requirements/t
 django-crum==0.7.5        # via -r requirements/quality.txt, -r requirements/test.txt, edx-rbac
 django-debug-toolbar==2.2  # via -r requirements/dev.in
 django-dynamic-fixture==3.0.3  # via -r requirements/test.txt
-django-extensions==2.2.8  # via -r requirements/quality.txt, -r requirements/test.txt
+django-extensions==2.2.9  # via -r requirements/quality.txt, -r requirements/test.txt
 django-model-utils==3.2.0  # via -r requirements/quality.txt, -r requirements/test.txt, edx-rbac
 django-rest-swagger==2.2.0  # via -r requirements/quality.txt, -r requirements/test.txt
 django-simple-history==2.8.0  # via -r requirements/quality.txt, -r requirements/test.txt
@@ -40,21 +40,21 @@ djangorestframework-xml==1.4.0  # via -r requirements/quality.txt, -r requiremen
 djangorestframework==3.11.0  # via -r requirements/quality.txt, -r requirements/test.txt, django-rest-swagger, drf-jwt, edx-drf-extensions, rest-condition
 drf-jwt==1.14.0           # via -r requirements/quality.txt, -r requirements/test.txt, edx-drf-extensions
 edx-auth-backends==3.0.2  # via -r requirements/quality.txt, -r requirements/test.txt
-edx-django-release-util==0.3.6  # via -r requirements/quality.txt, -r requirements/test.txt
-edx-django-utils==3.0     # via -r requirements/quality.txt, -r requirements/test.txt, edx-drf-extensions
-edx-drf-extensions==4.0.2  # via -r requirements/quality.txt, -r requirements/test.txt, edx-rbac
+edx-django-release-util==0.4.1  # via -r requirements/quality.txt, -r requirements/test.txt
+edx-django-utils==3.1     # via -r requirements/quality.txt, -r requirements/test.txt, edx-drf-extensions
+edx-drf-extensions==5.0.2  # via -r requirements/quality.txt, -r requirements/test.txt, edx-rbac
 edx-i18n-tools==0.5.0     # via -r requirements/dev.in
 edx-lint==1.4.1           # via -r requirements/quality.txt, -r requirements/test.txt
-edx-opaque-keys==2.0.1    # via -r requirements/quality.txt, -r requirements/test.txt, edx-drf-extensions
-edx-rbac==1.1.1           # via -r requirements/quality.txt, -r requirements/test.txt
+edx-opaque-keys==2.0.2    # via -r requirements/quality.txt, -r requirements/test.txt, edx-drf-extensions
+edx-rbac==1.1.2           # via -r requirements/quality.txt, -r requirements/test.txt
 edx-rest-api-client==1.9.2  # via -r requirements/quality.txt, -r requirements/test.txt
 factory-boy==2.12.0       # via -r requirements/test.txt
-faker==4.0.1              # via -r requirements/test.txt, factory-boy
+faker==4.0.2              # via -r requirements/test.txt, factory-boy
 filelock==3.0.12          # via -r requirements/test.txt, tox, virtualenv
 future==0.18.2            # via -r requirements/quality.txt, -r requirements/test.txt, pyjwkest
 idna==2.9                 # via -r requirements/quality.txt, -r requirements/test.txt, requests
-importlib-metadata==1.5.0  # via -r requirements/test.txt, importlib-resources, inflect, path, pluggy, pytest, tox, virtualenv
-importlib-resources==1.3.1  # via -r requirements/test.txt, virtualenv
+importlib-metadata==1.6.0  # via -r requirements/test.txt, importlib-resources, inflect, path, pluggy, pytest, tox, virtualenv
+importlib-resources==1.4.0  # via -r requirements/test.txt, virtualenv
 inflect==3.0.2            # via -r requirements/dev.in, jinja2-pluralize
 isort==4.3.21             # via -r requirements/quality.txt, -r requirements/test.txt, pylint
 itypes==1.1.0             # via -r requirements/quality.txt, -r requirements/test.txt, coreapi
@@ -95,12 +95,12 @@ pymongo==3.10.1           # via -r requirements/quality.txt, -r requirements/tes
 pyparsing==2.4.6          # via -r requirements/quality.txt, -r requirements/test.txt, packaging
 pytest-cov==2.8.1         # via -r requirements/test.txt
 pytest-django==3.8.0      # via -r requirements/test.txt
-pytest==5.4.0             # via -r requirements/test.txt, pytest-cov, pytest-django
+pytest==5.4.1             # via -r requirements/test.txt, pytest-cov, pytest-django
 python-dateutil==2.8.1    # via -r requirements/quality.txt, -r requirements/test.txt, edx-drf-extensions, faker
 python-slugify==4.0.0     # via -r requirements/test.txt, code-annotations
 python3-openid==3.1.0     # via -r requirements/quality.txt, -r requirements/test.txt, social-auth-core
 pytz==2019.3              # via -r requirements/quality.txt, -r requirements/test.txt, celery, django
-pyyaml==5.3               # via -r requirements/quality.txt, -r requirements/test.txt, code-annotations, edx-django-release-util, edx-i18n-tools
+pyyaml==5.3.1             # via -r requirements/quality.txt, -r requirements/test.txt, code-annotations, edx-django-release-util, edx-i18n-tools
 redis==2.8                # via -r requirements/quality.txt, -r requirements/test.txt
 requests-oauthlib==1.3.0  # via -r requirements/quality.txt, -r requirements/test.txt, social-auth-core
 requests==2.23.0          # via -r requirements/quality.txt, -r requirements/test.txt, caniusepython3, coreapi, edx-drf-extensions, edx-rest-api-client, pyjwkest, requests-oauthlib, slumber, social-auth-core
@@ -117,12 +117,12 @@ sqlparse==0.3.1           # via django-debug-toolbar
 stevedore==1.32.0         # via -r requirements/quality.txt, -r requirements/test.txt, code-annotations, edx-opaque-keys
 text-unidecode==1.3       # via -r requirements/test.txt, faker, python-slugify
 toml==0.10.0              # via -r requirements/test.txt, tox
-tox==3.14.5               # via -r requirements/test.txt
+tox==3.14.6               # via -r requirements/test.txt
 typed-ast==1.4.1          # via -r requirements/quality.txt, -r requirements/test.txt, astroid
 uritemplate==3.0.1        # via -r requirements/quality.txt, -r requirements/test.txt, coreapi
 urllib3==1.25.8           # via -r requirements/quality.txt, -r requirements/test.txt, requests
-virtualenv==20.0.10       # via -r requirements/test.txt, tox
-wcwidth==0.1.8            # via -r requirements/test.txt, pytest
+virtualenv==20.0.15       # via -r requirements/test.txt, tox
+wcwidth==0.1.9            # via -r requirements/test.txt, pytest
 wrapt==1.11.2             # via -r requirements/quality.txt, -r requirements/test.txt, astroid
 zipp==1.2.0               # via -r requirements/quality.txt, -r requirements/test.txt, importlib-metadata, importlib-resources
 
