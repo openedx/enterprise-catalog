@@ -20,7 +20,7 @@ django-model-utils==3.2.0  # via -r requirements/base.in, edx-rbac
 django-rest-swagger==2.2.0  # via -r requirements/base.in
 django-simple-history==2.8.0  # via -r requirements/base.in
 django-waffle==0.20.0     # via -r requirements/base.in, edx-django-utils, edx-drf-extensions
-django==1.11.29           # via -r requirements/base.in, django-cors-headers, django-crum, django-model-utils, djangorestframework, drf-jwt, edx-auth-backends, edx-django-release-util, edx-django-utils, edx-drf-extensions, edx-rbac, jsonfield2, rest-condition
+django==2.2.11            # via -r requirements/base.in, django-cors-headers, django-crum, django-model-utils, djangorestframework, drf-jwt, edx-auth-backends, edx-django-release-util, edx-django-utils, edx-drf-extensions, edx-rbac, jsonfield2, rest-condition
 djangorestframework-xml==1.4.0  # via -r requirements/base.in
 djangorestframework==3.11.0  # via -r requirements/base.in, django-rest-swagger, drf-jwt, edx-drf-extensions, rest-condition
 drf-jwt==1.14.0           # via -c requirements/constraints.txt, edx-drf-extensions
@@ -63,6 +63,7 @@ six==1.14.0               # via django-extensions, django-simple-history, django
 slumber==0.7.1            # via edx-rest-api-client
 git+https://github.com/python-social-auth/social-app-django.git@c00d23c2b45c3317bd35b15ad1b959338689cef8#egg=social-auth-app-django  # via -r requirements/github.in, edx-auth-backends
 social-auth-core==3.2.0   # via -c requirements/constraints.txt, edx-auth-backends, social-auth-app-django
+sqlparse==0.3.1           # via django
 stevedore==1.32.0         # via edx-opaque-keys
 uritemplate==3.0.1        # via coreapi
 urllib3==1.25.8           # via requests
