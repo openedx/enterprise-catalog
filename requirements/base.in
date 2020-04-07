@@ -7,7 +7,7 @@ Django>=2.2,<2.3          # Web application framework
 django-cors-headers
 django-crum
 django-extensions
-django-model-utils==3.2.0     # v4.0.0 drops Django 1.11 support
+django-model-utils
 django-rest-swagger
 django-simple-history
 django-waffle
