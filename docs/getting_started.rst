@@ -11,7 +11,7 @@ Initialize and Provision
 ------------------------
     1. Start and provision the edX `devstack <https://github.com/edx/devstack>`_, as enterprise-catalog currently relies on devstack
     2. Verify that your virtual environment is active before proceeding
-    3. Clone the enterprise-catalog repo and cd into that directory
+    3. Clone the enterprise-catalog repo and **cd into that directory**
     4. Run *make dev.provision* to provision a new enterprise catalog environment
     5. Run *make dev.init* to start the enterprise catalog app and run migrations
 
@@ -19,7 +19,7 @@ Viewing Enterprise Catalog
 ------------------------
 Once the server is up and running you can view the enterprise catalog at http://localhost:18160/admin.
 
-You can login with the username *edx@example.com* and password *edx*.
+You can login with the username *edx* and password *edx*.
 
 Makefile Commands
 --------------------
