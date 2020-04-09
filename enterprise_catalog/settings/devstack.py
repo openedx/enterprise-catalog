@@ -28,6 +28,11 @@ JWT_AUTH.update({
         '4Ee9qG5T38LFe8_oAuFCEntimWxN9F3P-FJQy43TL7wG54WodgiM0EgzkeLr5K6cDnyckWjTuZbWI-4ffcTgTZsL_Kq1owa_J2ngEfxMCObnzG'
         'y5ZLcTUomo4rZLjghVpq6KZxfS6I1Vz79ZsMVUWEdXOYePCKKsrQG20ogQEkmTf9FT_SouC6jPcHLXw"}]}'
     ),
+    'JWT_ISSUERS': [{
+        'AUDIENCE': 'lms-key',
+        'ISSUER': 'http://localhost:18000/oauth2',
+        'SECRET_KEY': 'lms-secret',
+    }],
 })
 
 DATABASES = {

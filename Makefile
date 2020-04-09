@@ -150,6 +150,9 @@ dev.migrate: # Migrates databases. Application and DB server must be up for this
 	docker exec -it enterprise.catalog.app bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && make migrate'
 
 dev.up: # Starts all containers
+	docker-compose up -d
+
+dev.up.build:
 	docker-compose up -d --build
 
 dev.down: # Kills containers and all of their data that isn't in volumes
@@ -161,8 +164,8 @@ dev.destroy: dev.down #Kills containers and destroys volumes. If you get an erro
 dev.stop: # Stops containers so they can be restarted
 	docker-compose stop
 
-%-shell: ## Run a shell on the specified service container
-	docker exec -it enterprise.catalog.$* bash
+%-shell: ## Run a shell, as root, on the specified service container
+	docker exec -u 0 -it enterprise.catalog.$* env TERM=$(TERM) bash
 
 %-logs: ## View the logs of the specified service container
 	docker-compose logs -f --tail=500 $*
