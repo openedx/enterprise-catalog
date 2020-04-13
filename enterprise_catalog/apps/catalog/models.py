@@ -5,6 +5,7 @@ from uuid import uuid4
 from django.db import models
 from django.utils.translation import gettext as _
 from edx_rbac.models import UserRole, UserRoleAssignment
+from jsonfield.encoder import JSONEncoder
 from jsonfield.fields import JSONField
 from model_utils.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
@@ -37,6 +38,7 @@ class CatalogQuery(models.Model):
         null=False,
         default=dict,
         load_kwargs={'object_pairs_hook': collections.OrderedDict},
+        dump_kwargs={'indent': 4, 'cls': JSONEncoder, 'separators': (',', ':')},
         help_text=_(
             "Query parameters which will be used to filter the discovery service's search/all "
             "endpoint results, specified as a JSON object."
@@ -98,6 +100,8 @@ class EnterpriseCatalog(TimeStampedModel):
     )
     enabled_course_modes = JSONField(
         default=json_serialized_course_modes,
+        load_kwargs={'object_pairs_hook': collections.OrderedDict},
+        dump_kwargs={'indent': 4, 'cls': JSONEncoder, 'separators': (',', ':')},
         help_text=_('Ordered list of enrollment modes which can be displayed to learners for course runs in'
                     ' this catalog.'),
     )
@@ -198,6 +202,7 @@ class ContentMetadata(TimeStampedModel):
         blank=True,
         null=True,
         load_kwargs={'object_pairs_hook': collections.OrderedDict},
+        dump_kwargs={'indent': 4, 'cls': JSONEncoder, 'separators': (',', ':')},
         help_text=_(
             "The metadata about a particular piece content as retrieved from the discovery service's search/all "
             "endpoint results, specified as a JSON object."

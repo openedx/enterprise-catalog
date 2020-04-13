@@ -56,3 +56,8 @@ CELERYD_HIJACK_ROOT_LOGGER = True
 CELERY_ALWAYS_EAGER = (
     os.environ.get("CELERY_ALWAYS_EAGER", "false").lower() == "true"
 )
+
+CORS_ORIGIN_WHITELIST = [
+    # Enterprise learner portal MFE
+    'http://localhost:8734',
+]
