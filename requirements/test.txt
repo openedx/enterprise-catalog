@@ -18,7 +18,7 @@ click==7.1.1              # via click-log, code-annotations, edx-lint
 code-annotations==0.3.3   # via -r requirements/test.in
 coreapi==2.3.3            # via -r requirements/base.txt, django-rest-swagger, openapi-codec
 coreschema==0.0.4         # via -r requirements/base.txt, coreapi
-coverage==5.0.4           # via -r requirements/test.in, pytest-cov
+coverage==5.1             # via -r requirements/test.in, pytest-cov
 ddt==1.3.1                # via -r requirements/test.in
 defusedxml==0.6.0         # via -r requirements/base.txt, djangorestframework-xml, python3-openid, social-auth-core
 distlib==0.3.0            # via virtualenv
@@ -30,19 +30,19 @@ django-model-utils==3.2.0  # via -r requirements/base.txt, edx-rbac
 django-rest-swagger==2.2.0  # via -r requirements/base.txt
 django-simple-history==2.8.0  # via -r requirements/base.txt
 django-waffle==0.20.0     # via -r requirements/base.txt, edx-django-utils, edx-drf-extensions
-djangorestframework-xml==1.4.0  # via -r requirements/base.txt
+djangorestframework-xml==2.0.0  # via -r requirements/base.txt
 djangorestframework==3.11.0  # via -r requirements/base.txt, django-rest-swagger, drf-jwt, edx-drf-extensions, rest-condition
 drf-jwt==1.14.0           # via -r requirements/base.txt, edx-drf-extensions
 edx-auth-backends==3.0.2  # via -r requirements/base.txt
 edx-django-release-util==0.4.2  # via -r requirements/base.txt
-edx-django-utils==3.1     # via -r requirements/base.txt, edx-drf-extensions
+edx-django-utils==3.2.0   # via -r requirements/base.txt, edx-drf-extensions
 edx-drf-extensions==5.0.2  # via -r requirements/base.txt, edx-rbac
 edx-lint==1.4.1           # via -r requirements/test.in
 edx-opaque-keys==2.0.2    # via -r requirements/base.txt, edx-drf-extensions
-edx-rbac==1.1.2           # via -r requirements/base.txt
+edx-rbac==1.1.3           # via -r requirements/base.txt
 edx-rest-api-client==1.9.2  # via -r requirements/base.txt
 factory-boy==2.12.0       # via -r requirements/test.in
-faker==4.0.2              # via factory-boy
+faker==4.0.3              # via factory-boy
 filelock==3.0.12          # via tox, virtualenv
 future==0.18.2            # via -r requirements/base.txt, pyjwkest
 idna==2.9                 # via -r requirements/base.txt, requests
@@ -50,7 +50,7 @@ importlib-metadata==1.6.0  # via importlib-resources, pluggy, pytest, tox, virtu
 importlib-resources==1.4.0  # via virtualenv
 isort==4.3.21             # via pylint
 itypes==1.1.0             # via -r requirements/base.txt, coreapi
-jinja2==2.11.1            # via -r requirements/base.txt, code-annotations, coreschema
+jinja2==2.11.2            # via -r requirements/base.txt, code-annotations, coreschema
 jsonfield2==3.0.3         # via -r requirements/base.txt
 kombu==3.0.37             # via -r requirements/base.txt, celery
 lazy-object-proxy==1.4.3  # via astroid
@@ -59,7 +59,7 @@ mccabe==0.6.1             # via pylint
 mock==3.0.5               # via -r requirements/test.in
 more-itertools==8.2.0     # via pytest
 mysqlclient==1.4.6        # via -r requirements/base.txt
-newrelic==5.10.0.138      # via -r requirements/base.txt, edx-django-utils
+newrelic==5.12.0.140      # via -r requirements/base.txt, edx-django-utils
 oauthlib==3.1.0           # via -r requirements/base.txt, requests-oauthlib, social-auth-core
 openapi-codec==1.3.2      # via -r requirements/base.txt, django-rest-swagger
 packaging==20.3           # via pytest, tox
@@ -104,7 +104,7 @@ tox==3.14.6               # via -r requirements/test.in
 typed-ast==1.4.1          # via astroid
 uritemplate==3.0.1        # via -r requirements/base.txt, coreapi
 urllib3==1.25.8           # via -r requirements/base.txt, requests
-virtualenv==20.0.16       # via tox
+virtualenv==20.0.17       # via tox
 wcwidth==0.1.9            # via pytest
 wrapt==1.11.2             # via astroid
 zipp==1.2.0               # via -r requirements/base.txt, importlib-metadata, importlib-resources
