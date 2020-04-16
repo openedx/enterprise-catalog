@@ -49,7 +49,7 @@ RUN pip3 install -r /edx/app/enterprise_catalog/enterprise_catalog/requirements/
 USER app
 
 # Gunicorn 19 does not log to stdout or stderr by default. Once we are past gunicorn 19, the logging to STDOUT need not be specified.
-CMD gunicorn --workers=2 --name enterprise_catalog -c /edx/app/enterprise_catalog/enterprise_catalog/enterprise_catalog/docker_gunicorn_configuration.py --log-file - --max-requests=1000 enterprise_catalog.wsgi:application
+CMD ["gunicorn", "--workers=2", "--name", "enterprise_catalog", "-c", "/edx/app/enterprise_catalog/enterprise_catalog/enterprise_catalog/docker_gunicorn_configuration.py", "--log-file", "-", "--max-requests=1000", "enterprise_catalog.wsgi:application"]
 
 # This line is after the requirements so that changes to the code will not
 # bust the image cache
@@ -57,7 +57,7 @@ COPY . /edx/app/enterprise_catalog/enterprise_catalog
 
 FROM app as newrelic
 RUN pip3 install newrelic
-CMD newrelic-admin run-program gunicorn --workers=2 --name enterprise_catalog -c /edx/app/enterprise_catalog/enterprise_catalog/enterprise_catalog/docker_gunicorn_configuration.py --log-file - --max-requests=1000 enterprise_catalog.wsgi:application
+CMD ["newrelic-admin", "run-program", "gunicorn", "--workers=2", "--name", "enterprise_catalog", "-c", "/edx/app/enterprise_catalog/enterprise_catalog/enterprise_catalog/docker_gunicorn_configuration.py", "--log-file", "-", "--max-requests=1000", "enterprise_catalog.wsgi:application"]
 
 FROM app as devapp
 # Dev ports
@@ -66,4 +66,4 @@ EXPOSE 18161
 USER root
 RUN pip3 install -r /edx/app/enterprise_catalog/enterprise_catalog/requirements/dev.txt
 USER app
-CMD gunicorn --reload --workers=2 --name enterprise_catalog -b :18160 -c /edx/app/enterprise_catalog/enterprise_catalog/enterprise_catalog/docker_gunicorn_configuration.py --log-file - --max-requests=1000 enterprise_catalog.wsgi:application
+CMD ["gunicorn", "--reload", "--workers=2", "--name", "enterprise_catalog", "-b", ":18160", "-c", "/edx/app/enterprise_catalog/enterprise_catalog/enterprise_catalog/docker_gunicorn_configuration.py", "--log-file", "-", "--max-requests=1000", "enterprise_catalog.wsgi:application"]
