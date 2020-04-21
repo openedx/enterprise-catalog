@@ -1,0 +1,278 @@
+# Enterprise Catalog IDA: upstream API definitions, including vendor extensions.
+# Note, while this document is not strictly to Swagger spec, each HTTP method's
+# definition _must_ be to spec or the downstream ref will fail.
+#
+# Clients must include an Authorization header with OAuth2 access token in order to communicate:
+#   Authorization: JWT {access_token}
+#
+#
+# Available service endpoints -- note that alternate endpoints may be presented at the API Gateway tier
+#   /enterprise-catalog/v1/enterprise-catalogs/
+#   /enterprise-catalog/v1/enterprise-catalogs/{uuid}/
+
+apigateway_responses: &apigateway_responses
+  default:
+    statusCode: "400"
+  200:
+    statusCode: "200"
+  401:
+    statusCode: "401"
+  403:
+    statusCode: "403"
+  404:
+    statusCode: "404"
+  429:
+    statusCode: "429"
+  500:
+    statusCode: "500"
+
+apigateway_responses_with_mapping_template: &apigateway_responses_with_mapping_template
+  default:
+    statusCode: "400"
+  200:
+    statusCode: "200"
+    responseTemplates:
+      # Response body mapping template, this template is used for updating
+      # "next" and "previous" urls (both host and url path) while preserving
+      # the protocol (http | https) and querystring parameters.
+      application/json: >
+        #set($inputRoot = $input.path('$'))
+        #set($host = $stageVariables.gateway_host)
+
+        #set($URLMatchRegex = "(^https?://)[^/]*[^?]*(.*$)")
+        #set($updatedURL = "$1$host$context.resourcePath$2")
+
+        {
+          "count": $inputRoot.count,
+          "next": "$inputRoot.next.replaceAll($URLMatchRegex, $updatedURL)",
+          "previous": "$inputRoot.previous.replaceAll($URLMatchRegex, $updatedURL)",
+          "results": $inputRoot.results
+        }
+  401:
+    statusCode: "401"
+  403:
+    statusCode: "403"
+  404:
+    statusCode: "404"
+  429:
+    statusCode: "429"
+  500:
+    statusCode: "500"
+
+apigateway_responses_with_mapping_template_for_id: &apigateway_responses_with_mapping_template_for_id
+  default:
+    statusCode: "400"
+  200:
+    statusCode: "200"
+    responseTemplates:
+      # Response body mapping template, this template is used for updating
+      # "next" and "previous" urls (both host and url path) while preserving
+      # the protocol (http | https) and querystring parameters.
+      application/json: >
+        #set($inputRoot = $input.path('$'))
+        #set($host = $stageVariables.gateway_host)
+        #set($id = $input.params('id'))
+
+        #set($URLMatchRegex = "(^https?://)[^/]*[^?]*(.*$)")
+        #set($updatedURL = "$1$host$context.resourcePath$2")
+        #set($resourceIdMatch = "{id}")
+
+        {
+          "count": $inputRoot.count,
+          "next": "$inputRoot.next.replaceAll($URLMatchRegex, $updatedURL).replace($resourceIdMatch, $id)",
+          "previous": "$inputRoot.previous.replaceAll($URLMatchRegex, $updatedURL).replace($resourceIdMatch, $id)",
+          "results": $inputRoot.results
+        }
+  401:
+    statusCode: "401"
+  403:
+    statusCode: "403"
+  404:
+    statusCode: "404"
+  429:
+    statusCode: "429"
+  500:
+    statusCode: "500"
+
+apigateway_responses_with_mapping_template_for_uuid: &apigateway_responses_with_mapping_template_for_uuid
+  default:
+    statusCode: "400"
+  200:
+    statusCode: "200"
+    responseTemplates:
+      # Response body mapping template, this template is used for updating
+      # "next" and "previous" urls (both host and url path) while preserving
+      # the protocol (http | https) and querystring parameters.
+      application/json: >
+        #set($inputRoot = $input.path('$'))
+        #set($host = $stageVariables.gateway_host)
+        #set($uuid = $input.params('uuid'))
+
+        #set($URLMatchRegex = "(^https?://)[^/]*[^?]*(.*$)")
+        #set($updatedURL = "$1$host$context.resourcePath$2")
+        #set($resourceUuidMatch = "{uuid}")
+
+        {
+          "count": $inputRoot.count,
+          "next": "$inputRoot.next.replaceAll($URLMatchRegex, $updatedURL).replace($resourceUuidMatch, $uuid)",
+          "previous": "$inputRoot.previous.replaceAll($URLMatchRegex, $updatedURL).replace($resourceUuidMatch, $uuid)",
+          "results": $inputRoot.results
+        }
+  401:
+    statusCode: "401"
+  403:
+    statusCode: "403"
+  404:
+    statusCode: "404"
+  429:
+    statusCode: "429"
+  500:
+    statusCode: "500"
+
+responses: &responses
+  200:
+    description: "OK"
+  400:
+    description: "Bad Request"
+  401:
+    description: "Unauthorized"
+  403:
+    description: "Forbidden"
+  404:
+    description: "Not Found"
+  429:
+    description: "Too Many Requests"
+  500:
+    description: "Internal Server Error"
+
+produces: &produces
+  - "application/json"
+  - "application/csv"
+
+id_parameter: &id_parameter
+  name: "id"
+  in: "path"
+  required: true
+  type: "number"
+
+uuid_parameter: &uuid_parameter
+  name: "uuid"
+  in: "path"
+  required: true
+  type: "string"
+
+auth_header: &auth_header
+  name: "Authorization"
+  in: "header"
+  required: true
+  type: "string"
+
+limit_qs_parameter: &limit_qs_parameter
+  in: "query"
+  name: "limit"
+  required: false
+  type: "number"
+
+offset_qs_parameter: &offset_qs_parameter
+  in: "query"
+  name: "offset"
+  required: false
+  type: "number"
+
+page_qs_parameter: &page_qs_parameter
+  in: "query"
+  name: "page"
+  required: false
+  type: "number"
+
+page_size_qs_parameter: &page_size_qs_parameter
+  in: "query"
+  name: "page_size"
+  required: false
+  type: "number"
+
+# AWS API Gateway vendor extension point. This information is used
+#  by https://github.com/awslabs/aws-apigateway-importer.
+x-amazon-apigateway-integration-id-response: &apigateway_integration_id
+  responses: *apigateway_responses_with_mapping_template_for_id
+  httpMethod: "GET"
+  type: "http"
+  requestParameters:
+    integration.request.header.Authorization: "method.request.header.Authorization"
+    integration.request.querystring.limit: "method.request.querystring.limit"
+    integration.request.querystring.offset: "method.request.querystring.offset"
+    integration.request.querystring.page: "method.request.querystring.page"
+    integration.request.querystring.page_size: "method.request.querystring.page_size"
+
+x-amazon-apigateway-integration-with-id: &apigateway_integration_with_id_parameter
+  responses: *apigateway_responses
+  httpMethod: "GET"
+  type: "http"
+  requestParameters:
+    integration.request.header.Authorization: "method.request.header.Authorization"
+    integration.request.path.id: "method.request.path.id"
+
+x-amazon-apigateway-integration-with-id-and-querystring-parameters: &apigateway_integration_with_id_and_querystring_parameters
+  responses: *apigateway_responses_with_mapping_template_for_id
+  httpMethod: "GET"
+  type: "http"
+  requestParameters:
+    integration.request.header.Authorization: "method.request.header.Authorization"
+    integration.request.path.id: "method.request.path.id"
+    integration.request.querystring.limit: "method.request.querystring.limit"
+    integration.request.querystring.offset: "method.request.querystring.offset"
+    integration.request.querystring.page: "method.request.querystring.page"
+    integration.request.querystring.page_size: "method.request.querystring.page_size"
+
+x-amazon-apigateway-integration-enterprise-catalog-list: &apigateway_integration_enterprise_catalog_list
+  responses: *apigateway_responses_with_mapping_template
+  httpMethod: "GET"
+  type: "http"
+  requestParameters:
+    integration.request.header.Authorization: "method.request.header.Authorization"
+    integration.request.querystring.page: "method.request.querystring.page"
+    integration.request.querystring.page_size: "method.request.querystring.page_size"
+
+x-amazon-apigateway-integration-enterprise-catalog-detail: &apigateway_integration_enterprise_catalog_detail
+  responses: *apigateway_responses_with_mapping_template_for_uuid
+  httpMethod: "GET"
+  type: "http"
+  requestParameters:
+    integration.request.header.Authorization: "method.request.header.Authorization"
+    integration.request.path.uuid: "method.request.path.uuid"
+    integration.request.querystring.page: "method.request.querystring.page"
+    integration.request.querystring.page_size: "method.request.querystring.page_size"
+
+endpoints:
+  v1:
+
+    # /v1/enterprise-catalogs/
+    enterpriseCatalogs:
+        get:
+          produces: *produces
+          parameters:
+            - *auth_header
+            - *page_qs_parameter
+            - *page_size_qs_parameter
+          operationId: "get_enterprise_catalogs"
+          responses: *responses
+          x-amazon-apigateway-integration:
+            <<: *apigateway_integration_enterprise_catalog_list
+            uri: "https://${stageVariables.enterprise_host}/api/v1/enterprise-catalogs/"
+
+    # /v1/enterprise-catalogs/{uuid}/
+    enterpriseCatalogByUuid:
+        get:
+          produces: *produces
+          parameters:
+            - *auth_header
+            - *uuid_parameter
+            - *page_qs_parameter
+            - *page_size_qs_parameter
+          operationId: "get_enterprise_catalog_by_uuid"
+          responses: *responses
+          x-amazon-apigateway-integration:
+            <<: *apigateway_integration_enterprise_catalog_detail
+            # In the enterprise catalog service, the `get_content_metadata` endpoint contains the additional info that
+            # the edx-enterprise endpoints used in their detail endpoints
+            uri: "https://${stageVariables.enterprise_host}/api/v1/enterprise-catalogs/{uuid}/get_content_metadata"
