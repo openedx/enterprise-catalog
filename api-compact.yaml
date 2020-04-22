@@ -7,8 +7,8 @@
 #
 #
 # Available service endpoints -- note that alternate endpoints may be presented at the API Gateway tier
-#   /enterprise-catalog/v1/enterprise-catalogs/
-#   /enterprise-catalog/v1/enterprise-catalogs/{uuid}/
+#   /enterprise/v2/enterprise-catalogs/
+#   /enterprise/v2/enterprise-catalogs/{uuid}/
 
 apigateway_responses: &apigateway_responses
   default:
