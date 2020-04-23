@@ -244,9 +244,9 @@ x-amazon-apigateway-integration-enterprise-catalog-detail: &apigateway_integrati
     integration.request.querystring.page_size: "method.request.querystring.page_size"
 
 endpoints:
-  v1:
+  v2:
 
-    # /v1/enterprise-catalogs/
+    # /v2/enterprise-catalogs/
     enterpriseCatalogs:
         get:
           produces: *produces
@@ -260,7 +260,7 @@ endpoints:
             <<: *apigateway_integration_enterprise_catalog_list
             uri: "https://${stageVariables.enterprise_host}/api/v1/enterprise-catalogs/"
 
-    # /v1/enterprise-catalogs/{uuid}/
+    # /v2/enterprise-catalogs/{uuid}/
     enterpriseCatalogByUuid:
         get:
           produces: *produces
