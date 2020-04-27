@@ -258,7 +258,7 @@ endpoints:
           responses: *responses
           x-amazon-apigateway-integration:
             <<: *apigateway_integration_enterprise_catalog_list
-            uri: "https://${stageVariables.enterprise_host}/api/v1/enterprise-catalogs/"
+            uri: "https://${stageVariables.enterprise_catalog_host}/api/v1/enterprise-catalogs/"
 
     # /v2/enterprise-catalogs/{uuid}/
     enterpriseCatalogByUuid:
@@ -275,4 +275,4 @@ endpoints:
             <<: *apigateway_integration_enterprise_catalog_detail
             # In the enterprise catalog service, the `get_content_metadata` endpoint contains the additional info that
             # the edx-enterprise endpoints used in their detail endpoints
-            uri: "https://${stageVariables.enterprise_host}/api/v1/enterprise-catalogs/{uuid}/get_content_metadata"
+            uri: "https://${stageVariables.enterprise_catalog_host}/api/v1/enterprise-catalogs/{uuid}/get_content_metadata"
