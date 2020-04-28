@@ -56,7 +56,7 @@ class TestDiscoveryApiClient(TestCase):
 
         content_filter = {'*': '*'}
         traverse_pagination = False
-        query_params = {}
+        query_params = {'exclude_expired_course_run': True}
 
         client = DiscoveryApiClient()
         actual_response = client.get_metadata_by_query(

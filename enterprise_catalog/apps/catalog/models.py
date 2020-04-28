@@ -341,12 +341,18 @@ def update_contentmetadata_from_discovery(catalog_uuid):
 
     Takes a uuid, looks up catalogquery, uses discovery service client to
     grab fresh metadata, and then create/updates ContentMetadata objects.
+
+    Omits expired course runs from the updated metadata to match old
+    edx-enterprise implementatiion.
     """
     client = DiscoveryApiClient()
 
     catalog = EnterpriseCatalog.objects.get(uuid=catalog_uuid)
     catalog_query = catalog.catalog_query
-    metadata = client.get_metadata_by_query(catalog_query.content_filter)
+    query_params = {}
+    # Omit non-active course runs from the course-discovery results
+    query_params['exclude_expired_course_run'] = True
+    metadata = client.get_metadata_by_query(catalog_query.content_filter, query_params=query_params)
 
     content_keys = associate_content_metadata_with_query(metadata, catalog_query)
 
