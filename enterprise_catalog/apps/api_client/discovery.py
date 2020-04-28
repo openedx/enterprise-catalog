@@ -51,7 +51,7 @@ class DiscoveryApiClient:
             response = self.client.post(
                 self.SEARCH_ALL_ENDPOINT,
                 data=content_filter_query,
-                **query_params
+                params=query_params
             ).json()
             results += response.get('results', [])
 
@@ -76,7 +76,7 @@ class DiscoveryApiClient:
         response = self.client.post(
             self.SEARCH_ALL_ENDPOINT,
             data=content_filter_query,
-            **query_params
+            params=query_params
         ).json()
 
         if traverse_pagination:
