@@ -1,10 +1,7 @@
 """
 Shoddy script for load-testing the enterprise-catalog `get_content_metadata` API endpoint.
 
-requirements (you must pip install these before using):
-matplotlib==3.0.3
-numpy==1.18.3
-requests==2.23.0
+requirements you must pip install these before using: matplotlib, numpy, requests
 """
 
 from collections import defaultdict
