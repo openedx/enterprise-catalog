@@ -56,7 +56,6 @@ def _make_request(url, *args, delay_seconds=0.1):
         headers=_headers(),
     )
     elapsed = time.time() - start
-    # print('Got metadata for {} in {} seconds'.format(catalog_uuid, elapsed))
 
     if response.status_code != 200:
         print(response.status_code)
@@ -72,10 +71,11 @@ def get_content_metadata(task_input):
     catalog_uuid, delay_seconds = task_input
 
     response_content, elapsed = _make_request(
-        'https://enterprise-catalog.stage.edx.org/api/v1/enterprise-catalogs/{}/get_content_metadata/',
+        'https://enterprise-catalog.stage.edx.org/api/v1/enterprise-catalogs/{}/get_content_metadata.json/?traverse_pagination=1',
         catalog_uuid,
         delay_seconds=delay_seconds,
     )
+    print('Got metadata for {} in {} seconds'.format(catalog_uuid, elapsed))
     return catalog_uuid, response_content, elapsed
 
 
@@ -83,7 +83,7 @@ def get_catalog_contains_content_items(task_input):
     catalog_uuid, delay_seconds, content_item_key = task_input
 
     response_content, elapsed = _make_request(
-        'https://enterprise-catalog.stage.edx.org/api/v1/enterprise-catalogs/{}/contains_content_items/?course_run_ids={}',
+        'https://enterprise-catalog.stage.edx.org/api/v1/enterprise-catalogs/{}/contains_content_items.json/?course_run_ids={}',
         catalog_uuid,
         content_item_key,
         delay_seconds=delay_seconds,
@@ -91,6 +91,21 @@ def get_catalog_contains_content_items(task_input):
 
     print(response_content, elapsed)
     return elapsed
+
+
+def get_enterprise_contains_content_items(task_input):
+    enterprise_uuid, delay_seconds, content_item_key = task_input
+
+    response_content, elapsed = _make_request(
+        'https://enterprise-catalog.stage.edx.org/api/v1/enterprise-customer/{}/contains_content_items.json/?course_run_ids={}',
+        enterprise_uuid,
+        content_item_key,
+        delay_seconds=delay_seconds,
+    )
+
+    print(response_content, elapsed)
+    return elapsed
+
 
 def content_metadata_loadtest(async=False, num_procs=4, number_requests=100, delay_seconds=2):
     response_times_and_sizes = []
@@ -121,8 +136,8 @@ def content_metadata_loadtest(async=False, num_procs=4, number_requests=100, del
     return response_times_and_sizes
 
 
-def catalog_contains_content_items_loadtest(
-        catalog_uuid, item_id_filename,
+def _contains_content_items_loadtest(
+        request_function, primary_uuid, item_id_filename,
         async=False, num_procs=4, number_requests=100, delay_seconds=2,
         random_misses=False
 ):
@@ -135,19 +150,43 @@ def catalog_contains_content_items_loadtest(
         for _ in range(number_requests)
     ]
     delay_input = [delay_seconds for _ in range(number_requests)]
-    catalog_uuid_input = [catalog_uuid for _ in range(number_requests)]
+    catalog_uuid_input = [primary_uuid for _ in range(number_requests)]
     task_input = zip(catalog_uuid_input, delay_input, content_item_input)
 
     if async:
         with Pool(processes=num_procs) as pool:
-            result = pool.map_async(get_catalog_contains_content_items, task_input)
+            result = pool.map_async(request_function, task_input)
             pool.close()
             pool.join()
 
             return list(result.get())
 
     else:
-        return list(map(get_catalog_contains_content_items, task_input))
+        return list(map(request_function, task_input))
+
+
+def catalog_contains_content_items_loadtest(
+        catalog_uuid, item_id_filename,
+        async=False, num_procs=4, number_requests=100, delay_seconds=2,
+        random_misses=False
+):
+    return _contains_content_items_loadtest(
+        get_catalog_contains_content_items, catalog_uuid, item_id_filename,
+        async=async, num_procs=num_procs, number_requests=number_requests, delay_seconds=delay_seconds,
+        random_misses=random_misses
+    )
+
+
+def enterprise_contains_content_items_loadtest(
+        enterprise_uuid, item_id_filename,
+        async=False, num_procs=4, number_requests=100, delay_seconds=2,
+        random_misses=False
+):
+    return _contains_content_items_loadtest(
+        get_enterprise_contains_content_items, enterprise_uuid, item_id_filename,
+        async=async, num_procs=num_procs, number_requests=number_requests, delay_seconds=delay_seconds,
+        random_misses=random_misses
+    )
 
 
 def _perturb(content_id, do_nothing):
@@ -195,7 +234,7 @@ def analyze(response_times):
 if __name__ == '__main__':
     if sys.argv[1] == 'get_content_metadata':
         response_times_and_sizes = content_metadata_loadtest(
-            async=True, num_procs=4, number_requests=200, delay_seconds=0.1
+            async=False, num_procs=4, number_requests=5, delay_seconds=0.1
         )
         analyze_with_sizes(response_times_and_sizes)
     if sys.argv[1] == 'catalog_contains_content_items':
@@ -203,6 +242,14 @@ if __name__ == '__main__':
         content_items_filenames = sys.argv[3]
         response_times = catalog_contains_content_items_loadtest(
             catalog_uuid, content_items_filenames,
+            async=False, num_procs=16, number_requests=100, delay_seconds=0.01, random_misses=True
+        )
+        analyze(response_times)
+    if sys.argv[1] == 'enterprise_contains_content_items':
+        enterprise_uuid = sys.argv[2]
+        content_items_filenames = sys.argv[3]
+        response_times = enterprise_contains_content_items_loadtest(
+            enterprise_uuid, content_items_filenames,
             async=True, num_procs=16, number_requests=1600, delay_seconds=0.01, random_misses=True
         )
         analyze(response_times)

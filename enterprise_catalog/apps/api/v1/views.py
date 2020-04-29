@@ -143,6 +143,7 @@ class EnterpriseCatalogContainsContentItems(BaseViewSet, viewsets.ModelViewSet):
         Multiple course_run_ids and/or program_uuids query parameters can be sent to this view to check for their
         existence in the specified enterprise catalog.
         """
+        import pdb; pdb.set_trace()
         course_run_ids = unquote_course_keys(course_run_ids)
 
         enterprise_catalog = self.get_object()
