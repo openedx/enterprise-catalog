@@ -46,40 +46,46 @@ def _headers():
 
 def get_content_metadata(task_input):
     catalog_uuid, delay_seconds = task_input
-    print('Getting metadata for {}'.format(catalog_uuid))
     
     start = time.time()
     response = requests.get(
         'https://enterprise-catalog.stage.edx.org/api/v1/enterprise-catalogs/{}/get_content_metadata/'.format(catalog_uuid),
         headers=_headers(),
     )
+    elapsed = time.time() - start
+    print('Got metadata for {} in {} seconds'.format(catalog_uuid, elapsed))
+
     if response.status_code != 200:
         print(response.status_code)
         print(response.content)
         raise Exception('Got non-200 status_code')
-
-    elapsed = time.time() - start
     
     time.sleep(delay_seconds)
     
-    return catalog_uuid, response, elapsed
+    return catalog_uuid, response.content, elapsed
 
 
-def content_metadata_loadtest(num_procs=4, number_requests=100, delay_seconds=2):
+def content_metadata_loadtest(async=False, num_procs=4, number_requests=100, delay_seconds=2):
     data_by_catalog_uuid = defaultdict(list)
     response_times_and_sizes = []
     uuid_input = [str(random.choice(CATALOG_UUIDS)) for _ in range(number_requests)]
     delay_input = [delay_seconds for _ in range(number_requests)]
     task_input = zip(uuid_input, delay_input)
 
-    # with Pool(processes=num_procs) as pool:
-    #     result = pool.map_async(get_content_metadata, task_input)
-    #     pool.close()
-    #     pool.join()
+    if async:
+        with Pool(processes=num_procs) as pool:
+            result = pool.map_async(get_content_metadata, task_input)
+            pool.close()
+            pool.join()
 
-    result = map(get_content_metadata, task_input)
-    for catalog_uuid, response, elapsed in result:
-        response_times_and_sizes.append((elapsed, len(response.content)))
+            for catalog_uuid, response_content, elapsed in result.get():
+                response_times_and_sizes.append((elapsed, len(response_content)))
+
+    else:
+        result = map(get_content_metadata, task_input)
+        for catalog_uuid, response_content, elapsed in result:
+            response_times_and_sizes.append((elapsed, len(response_content)))
+
 
     return response_times_and_sizes
 
@@ -105,5 +111,5 @@ def analyze(response_times_and_sizes):
 
 
 if __name__ == '__main__':
-    response_times_and_sizes = content_metadata_loadtest(num_procs=4, number_requests=200, delay_seconds=0.1)
+    response_times_and_sizes = content_metadata_loadtest(async=True, num_procs=16, number_requests=400, delay_seconds=0.1)
     analyze(response_times_and_sizes)
