@@ -319,6 +319,7 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SOCIAL_AUTH_REDIRECT_IS_HTTPS = False
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
+LMS_BASE_URL = os.environ.get('LMS_BASE_URL', '')
 DISCOVERY_SERVICE_API_URL = os.environ.get('DISCOVERY_SERVICE_API_URL', '')
 
 # Set up system-to-feature roles mapping for edx-rbac
