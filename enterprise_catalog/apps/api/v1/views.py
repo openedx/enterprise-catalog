@@ -19,14 +19,12 @@ from enterprise_catalog.apps.api.v1.decorators import (
     require_at_least_one_query_parameter,
 )
 from enterprise_catalog.apps.api.v1.serializers import (
+    ContentMetadataSerializer,
     EnterpriseCatalogCreateSerializer,
     EnterpriseCatalogSerializer,
 )
 from enterprise_catalog.apps.api.v1.utils import unquote_course_keys
-from enterprise_catalog.apps.catalog.models import (
-    ContentMetadata,
-    EnterpriseCatalog,
-)
+from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
 
 
 class BaseViewSet(PermissionRequiredMixin, viewsets.ViewSet):
@@ -125,11 +123,15 @@ class EnterpriseCatalogActionViewSet(BaseViewSet, viewsets.ModelViewSet):
         if not catalog_query:
             return Response(metadata)
 
-        associated_metadata = catalog_query.contentmetadata_set.all()
-        sorted_content_keys = sorted([metadata_chunk.content_key for metadata_chunk in associated_metadata])
-        metadata['results'] = [ContentMetadata.objects.get(content_key=content_key).json_metadata for content_key
-                               in sorted_content_keys]
-        metadata['count'] = len(sorted_content_keys)
+        context = self.get_serializer_context()
+        context['enterprise_catalog'] = enterprise_catalog
+
+        associated_metadata = catalog_query.contentmetadata_set.order_by('content_key')
+        serializer = ContentMetadataSerializer(associated_metadata, context=context, many=True)
+        updated_associated_metadata = serializer.data
+
+        metadata['results'] = [metadata_obj.json_metadata for metadata_obj in updated_associated_metadata]
+        metadata['count'] = len(associated_metadata)
 
         return Response(metadata)
 

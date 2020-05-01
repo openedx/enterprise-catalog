@@ -57,7 +57,7 @@ class CatalogQueryAdmin(UnchangeableMixin):
 @admin.register(EnterpriseCatalog)
 class EnterpriseCatalogAdmin(UnchangeableMixin):
     """ Admin configuration for the custom EnterpriseCatalog model. """
-    list_display = ('uuid', 'enterprise_uuid', 'title', 'get_catalog_query',)
+    list_display = ('uuid', 'enterprise_uuid', 'enterprise_name', 'title', 'get_catalog_query',)
 
     def get_catalog_query(self, obj):
         link = reverse("admin:catalog_catalogquery_change", args=[obj.catalog_query.id])
