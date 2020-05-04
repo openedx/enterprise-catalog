@@ -117,7 +117,10 @@ class EnterpriseCatalogCreateSerializer(EnterpriseCatalogSerializer):
 
 
 class ContentMetadataSerializer(ImmutableStateSerializer):
-    """ TODO """
+    """ 
+    Serializer for the `ContentMetadata` model to add/modify additional
+    fields (e.g., enrollment_url, marketing_url)
+    """
 
     def to_representation(self, instance):
         """
