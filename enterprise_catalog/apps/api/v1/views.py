@@ -29,6 +29,7 @@ from enterprise_catalog.apps.catalog.models import (
 )
 
 
+
 class BaseViewSet(PermissionRequiredMixin, viewsets.ViewSet):
     """
     Base class for all enterprise catalog view sets.
