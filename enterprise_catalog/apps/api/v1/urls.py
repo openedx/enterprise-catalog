@@ -12,7 +12,8 @@ app_name = 'v1'
 
 router = DefaultRouter()  # pylint: disable=invalid-name
 router.register(r'enterprise-catalogs', views.EnterpriseCatalogCRUDViewSet, basename='enterprise-catalog')
-router.register(r'enterprise-catalogs', views.EnterpriseCatalogActionViewSet, basename='enterprise-catalog')
+router.register(r'enterprise-catalogs', views.EnterpriseCatalogContainsContentItems, basename='enterprise-catalog')
+router.register(r'enterprise-catalogs', views.EnterpriseCatalogGetContentMetadata, basename='enterprise-catalog')
 router.register(r'enterprise-customer', views.EnterpriseCustomerViewSet, basename='enterprise-customer')
 
 urlpatterns = [
