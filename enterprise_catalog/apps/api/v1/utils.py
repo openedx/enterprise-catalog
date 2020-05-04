@@ -48,10 +48,14 @@ def get_enterprise_utm_context(enterprise_name):
     """
     Get the UTM context for the enterprise.
     """
-    return {
+    utm_context = {
         'utm_medium': 'enterprise',
-        'utm_source': slugify(enterprise_name),
     }
+
+    if enterprise_name:
+        utm_context['utm_source'] = slugify(enterprise_name)
+
+    return utm_context
 
 
 def parse_datetime_handle_invalid(datetime_value):

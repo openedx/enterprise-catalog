@@ -3,7 +3,9 @@ from collections import OrderedDict
 
 import ddt
 import mock
+from django.conf import settings
 from django.db import IntegrityError
+from django.utils.text import slugify
 from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.settings import api_settings
@@ -25,12 +27,16 @@ class EnterpriseCatalogCRUDViewSetTests(APITestMixin):
     def setUp(self):
         super(EnterpriseCatalogCRUDViewSetTests, self).setUp()
         self.set_up_staff()
-        self.enterprise_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
+        self.enterprise_catalog = EnterpriseCatalogFactory(
+            enterprise_uuid=self.enterprise_uuid,
+            enterprise_name=self.enterprise_name,
+        )
         self.new_catalog_uuid = uuid.uuid4()
         self.new_catalog_data = {
             'uuid': self.new_catalog_uuid,
             'title': 'Test Title',
             'enterprise_customer': self.enterprise_uuid,
+            'enterprise_customer_name': self.enterprise_name,
             'enabled_course_modes': '["verified"]',
             'publish_audit_enrollment_urls': True,
             'content_filter': '{"content_type":"course"}',

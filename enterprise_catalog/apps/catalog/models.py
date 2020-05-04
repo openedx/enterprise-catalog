@@ -196,6 +196,9 @@ class EnterpriseCatalog(TimeStampedModel):
         Returns:
             (str): Enterprise landing page url.
         """
+        if not content_key or not content_resource:
+            return None
+
         url = '{}/enterprise/{}/{}/{}/enroll/'.format(
             settings.LMS_BASE_URL,
             self.enterprise_uuid,

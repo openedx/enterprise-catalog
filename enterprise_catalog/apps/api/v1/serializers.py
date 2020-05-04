@@ -25,6 +25,7 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
     Serializer for the `EnterpriseCatalog` model
     """
     enterprise_customer = serializers.UUIDField(source='enterprise_uuid')
+    enterprise_customer_name = serializers.CharField(source='enterprise_name', write_only=True)
     enabled_course_modes = serializers.JSONField(write_only=True)
     publish_audit_enrollment_urls = serializers.BooleanField(write_only=True)
     content_filter = serializers.JSONField(write_only=True)
@@ -35,6 +36,7 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
             'uuid',
             'title',
             'enterprise_customer',
+            'enterprise_customer_name',
             'enabled_course_modes',
             'publish_audit_enrollment_urls',
             'content_filter',
@@ -137,6 +139,8 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
         json_metadata = updated_metadata.json_metadata
 
         marketing_url = json_metadata.get('marketing_url')
+        content_key = json_metadata.get('key')
+
         if marketing_url:
             marketing_url = update_query_parameters(
                 marketing_url,
@@ -147,7 +151,7 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
         if content_type in ['course', 'courserun']:
             json_metadata['enrollment_url'] = enterprise_catalog.get_content_enrollment_url(
                 content_resource='course',
-                content_key=json_metadata.get('key'),
+                content_key=content_key,
             )
             if content_type == 'course':
                 course_runs = json_metadata.get('course_runs', [])
@@ -155,12 +159,12 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
                 for course_run in course_runs:
                     course_run['enrollment_url'] = enterprise_catalog.get_content_enrollment_url(
                         content_resource='course',
-                        content_key=json_metadata.get('key'),
+                        content_key=content_key,
                     )
         elif content_type == 'program':
             json_metadata['enrollment_url'] = enterprise_catalog.get_content_enrollment_url(
                 content_resource='program',
-                content_key=json_metadata.get('key'),
+                content_key=content_key,
             )
 
         return updated_metadata
