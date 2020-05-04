@@ -58,7 +58,7 @@ def get_enterprise_utm_context(enterprise_name):
     return utm_context
 
 
-def parse_datetime_handle_invalid(datetime_value):
+def safe_parse_datetime(datetime_value):
     """
     Return the parsed version of a datetime string. If the string is invalid, return None.
     """
@@ -82,19 +82,20 @@ def is_course_run_enrollable(course_run):
     """
     now = datetime.datetime.now(pytz.UTC)
     reasonable_enrollment_window = now + datetime.timedelta(days=1)
-    end = parse_datetime_handle_invalid(course_run.get('end'))
-    enrollment_start = parse_datetime_handle_invalid(course_run.get('enrollment_start'))
-    enrollment_end = parse_datetime_handle_invalid(course_run.get('enrollment_end'))
-    return (not end or end > reasonable_enrollment_window) and \
-           (not enrollment_start or enrollment_start < now) and \
-           (not enrollment_end or enrollment_end > now)
+    course_end = safe_parse_datetime(course_run.get('end')) or datetime.datetime.max
+    enrollment_start = safe_parse_datetime(course_run.get('enrollment_start')) or datetime.datetime.min
+    enrollment_end = safe_parse_datetime(course_run.get('enrollment_end')) or datetime.datetime.max
+
+    return (reasonable_enrollment_window < course_end) and \
+        (enrollment_start < now) and \
+        (now < enrollment_end)
 
 
 def is_course_run_available_for_enrollment(course_run):
     """
     Check if a course run is available for enrollment.
     """
-    if course_run['availability'] not in ['Current', 'Starting Soon', 'Upcoming']:
+    if course_run['availability'] not in ('Current', 'Starting Soon', 'Upcoming'):
         # course run is archived so not available for enrollment
         return False
 
@@ -103,7 +104,7 @@ def is_course_run_available_for_enrollment(course_run):
     return is_course_run_enrollable(course_run)
 
 
-def has_course_run_available_for_enrollment(course_runs):
+def is_any_course_run_enrollable(course_runs):
     """
     Iterates over all course runs to check if there any course run that is available for enrollment.
 

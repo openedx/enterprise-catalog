@@ -205,13 +205,13 @@ class EnterpriseCatalog(TimeStampedModel):
             content_resource,
             content_key,
         )
-
-        url = update_query_parameters(url, get_enterprise_utm_context(self.enterprise_name))
+        params = get_enterprise_utm_context(self.enterprise_name)
+        params['catalog'] = self.uuid
 
         if self.publish_audit_enrollment_urls:
-            url = update_query_parameters(url, {'audit': 'true'})
+            params['audit'] = 'true'
 
-        return update_query_parameters(url, {'catalog': self.uuid})
+        return update_query_parameters(url, params)
 
 
 class ContentMetadata(TimeStampedModel):

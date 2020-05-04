@@ -7,7 +7,7 @@ from rest_framework import serializers
 from enterprise_catalog.apps.api.tasks import update_catalog_metadata_task
 from enterprise_catalog.apps.api.v1.utils import (
     get_enterprise_utm_context,
-    has_course_run_available_for_enrollment,
+    is_any_course_run_enrollable,
     update_query_parameters,
 )
 from enterprise_catalog.apps.catalog.models import (
@@ -125,19 +125,18 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
 
     def to_representation(self, instance):
         """
-        Return the updated course data dictionary.
+        Return the updated content metadata dictionary.
 
         Arguments:
-            instance (dict): ContentMetadata object.
+            instance (dict): ContentMetadata instance.
 
         Returns:
-            dict: The updated course data.
+            dict: The updated ContentMetadata object.
         """
         updated_metadata = copy.deepcopy(instance)
         enterprise_catalog = self.context['enterprise_catalog']
         content_type = updated_metadata.content_type
         json_metadata = updated_metadata.json_metadata
-
         marketing_url = json_metadata.get('marketing_url')
         content_key = json_metadata.get('key')
 
@@ -148,14 +147,14 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
             )
             json_metadata['marketing_url'] = marketing_url
 
-        if content_type in ['course', 'courserun']:
+        if content_type in ('course', 'courserun'):
             json_metadata['enrollment_url'] = enterprise_catalog.get_content_enrollment_url(
                 content_resource='course',
                 content_key=content_key,
             )
             if content_type == 'course':
                 course_runs = json_metadata.get('course_runs', [])
-                json_metadata['active'] = has_course_run_available_for_enrollment(course_runs)
+                json_metadata['active'] = is_any_course_run_enrollable(course_runs)
                 for course_run in course_runs:
                     course_run['enrollment_url'] = enterprise_catalog.get_content_enrollment_url(
                         content_resource='course',
