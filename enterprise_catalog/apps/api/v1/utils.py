@@ -86,9 +86,7 @@ def is_course_run_enrollable(course_run):
     enrollment_start = safe_parse_datetime(course_run.get('enrollment_start')) or datetime.datetime.min
     enrollment_end = safe_parse_datetime(course_run.get('enrollment_end')) or datetime.datetime.max
 
-    return (reasonable_enrollment_window < course_end) and \
-        (enrollment_start < now) and \
-        (now < enrollment_end)
+    return (reasonable_enrollment_window < course_end) and (enrollment_start < now < enrollment_end)
 
 
 def is_course_run_available_for_enrollment(course_run):
