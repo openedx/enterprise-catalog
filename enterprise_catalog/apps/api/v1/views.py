@@ -1,11 +1,14 @@
 from collections import OrderedDict
 
-import crum
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
+from django.utils.functional import cached_property
 from edx_rbac.mixins import PermissionRequiredMixin
 from edx_rest_framework_extensions.auth.jwt.authentication import (
     JwtAuthentication,
+)
+from edx_rest_framework_extensions.permissions import (
+    LoginRedirectIfUnauthenticated,
 )
 from rest_framework import permissions, viewsets
 from rest_framework.authentication import SessionAuthentication
@@ -28,6 +31,10 @@ from enterprise_catalog.apps.api.v1.serializers import (
 )
 from enterprise_catalog.apps.api.v1.utils import unquote_course_keys
 from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
+from enterprise_catalog.apps.catalog.rules import (
+    enterprises_with_admin_access,
+    has_access_to_all_enterprises,
+)
 
 
 class BaseViewSet(PermissionRequiredMixin, viewsets.ViewSet):
@@ -35,15 +42,25 @@ class BaseViewSet(PermissionRequiredMixin, viewsets.ViewSet):
     Base class for all enterprise catalog view sets.
     """
     authentication_classes = [JwtAuthentication, SessionAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, LoginRedirectIfUnauthenticated]
 
 
 class EnterpriseCatalogCRUDViewSet(BaseViewSet, viewsets.ModelViewSet):
     """ Viewset for CRUD operations on Enterprise Catalogs """
-    queryset = EnterpriseCatalog.objects.all().order_by('created')
     renderer_classes = [JSONRenderer, XMLRenderer]
     permission_required = 'catalog.has_admin_access'
     lookup_field = 'uuid'
+
+    @cached_property
+    def request_action(self):
+        return getattr(self, 'action', None)
+
+    @cached_property
+    def admin_accessible_enterprises(self):
+        """
+        Cached set of enterprise identifiers the requesting user has admin access to.
+        """
+        return enterprises_with_admin_access(self.request.user)
 
     def get_serializer_class(self):
         request_action = getattr(self, 'action', None)
@@ -57,18 +74,43 @@ class EnterpriseCatalogCRUDViewSet(BaseViewSet, viewsets.ModelViewSet):
 
         This object is passed to the rule predicate(s).
         """
-        request_action = getattr(self, 'action', None)
-        if request_action == 'create':
-            request = crum.get_current_request()
-            return request.data.get('enterprise_customer', None)
-        elif request_action == 'list':
-            # `django-rules` only supports object-level permissions, i.e. does not filter the
-            # objects in querysets; returning `None` here forces the permissions check to fail.
-            return None
+        if self.request_action == 'create':
+            return self.request.data.get('enterprise_customer', None)
         if self.kwargs.get('uuid'):
             enterprise_catalog = self.get_object()
             return str(enterprise_catalog.enterprise_uuid)
         return None
+
+    def check_permissions(self, request):
+        """
+        Check through permissions required and throws a permission_denied if missing any.
+
+        If `get_permission_object` is implemented, it will be called and should return the object
+        for which the `rules` predicate checks against.
+        """
+        if self.request_action == 'list':
+            # Super-users and staff won't get Forbidden responses,
+            # but depending on their assigned roles, staff may
+            # get an empty result set.
+            if request.user.is_staff:
+                return
+            if not self.admin_accessible_enterprises:
+                self.permission_denied(request)
+        else:
+            super().check_permissions(request)
+
+    def get_queryset(self):
+        """
+        Returns the queryset corresponding to all catalogs the requesting user has access to.
+        """
+        all_catalogs = EnterpriseCatalog.objects.all().order_by('created')
+        if self.request_action == 'list':
+            if not self.admin_accessible_enterprises:
+                return EnterpriseCatalog.objects.none()
+            if has_access_to_all_enterprises(self.admin_accessible_enterprises):
+                return all_catalogs
+            return all_catalogs.filter(enterprise_uuid__in=self.admin_accessible_enterprises)
+        return all_catalogs
 
 
 class EnterpriseCatalogContainsContentItems(BaseViewSet, viewsets.ModelViewSet):
