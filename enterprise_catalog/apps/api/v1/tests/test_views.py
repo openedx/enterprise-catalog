@@ -1,5 +1,6 @@
 import uuid
 from collections import OrderedDict
+from operator import itemgetter
 
 import ddt
 import mock
@@ -16,7 +17,11 @@ from enterprise_catalog.apps.catalog.constants import (
     COURSE_RUN,
     PROGRAM,
 )
-from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
+from enterprise_catalog.apps.catalog.models import (
+    CatalogQuery,
+    ContentMetadata,
+    EnterpriseCatalog,
+)
 from enterprise_catalog.apps.catalog.tests.factories import (
     ContentMetadataFactory,
     EnterpriseCatalogFactory,
@@ -62,39 +67,6 @@ class EnterpriseCatalogCRUDViewSetTests(APITestMixin):
             new_enterprise_catalog.catalog_query.content_filter,
             OrderedDict([('content_type', 'course')]),
         )
-
-    def test_list(self):
-        """
-        Verify the viewset returns a list of all enterprise catalogs for superusers
-        """
-        self.set_up_superuser()
-        url = reverse('api:v1:enterprise-catalog-list')
-        second_enterprise_catalog = EnterpriseCatalogFactory()
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 2)
-        results = response.data['results']
-        self.assertEqual(uuid.UUID(results[0]['uuid']), self.enterprise_catalog.uuid)
-        self.assertEqual(uuid.UUID(results[1]['uuid']), second_enterprise_catalog.uuid)
-
-    def test_list_unauthorized_non_catalog_admin(self):
-        """
-        Verify the viewset rejects list for users that are not catalog admins
-        """
-        self.set_up_invalid_jwt_role()
-        self.remove_role_assignments()
-        url = reverse('api:v1:enterprise-catalog-list')
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_list_unauthorized_catalog_learner(self):
-        """
-        Verify the viewset rejects list for catalog learners
-        """
-        self.set_up_catalog_learner()
-        url = reverse('api:v1:enterprise-catalog-list')
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_detail_unauthorized_catalog_learner(self):
         """
@@ -324,6 +296,131 @@ class EnterpriseCatalogCRUDViewSetTests(APITestMixin):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
+@ddt.ddt
+class EnterpriseCatalogCRUDViewSetListTests(APITestMixin):
+    """
+    Tests for the EnterpriseCatalogCRUDViewSet list endpoint.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.set_up_staff_user()
+        self.enterprise_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
+
+    def test_list_for_superusers(self):
+        """
+        Verify the viewset returns a list of all enterprise catalogs for superusers
+        """
+        self.set_up_superuser()
+        url = reverse('api:v1:enterprise-catalog-list')
+        second_enterprise_catalog = EnterpriseCatalogFactory()
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 2)
+        results = response.data['results']
+        self.assertEqual(uuid.UUID(results[0]['uuid']), self.enterprise_catalog.uuid)
+        self.assertEqual(uuid.UUID(results[1]['uuid']), second_enterprise_catalog.uuid)
+
+    def test_empty_list_for_non_catalog_admin(self):
+        """
+        Verify the viewset returns an empty list for users that are staff but not catalog admins.
+        """
+        self.set_up_invalid_jwt_role()
+        url = reverse('api:v1:enterprise-catalog-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 0)
+
+    @ddt.data(
+        False,
+        True,
+    )
+    def test_one_catalog_for_catalog_admins(self, is_role_assigned_via_jwt):
+        """
+        Verify the viewset returns a single catalog (when multiple exist) for catalog admins of a certain enterprise.
+        """
+        if is_role_assigned_via_jwt:
+            self.assign_catalog_admin_jwt_role()
+        else:
+            self.assign_catalog_admin_feature_role()
+
+        # create an additional catalog from a different enterprise,
+        # and make sure we don't see it in the response results.
+        EnterpriseCatalogFactory(enterprise_uuid=uuid.uuid4())
+
+        url = reverse('api:v1:enterprise-catalog-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 1)
+        results = response.data['results']
+        self.assertEqual(uuid.UUID(results[0]['uuid']), self.enterprise_catalog.uuid)
+
+    @ddt.data(
+        False,
+        True,
+    )
+    def test_multiple_catalogs_for_catalog_admins(self, is_role_assigned_via_jwt):
+        """
+        Verify the viewset returns multiple catalogs for catalog admins of two different enterprises.
+        """
+        second_enterprise_catalog = EnterpriseCatalogFactory(enterprise_uuid=uuid.uuid4())
+
+        if is_role_assigned_via_jwt:
+            self.assign_catalog_admin_jwt_role(
+                self.enterprise_uuid,
+                second_enterprise_catalog.enterprise_uuid,
+            )
+        else:
+            self.assign_catalog_admin_feature_role(enterprise_uuids=[
+                self.enterprise_uuid,
+                second_enterprise_catalog.enterprise_uuid,
+            ])
+
+        url = reverse('api:v1:enterprise-catalog-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 2)
+        results = response.data['results']
+        self.assertEqual(uuid.UUID(results[0]['uuid']), self.enterprise_catalog.uuid)
+        self.assertEqual(uuid.UUID(results[1]['uuid']), second_enterprise_catalog.uuid)
+
+    @ddt.data(
+        False,
+        True,
+    )
+    def test_every_catalog_for_catalog_admins(self, is_role_assigned_via_jwt):
+        """
+        Verify the viewset returns catalogs of all enterprises for admins with wildcard permission.
+        """
+        if is_role_assigned_via_jwt:
+            self.assign_catalog_admin_jwt_role('*')
+        else:
+            # This will cause a feature role assignment to be created with a null enterprise UUID,
+            # which is interpretted as having access to catalogs of ANY enterprise.
+            self.assign_catalog_admin_feature_role(enterprise_uuids=[None])
+
+        catalog_b = EnterpriseCatalogFactory(enterprise_uuid=uuid.uuid4())
+        catalog_c = EnterpriseCatalogFactory(enterprise_uuid=uuid.uuid4())
+
+        url = reverse('api:v1:enterprise-catalog-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 3)
+        results = response.data['results']
+        self.assertEqual(uuid.UUID(results[0]['uuid']), self.enterprise_catalog.uuid)
+        self.assertEqual(uuid.UUID(results[1]['uuid']), catalog_b.uuid)
+        self.assertEqual(uuid.UUID(results[2]['uuid']), catalog_c.uuid)
+
+    def test_list_unauthorized_catalog_learner(self):
+        """
+        Verify the viewset rejects list for catalog learners
+        """
+        self.set_up_catalog_learner()
+        url = reverse('api:v1:enterprise-catalog-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
 class EnterpriseCatalogContainsContentItemsTests(APITestMixin):
     """
     Tests on the contains_content_items on enterprise catalogs endpoint
@@ -417,10 +514,12 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
     """
 
     def setUp(self):
-        super(EnterpriseCatalogGetContentMetadataTests, self).setUp()
+        super().setUp()
         # Set up catalog.has_learner_access permissions
         self.set_up_catalog_learner()
         self.enterprise_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
+        # Delete any existing ContentMetadata records.
+        ContentMetadata.objects.all().delete()
 
     def _get_content_metadata_url(self, enterprise_catalog):
         """
@@ -528,14 +627,17 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         self.assertEqual(uuid.UUID(response_data['enterprise_customer']), self.enterprise_catalog.enterprise_uuid)
 
         # Check that the first page contains all but the last metadata
-        sorted_metadata = sorted(metadata, key=lambda metadata: metadata.content_key)
-        json_metadata = [self._get_expected_json_metadata(metadata) for metadata in sorted_metadata]
-        self.assertEqual(response_data['results'], json_metadata[:-1])
+        expected_metadata = sorted([
+            self._get_expected_json_metadata(item)
+            for item in metadata
+        ], key=itemgetter('key'))
+        actual_metadata = response_data['results']
+        self.assertEqual(actual_metadata, expected_metadata[:-1])
 
         # Check that the second page contains the last metadata
         second_page_response = self.client.get(response_data['next'])
         self.assertEqual(second_page_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(second_page_response.json()['results'], [json_metadata[-1]])
+        self.assertEqual(second_page_response.json()['results'], [expected_metadata[-1]])
 
     def test_get_content_metadata_traverse_pagination(self):
         """
@@ -555,9 +657,12 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         self.assertEqual(uuid.UUID(response_data['enterprise_customer']), self.enterprise_catalog.enterprise_uuid)
 
         # Check that the page contains all the metadata
-        sorted_metadata = sorted(metadata, key=lambda metadata: metadata.content_key)
-        json_metadata = [self._get_expected_json_metadata(metadata) for metadata in sorted_metadata]
-        self.assertEqual(response_data['results'], json_metadata)
+        expected_metadata = sorted([
+            self._get_expected_json_metadata(item)
+            for item in metadata
+        ], key=itemgetter('key'))
+        actual_metadata = response_data['results']
+        self.assertEqual(actual_metadata, expected_metadata)
 
 
 class EnterpriseCatalogRefreshDataFromDiscoveryTests(APITestMixin):
@@ -608,7 +713,13 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
 
     def setUp(self):
         super(EnterpriseCustomerViewSetTests, self).setUp()
+        # clean up any stale test objects
+        CatalogQuery.objects.all().delete()
+        ContentMetadata.objects.all().delete()
+        EnterpriseCatalog.objects.all().delete()
+
         self.enterprise_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
+
         # Set up catalog.has_learner_access permissions
         self.set_up_catalog_learner()
 

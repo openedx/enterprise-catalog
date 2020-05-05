@@ -45,20 +45,26 @@ class JwtMixin():
         request.COOKIES[jwt_cookie_name()] = jwt_token
         return request
 
-    def set_jwt_cookie(self, system_wide_role=None, context=None):
+    def _jwt_token_from_role_context_pairs(self, role_context_pairs):
+        """
+        Generates a new JWT token with roles assigned from pairs of (role name, context).
+        """
+        roles = []
+        for role, context in role_context_pairs:
+            role_data = '{role}'.format(role=role)
+            if context is not None:
+                role_data += ':{context}'.format(context=context)
+            roles.append(role_data)
+
+        payload = generate_unversioned_payload(self.user)
+        payload.update({'roles': roles})
+        return generate_jwt_token(payload)
+
+    def set_jwt_cookie(self, role_context_pairs=None):
         """
         Set jwt token in cookies
         """
-        role_data = '{system_wide_role}'.format(system_wide_role=system_wide_role)
-        if context is not None:
-            role_data += ':{context}'.format(context=context)
-
-        payload = generate_unversioned_payload(self.user)
-        payload.update({
-            'roles': [role_data]
-        })
-        jwt_token = generate_jwt_token(payload)
-
+        jwt_token = self._jwt_token_from_role_context_pairs(role_context_pairs or [])
         self.client.cookies[jwt_cookie_name()] = jwt_token
 
 
@@ -74,17 +80,11 @@ class APITestMixin(JwtMixin, APITestCase):
 
     def set_up_staff(self):
         """
-        Helper for setting up tests as a staff user
+        Helper for setting up tests as a staff user with roles assigned.
         """
-        self.user = UserFactory(is_staff=True)
-        self.client.login(username=self.user.username, password=USER_PASSWORD)
-        self.role = EnterpriseCatalogFeatureRole.objects.get(name=ENTERPRISE_CATALOG_ADMIN_ROLE)
-        self.role_assignment = EnterpriseCatalogRoleAssignmentFactory(
-            role=self.role,
-            user=self.user,
-            enterprise_id=self.enterprise_uuid
-        )
-        self.set_jwt_cookie(ENTERPRISE_CATALOG_ADMIN_ROLE, self.enterprise_uuid)
+        self.set_up_staff_user()
+        self.assign_catalog_admin_feature_role()
+        self.assign_catalog_admin_jwt_role()
 
     def set_up_catalog_learner(self):
         """
@@ -98,7 +98,14 @@ class APITestMixin(JwtMixin, APITestCase):
             user=self.user,
             enterprise_id=self.enterprise_uuid
         )
-        self.set_jwt_cookie(ENTERPRISE_CATALOG_LEARNER_ROLE, self.enterprise_uuid)
+        self.set_jwt_cookie([(ENTERPRISE_CATALOG_LEARNER_ROLE, self.enterprise_uuid)])
+
+    def set_up_staff_user(self):
+        """
+        Helper for setting up tests with a staff user object.
+        """
+        self.user = UserFactory(is_staff=True)
+        self.client.login(username=self.user.username, password=USER_PASSWORD)
 
     def set_up_superuser(self):
         """
@@ -107,11 +114,33 @@ class APITestMixin(JwtMixin, APITestCase):
         superuser = UserFactory(is_superuser=True)
         self.client.login(username=superuser.username, password=USER_PASSWORD)
 
+    def assign_catalog_admin_feature_role(self, user=None, enterprise_uuids=None):
+        self.role = EnterpriseCatalogFeatureRole.objects.get(name=ENTERPRISE_CATALOG_ADMIN_ROLE)
+
+        if not enterprise_uuids:
+            enterprise_uuids = [self.enterprise_uuid]
+
+        for enterprise_uuid in enterprise_uuids:
+            self.role_assignment = EnterpriseCatalogRoleAssignmentFactory(
+                role=self.role,
+                user=user or self.user,
+                enterprise_id=enterprise_uuid,
+            )
+
+    def assign_catalog_admin_jwt_role(self, *enterprise_uuids):
+        if not enterprise_uuids:
+            enterprise_uuids = [self.enterprise_uuid]
+
+        self.set_jwt_cookie([
+            (ENTERPRISE_CATALOG_ADMIN_ROLE, enterprise_uuid)
+            for enterprise_uuid in enterprise_uuids
+        ])
+
     def set_up_invalid_jwt_role(self):
         """
         Helper for logging in as a user that does not have the appropriate role(s) in the JWT
         """
-        self.set_jwt_cookie('invalid_role')
+        self.set_jwt_cookie([('invalid_role', None)])
 
     def remove_role_assignments(self):
         """

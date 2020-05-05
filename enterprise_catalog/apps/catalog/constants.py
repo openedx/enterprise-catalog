@@ -27,6 +27,8 @@ SYSTEM_ENTERPRISE_LEARNER_ROLE = 'enterprise_learner'
 SYSTEM_ENTERPRISE_ADMIN_ROLE = 'enterprise_admin'
 SYSTEM_ENTERPRISE_OPERATOR_ROLE = 'enterprise_openedx_operator'
 
+ACCESS_TO_ALL_ENTERPRISES_TOKEN = '*'
+
 
 def json_serialized_course_modes():
     """
