@@ -17,6 +17,7 @@ from enterprise_catalog.apps.api.v1.utils import (
 )
 from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 from enterprise_catalog.apps.catalog.constants import (
+    ACCESS_TO_ALL_ENTERPRISES_TOKEN,
     CONTENT_TYPE_CHOICES,
     json_serialized_course_modes,
 )
@@ -360,11 +361,17 @@ class EnterpriseCatalogRoleAssignment(UserRoleAssignment):
         """
         Return the enterprise customer id or `*` if the user has access to all resources.
         """
-        enterprise_id = '*'
         if self.enterprise_id:
             # converting the UUID('ee5e6b3a-069a-4947-bb8d-d2dbc323396c') to 'ee5e6b3a-069a-4947-bb8d-d2dbc323396c'
-            enterprise_id = str(self.enterprise_id)
-        return enterprise_id
+            return str(self.enterprise_id)
+        return ACCESS_TO_ALL_ENTERPRISES_TOKEN
+
+    @classmethod
+    def user_assignments_for_role_name(cls, user, role_name):
+        """
+        Returns assignments for a given user and role name.
+        """
+        return cls.objects.filter(user__id=user.id, role__name=role_name)
 
     def __str__(self):
         """

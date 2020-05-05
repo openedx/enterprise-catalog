@@ -54,13 +54,16 @@ class ContentMetadataFactory(factory.DjangoModelFactory):
     class Meta:
         model = ContentMetadata
 
-    content_key = factory.Faker('word')
+    content_key = factory.Sequence(lambda n: 'metadata_item_{}'.format(n))  # pylint: disable=unnecessary-lambda
     content_type = factory.Iterator([COURSE_RUN, COURSE, PROGRAM])
     parent_content_key = None   # Default to None
-    json_metadata = factory.Dict({
-        'key': factory.Faker('word'),
-        'marketing_url': factory.Faker('word'),
-    })
+
+    @factory.lazy_attribute
+    def json_metadata(self):
+        return {
+            'key': self.content_key,
+            'marketing_url': 'http://marketing.yay/{}'.format(self.content_key),
+        }
 
 
 class UserFactory(factory.DjangoModelFactory):

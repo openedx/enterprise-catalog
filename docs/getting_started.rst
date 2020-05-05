@@ -16,7 +16,7 @@ Initialize and Provision
     5. Run *make dev.init* to start the enterprise catalog app and run migrations
 
 Viewing Enterprise Catalog
-------------------------
+--------------------------
 Once the server is up and running you can view the enterprise catalog at http://localhost:18160/admin.
 
 You can login with the username *edx* and password *edx*.
@@ -41,7 +41,73 @@ Open the logs in the enterprise catalog container
 
 .. code-block:: bash
 
-    $ make enterprise_catalog-logs
+    $ make app-logs
+
+Migrating Catalog Data from LMS to the Catalog Service
+------------------------------------------------------
+You may already have enterprise catalog data persisted in your local LMS (edx-platform) database.  The edx-enterprise
+library provides a `migrate_enterprise_catalogs <https://github.com/edx/edx-enterprise/blob/master/enterprise/management/commands/migrate_enterprise_catalogs.py>`_
+management command that will copy those existing catalogs and their metadata into your local catalog service.  From your **devstack** directory, do the following:
+
+   #. ``make dev.up.lms+redis``
+   #. ``make lms-shell``
+   #. ``./manage.py lms migrate_enterprise_catalogs --api_user enterprise_catalog_worker``
+
+Permissions
+-----------
+
+Requests against endpoints of this service are authorized via two mechanisms:
+
+   #. JWT Roles, which are encoded inside a JWT cookie that is provided by the LMS.
+   #. Feature-based Role Assignments, which are persisted in the database via the `EnterpriseCatalogRoleAssignment` model.
+
+To get a JWT role defined inside your cookie, do the following:
+
+   #. Create a new System-wide role assignment for your user: http://localhost:18000/admin/enterprise/systemwideenterpriseuserroleassignment/
+   #. If you want the user to have admin access to all enterprises/catalogs, create the assignment with the `enterprise_openedx_operator` role.
+   #. Otherwise, use the `enterprise_catalog_admin` role.  This will grant admin permissions on any Enterprise the user is a member of.
+   #. Add your user to any Enterprises you want them to be an admin of: http://localhost:18000/admin/enterprise/enterprisecustomer/{enterprise_uuid}/manage_learners
+   #. Log out and log back in as the user - this will refresh their JWT cookie.
+   #. As a demonstration that this worked, use your browser's dev tools, find the `edx-jwt-cookie-header-payload` cookie and copy its content.
+      Paste the encoded content into https://jwt.io.  The decoded payload section should have a `roles` field defined that looks like::
+
+        "roles": [
+            "enterprise_catalog_admin:{some-enterprise-uuid}",
+            "enterprise_learner:{another-enterprise-uuid}",
+            "enterprise_openedx_operator:*"
+        ]
+   #. Soon, you'll make a request to e.g. http://localhost:18160/api/v1/enterprise-catalogs/?format=json.  Before you do this,
+      it's important that you can make the request with an additional header: ``use_jwt_cookie: true``  This tells
+      our auth middleware to "reconstitute" the JWT cookie header and signature into a single JWT from which auth, roles, etc.
+      can be fetched.  You can do this in your browser using a tool like ModHeader, or with something like Postman.
+   #. Make the request.  For the example endpoint above, you should get a response payload that looks like::
+
+        {
+          "count": 2,
+          "next": null,
+          "previous": null,
+          "results": [
+            {
+              "uuid": "7467c9d2-433c-4f7e-ba2e-c5c7798527b2",
+              "title": "All Content",
+              "enterprise_customer": "378d5bf0-f67d-4bf7-8b2a-cbbc53d0f772"
+            },
+            {
+              "uuid": "482a8a38-f60d-4250-8f93-402cd5f69d3b",
+              "title": "All Course Runs",
+              "enterprise_customer": "70699d54-7504-4429-8295-e1c0ec68dbc7"
+            }
+          ]
+        }
+
+How to define a role with a feature-based assignment:
+
+   #. Add a new assignment via http://localhost:18160/admin/catalog/enterprisecatalogroleassignment/ using your user's
+      email address and the `enterprise_catalog_admin` role to grant admin permissions.
+   #. Grant permissions to catalogs of specific enterprises using the `Enterprise Customer UUID` field.  Leaving this
+      field null will result in the user having the role applied for ALL enterprises/catalogs.
+   #. Go ahead and make the request.  The role should take affect immediately after the assignment record is saved -
+      you don't have to worry about logging out, cookies, or request headers.
 
 Advanced Setup Outside Docker
 =============================
