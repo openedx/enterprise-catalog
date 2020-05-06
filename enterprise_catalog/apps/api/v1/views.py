@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 import crum
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
@@ -8,6 +10,7 @@ from edx_rest_framework_extensions.auth.jwt.authentication import (
 from rest_framework import permissions, viewsets
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
+from rest_framework.generics import GenericAPIView
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK
@@ -19,14 +22,12 @@ from enterprise_catalog.apps.api.v1.decorators import (
     require_at_least_one_query_parameter,
 )
 from enterprise_catalog.apps.api.v1.serializers import (
+    ContentMetadataSerializer,
     EnterpriseCatalogCreateSerializer,
     EnterpriseCatalogSerializer,
 )
 from enterprise_catalog.apps.api.v1.utils import unquote_course_keys
-from enterprise_catalog.apps.catalog.models import (
-    ContentMetadata,
-    EnterpriseCatalog,
-)
+from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
 
 
 class BaseViewSet(PermissionRequiredMixin, viewsets.ViewSet):
@@ -38,7 +39,7 @@ class BaseViewSet(PermissionRequiredMixin, viewsets.ViewSet):
 
 
 class EnterpriseCatalogCRUDViewSet(BaseViewSet, viewsets.ModelViewSet):
-    """ View for CRUD operations on Enterprise Catalogs """
+    """ Viewset for CRUD operations on Enterprise Catalogs """
     queryset = EnterpriseCatalog.objects.all().order_by('created')
     renderer_classes = [JSONRenderer, XMLRenderer]
     permission_required = 'catalog.has_admin_access'
@@ -70,9 +71,9 @@ class EnterpriseCatalogCRUDViewSet(BaseViewSet, viewsets.ModelViewSet):
         return None
 
 
-class EnterpriseCatalogActionViewSet(BaseViewSet, viewsets.ModelViewSet):
+class EnterpriseCatalogContainsContentItems(BaseViewSet, viewsets.ModelViewSet):
     """
-    Viewset for special actions on enterprise catalogs
+    View to determine if an enterprise catalog contains certain content
     """
     queryset = EnterpriseCatalog.objects.all().order_by('created')
     renderer_classes = [JSONRenderer, XMLRenderer]
@@ -106,32 +107,84 @@ class EnterpriseCatalogActionViewSet(BaseViewSet, viewsets.ModelViewSet):
         contains_content_items = enterprise_catalog.contains_content_keys(course_run_ids + program_uuids)
         return Response({'contains_content_items': contains_content_items})
 
+
+class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
+    """
+    View for retrieving all the content metadata associated with a catalog.
+    """
+    permission_required = 'catalog.has_learner_access'
+    serializer_class = ContentMetadataSerializer
+    renderer_classes = [JSONRenderer, XMLRenderer]
+    lookup_field = 'uuid'
+
+    def get_enterprise_catalog(self):
+        """
+        Helper for retrieving the specified enterprise catalog, or 404ing if it doesn't exist.
+        """
+        uuid = self.kwargs.get('uuid')
+        return get_object_or_404(EnterpriseCatalog, uuid=uuid)
+
+    def get_permission_object(self):
+        """
+        Retrieves the apporpriate object to use during edx-rbac's permission checks.
+
+        This object is passed to the rule predicate(s).
+        """
+        enterprise_catalog = self.get_enterprise_catalog()
+        return str(enterprise_catalog.enterprise_uuid)
+
+    def get_queryset(self):
+        """
+        Returns all of the json of content metadata associated with the catalog.
+
+        Note that the metadata is ordered by content key.
+        """
+        enterprise_catalog = self.get_enterprise_catalog()
+        ordered_metadata = enterprise_catalog.content_metadata.order_by('content_key')
+        return ordered_metadata
+
+    def get_response_with_enterprise_fields(self, response):
+        """
+        Add on the enterprise fields to the top level of the DRF response
+
+        Args:
+            response (HttpResponse): The existing DRF response to add on to
+
+        Returns:
+            HttpResponse: The new response with additional fields added on
+        """
+        enterprise_catalog = self.get_enterprise_catalog()
+        response.data['uuid'] = enterprise_catalog.uuid
+        response.data['title'] = enterprise_catalog.title
+        response.data['enterprise_customer'] = enterprise_catalog.enterprise_uuid
+        response.data.move_to_end('results')  # Place the results at the end of the response again
+        return response
+
     @action(detail=True)
     def get_content_metadata(self, request, uuid, **kwargs):
         """
-        Returns all the content linked to the specified catalog, ordered by content key.
+        Returns all the content metadata associated with the enterprise catalog.
+
+        Adding the query parameter `traverse_pagination` will collect the results onto a single page.
         """
-        enterprise_catalog = self.get_object()
-        metadata = {
-            'uuid': enterprise_catalog.uuid,
-            'title': enterprise_catalog.title,
-            'enterprise_customer': enterprise_catalog.enterprise_uuid,
-            'count': 0,
-            'previous': None, 'next': None,  # Kept for parity with edx-enterprise
-            'results': [],
-        }
+        queryset = self.filter_queryset(self.get_queryset())
+        # Traverse pagination query parameter signals that we should collect the results onto a single page
+        traverse_pagination = request.query_params.get('traverse_pagination', False)
+        page = self.paginate_queryset(queryset)
+        if page is not None and not traverse_pagination:
+            serializer = ContentMetadataSerializer(page, many=True)
+            paginated_response = self.get_paginated_response(serializer.data)
+            return self.get_response_with_enterprise_fields(paginated_response)
 
-        catalog_query = enterprise_catalog.catalog_query
-        if not catalog_query:
-            return Response(metadata)
-
-        associated_metadata = catalog_query.contentmetadata_set.all()
-        sorted_content_keys = sorted([metadata_chunk.content_key for metadata_chunk in associated_metadata])
-        metadata['results'] = [ContentMetadata.objects.get(content_key=content_key).json_metadata for content_key
-                               in sorted_content_keys]
-        metadata['count'] = len(sorted_content_keys)
-
-        return Response(metadata)
+        serializer = ContentMetadataSerializer(queryset, many=True)
+        ordered_data = OrderedDict({
+            'previous': None,
+            'next': None,
+            'count': len(queryset),
+            'results': serializer.data,
+        })
+        response = Response(ordered_data)
+        return self.get_response_with_enterprise_fields(response)
 
 
 class EnterpriseCatalogRefreshDataFromDiscovery(BaseViewSet, APIView):

@@ -6,6 +6,7 @@ import mock
 from django.db import IntegrityError
 from rest_framework import status
 from rest_framework.reverse import reverse
+from rest_framework.settings import api_settings
 
 from enterprise_catalog.apps.api.v1.tests.mixins import APITestMixin
 from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
@@ -312,13 +313,13 @@ class EnterpriseCatalogCRUDViewSetTests(APITestMixin):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-class EnterpriseCatalogActionViewSetTests(APITestMixin):
+class EnterpriseCatalogContainsContentItemsTests(APITestMixin):
     """
-    Tests on the EnterpriseCatalogActionViewSet
+    Tests on the contains_content_items on enterprise catalogs endpoint
     """
 
     def setUp(self):
-        super(EnterpriseCatalogActionViewSetTests, self).setUp()
+        super(EnterpriseCatalogContainsContentItemsTests, self).setUp()
         # Set up catalog.has_learner_access permissions
         self.set_up_catalog_learner()
         self.enterprise_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
@@ -328,12 +329,6 @@ class EnterpriseCatalogActionViewSetTests(APITestMixin):
         Helper to construct the base url for the contains_content_items endpoint
         """
         return reverse('api:v1:enterprise-catalog-contains-content-items', kwargs={'uuid': enterprise_catalog.uuid})
-
-    def _get_content_metadata_url(self, enterprise_catalog):
-        """
-        Helper to get the get_content_metadata endpoint url for a given catalog
-        """
-        return reverse('api:v1:enterprise-catalog-get-content-metadata', kwargs={'uuid': enterprise_catalog.uuid})
 
     def test_contains_content_items_no_params(self):
         """
@@ -404,6 +399,24 @@ class EnterpriseCatalogActionViewSetTests(APITestMixin):
         url = self._get_contains_content_base_url(self.enterprise_catalog) + '?course_run_ids=' + 'test-key'
         self.assert_correct_contains_response(url, False)
 
+
+class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
+    """
+    Tests on the get_content_metadata endpoint
+    """
+
+    def setUp(self):
+        super(EnterpriseCatalogGetContentMetadataTests, self).setUp()
+        # Set up catalog.has_learner_access permissions
+        self.set_up_catalog_learner()
+        self.enterprise_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
+
+    def _get_content_metadata_url(self, enterprise_catalog):
+        """
+        Helper to get the get_content_metadata endpoint url for a given catalog
+        """
+        return reverse('api:v1:enterprise-catalog-get-content-metadata', kwargs={'uuid': enterprise_catalog.uuid})
+
     def test_get_content_metadata_unauthorized_invalid_permissions(self):
         """
         Verify the get_content_metadata endpoint rejects users with invalid permissions
@@ -452,21 +465,49 @@ class EnterpriseCatalogActionViewSetTests(APITestMixin):
         """
         Verify the get_content_metadata endpoint returns all the metadata associated with a particular catalog
         """
-        # Associate two pieces of metadata with the catalog, making sure the content keys are ordered for testing
-        json_metadata_1 = {'content': 'fake'}
-        metadata_1 = ContentMetadataFactory(json_metadata=json_metadata_1, content_key='first')
-        json_metadata_2 = {'content': 'fake2'}
-        metadata_2 = ContentMetadataFactory(json_metadata=json_metadata_2, content_key='second')
-        self.add_metadata_to_catalog(self.enterprise_catalog, [metadata_1, metadata_2])
-
+        # Create enough metadata to force pagination
+        metadata = ContentMetadataFactory.create_batch(api_settings.PAGE_SIZE + 1)
+        self.add_metadata_to_catalog(self.enterprise_catalog, metadata)
         url = self._get_content_metadata_url(self.enterprise_catalog)
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(uuid.UUID(response.json()['uuid']), self.enterprise_catalog.uuid)
-        self.assertEqual((response.json()['count']), 2)
-        self.assertEqual(response.json()['title'], self.enterprise_catalog.title)
-        self.assertEqual(uuid.UUID(response.json()['enterprise_customer']), self.enterprise_catalog.enterprise_uuid)
-        self.assertEqual(response.json()['results'], [json_metadata_1, json_metadata_2])
+        response_data = response.json()
+        self.assertEqual((response_data['count']), api_settings.PAGE_SIZE + 1)
+        self.assertEqual(uuid.UUID(response_data['uuid']), self.enterprise_catalog.uuid)
+        self.assertEqual(response_data['title'], self.enterprise_catalog.title)
+        self.assertEqual(uuid.UUID(response_data['enterprise_customer']), self.enterprise_catalog.enterprise_uuid)
+
+        # Check that the first page contains all but the last metadata
+        sorted_metadata = sorted(metadata, key=lambda metadata: metadata.content_key)
+        json_metadata = [metadata.json_metadata for metadata in sorted_metadata]
+        self.assertEqual(response_data['results'], json_metadata[:-1])
+
+        # Check that the second page contains the last metadata
+        second_page_response = self.client.get(response_data['next'])
+        self.assertEqual(second_page_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(second_page_response.json()['results'], [json_metadata[-1]])
+
+    def test_get_content_metadata_traverse_pagination(self):
+        """
+        Verify the get_content_metadata endpoint returns all metadata on one page if the traverse pagination query
+        parameter is added.
+        """
+        # Create enough metadata to force pagination (if the query parameter wasn't sent)
+        metadata = ContentMetadataFactory.create_batch(api_settings.PAGE_SIZE + 1)
+        self.add_metadata_to_catalog(self.enterprise_catalog, metadata)
+        url = self._get_content_metadata_url(self.enterprise_catalog) + '?traverse_pagination=1'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_data = response.json()
+        self.assertEqual((response_data['count']), api_settings.PAGE_SIZE + 1)
+        self.assertEqual(uuid.UUID(response_data['uuid']), self.enterprise_catalog.uuid)
+        self.assertEqual(response_data['title'], self.enterprise_catalog.title)
+        self.assertEqual(uuid.UUID(response_data['enterprise_customer']), self.enterprise_catalog.enterprise_uuid)
+
+        # Check that the page contains all the metadata
+        sorted_metadata = sorted(metadata, key=lambda metadata: metadata.content_key)
+        json_metadata = [metadata.json_metadata for metadata in sorted_metadata]
+        self.assertEqual(response_data['results'], json_metadata)
 
 
 class EnterpriseCatalogRefreshDataFromDiscoveryTests(APITestMixin):
