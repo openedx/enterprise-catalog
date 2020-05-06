@@ -92,3 +92,28 @@ class EnterpriseCatalogCreateSerializer(EnterpriseCatalogSerializer):
     UUID is writable to allow importing existing Enterprise Catalogs and keeping the same UUID
     """
     uuid = serializers.UUIDField(read_only=False, required=False)
+
+
+class ImmutableStateSerializer(serializers.Serializer):
+    """
+    Base serializer for any serializer that inhibits state changing requests.
+    """
+
+    def create(self, validated_data):
+        """
+        Do not perform any operations for state changing requests.
+        """
+
+    def update(self, instance, validated_data):
+        """
+        Do not perform any operations for state changing requests.
+        """
+
+
+class ContentMetadataSerializer(ImmutableStateSerializer):
+    """
+    Serializer for rendering Content Metadata objects
+    """
+
+    def to_representation(self, instance):
+        return instance.json_metadata

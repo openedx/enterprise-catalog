@@ -132,6 +132,18 @@ class EnterpriseCatalog(TimeStampedModel):
             )
         )
 
+    @property
+    def content_metadata(self):
+        """
+        Helper to retrieve the content metadata associated with the catalog.
+
+        Returns:
+            Queryset: The queryset of associated content metadata
+        """
+        if not self.catalog_query:
+            return ContentMetadata.objects.none()
+        return self.catalog_query.contentmetadata_set.all()
+
     def contains_content_keys(self, content_keys):
         """
         Return True if catalog contains the courses/course runs/programs specified by the given content keys, else False
@@ -143,8 +155,7 @@ class EnterpriseCatalog(TimeStampedModel):
             return False
 
         content_keys = set(content_keys)
-        associated_metadata_content_keys = {metadata_chunk.content_key for metadata_chunk
-                                            in self.catalog_query.contentmetadata_set.all()}
+        associated_metadata_content_keys = {metadata_chunk.content_key for metadata_chunk in self.content_metadata}
         contained_in_catalog = True
         for content_key in content_keys:
             try:
@@ -239,7 +250,7 @@ def associate_content_metadata_with_query(metadata, catalog_query):
     Returns set of content_keys
     """
     content_keys = set()
-    for entry in metadata.get('results', []):
+    for entry in metadata:
         content_key = get_content_key(entry)
         defaults = {
             'content_key': content_key,
