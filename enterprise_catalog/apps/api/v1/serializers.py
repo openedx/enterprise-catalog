@@ -4,6 +4,16 @@ from django.db import IntegrityError
 from rest_framework import serializers
 
 from enterprise_catalog.apps.api.tasks import update_catalog_metadata_task
+from enterprise_catalog.apps.api.v1.utils import (
+    get_enterprise_utm_context,
+    is_any_course_run_enrollable,
+    update_query_parameters,
+)
+from enterprise_catalog.apps.catalog.constants import (
+    COURSE,
+    COURSE_RUN,
+    PROGRAM,
+)
 from enterprise_catalog.apps.catalog.models import (
     CatalogQuery,
     EnterpriseCatalog,
@@ -19,6 +29,7 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
     Serializer for the `EnterpriseCatalog` model
     """
     enterprise_customer = serializers.UUIDField(source='enterprise_uuid')
+    enterprise_customer_name = serializers.CharField(source='enterprise_name', write_only=True)
     enabled_course_modes = serializers.JSONField(write_only=True)
     publish_audit_enrollment_urls = serializers.BooleanField(write_only=True)
     content_filter = serializers.JSONField(write_only=True)
@@ -29,6 +40,7 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
             'uuid',
             'title',
             'enterprise_customer',
+            'enterprise_customer_name',
             'enabled_course_modes',
             'publish_audit_enrollment_urls',
             'content_filter',
@@ -116,4 +128,45 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
     """
 
     def to_representation(self, instance):
-        return instance.json_metadata
+        """
+        Return the updated content metadata dictionary.
+
+        Arguments:
+            instance (dict): ContentMetadata instance.
+
+        Returns:
+            dict: The modified json_metadata field.
+        """
+        enterprise_catalog = self.context['enterprise_catalog']
+        content_type = instance.content_type
+        json_metadata = instance.json_metadata.copy()
+        marketing_url = json_metadata.get('marketing_url')
+        content_key = json_metadata.get('key')
+
+        if marketing_url:
+            marketing_url = update_query_parameters(
+                marketing_url,
+                get_enterprise_utm_context(enterprise_catalog.enterprise_name)
+            )
+            json_metadata['marketing_url'] = marketing_url
+
+        if content_type in (COURSE, COURSE_RUN):
+            json_metadata['enrollment_url'] = enterprise_catalog.get_content_enrollment_url(
+                content_resource='course',
+                content_key=content_key,
+            )
+            if content_type == COURSE:
+                course_runs = json_metadata.get('course_runs', [])
+                json_metadata['active'] = is_any_course_run_enrollable(course_runs)
+                for course_run in course_runs:
+                    course_run['enrollment_url'] = enterprise_catalog.get_content_enrollment_url(
+                        content_resource='course',
+                        content_key=content_key,
+                    )
+        elif content_type == PROGRAM:
+            json_metadata['enrollment_url'] = enterprise_catalog.get_content_enrollment_url(
+                content_resource='program',
+                content_key=content_key,
+            )
+
+        return json_metadata
