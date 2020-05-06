@@ -70,6 +70,7 @@ class APITestMixin(JwtMixin, APITestCase):
     def setUp(self):
         super(APITestMixin, self).setUp()
         self.enterprise_uuid = uuid.uuid4()
+        self.enterprise_name = 'Test Enterprise'
 
     def set_up_staff(self):
         """

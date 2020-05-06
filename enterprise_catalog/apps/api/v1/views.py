@@ -168,15 +168,18 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
         Adding the query parameter `traverse_pagination` will collect the results onto a single page.
         """
         queryset = self.filter_queryset(self.get_queryset())
+        enterprise_catalog = self.get_enterprise_catalog()
+        context = self.get_serializer_context()
+        context['enterprise_catalog'] = enterprise_catalog
         # Traverse pagination query parameter signals that we should collect the results onto a single page
         traverse_pagination = request.query_params.get('traverse_pagination', False)
         page = self.paginate_queryset(queryset)
         if page is not None and not traverse_pagination:
-            serializer = ContentMetadataSerializer(page, many=True)
+            serializer = ContentMetadataSerializer(page, context=context, many=True)
             paginated_response = self.get_paginated_response(serializer.data)
             return self.get_response_with_enterprise_fields(paginated_response)
 
-        serializer = ContentMetadataSerializer(queryset, many=True)
+        serializer = ContentMetadataSerializer(queryset, context=context, many=True)
         ordered_data = OrderedDict({
             'previous': None,
             'next': None,

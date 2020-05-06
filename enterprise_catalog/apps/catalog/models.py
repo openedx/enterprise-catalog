@@ -2,6 +2,7 @@ import collections
 from logging import getLogger
 from uuid import uuid4
 
+from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext as _
 from edx_rbac.models import UserRole, UserRoleAssignment
@@ -10,6 +11,10 @@ from jsonfield.fields import JSONField
 from model_utils.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
 
+from enterprise_catalog.apps.api.v1.utils import (
+    get_enterprise_utm_context,
+    update_query_parameters,
+)
 from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 from enterprise_catalog.apps.catalog.constants import (
     CONTENT_TYPE_CHOICES,
@@ -84,12 +89,16 @@ class EnterpriseCatalog(TimeStampedModel):
     title = models.CharField(
         max_length=255,
         blank=False,
-        null=False
+        null=False,
     )
     enterprise_uuid = models.UUIDField(
         blank=False,
         null=False,
         db_index=True,
+    )
+    enterprise_name = models.CharField(
+        max_length=255,
+        blank=True,
     )
     catalog_query = models.ForeignKey(
         CatalogQuery,
@@ -174,6 +183,34 @@ class EnterpriseCatalog(TimeStampedModel):
                 return False
 
         return contained_in_catalog
+
+    def get_content_enrollment_url(self, content_resource, content_key):
+        """
+        Return enterprise content enrollment page url with the catalog information for the given content key.
+
+        Arguments:
+            content_resource (str): The content resource to use in the URL (i.e., "course", "program")
+            content_key (str): The content key for the course to be displayed.
+
+        Returns:
+            (str): Enterprise landing page url.
+        """
+        if not content_key or not content_resource:
+            return None
+
+        url = '{}/enterprise/{}/{}/{}/enroll/'.format(
+            settings.LMS_BASE_URL,
+            self.enterprise_uuid,
+            content_resource,
+            content_key,
+        )
+        params = get_enterprise_utm_context(self.enterprise_name)
+        params['catalog'] = self.uuid
+
+        if self.publish_audit_enrollment_urls:
+            params['audit'] = 'true'
+
+        return update_query_parameters(url, params)
 
 
 class ContentMetadata(TimeStampedModel):

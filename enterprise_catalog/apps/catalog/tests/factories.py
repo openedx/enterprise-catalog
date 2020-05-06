@@ -41,6 +41,7 @@ class EnterpriseCatalogFactory(factory.DjangoModelFactory):
     uuid = factory.LazyFunction(uuid4)
     title = factory.Faker('word')
     enterprise_uuid = factory.LazyFunction(uuid4)
+    enterprise_name = factory.Faker('word')
     catalog_query = factory.SubFactory(CatalogQueryFactory)
     enabled_course_modes = json_serialized_course_modes()
     publish_audit_enrollment_urls = False   # Default to False
@@ -56,7 +57,10 @@ class ContentMetadataFactory(factory.DjangoModelFactory):
     content_key = factory.Faker('word')
     content_type = factory.Iterator([COURSE_RUN, COURSE, PROGRAM])
     parent_content_key = None   # Default to None
-    json_metadata = "{}"  # Default metadata to empty object
+    json_metadata = factory.Dict({
+        'key': factory.Faker('word'),
+        'marketing_url': factory.Faker('word'),
+    })
 
 
 class UserFactory(factory.DjangoModelFactory):

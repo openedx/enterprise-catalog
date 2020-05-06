@@ -3,12 +3,19 @@ from collections import OrderedDict
 
 import ddt
 import mock
+from django.conf import settings
 from django.db import IntegrityError
+from django.utils.text import slugify
 from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.settings import api_settings
 
 from enterprise_catalog.apps.api.v1.tests.mixins import APITestMixin
+from enterprise_catalog.apps.catalog.constants import (
+    COURSE,
+    COURSE_RUN,
+    PROGRAM,
+)
 from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
 from enterprise_catalog.apps.catalog.tests.factories import (
     ContentMetadataFactory,
@@ -25,12 +32,16 @@ class EnterpriseCatalogCRUDViewSetTests(APITestMixin):
     def setUp(self):
         super(EnterpriseCatalogCRUDViewSetTests, self).setUp()
         self.set_up_staff()
-        self.enterprise_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
+        self.enterprise_catalog = EnterpriseCatalogFactory(
+            enterprise_uuid=self.enterprise_uuid,
+            enterprise_name=self.enterprise_name,
+        )
         self.new_catalog_uuid = uuid.uuid4()
         self.new_catalog_data = {
             'uuid': self.new_catalog_uuid,
             'title': 'Test Title',
             'enterprise_customer': self.enterprise_uuid,
+            'enterprise_customer_name': self.enterprise_name,
             'enabled_course_modes': '["verified"]',
             'publish_audit_enrollment_urls': True,
             'content_filter': '{"content_type":"course"}',
@@ -417,6 +428,45 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         """
         return reverse('api:v1:enterprise-catalog-get-content-metadata', kwargs={'uuid': enterprise_catalog.uuid})
 
+    def _get_expected_json_metadata(self, content_metadata):
+        """
+        Helper to get the expected json_metadata from the passed in content_metadata instance
+        """
+        content_type = content_metadata.content_type
+        updated_json_metadata = content_metadata.json_metadata.copy()
+
+        enrollment_url = '{}/enterprise/{}/{}/{}/enroll/?catalog={}&utm_medium=enterprise&utm_source={}'
+        marketing_url = '{}?utm_medium=enterprise&utm_source={}'
+
+        if updated_json_metadata.get('marketing_url'):
+            updated_json_metadata['marketing_url'] = marketing_url.format(
+                updated_json_metadata['marketing_url'],
+                slugify(self.enterprise_catalog.enterprise_name),
+            )
+
+        if content_type in (COURSE, COURSE_RUN):
+            updated_json_metadata['enrollment_url'] = enrollment_url.format(
+                settings.LMS_BASE_URL,
+                self.enterprise_catalog.enterprise_uuid,
+                'course',
+                updated_json_metadata['key'],
+                self.enterprise_catalog.uuid,
+                self.enterprise_catalog.enterprise_name,
+            )
+            if content_type == COURSE:
+                updated_json_metadata['active'] = False
+        elif content_type == PROGRAM:
+            updated_json_metadata['enrollment_url'] = enrollment_url.format(
+                settings.LMS_BASE_URL,
+                self.enterprise_catalog.enterprise_uuid,
+                'program',
+                updated_json_metadata['key'],
+                self.enterprise_catalog.uuid,
+                self.enterprise_catalog.enterprise_name,
+            )
+
+        return updated_json_metadata
+
     def test_get_content_metadata_unauthorized_invalid_permissions(self):
         """
         Verify the get_content_metadata endpoint rejects users with invalid permissions
@@ -479,7 +529,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
 
         # Check that the first page contains all but the last metadata
         sorted_metadata = sorted(metadata, key=lambda metadata: metadata.content_key)
-        json_metadata = [metadata.json_metadata for metadata in sorted_metadata]
+        json_metadata = [self._get_expected_json_metadata(metadata) for metadata in sorted_metadata]
         self.assertEqual(response_data['results'], json_metadata[:-1])
 
         # Check that the second page contains the last metadata
@@ -506,7 +556,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
 
         # Check that the page contains all the metadata
         sorted_metadata = sorted(metadata, key=lambda metadata: metadata.content_key)
-        json_metadata = [metadata.json_metadata for metadata in sorted_metadata]
+        json_metadata = [self._get_expected_json_metadata(metadata) for metadata in sorted_metadata]
         self.assertEqual(response_data['results'], json_metadata)
 
 
