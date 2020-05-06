@@ -471,18 +471,19 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         url = self._get_content_metadata_url(self.enterprise_catalog)
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual((response.json()['count']), api_settings.PAGE_SIZE + 1)
-        self.assertEqual(uuid.UUID(response.json()['uuid']), self.enterprise_catalog.uuid)
-        self.assertEqual(response.json()['title'], self.enterprise_catalog.title)
-        self.assertEqual(uuid.UUID(response.json()['enterprise_customer']), self.enterprise_catalog.enterprise_uuid)
+        response_data = response.json()
+        self.assertEqual((response_data['count']), api_settings.PAGE_SIZE + 1)
+        self.assertEqual(uuid.UUID(response_data['uuid']), self.enterprise_catalog.uuid)
+        self.assertEqual(response_data['title'], self.enterprise_catalog.title)
+        self.assertEqual(uuid.UUID(response_data['enterprise_customer']), self.enterprise_catalog.enterprise_uuid)
 
         # Check that the first page contains all but the last metadata
         sorted_metadata = sorted(metadata, key=lambda metadata: metadata.content_key)
         json_metadata = [metadata.json_metadata for metadata in sorted_metadata]
-        self.assertEqual(response.json()['results'], json_metadata[:-1])
+        self.assertEqual(response_data['results'], json_metadata[:-1])
 
         # Check that the second page contains the last metadata
-        second_page_response = self.client.get(response.json()['next'])
+        second_page_response = self.client.get(response_data['next'])
         self.assertEqual(second_page_response.status_code, status.HTTP_200_OK)
         self.assertEqual(second_page_response.json()['results'], [json_metadata[-1]])
 
@@ -497,15 +498,16 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         url = self._get_content_metadata_url(self.enterprise_catalog) + '?traverse_pagination=1'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual((response.json()['count']), api_settings.PAGE_SIZE + 1)
-        self.assertEqual(uuid.UUID(response.json()['uuid']), self.enterprise_catalog.uuid)
-        self.assertEqual(response.json()['title'], self.enterprise_catalog.title)
-        self.assertEqual(uuid.UUID(response.json()['enterprise_customer']), self.enterprise_catalog.enterprise_uuid)
+        response_data = response.json()
+        self.assertEqual((response_data['count']), api_settings.PAGE_SIZE + 1)
+        self.assertEqual(uuid.UUID(response_data['uuid']), self.enterprise_catalog.uuid)
+        self.assertEqual(response_data['title'], self.enterprise_catalog.title)
+        self.assertEqual(uuid.UUID(response_data['enterprise_customer']), self.enterprise_catalog.enterprise_uuid)
 
         # Check that the page contains all the metadata
         sorted_metadata = sorted(metadata, key=lambda metadata: metadata.content_key)
         json_metadata = [metadata.json_metadata for metadata in sorted_metadata]
-        self.assertEqual(response.json()['results'], json_metadata)
+        self.assertEqual(response_data['results'], json_metadata)
 
 
 class EnterpriseCatalogRefreshDataFromDiscoveryTests(APITestMixin):
