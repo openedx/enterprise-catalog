@@ -1,4 +1,3 @@
-import copy
 import logging
 
 from django.db import IntegrityError
@@ -133,10 +132,13 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
         Returns:
             dict: The updated ContentMetadata object.
         """
-        updated_metadata = copy.deepcopy(instance)
+        updated_metadata = {
+            'content_type': instance.content_type,
+            'json_metadata': instance.json_metadata,
+        }
+        content_type = updated_metadata['content_type']
+        json_metadata = updated_metadata['json_metadata']
         enterprise_catalog = self.context['enterprise_catalog']
-        content_type = updated_metadata.content_type
-        json_metadata = updated_metadata.json_metadata
         marketing_url = json_metadata.get('marketing_url')
         content_key = json_metadata.get('key')
 
