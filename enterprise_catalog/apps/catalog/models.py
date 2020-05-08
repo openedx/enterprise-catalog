@@ -126,7 +126,6 @@ class EnterpriseCatalog(TimeStampedModel):
     class Meta:
         verbose_name = _("Enterprise Catalog")
         verbose_name_plural = _("Enterprise Catalogs")
-        unique_together = (("enterprise_uuid", "catalog_query"),)
         app_label = 'catalog'
 
     def __str__(self):
