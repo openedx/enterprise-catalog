@@ -31,7 +31,7 @@ class DiscoveryApiClient:
     def oauth2_client_secret(self):
         return settings.BACKEND_SERVICE_EDX_OAUTH2_SECRET
 
-    def get_metadata_by_query(self, content_filter_query, query_params=None):
+    def get_metadata_by_query(self, content_filter_query):
         """
         Return results from the discovery service's search/all endpoint.
 
@@ -44,12 +44,13 @@ class DiscoveryApiClient:
 
         Returns a list of the results.
         """
-        if query_params is None:
-            query_params = {}
+        query_params = {}
+        query_params.update(**content_filter_query)
+        # Omit non-active course runs from the course-discovery results
+        query_params['exclude_expired_course_run'] = True
 
-        response = self.client.post(
+        response = self.client.get(
             self.SEARCH_ALL_ENDPOINT,
-            data=content_filter_query,
             params=query_params
         ).json()
 
@@ -57,10 +58,9 @@ class DiscoveryApiClient:
         page = 1
         while response.get('next'):
             page += 1
-            query_params.update({'page': page})
-            response = self.client.post(
+            query_params['page'] = page
+            response = self.client.get(
                 self.SEARCH_ALL_ENDPOINT,
-                data=content_filter_query,
                 params=query_params
             ).json()
             results += response.get('results', [])

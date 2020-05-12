@@ -20,11 +20,10 @@ class TestDiscoveryApiClient(TestCase):
         }
 
         content_filter = {'*': '*'}
-        query_params = {'exclude_expired_course_run': True}
         client = DiscoveryApiClient()
-        actual_response = client.get_metadata_by_query(content_filter, query_params)
+        actual_response = client.get_metadata_by_query(content_filter)
 
-        mock_oauth_client.return_value.post.assert_called_once()
+        mock_oauth_client.return_value.get.assert_called_once()
 
         expected_response = [{'key': 'fakeX'}]
         self.assertEqual(actual_response, expected_response)
