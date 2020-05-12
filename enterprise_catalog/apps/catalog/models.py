@@ -400,6 +400,13 @@ def update_contentmetadata_from_discovery(catalog_uuid):
     # Omit non-active course runs from the course-discovery results
     query_params['exclude_expired_course_run'] = True
     metadata = client.get_metadata_by_query(catalog_query.content_filter, query_params=query_params)
+    metadata_content_keys = [get_content_key(entry) for entry in metadata]
+
+    LOGGER.info(
+        'Retrieved %d content items from course-discovery: %s',
+        len(metadata_content_keys),
+        metadata_content_keys
+    )
 
     content_keys = associate_content_metadata_with_query(metadata, catalog_query)
 
