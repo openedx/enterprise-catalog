@@ -39,8 +39,6 @@ class DiscoveryApiClient:
             e.g. - {'aggregation_key': 'course-v1:some+key+here'}
         query_params (dict): additional query params for the rest api endpoint
              we're hitting. e.g. - {'page': 3}
-        traverse_pagination (bool): determine if we should iterate over all
-            pages of results for given query
 
         Returns a list of the results.
         """
@@ -49,7 +47,7 @@ class DiscoveryApiClient:
 
         response = self.client.post(
             self.SEARCH_ALL_ENDPOINT,
-            data=content_filter_query,
+            json=content_filter_query,
             params=query_params
         ).json()
 
@@ -60,7 +58,7 @@ class DiscoveryApiClient:
             query_params.update({'page': page})
             response = self.client.post(
                 self.SEARCH_ALL_ENDPOINT,
-                data=content_filter_query,
+                json=content_filter_query,
                 params=query_params
             ).json()
             results += response.get('results', [])
