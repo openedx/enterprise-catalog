@@ -1,14 +1,12 @@
 from collections import OrderedDict
 
+import crum
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
 from edx_rbac.mixins import PermissionRequiredMixin
 from edx_rest_framework_extensions.auth.jwt.authentication import (
     JwtAuthentication,
-)
-from edx_rest_framework_extensions.permissions import (
-    LoginRedirectIfUnauthenticated,
 )
 from rest_framework import permissions, viewsets
 from rest_framework.authentication import SessionAuthentication
@@ -42,7 +40,7 @@ class BaseViewSet(PermissionRequiredMixin, viewsets.ViewSet):
     Base class for all enterprise catalog view sets.
     """
     authentication_classes = [JwtAuthentication, SessionAuthentication]
-    permission_classes = [permissions.IsAuthenticated, LoginRedirectIfUnauthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
 
 class EnterpriseCatalogCRUDViewSet(BaseViewSet, viewsets.ModelViewSet):
@@ -75,7 +73,8 @@ class EnterpriseCatalogCRUDViewSet(BaseViewSet, viewsets.ModelViewSet):
         This object is passed to the rule predicate(s).
         """
         if self.request_action == 'create':
-            return self.request.data.get('enterprise_customer', None)
+            request = crum.get_current_request()
+            return request.data.get('enterprise_customer', None)
         if self.kwargs.get('uuid'):
             enterprise_catalog = self.get_object()
             return str(enterprise_catalog.enterprise_uuid)
