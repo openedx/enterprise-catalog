@@ -317,8 +317,11 @@ def unassociate_content_metadata_from_catalog_query(content_keys, catalog_query)
     Remove association of content_metadata objects from catalog_query if
     the content_metadata object does not have a content_key included in the
     content_keys set provided.
+
+    Returns set of content_keys
     """
 
+    unassociated_content_keys = set()
     for cm in catalog_query.contentmetadata_set.all():
         if cm.content_key not in content_keys:
             LOGGER.info(
@@ -327,6 +330,8 @@ def unassociate_content_metadata_from_catalog_query(content_keys, catalog_query)
                 catalog_query
             )
             catalog_query.contentmetadata_set.remove(cm)
+            unassociated_content_keys.add(cm.content_key)
+    return unassociated_content_keys
 
 
 class EnterpriseCatalogFeatureRole(UserRole):
@@ -416,6 +421,20 @@ def update_contentmetadata_from_discovery(catalog_uuid):
         metadata_content_keys
     )
 
-    content_keys = associate_content_metadata_with_query(metadata, catalog_query)
+    associated_content_keys = associate_content_metadata_with_query(metadata, catalog_query)
+    LOGGER.info(
+        'Associated %d content items with catalog query %s for catalog %s: %s',
+        len(associated_content_keys),
+        catalog_query,
+        catalog_uuid,
+        associated_content_keys,
+    )
 
-    unassociate_content_metadata_from_catalog_query(content_keys, catalog_query)
+    unassociated_content_keys = unassociate_content_metadata_from_catalog_query(associated_content_keys, catalog_query)
+    LOGGER.info(
+        'Unassociated %d content items with catalog query %s for catalog %s: %s',
+        len(unassociated_content_keys),
+        catalog_query,
+        catalog_uuid,
+        unassociated_content_keys,
+    )
