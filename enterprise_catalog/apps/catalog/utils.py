@@ -25,18 +25,6 @@ def get_content_filter_hash(content_filter):
     return content_filter_hash
 
 
-def get_metadata_hash(metadata):
-    """
-    This is a temporary duplicate of get_content_filter_hash for logging
-
-    This will likely be removed soon, but could also be updated to hash more of a content metadata
-    object as opposed to simply json_metadata
-    """
-    metadata_sorted_keys = json.dumps(metadata, sort_keys=True).encode()
-    metadata_hash = hashlib.md5(metadata_sorted_keys).hexdigest()
-    return metadata_hash
-
-
 def get_content_key(metadata, catalog_uuid=None):
     """
     Returns the content key of a piece of metadata
