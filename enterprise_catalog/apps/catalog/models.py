@@ -1,4 +1,5 @@
 import collections
+import json
 from logging import getLogger
 from uuid import uuid4
 
@@ -295,6 +296,18 @@ def associate_content_metadata_with_query(metadata, catalog_query):
             'parent_content_key': get_parent_content_key(entry),
             'content_type': get_content_type(entry),
         }
+        try:
+            old_metadata = ContentMetadata.objects.get(content_key=content_key)
+        except ContentMetadata.DoesNotExist:
+            old_metadata = None
+
+        if old_metadata:
+            if sorted(json.dumps(entry)) == sorted(json.dumps(old_metadata.json_metadata)):
+                LOGGER.info(
+                    'JSON metadata for content key %s has not changed',
+                    content_key,
+                )
+
         cm, __ = ContentMetadata.objects.update_or_create(
             content_key=content_key,
             defaults=defaults,
