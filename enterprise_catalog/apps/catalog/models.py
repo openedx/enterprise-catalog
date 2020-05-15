@@ -410,8 +410,9 @@ def update_contentmetadata_from_discovery(catalog_uuid):
     metadata_content_keys = [get_content_key(entry) for entry in metadata]
 
     LOGGER.info(
-        'Retrieved %d content items from course-discovery: %s',
+        'Retrieved %d content items from course-discovery for catalog %s: %s',
         len(metadata_content_keys),
+        catalog_uuid,
         metadata_content_keys
     )
 
