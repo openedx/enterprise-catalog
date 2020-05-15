@@ -305,7 +305,19 @@ def associate_content_metadata_with_query(metadata, catalog_query):
             catalog_query
         )
         catalog_query.contentmetadata_set.add(cm)
+        if content_key in content_keys:
+            LOGGER.info(
+                'Content key %s is a duplicate for a key associated with content metadata object %s',
+                content_key,
+                cm,
+            )
         content_keys.add(content_key)
+
+    LOGGER.info(
+        'Returning %s unique content keys from %s metadata chunks',
+        len(content_keys),
+        len(metadata),
+    )
     return content_keys
 
 
@@ -412,7 +424,7 @@ def update_contentmetadata_from_discovery(catalog_uuid):
     # Omit non-active course runs from the course-discovery results
     query_params['exclude_expired_course_run'] = True
     metadata = client.get_metadata_by_query(catalog_query.content_filter, query_params=query_params)
-    metadata_content_keys = [get_content_key(entry) for entry in metadata]
+    metadata_content_keys = [get_content_key(entry, catalog_uuid=catalog_uuid) for entry in metadata]
 
     LOGGER.info(
         'Retrieved %d content items from course-discovery for catalog %s: %s',
