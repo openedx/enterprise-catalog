@@ -4,6 +4,7 @@ Utility functions for catalog app.
 """
 import hashlib
 import json
+from logging import getLogger
 
 from edx_rbac.utils import feature_roles_from_jwt
 from edx_rest_framework_extensions.auth.jwt.authentication import (
@@ -15,19 +16,30 @@ from edx_rest_framework_extensions.auth.jwt.cookies import \
 from enterprise_catalog.apps.catalog.constants import COURSE_RUN
 
 
+LOGGER = getLogger(__name__)
+
+
 def get_content_filter_hash(content_filter):
     content_filter_sorted_keys = json.dumps(content_filter, sort_keys=True).encode()
     content_filter_hash = hashlib.md5(content_filter_sorted_keys).hexdigest()
     return content_filter_hash
 
 
-def get_content_key(metadata):
+def get_content_key(metadata, catalog_uuid=None):
     """
     Returns the content key of a piece of metadata
 
     Try to get the course/course run key as the content key, falling back to uuid for programs
     """
-    return metadata.get('key') or metadata.get('uuid')
+    content_key = metadata.get('key') or metadata.get('uuid')
+    if not content_key:
+        LOGGER.info(
+            'Unable to retrieve a content key for metadata: %s, from catalog: %s',
+            metadata,
+            catalog_uuid,
+        )
+
+    return content_key
 
 
 def _partition_aggregation_key(aggregation_key):
