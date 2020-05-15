@@ -287,6 +287,7 @@ def associate_content_metadata_with_query(metadata, catalog_query):
 
     Returns set of content_keys
     """
+    number_of_items_that_have_not_changed = 0
     content_keys = set()
     for entry in metadata:
         content_key = get_content_key(entry)
@@ -303,10 +304,7 @@ def associate_content_metadata_with_query(metadata, catalog_query):
 
         if old_metadata:
             if sorted(json.dumps(entry)) == sorted(json.dumps(old_metadata.json_metadata)):
-                LOGGER.info(
-                    'JSON metadata for content key %s has not changed',
-                    content_key,
-                )
+                number_of_items_that_have_not_changed += 1
 
         cm, __ = ContentMetadata.objects.update_or_create(
             content_key=content_key,
@@ -331,6 +329,12 @@ def associate_content_metadata_with_query(metadata, catalog_query):
         len(content_keys),
         len(metadata),
     )
+    LOGGER.info(
+        'CatalogQuery %s had %s keys whose metadata did not change',
+        catalog_query,
+        number_of_items_that_have_not_changed,
+    )
+
     return content_keys
 
 
