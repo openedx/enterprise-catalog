@@ -25,6 +25,7 @@ from enterprise_catalog.apps.catalog.utils import (
     get_content_filter_hash,
     get_content_key,
     get_content_type,
+    get_metadata_hash,
     get_parent_content_key,
 )
 
@@ -295,6 +296,20 @@ def associate_content_metadata_with_query(metadata, catalog_query):
             'parent_content_key': get_parent_content_key(entry),
             'content_type': get_content_type(entry),
         }
+        try:
+            old_metadata = ContentMetadata.objects.get(content_key=content_key)
+        except ContentMetadata.DoesNotExist:
+            old_metadata = None
+
+        if old_metadata:
+            old_json_metadata_hash = get_metadata_hash(old_metadata.json_metadata)
+            new_json_metadata_hash = get_metadata_hash(entry)
+            if old_json_metadata_hash != new_json_metadata_hash:
+                LOGGER.info(
+                    'JSON metadata hash for content key %s has changed',
+                    content_key,
+                )
+
         cm, __ = ContentMetadata.objects.update_or_create(
             content_key=content_key,
             defaults=defaults,
