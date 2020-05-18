@@ -301,7 +301,7 @@ def associate_content_metadata_with_query(metadata, catalog_query):
     Returns:
         list: The list of content_keys for the metadata associated with the query.
     """
-    content_keys = []
+    content_keys = collections.Counter()
     for entry in metadata:
         content_key = get_content_key(entry)
         if content_key in content_keys:
@@ -310,7 +310,7 @@ def associate_content_metadata_with_query(metadata, catalog_query):
                 content_key,
                 cm,
             )
-        content_keys.append(content_key)
+        content_keys[content_key] += 1
 
         defaults = {
             'content_key': content_key,
@@ -325,7 +325,8 @@ def associate_content_metadata_with_query(metadata, catalog_query):
 
         if old_metadata:
             if get_sorted_string_from_json(entry) == get_sorted_string_from_json(old_metadata.json_metadata):
-                # Only update the existing ContentMetadata object if its json has changed, but still associate it with the query
+                # Only update the existing ContentMetadata object if its json has changed,
+                # but still associate it with the query
                 LOGGER.info(
                     'Associating content_metadata %s with catalog_query %s.',
                     old_metadata,
@@ -361,7 +362,7 @@ def unassociate_content_metadata_from_catalog_query(content_keys, catalog_query)
         list: The list of content_keys that were unassociated from the query.
     """
 
-    unassociated_content_keys = []
+    unassociated_content_keys = collections.Counter()
     for cm in catalog_query.contentmetadata_set.all():
         if cm.content_key not in content_keys:
             LOGGER.info(
@@ -370,7 +371,7 @@ def unassociate_content_metadata_from_catalog_query(content_keys, catalog_query)
                 catalog_query
             )
             catalog_query.contentmetadata_set.remove(cm)
-            unassociated_content_keys.append(cm.content_key)
+            unassociated_content_keys[cm.content_key] += 1
     return unassociated_content_keys
 
 
@@ -463,18 +464,38 @@ def update_contentmetadata_from_discovery(catalog_uuid):
 
     associated_content_keys = associate_content_metadata_with_query(metadata, catalog_query)
     LOGGER.info(
-        'Associated %d content items with catalog query %s for catalog %s: %s',
+        'Associated %d content items (%s unique) with catalog query %s for catalog %s: %s',
+        sum(associated_content_keys.values()),
         len(associated_content_keys),
         catalog_query,
         catalog_uuid,
         associated_content_keys,
     )
+    # TODO: Remove once we're finished debugging data syncing.
+    LOGGER.info(
+        'Non-unique associated content items for catalog %s: %s',
+        catalog_uuid,
+        {
+            key: value for key, value in associated_content_keys.items()
+            if value > 1
+        },
+    )
 
     unassociated_content_keys = unassociate_content_metadata_from_catalog_query(associated_content_keys, catalog_query)
     LOGGER.info(
-        'Unassociated %d content items with catalog query %s for catalog %s: %s',
+        'Unassociated %d content items (%s unique) with catalog query %s for catalog %s: %s',
+        sum(unassociated_content_keys.values()),
         len(unassociated_content_keys),
         catalog_query,
         catalog_uuid,
         unassociated_content_keys,
+    )
+    # TODO: Remove once we're finished debugging data syncing.
+    LOGGER.info(
+        'Non-unique unassociated content items for catalog %s: %s',
+        catalog_uuid,
+        {
+            key: value for key, value in unassociated_content_keys.items()
+            if value > 1
+        },
     )
