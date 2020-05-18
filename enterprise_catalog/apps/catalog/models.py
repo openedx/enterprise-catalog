@@ -304,12 +304,6 @@ def associate_content_metadata_with_query(metadata, catalog_query):
     content_keys = collections.Counter()
     for entry in metadata:
         content_key = get_content_key(entry)
-        if content_key in content_keys:
-            LOGGER.info(
-                'Content key %s is a duplicate for a key associated with content metadata object %s',
-                content_key,
-                cm,
-            )
         content_keys[content_key] += 1
 
         defaults = {
@@ -327,22 +321,12 @@ def associate_content_metadata_with_query(metadata, catalog_query):
             if get_sorted_string_from_json(entry) == get_sorted_string_from_json(old_metadata.json_metadata):
                 # Only update the existing ContentMetadata object if its json has changed,
                 # but still associate it with the query
-                LOGGER.info(
-                    'Associating content_metadata %s with catalog_query %s.',
-                    old_metadata,
-                    catalog_query
-                )
                 catalog_query.contentmetadata_set.add(old_metadata)
                 continue
 
         cm, __ = ContentMetadata.objects.update_or_create(
             content_key=content_key,
             defaults=defaults,
-        )
-        LOGGER.info(
-            'Associating content_metadata %s with catalog_query %s.',
-            cm,
-            catalog_query
         )
         catalog_query.contentmetadata_set.add(cm)
 
