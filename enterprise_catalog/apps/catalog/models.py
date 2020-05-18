@@ -277,6 +277,19 @@ class ContentMetadata(TimeStampedModel):
         )
 
 
+def get_sorted_string_from_json(json_metadata):
+    """
+    Get the string representing a json piece of metadata in alphabetical order for comparisons.
+
+    Arguments:
+        json_metadata (json): The json metadata of a particular piece of content metadata.
+
+    Returns:
+        string: The json metadata as a sorted string
+    """
+    return sorted(json.dumps(json_metadata))
+
+
 def associate_content_metadata_with_query(metadata, catalog_query):
     """
     get_or_create a content metadata object for entry in metadata
@@ -287,10 +300,17 @@ def associate_content_metadata_with_query(metadata, catalog_query):
 
     Returns set of content_keys
     """
-    number_of_items_that_have_not_changed = 0
     content_keys = set()
     for entry in metadata:
         content_key = get_content_key(entry)
+        if content_key in content_keys:
+            LOGGER.info(
+                'Content key %s is a duplicate for a key associated with content metadata object %s',
+                content_key,
+                cm,
+            )
+        content_keys.add(content_key)
+
         defaults = {
             'content_key': content_key,
             'json_metadata': entry,
@@ -303,8 +323,9 @@ def associate_content_metadata_with_query(metadata, catalog_query):
             old_metadata = None
 
         if old_metadata:
-            if sorted(json.dumps(entry)) == sorted(json.dumps(old_metadata.json_metadata)):
-                number_of_items_that_have_not_changed += 1
+            if get_sorted_string_from_json(entry) == get_sorted_string_from_json(old_metadata.json_metadata):
+                # Only update the existing ContentMetadata object if its json has not changed
+                continue
 
         cm, __ = ContentMetadata.objects.update_or_create(
             content_key=content_key,
@@ -316,23 +337,11 @@ def associate_content_metadata_with_query(metadata, catalog_query):
             catalog_query
         )
         catalog_query.contentmetadata_set.add(cm)
-        if content_key in content_keys:
-            LOGGER.info(
-                'Content key %s is a duplicate for a key associated with content metadata object %s',
-                content_key,
-                cm,
-            )
-        content_keys.add(content_key)
 
     LOGGER.info(
         'Returning %s unique content keys from %s metadata chunks',
         len(content_keys),
         len(metadata),
-    )
-    LOGGER.info(
-        'CatalogQuery %s had %s keys whose metadata did not change',
-        catalog_query,
-        number_of_items_that_have_not_changed,
     )
 
     return content_keys
@@ -441,7 +450,7 @@ def update_contentmetadata_from_discovery(catalog_uuid):
     # Omit non-active course runs from the course-discovery results
     query_params['exclude_expired_course_run'] = True
     metadata = client.get_metadata_by_query(catalog_query.content_filter, query_params=query_params)
-    metadata_content_keys = [get_content_key(entry, catalog_uuid=catalog_uuid) for entry in metadata]
+    metadata_content_keys = [get_content_key(entry) for entry in metadata]
 
     LOGGER.info(
         'Retrieved %d content items from course-discovery for catalog %s: %s',

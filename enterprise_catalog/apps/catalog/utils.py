@@ -25,21 +25,13 @@ def get_content_filter_hash(content_filter):
     return content_filter_hash
 
 
-def get_content_key(metadata, catalog_uuid=None):
+def get_content_key(metadata):
     """
     Returns the content key of a piece of metadata
 
     Try to get the course/course run key as the content key, falling back to uuid for programs
     """
-    content_key = metadata.get('key') or metadata.get('uuid')
-    if not content_key:
-        LOGGER.info(
-            'Unable to retrieve a content key for metadata: %s, from catalog: %s',
-            metadata,
-            catalog_uuid,
-        )
-
-    return content_key
+    return metadata.get('key') or metadata.get('uuid')
 
 
 def _partition_aggregation_key(aggregation_key):
