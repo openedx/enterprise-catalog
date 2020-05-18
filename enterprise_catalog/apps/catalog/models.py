@@ -326,8 +326,8 @@ def associate_content_metadata_with_query(metadata, catalog_query):
     # before setting all new relationships from `metadata_list`.
     # https://docs.djangoproject.com/en/2.2/ref/models/relations/#django.db.models.fields.related.RelatedManager.set
     catalog_query.contentmetadata_set.set(metadata_list, clear=True)
-
-    return metadata_list
+    associated_content_keys = [metadata.content_key for metadata in metadata_list]
+    return associated_content_keys
 
 
 class EnterpriseCatalogFeatureRole(UserRole):
@@ -411,17 +411,19 @@ def update_contentmetadata_from_discovery(catalog_uuid):
     metadata_content_keys = [get_content_key(entry) for entry in metadata]
 
     LOGGER.info(
-        'Retrieved %d content items from course-discovery for catalog %s: %s',
+        'Retrieved %d content items (%d unique) from course-discovery for catalog %s: %s',
         len(metadata_content_keys),
+        len(set(metadata_content_keys)),
         catalog_uuid,
         metadata_content_keys
     )
 
-    associated_metadata = associate_content_metadata_with_query(metadata, catalog_query)
+    associated_content_keys = associate_content_metadata_with_query(metadata, catalog_query)
     LOGGER.info(
-        'Associated %d content items with catalog query %s for catalog %s: %s',
-        len(associated_metadata),
+        'Associated %d content items (%d unique) with catalog query %s for catalog %s: %s',
+        len(associated_content_keys),
+        len(set(associated_content_keys)),
         catalog_query,
         catalog_uuid,
-        [metadata.content_key for metadata in associated_metadata],
+        associated_content_keys,
     )
