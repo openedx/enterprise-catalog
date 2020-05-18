@@ -1,5 +1,4 @@
 import collections
-import json
 from logging import getLogger
 from uuid import uuid4
 
@@ -27,6 +26,7 @@ from enterprise_catalog.apps.catalog.utils import (
     get_content_key,
     get_content_type,
     get_parent_content_key,
+    get_sorted_string_from_json,
 )
 
 
@@ -277,86 +277,57 @@ class ContentMetadata(TimeStampedModel):
         )
 
 
-def get_sorted_string_from_json(json_metadata):
-    """
-    Get the string representing a json piece of metadata in alphabetical order for comparisons.
-
-    Arguments:
-        json_metadata (json): The json metadata of a particular piece of content metadata.
-
-    Returns:
-        string: The json metadata as a sorted string
-    """
-    return sorted(json.dumps(json_metadata))
-
-
 def associate_content_metadata_with_query(metadata, catalog_query):
     """
-    get_or_create a content metadata object for entry in metadata
-    and then associate that object with the catalog_query provided.
+    Creates or (possibly) updates a ContentMetadata object for each entry in `metadata`,
+    and then associates that object with the `catalog_query` provided.
+    Only updates an existing ContentMetadata object if its `json_metadata` field
+    differs from the data provided in `metadata`.
 
-    metadata: Dictionary containing metadata
+    metadata: List of content metadata dictionaries.
     catalog_query: CatalogQuery object
 
     Returns:
         list: The list of content_keys for the metadata associated with the query.
     """
-    content_keys = collections.Counter()
+    metadata_list = []
     for entry in metadata:
         content_key = get_content_key(entry)
-        content_keys[content_key] += 1
-
         defaults = {
             'content_key': content_key,
             'json_metadata': entry,
             'parent_content_key': get_parent_content_key(entry),
             'content_type': get_content_type(entry),
         }
-        try:
-            old_metadata = ContentMetadata.objects.get(content_key=content_key)
-        except ContentMetadata.DoesNotExist:
-            old_metadata = None
 
-        if old_metadata:
-            if get_sorted_string_from_json(entry) == get_sorted_string_from_json(old_metadata.json_metadata):
+        try:
+            existing_metadata = ContentMetadata.objects.get(content_key=content_key)
+        except ContentMetadata.DoesNotExist:
+            existing_metadata = None
+
+        if existing_metadata:
+            if get_sorted_string_from_json(entry) == get_sorted_string_from_json(existing_metadata.json_metadata):
                 # Only update the existing ContentMetadata object if its json has changed,
                 # but still associate it with the query
-                catalog_query.contentmetadata_set.add(old_metadata)
+                metadata_list.append(existing_metadata)
                 continue
 
-        cm, __ = ContentMetadata.objects.update_or_create(
-            content_key=content_key,
-            defaults=defaults,
-        )
-        catalog_query.contentmetadata_set.add(cm)
+        if existing_metadata:
+            for key, value in defaults.items():
+                setattr(existing_metadata, key, value)
+            existing_metadata.save()
+        else:
+            existing_metadata = ContentMetadata.objects.create(**defaults)
 
-    return content_keys
+        metadata_list.append(existing_metadata)
 
+    # Setting `clear=True` will remove all prior relationships between
+    # the CatalogQuery's associated ContentMetadata objects
+    # before setting all new relationships from `metadata_list`.
+    # https://docs.djangoproject.com/en/2.2/ref/models/relations/#django.db.models.fields.related.RelatedManager.set
+    catalog_query.contentmetadata_set.set(metadata_list, clear=True)
 
-def unassociate_content_metadata_from_catalog_query(content_keys, catalog_query):
-    """
-    content_keys: List of content keys
-    catalog_query: CatalogQuery object
-
-    Remove association of content_metadata objects from catalog_query if
-    the content_metadata object does not have a content_key included in the
-    content_keys set provided.
-
-    Returns:
-        list: The list of content_keys that were unassociated from the query.
-    """
-
-    unassociated_content_keys = collections.Counter()
-    for cm in catalog_query.contentmetadata_set.all():
-        if cm.content_key not in content_keys:
-            LOGGER.info(
-                'Removing association for content_metadata %s with catalog_query %s.',
-                cm,
-                catalog_query
-            )
-            catalog_query.contentmetadata_set.remove(cm)
-            unassociated_content_keys[cm.content_key] += 1
-    return unassociated_content_keys
+    return metadata_list
 
 
 class EnterpriseCatalogFeatureRole(UserRole):
@@ -446,40 +417,11 @@ def update_contentmetadata_from_discovery(catalog_uuid):
         metadata_content_keys
     )
 
-    associated_content_keys = associate_content_metadata_with_query(metadata, catalog_query)
+    associated_metadata = associate_content_metadata_with_query(metadata, catalog_query)
     LOGGER.info(
-        'Associated %d content items (%s unique) with catalog query %s for catalog %s: %s',
-        sum(associated_content_keys.values()),
-        len(associated_content_keys),
+        'Associated %d content items with catalog query %s for catalog %s: %s',
+        len(associated_metadata),
         catalog_query,
         catalog_uuid,
-        associated_content_keys,
-    )
-    # TODO: Remove once we're finished debugging data syncing.
-    LOGGER.info(
-        'Non-unique associated content items for catalog %s: %s',
-        catalog_uuid,
-        {
-            key: value for key, value in associated_content_keys.items()
-            if value > 1
-        },
-    )
-
-    unassociated_content_keys = unassociate_content_metadata_from_catalog_query(associated_content_keys, catalog_query)
-    LOGGER.info(
-        'Unassociated %d content items (%s unique) with catalog query %s for catalog %s: %s',
-        sum(unassociated_content_keys.values()),
-        len(unassociated_content_keys),
-        catalog_query,
-        catalog_uuid,
-        unassociated_content_keys,
-    )
-    # TODO: Remove once we're finished debugging data syncing.
-    LOGGER.info(
-        'Non-unique unassociated content items for catalog %s: %s',
-        catalog_uuid,
-        {
-            key: value for key, value in unassociated_content_keys.items()
-            if value > 1
-        },
+        [metadata.content_key for metadata in associated_metadata],
     )
