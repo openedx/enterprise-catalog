@@ -324,7 +324,7 @@ def associate_content_metadata_with_query(metadata, catalog_query):
 
         if old_metadata:
             if get_sorted_string_from_json(entry) == get_sorted_string_from_json(old_metadata.json_metadata):
-                # Only update the existing ContentMetadata object if its json has not changed
+                # Only update the existing ContentMetadata object if its json has changed
                 continue
 
         cm, __ = ContentMetadata.objects.update_or_create(
