@@ -77,3 +77,16 @@ def get_jwt_roles(request):
     if not decoded_jwt:
         return {}
     return feature_roles_from_jwt(decoded_jwt)
+
+
+def get_sorted_string_from_json(json_metadata):
+    """
+    Get the string representing a json piece of metadata in alphabetical order for comparisons.
+
+    Arguments:
+        json_metadata (json): The json metadata of a particular piece of content metadata.
+
+    Returns:
+        string: The json metadata as a sorted string
+    """
+    return sorted(json.dumps(json_metadata))
