@@ -298,9 +298,10 @@ def associate_content_metadata_with_query(metadata, catalog_query):
     metadata: Dictionary containing metadata
     catalog_query: CatalogQuery object
 
-    Returns set of content_keys
+    Returns:
+        list: The list of content_keys for the metadata associated with the query.
     """
-    content_keys = set()
+    content_keys = []
     for entry in metadata:
         content_key = get_content_key(entry)
         if content_key in content_keys:
@@ -309,7 +310,7 @@ def associate_content_metadata_with_query(metadata, catalog_query):
                 content_key,
                 cm,
             )
-        content_keys.add(content_key)
+        content_keys.append(content_key)
 
         defaults = {
             'content_key': content_key,
@@ -338,28 +339,23 @@ def associate_content_metadata_with_query(metadata, catalog_query):
         )
         catalog_query.contentmetadata_set.add(cm)
 
-    LOGGER.info(
-        'Returning %s unique content keys from %s metadata chunks',
-        len(content_keys),
-        len(metadata),
-    )
-
     return content_keys
 
 
 def unassociate_content_metadata_from_catalog_query(content_keys, catalog_query):
     """
-    content_keys: Set of content keys
+    content_keys: List of content keys
     catalog_query: CatalogQuery object
 
     Remove association of content_metadata objects from catalog_query if
     the content_metadata object does not have a content_key included in the
     content_keys set provided.
 
-    Returns set of content_keys
+    Returns:
+        list: The list of content_keys that were unassociated from the query.
     """
 
-    unassociated_content_keys = set()
+    unassociated_content_keys = []
     for cm in catalog_query.contentmetadata_set.all():
         if cm.content_key not in content_keys:
             LOGGER.info(
@@ -368,7 +364,7 @@ def unassociate_content_metadata_from_catalog_query(content_keys, catalog_query)
                 catalog_query
             )
             catalog_query.contentmetadata_set.remove(cm)
-            unassociated_content_keys.add(cm.content_key)
+            unassociated_content_keys.append(cm.content_key)
     return unassociated_content_keys
 
 
