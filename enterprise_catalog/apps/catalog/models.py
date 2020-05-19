@@ -312,7 +312,6 @@ def associate_content_metadata_with_query(metadata, catalog_query):
                 metadata_list.append(existing_metadata)
                 continue
 
-        if existing_metadata:
             for key, value in defaults.items():
                 setattr(existing_metadata, key, value)
             existing_metadata.save()

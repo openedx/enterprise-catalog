@@ -161,7 +161,7 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
                 for course_run in course_runs:
                     course_run['enrollment_url'] = enterprise_catalog.get_content_enrollment_url(
                         content_resource='course',
-                        content_key=content_key,
+                        content_key=course_run.get('key'),
                     )
         elif content_type == PROGRAM:
             json_metadata['enrollment_url'] = enterprise_catalog.get_content_enrollment_url(
