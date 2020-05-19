@@ -22,7 +22,9 @@ from enterprise_catalog.apps.api.tasks import update_catalog_metadata_task
 from enterprise_catalog.apps.api.v1.decorators import (
     require_at_least_one_query_parameter,
 )
-from enterprise_catalog.apps.api.v1.pagination import PageNumberWithSizePagination
+from enterprise_catalog.apps.api.v1.pagination import (
+    PageNumberWithSizePagination,
+)
 from enterprise_catalog.apps.api.v1.serializers import (
     ContentMetadataSerializer,
     EnterpriseCatalogCreateSerializer,
