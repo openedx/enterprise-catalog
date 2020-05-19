@@ -51,6 +51,7 @@ class EnterpriseCatalogCRUDViewSet(BaseViewSet, viewsets.ModelViewSet):
     renderer_classes = [JSONRenderer, XMLRenderer]
     permission_required = 'catalog.has_admin_access'
     lookup_field = 'uuid'
+    pagination_class = PageNumberWithSizePagination
 
     @cached_property
     def request_action(self):
