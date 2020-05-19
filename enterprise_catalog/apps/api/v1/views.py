@@ -22,6 +22,9 @@ from enterprise_catalog.apps.api.tasks import update_catalog_metadata_task
 from enterprise_catalog.apps.api.v1.decorators import (
     require_at_least_one_query_parameter,
 )
+from enterprise_catalog.apps.api.v1.pagination import (
+    PageNumberWithSizePagination,
+)
 from enterprise_catalog.apps.api.v1.serializers import (
     ContentMetadataSerializer,
     EnterpriseCatalogCreateSerializer,
@@ -48,6 +51,7 @@ class EnterpriseCatalogCRUDViewSet(BaseViewSet, viewsets.ModelViewSet):
     renderer_classes = [JSONRenderer, XMLRenderer]
     permission_required = 'catalog.has_admin_access'
     lookup_field = 'uuid'
+    pagination_class = PageNumberWithSizePagination
 
     @cached_property
     def request_action(self):
@@ -157,6 +161,7 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
     serializer_class = ContentMetadataSerializer
     renderer_classes = [JSONRenderer, XMLRenderer]
     lookup_field = 'uuid'
+    pagination_class = PageNumberWithSizePagination
 
     def get_enterprise_catalog(self):
         """
