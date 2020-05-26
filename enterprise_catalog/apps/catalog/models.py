@@ -407,7 +407,7 @@ def update_contentmetadata_from_discovery(catalog_uuid):
         # Omit non-active course runs from the course-discovery results
         'exclude_expired_course_run': True,
         # Increasing page_size will help alleviate the non-deterministic behavior
-        # of the /search/all/ endpoint where a content items may appear on multiple
+        # of the /search/all/ endpoint where a content item may appear on multiple
         # pages (e.g., a course is included on both pages 1 and 2). This issue with the
         # /search/all/ endpoint is likely the reason we get duplicate results.
         'page_size': 200,
