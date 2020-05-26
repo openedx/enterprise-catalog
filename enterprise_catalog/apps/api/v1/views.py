@@ -179,14 +179,13 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
         enterprise_catalog = self.get_enterprise_catalog()
         return str(enterprise_catalog.enterprise_uuid)
 
-    def get_queryset(self, enterprise_catalog=None):
+    def get_queryset(self):
         """
         Returns all of the json of content metadata associated with the catalog.
 
         Note that the metadata is ordered by content key.
         """
-        if not enterprise_catalog:
-            enterprise_catalog = self.get_enterprise_catalog()
+        enterprise_catalog = self.get_enterprise_catalog()
         ordered_metadata = enterprise_catalog.content_metadata.order_by('content_key')
         return ordered_metadata
 
@@ -214,8 +213,8 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
 
         Adding the query parameter `traverse_pagination` will collect the results onto a single page.
         """
+        queryset = self.filter_queryset(self.get_queryset())
         enterprise_catalog = self.get_enterprise_catalog()
-        queryset = self.filter_queryset(self.get_queryset(enterprise_catalog=enterprise_catalog))
         context = self.get_serializer_context()
         context['enterprise_catalog'] = enterprise_catalog
         # Traverse pagination query parameter signals that we should collect the results onto a single page
