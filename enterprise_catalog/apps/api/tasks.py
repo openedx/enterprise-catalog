@@ -7,5 +7,5 @@ from enterprise_catalog.apps.catalog.models import (
 
 @shared_task(bind=True)
 # pylint: disable=unused-argument
-def update_catalog_metadata_task(self, catalog_uuid):
-    update_contentmetadata_from_discovery(catalog_uuid)
+def update_catalog_metadata_task(self, catalog_query_id):
+    update_contentmetadata_from_discovery(catalog_query_id)

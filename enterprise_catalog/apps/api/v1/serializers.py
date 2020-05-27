@@ -72,7 +72,7 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
             'to update content_metadata for catalog %s'
         )
         logger.info(message, catalog)
-        update_catalog_metadata_task.delay(catalog_uuid=str(catalog.uuid))
+        update_catalog_metadata_task.delay(catalog_query_id=catalog.catalog_query.id)
 
         return catalog
 
@@ -92,7 +92,7 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
             'to update content_metadata for catalog %s'
         )
         logger.info(message, instance)
-        update_catalog_metadata_task.delay(catalog_uuid=str(instance.uuid))
+        update_catalog_metadata_task.delay(catalog_query_id=instance.catalog_query.id)
 
         return super().update(instance, validated_data)
 
