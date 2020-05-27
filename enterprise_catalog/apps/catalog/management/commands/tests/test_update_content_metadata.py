@@ -4,7 +4,7 @@ from django.test import TestCase
 
 from enterprise_catalog.apps.api.tasks import update_catalog_metadata_task
 from enterprise_catalog.apps.catalog.tests.factories import (
-    EnterpriseCatalogFactory,
+    CatalogQueryFactory,
 )
 
 
@@ -18,9 +18,9 @@ class UpdateContentMetadataCommandTests(TestCase):
         """
         Verify that the job creates an update task for every enterprise catalog
         """
-        [catalog_a, catalog_b, catalog_c] = EnterpriseCatalogFactory.create_batch(3)
+        [catalog_query_a, catalog_query_b, catalog_query_c] = CatalogQueryFactory.create_batch(3)
         call_command(self.command_name)
 
-        mock_task.assert_any_call(catalog_uuid=str(catalog_a.uuid))
-        mock_task.assert_any_call(catalog_uuid=str(catalog_b.uuid))
-        mock_task.assert_any_call(catalog_uuid=str(catalog_c.uuid))
+        mock_task.assert_any_call(catalog_query_id=catalog_query_a.id)
+        mock_task.assert_any_call(catalog_query_id=catalog_query_b.id)
+        mock_task.assert_any_call(catalog_query_id=catalog_query_c.id)

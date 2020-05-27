@@ -436,7 +436,7 @@ def update_contentmetadata_from_discovery(catalog_query_id):
             associated_content_keys,
         )
     else:
-        # CatalogQuery with
         LOGGER.warning(
-            'Could not find a CatalogQuery with id %s'
+            'Could not find a CatalogQuery with id %s',
+            catalog_query_id,
         )
