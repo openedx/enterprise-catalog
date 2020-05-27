@@ -6,9 +6,7 @@ from unittest import mock
 from django.test import TestCase
 
 from enterprise_catalog.apps.api import tasks
-from enterprise_catalog.apps.catalog.tests.factories import (
-    CatalogQueryFactory,
-)
+from enterprise_catalog.apps.catalog.tests.factories import CatalogQueryFactory
 
 
 class EnterpriseCatalogCeleryTaskTests(TestCase):
