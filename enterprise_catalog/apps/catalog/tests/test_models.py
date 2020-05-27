@@ -49,7 +49,7 @@ class TestModels(TestCase):
         catalog = factories.EnterpriseCatalogFactory()
 
         self.assertEqual(ContentMetadata.objects.count(), 0)
-        update_contentmetadata_from_discovery(catalog.uuid)
+        update_contentmetadata_from_discovery(catalog.catalog_query.id)
         mock_client.assert_called_once()
         self.assertEqual(ContentMetadata.objects.count(), 3)
 
@@ -78,7 +78,7 @@ class TestModels(TestCase):
         # from catalog query while perserving the content metadata objects
         # themselves.
         mock_client.return_value.get_metadata_by_query.return_value = [program_metadata]
-        update_contentmetadata_from_discovery(catalog.uuid)
+        update_contentmetadata_from_discovery(catalog.catalog_query.id)
         self.assertEqual(ContentMetadata.objects.count(), 3)
 
         associated_metadata = catalog.content_metadata

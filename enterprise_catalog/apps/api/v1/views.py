@@ -253,7 +253,9 @@ class EnterpriseCatalogRefreshDataFromDiscovery(BaseViewSet, APIView):
         return str(enterprise_catalog.enterprise_uuid)
 
     def post(self, request, uuid):
-        async_task = update_catalog_metadata_task.delay(catalog_uuid=uuid)
+        enterprise_catalog = get_object_or_404(EnterpriseCatalog, uuid=uuid)
+        catalog_query_id = enterprise_catalog.catalog_query.id
+        async_task = update_catalog_metadata_task.delay(catalog_query_id=catalog_query_id)
         return Response({'async_task_id': async_task.task_id}, status=HTTP_200_OK)
 
 
