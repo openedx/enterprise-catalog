@@ -391,7 +391,7 @@ class EnterpriseCatalogRoleAssignment(UserRoleAssignment):
 
 def update_contentmetadata_from_discovery(catalog_query_id):
     """
-    catalog_query_id is a identifer for CatalogQuery objects (str)
+    catalog_query_id is a identifer for CatalogQuery objects (int)
 
     Takes a uuid, looks up catalogquery, uses discovery service client to
     grab fresh metadata, and then create/updates ContentMetadata objects.
