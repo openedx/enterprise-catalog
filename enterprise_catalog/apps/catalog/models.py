@@ -412,8 +412,8 @@ def update_contentmetadata_from_discovery(catalog_query_id):
             'exclude_expired_course_run': True,
             # Increase number of results per page for the course-discovery response
             'page_size': 100,
-            # Ensure paginated results are consistently ordered by `aggregation_key`
-            'ordering': 'aggregation_key',
+            # Ensure paginated results are consistently ordered by `aggregation_key` and `start`
+            'ordering': 'aggregation_key,start',
         }
         metadata = client.get_metadata_by_query(catalog_query.content_filter, query_params=query_params)
         metadata_content_keys = [get_content_key(entry) for entry in metadata]
