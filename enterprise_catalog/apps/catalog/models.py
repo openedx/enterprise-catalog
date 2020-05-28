@@ -410,15 +410,9 @@ def update_contentmetadata_from_discovery(catalog_query_id):
         query_params = {
             # Omit non-active course runs from the course-discovery results
             'exclude_expired_course_run': True,
-            # Increasing page_size will help alleviate the non-deterministic behavior
-            # of the /search/all/ endpoint where a content item may appear on multiple
-            # pages (e.g., a course is included on both pages 1 and 2). This issue with the
-            # /search/all/ endpoint is likely the reason we get duplicate results.
-            'page_size': 200,
-            # Another attempt to address the non-deterministic pagination behavior of the
-            # /search/all endpoint. The endpoint now enables ordering for the `aggregation_key`
-            # field, but doesn't apply that ordering by default. This query param may help
-            # to get consistent results when traversing pagination.
+            # Increase number of results per page for the course-discovery response
+            'page_size': 100,
+            # Ensure paginated results are consistently ordered by `aggregation_key`
             'ordering': 'aggregation_key',
         }
         metadata = client.get_metadata_by_query(catalog_query.content_filter, query_params=query_params)
