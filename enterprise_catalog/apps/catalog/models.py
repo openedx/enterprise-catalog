@@ -416,7 +416,7 @@ def update_contentmetadata_from_discovery(catalog_query_id):
             # /search/all/ endpoint is likely the reason we get duplicate results.
             'page_size': 200,
             # Another attempt to address the non-deterministic pagination behavior of the
-            # /search/all endpoint. The endpoint now enables ordering for the `aggregation_key` 
+            # /search/all endpoint. The endpoint now enables ordering for the `aggregation_key`
             # field, but doesn't apply that ordering by default. This query param may help
             # to get consistent results when traversing pagination.
             'ordering': 'aggregation_key',
