@@ -415,7 +415,7 @@ def update_contentmetadata_from_discovery(catalog_query_id):
             # Ensure paginated results are consistently ordered by `aggregation_key` and `start`
             'ordering': 'aggregation_key,start',
         }
-        metadata = client.get_metadata_by_query(catalog_query.content_filter, query_params=query_params)
+        metadata = client.get_metadata_by_query(catalog_query, query_params=query_params)
         metadata_content_keys = [get_content_key(entry) for entry in metadata]
 
         LOGGER.info(

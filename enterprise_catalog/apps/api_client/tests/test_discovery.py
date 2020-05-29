@@ -4,6 +4,7 @@ import mock
 from django.test import TestCase
 
 from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
+from enterprise_catalog.apps.catalog.tests.factories import CatalogQueryFactory
 
 
 class TestDiscoveryApiClient(TestCase):
@@ -19,10 +20,10 @@ class TestDiscoveryApiClient(TestCase):
             'results': [{'key': 'fakeX'}],
         }
 
-        content_filter = {'*': '*'}
+        catalog_query = CatalogQueryFactory()
         query_params = {'exclude_expired_course_run': True}
         client = DiscoveryApiClient()
-        actual_response = client.get_metadata_by_query(content_filter, query_params)
+        actual_response = client.get_metadata_by_query(catalog_query, query_params)
 
         mock_oauth_client.return_value.post.assert_called_once()
 
