@@ -3,10 +3,15 @@
 Discovery service api client code.
 """
 
+import logging
 from urllib.parse import urljoin
 
 from django.conf import settings
 from edx_rest_api_client.client import OAuthAPIClient
+from simplejson import JSONDecodeError
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class DiscoveryApiClient:
@@ -31,7 +36,7 @@ class DiscoveryApiClient:
     def oauth2_client_secret(self):
         return settings.BACKEND_SERVICE_EDX_OAUTH2_SECRET
 
-    def get_metadata_by_query(self, content_filter_query, query_params=None):
+    def get_metadata_by_query(self, catalog_query, query_params=None):
         """
         Return results from the discovery service's search/all endpoint.
 
@@ -45,22 +50,31 @@ class DiscoveryApiClient:
         if query_params is None:
             query_params = {}
 
-        response = self.client.post(
-            self.SEARCH_ALL_ENDPOINT,
-            json=content_filter_query,
-            params=query_params
-        ).json()
-
-        results = response.get('results', [])
         page = 1
-        while response.get('next'):
-            page += 1
-            query_params.update({'page': page})
+        results = []
+        try:
             response = self.client.post(
                 self.SEARCH_ALL_ENDPOINT,
-                json=content_filter_query,
+                json=catalog_query.content_filter,
                 params=query_params
             ).json()
             results += response.get('results', [])
+
+            # Traverse all pages (new request per page) and concatenate results
+            while response.get('next'):
+                page += 1
+                query_params.update({'page': page})
+                response = self.client.post(
+                    self.SEARCH_ALL_ENDPOINT,
+                    json=catalog_query.content_filter,
+                    params=query_params
+                ).json()
+                results += response.get('results', [])
+        except JSONDecodeError:
+            LOGGER.error(
+                'Could not retrieve content items from course-discovery (page %s) for catalog query %s',
+                page,
+                catalog_query,
+            )
 
         return results
