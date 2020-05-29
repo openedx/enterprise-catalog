@@ -3,7 +3,10 @@ import logging
 from django.core.management.base import BaseCommand
 
 from enterprise_catalog.apps.api.tasks import update_catalog_metadata_task
-from enterprise_catalog.apps.catalog.models import CatalogQuery, EnterpriseCatalog
+from enterprise_catalog.apps.catalog.models import (
+    CatalogQuery,
+    EnterpriseCatalog,
+)
 
 
 logger = logging.getLogger(__name__)
