@@ -489,12 +489,34 @@ class EnterpriseCatalogContainsContentItemsTests(APITestMixin):
         """
         Verify the contains_content_items endpoint returns True if the parent's key is in the catalog
         """
-        child_key = 'child-key+101x'
         parent_metadata = ContentMetadataFactory(content_key='parent-key')
-        ContentMetadataFactory(content_key=child_key, parent_content_key=parent_metadata.content_key)
-        self.add_metadata_to_catalog(self.enterprise_catalog, [parent_metadata])
+        associated_metadata = ContentMetadataFactory(
+            content_key='child-key+101x',
+            parent_content_key=parent_metadata.content_key
+        )
+        self.add_metadata_to_catalog(self.enterprise_catalog, [associated_metadata])
 
-        url = self._get_contains_content_base_url(self.enterprise_catalog) + '?course_run_ids=' + child_key
+        query_string = '?course_run_ids=' + parent_metadata.content_key
+        url = self._get_contains_content_base_url(self.enterprise_catalog) + query_string
+        self.assert_correct_contains_response(url, True)
+
+    def test_contains_content_items_course_run_keys_in_catalog(self):
+        """
+        Verify the contains_content_items endpoint returns True if a course run's key is in the catalog
+        """
+        content_key = 'course-content-key'
+        course_run_content_key = 'course-run-content-key'
+        associated_metadata = ContentMetadataFactory(
+            content_key=content_key,
+            json_metadata={
+                'key': content_key,
+                'marketing_url': 'http://marketing.url/{}'.format(content_key),
+                'course_runs': [{'key': course_run_content_key}],
+            }
+        )
+        self.add_metadata_to_catalog(self.enterprise_catalog, [associated_metadata])
+
+        url = self._get_contains_content_base_url(self.enterprise_catalog) + '?course_run_ids=' + course_run_content_key
         self.assert_correct_contains_response(url, True)
 
     def test_contains_content_items_keys_not_in_catalog(self):

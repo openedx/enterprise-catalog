@@ -156,34 +156,50 @@ class EnterpriseCatalog(TimeStampedModel):
 
     def contains_content_keys(self, content_keys):
         """
-        Return True if catalog contains the courses/course runs/programs specified by the given content keys, else False
+        Determines whether content_keys are part of the catalog.
 
-        Note that content is also part of the catalog if its parent is part of the catalog. Assumes that we have a
-        ContentMetadata entry for every content id for proper parent/child lookup, but does not error if that is false.
+        Return True if catalog contains the {courses/course runs} and/or programs specified by the given
+        content key(s), else False.
+
+        A content key is considered part of the catalog when:
+          - the content key is part of the associated metadata
+          - the parent's content key is part of the associated metadata
+          - a content key for the course runs associated with a course is part of the associated metadata
         """
-        if not self.catalog_query:
+        # cannot determine if content_keys are part of catalog when catalog_query doesn't
+        # exist, or no content_keys were provided.
+        if not self.catalog_query or not content_keys or len(content_keys) == 0:
             return False
 
         content_keys = set(content_keys)
-        associated_metadata_content_keys = {metadata_chunk.content_key for metadata_chunk in self.content_metadata}
-        contained_in_catalog = True
+        content_metadata = self.content_metadata
+
+        associated_content_keys = set()
+
+        # iterate through content_metadata to find all associated content keys
+        for metadata_chunk in content_metadata:
+            # content key of metadata_chunk is always considered part of catalog
+            associated_content_keys.add(metadata_chunk.content_key)
+
+            if metadata_chunk.parent_content_key:
+                # parent content key of metadata_chunk is considered part of catalog
+                associated_content_keys.add(metadata_chunk.parent_content_key)
+
+            json_metadata = metadata_chunk.json_metadata
+            if json_metadata and json_metadata.get('course_runs'):
+                # course run keys within json_metadata['course_runs'] are considered part of catalog
+                for course_run in json_metadata['course_runs']:
+                    course_run_content_key = course_run.get('key')
+                    if course_run_content_key:
+                        associated_content_keys.add(course_run_content_key)
+
+        is_contained_in_catalog = True
         for content_key in content_keys:
-            try:
-                parent_content_key = ContentMetadata.objects.get(content_key=content_key).parent_content_key
-            except ContentMetadata.DoesNotExist:
-                parent_content_key = None
-
-            # The content key is contained in the catalog if its key is explictly part of the associated metadata, or
-            # its parent's key is.
-            contained_in_catalog = contained_in_catalog and (
-                # pylint: disable=line-too-long
-                content_key in associated_metadata_content_keys or parent_content_key in associated_metadata_content_keys
-            )
+            is_contained_in_catalog = content_key in associated_content_keys
             # Break early as soon as we find a key that is not contained in the catalog
-            if not contained_in_catalog:
+            if not is_contained_in_catalog:
                 return False
-
-        return contained_in_catalog
+        return is_contained_in_catalog
 
     def get_content_enrollment_url(self, content_resource, content_key):
         """
