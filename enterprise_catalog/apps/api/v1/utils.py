@@ -65,6 +65,6 @@ def is_any_course_run_enrollable(course_runs):
         bool: True if enrollable course run is found, else False
     """
     for course_run in course_runs:
-        if course_run['is_enrollable']:
+        if course_run.get('is_enrollable'):
             return True
     return False
