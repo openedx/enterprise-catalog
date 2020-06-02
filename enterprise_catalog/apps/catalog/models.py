@@ -177,9 +177,8 @@ class EnterpriseCatalog(TimeStampedModel):
         content_keys = set(content_keys)
 
         # retrieve content metadata objects for the specified content keys to get a set of
-        # parent content keys to use in the below query that returns all matching content
-        # metadata for the specified content keys. this handles the case for when a catalog
-        # contains only courses but course runs are specified in content_keys.
+        # parent content keys to use in the below query. this handles the case for when a
+        # catalog contains only courses but course run(s) are specified in content_keys.
         searched_metadata = ContentMetadata.objects.filter(content_key__in=content_keys)
         parent_content_keys = {
             metadata.parent_content_key
@@ -191,10 +190,11 @@ class EnterpriseCatalog(TimeStampedModel):
         query = Q(content_key__in=content_keys)
         query |= Q(parent_content_key__in=content_keys)
         query |= Q(content_key__in=parent_content_keys)
+
         content_metadata = self.catalog_query.contentmetadata_set.filter(query)
 
         # if content metadata was returned, the specified content keys exist in the catalog
-        return True if content_metadata else False
+        return bool(content_metadata)
 
     def get_content_enrollment_url(self, content_resource, content_key):
         """
