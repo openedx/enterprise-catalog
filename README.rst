@@ -28,24 +28,23 @@ To use ``django-silk`` during local development to profile requests and database
 #. Make any request (e.g., http://localhost:18160/api/v1/enterprise-catalogs/) and check back on the Silk UI.
 #. The request you made should appear in the Django Silk UI. From here, click on the request to view its details.
 
-``django-silk`` can also be used to profile specific code blocks within a function/method through the `silk_profile` decorator and/or context manager:
+``django-silk`` can also be used to profile specific code blocks within a function/method through the `silk_profile` decorator and/or context manager. Example:
 
-.. code-block::
-    :linenos:
+.. code-block:: python
 
     from silk.profiling.profiler import silk_profile
 
     class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
-      @silk_profile(name='get_enterprise_catalog')
-      def get_enterprise_catalog(self):
-          uuid = self.kwargs.get('uuid')
-          return get_object_or_404(EnterpriseCatalog, uuid=uuid)
-
-    class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
-      def get_enterprise_catalog(self):
-        with silk_profile(name='get_enterprise_catalog'):
+        @silk_profile(name='get_enterprise_catalog')
+        def get_enterprise_catalog(self):
             uuid = self.kwargs.get('uuid')
             return get_object_or_404(EnterpriseCatalog, uuid=uuid)
+
+    class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
+        def get_enterprise_catalog(self):
+            with silk_profile(name='get_enterprise_catalog'):
+                uuid = self.kwargs.get('uuid')
+                return get_object_or_404(EnterpriseCatalog, uuid=uuid)
 
 See https://github.com/jazzband/django-silk for more advanced usage.
 
