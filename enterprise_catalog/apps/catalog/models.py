@@ -197,10 +197,8 @@ class EnterpriseCatalog(TimeStampedModel):
         }
         query |= Q(content_key__in=parent_content_keys)
 
-        content_metadata = self.content_metadata.filter(query)
-
-        # if content metadata was returned, the specified content_keys exist in the catalog
-        return bool(content_metadata)
+        # if the filtered content metadata exists, the specified content_keys exist in the catalog
+        return self.content_metadata.filter(query).exists()
 
     def get_content_enrollment_url(self, content_resource, content_key):
         """
