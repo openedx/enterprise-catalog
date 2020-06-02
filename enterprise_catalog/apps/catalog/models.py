@@ -4,6 +4,7 @@ from uuid import uuid4
 
 from django.conf import settings
 from django.db import models
+from django.db.models import Q
 from django.utils.translation import gettext as _
 from edx_rbac.models import UserRole, UserRoleAssignment
 from jsonfield.encoder import JSONEncoder
@@ -156,34 +157,48 @@ class EnterpriseCatalog(TimeStampedModel):
 
     def contains_content_keys(self, content_keys):
         """
-        Return True if catalog contains the courses/course runs/programs specified by the given content keys, else False
+        Determines whether content_keys are part of the catalog.
 
-        Note that content is also part of the catalog if its parent is part of the catalog. Assumes that we have a
-        ContentMetadata entry for every content id for proper parent/child lookup, but does not error if that is false.
+        Return True if catalog contains the courses, course runs, and/or programs specified by
+        the given content key(s), else False.
+
+        A content key is considered contained within the catalog when:
+          - associated metadata contains the specified content key.
+          - associated metadata contains the specified content key as a parent (to handle when
+            a catalog only contains course runs but a course id is searched).
+          - associated metadata contains the specified content key in a nested course run (to
+            handle when a catalog only contains courses but a course run id is searched).
         """
-        if not self.catalog_query:
+        # cannot determine if specified content keys are part of catalog when catalog
+        # query doesn't exist or no content keys are provided.
+        if not self.catalog_query or not content_keys:
             return False
 
         content_keys = set(content_keys)
-        associated_metadata_content_keys = {metadata_chunk.content_key for metadata_chunk in self.content_metadata}
-        contained_in_catalog = True
-        for content_key in content_keys:
-            try:
-                parent_content_key = ContentMetadata.objects.get(content_key=content_key).parent_content_key
-            except ContentMetadata.DoesNotExist:
-                parent_content_key = None
 
-            # The content key is contained in the catalog if its key is explictly part of the associated metadata, or
-            # its parent's key is.
-            contained_in_catalog = contained_in_catalog and (
-                # pylint: disable=line-too-long
-                content_key in associated_metadata_content_keys or parent_content_key in associated_metadata_content_keys
-            )
-            # Break early as soon as we find a key that is not contained in the catalog
-            if not contained_in_catalog:
-                return False
+        # construct a query on the associated catalog's content metadata to return metadata
+        # where content_key and parent_content_key matches the specified content_keys to
+        # handle the following cases where the catalog:
+        #   - contains courses and the specified content_keys are course ids
+        #   - contains course runs and the specified content_keys are course ids
+        #   - contains course runs and the specified content_keys are course run ids
+        #   - contains programs and the specified content_keys are program ids
+        query = Q(content_key__in=content_keys) | Q(parent_content_key__in=content_keys)
 
-        return contained_in_catalog
+        # retrieve content metadata objects for the specified content keys to get a set of
+        # parent content keys, i.e. course ids associated with the specified content_keys
+        # (if any) to handle the following case:
+        #   - catalog contains courses and the specified content_keys are course run ids.
+        searched_metadata = ContentMetadata.objects.filter(content_key__in=content_keys)
+        parent_content_keys = {
+            metadata.parent_content_key
+            for metadata in searched_metadata
+            if metadata.parent_content_key
+        }
+        query |= Q(content_key__in=parent_content_keys)
+
+        # if the filtered content metadata exists, the specified content_keys exist in the catalog
+        return self.content_metadata.filter(query).exists()
 
     def get_content_enrollment_url(self, content_resource, content_key):
         """

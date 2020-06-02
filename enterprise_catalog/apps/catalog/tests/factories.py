@@ -60,10 +60,12 @@ class ContentMetadataFactory(factory.DjangoModelFactory):
 
     @factory.lazy_attribute
     def json_metadata(self):
-        return {
-            'key': self.content_key,
-            'marketing_url': 'http://marketing.yay/{}'.format(self.content_key),
-        }
+        json_metadata = {'key': self.content_key}
+        if self.content_key == COURSE:
+            json_metadata.update({
+                'marketing_url': 'http://marketing.url/{}'.format(self.content_key),
+            })
+        return json_metadata
 
 
 class UserFactory(factory.DjangoModelFactory):
