@@ -46,6 +46,18 @@ if os.environ.get('ENABLE_DJANGO_TOOLBAR', False):
 INTERNAL_IPS = ('127.0.0.1',)
 # END TOOLBAR CONFIGURATION
 
+# DJANGO-SILK CONFIGURATION
+# See: https://github.com/jazzband/django-silk
+if os.environ.get('ENABLE_DJANGO_SILK', False):
+    MIDDLEWARE += (
+        'silk.middleware.SilkyMiddleware',
+    )
+
+    INSTALLED_APPS += (
+        'silk',
+    )
+# END OF DJANGO-SILK CONFIGURATION
+
 # AUTHENTICATION
 # Use a non-SSL URL for authorization redirects
 SOCIAL_AUTH_REDIRECT_IS_HTTPS = False
