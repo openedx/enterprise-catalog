@@ -159,8 +159,8 @@ class EnterpriseCatalog(TimeStampedModel):
         """
         Determines whether content_keys are part of the catalog.
 
-        Return True if catalog contains the {courses/course runs} and/or programs specified by the given
-        content key(s), else False.
+        Return True if catalog contains the courses, course runs, and/or programs specified by
+        the given content key(s), else False.
 
         A content key is considered contained within the catalog when:
           - associated metadata contains the specified content key.
@@ -184,7 +184,7 @@ class EnterpriseCatalog(TimeStampedModel):
         #   - contains course runs and the specified content_keys are course run ids
         #   - contains programs and the specified content_keys are program ids
         query = Q(content_key__in=content_keys) | Q(parent_content_key__in=content_keys)
-        
+
         # retrieve content metadata objects for the specified content keys to get a set of
         # parent content keys, i.e. course ids associated with the specified content_keys
         # (if any) to handle the following case:
