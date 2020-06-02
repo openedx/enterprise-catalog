@@ -506,15 +506,18 @@ class EnterpriseCatalogContainsContentItemsTests(APITestMixin):
         """
         content_key = 'course-content-key'
         course_run_content_key = 'course-run-content-key'
-        associated_metadata = ContentMetadataFactory(
+        associated_course_run_metadata = ContentMetadataFactory(
+            content_key=course_run_content_key,
+            parent_content_key=content_key,
+        )
+        associated_course_metadata = ContentMetadataFactory(
             content_key=content_key,
             json_metadata={
                 'key': content_key,
-                'marketing_url': 'http://marketing.url/{}'.format(content_key),
                 'course_runs': [{'key': course_run_content_key}],
             }
         )
-        self.add_metadata_to_catalog(self.enterprise_catalog, [associated_metadata])
+        self.add_metadata_to_catalog(self.enterprise_catalog, [associated_course_metadata])
 
         url = self._get_contains_content_base_url(self.enterprise_catalog) + '?course_run_ids=' + course_run_content_key
         self.assert_correct_contains_response(url, True)
