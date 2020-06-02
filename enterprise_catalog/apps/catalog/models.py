@@ -176,24 +176,30 @@ class EnterpriseCatalog(TimeStampedModel):
 
         content_keys = set(content_keys)
 
+        # construct a query on the associated catalog's content metadata to return metadata
+        # where content_key and parent_content_key matches the specified content_keys to
+        # handle the following cases where the catalog:
+        #   - contains courses and the specified content_keys are course ids
+        #   - contains course runs and the specified content_keys are course ids
+        #   - contains course runs and the specified content_keys are course run ids
+        #   - contains programs and the specified content_keys are program ids
+        query = Q(content_key__in=content_keys) | Q(parent_content_key__in=content_keys)
+        
         # retrieve content metadata objects for the specified content keys to get a set of
-        # parent content keys to use in the below query. this handles the case for when a
-        # catalog contains only courses but course run(s) are specified in content_keys.
+        # parent content keys, i.e. course ids associated with the specified content_keys
+        # (if any) to handle the following case:
+        #   - catalog contains courses and the specified content_keys are course run ids.
         searched_metadata = ContentMetadata.objects.filter(content_key__in=content_keys)
         parent_content_keys = {
             metadata.parent_content_key
             for metadata in searched_metadata
             if metadata.parent_content_key
         }
-
-        # find all content metadata associated with the catalog that match specified content_keys
-        query = Q(content_key__in=content_keys)
-        query |= Q(parent_content_key__in=content_keys)
         query |= Q(content_key__in=parent_content_keys)
 
-        content_metadata = self.catalog_query.contentmetadata_set.filter(query)
+        content_metadata = self.content_metadata.filter(query)
 
-        # if content metadata was returned, the specified content keys exist in the catalog
+        # if content metadata was returned, the specified content_keys exist in the catalog
         return bool(content_metadata)
 
     def get_content_enrollment_url(self, content_resource, content_key):
