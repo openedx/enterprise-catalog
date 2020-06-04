@@ -45,7 +45,8 @@ class DiscoveryApiClient:
         query_params (dict): additional query params for the rest api endpoint
              we're hitting. e.g. - {'page': 3}
 
-        Returns a list of the results.
+        Returns a list of the results, or `None` if there was an error calling the
+        discovery service.
         """
         if query_params is None:
             query_params = {}
@@ -70,11 +71,15 @@ class DiscoveryApiClient:
                     params=query_params
                 ).json()
                 results += response.get('results', [])
-        except JSONDecodeError:
+        except JSONDecodeError as exc:
             LOGGER.error(
-                'Could not retrieve content items from course-discovery (page %s) for catalog query %s',
+                'Could not retrieve content items from course-discovery (page %s) for catalog query %s: %s',
                 page,
                 catalog_query,
+                exc,
             )
+            # if a request to discovery fails, return `None` so that callers of this
+            # method are aware we weren't able to get all metadata for the given query
+            return None
 
         return results
