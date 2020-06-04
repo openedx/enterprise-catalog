@@ -431,24 +431,28 @@ def update_contentmetadata_from_discovery(catalog_query_id):
             'ordering': 'aggregation_key,start',
         }
         metadata = client.get_metadata_by_query(catalog_query, query_params=query_params)
-        metadata_content_keys = [get_content_key(entry) for entry in metadata]
 
-        LOGGER.info(
-            'Retrieved %d content items (%d unique) from course-discovery for catalog query %s: %s',
-            len(metadata_content_keys),
-            len(set(metadata_content_keys)),
-            catalog_query,
-            metadata_content_keys
-        )
+        # associate content metadata with a catalog query only when we get valid results
+        # back from the discovery service. if metadata is `None`, an error occurred while
+        # calling discovery and we should not proceed with the below association logic.
+        if metadata is not None:
+            metadata_content_keys = [get_content_key(entry) for entry in metadata]
+            LOGGER.info(
+                'Retrieved %d content items (%d unique) from course-discovery for catalog query %s: %s',
+                len(metadata_content_keys),
+                len(set(metadata_content_keys)),
+                catalog_query,
+                metadata_content_keys
+            )
 
-        associated_content_keys = associate_content_metadata_with_query(metadata, catalog_query)
-        LOGGER.info(
-            'Associated %d content items (%d unique) with catalog query %s: %s',
-            len(associated_content_keys),
-            len(set(associated_content_keys)),
-            catalog_query,
-            associated_content_keys,
-        )
+            associated_content_keys = associate_content_metadata_with_query(metadata, catalog_query)
+            LOGGER.info(
+                'Associated %d content items (%d unique) with catalog query %s: %s',
+                len(associated_content_keys),
+                len(set(associated_content_keys)),
+                catalog_query,
+                associated_content_keys,
+            )
     else:
         LOGGER.warning(
             'Could not find a CatalogQuery with id %s',
