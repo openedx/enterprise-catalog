@@ -76,6 +76,18 @@ class CatalogQuery(models.Model):
             content_filter_hash=self.content_filter_hash
         )
 
+    @property
+    def enterprise_catalogs(self):
+        """
+        Helper to retrieve the enterprise catalogs associated with the catalog query.
+
+        Returns:
+            Queryset: The queryset of associated enterprise catalogs
+        """
+        if not self.enterprise_catalogs:
+            return EnterpriseCatalog.objects.none()
+        return self.enterprise_catalogs.all()
+
 
 class EnterpriseCatalog(TimeStampedModel):
     """
@@ -292,6 +304,39 @@ class ContentMetadata(TimeStampedModel):
         )
 
 
+def get_related_enterprise_catalogs_for_content_keys(content_keys):
+    """
+    Get enterprise_catalog_uuids and enterprise_customer_uuids for each of the specified content_keys.
+    """
+    related_catalogs_for_keys = {}
+
+    content_metadata = ContentMetadata.objects.filter(content_key__in=content_keys)
+
+    catalog_queries = CatalogQuery.objects.prefetch_related('contentmetadata_set')
+    catalog_queries = catalog_queries.prefetch_related('enterprise_catalogs')
+    catalog_queries = catalog_queries.filter(contentmetadata__in=content_metadata)
+
+    for query in catalog_queries.all():
+        enterprise_catalogs = query.enterprise_catalogs.all()
+        metadata_for_query = query.contentmetadata_set.all()
+
+        for metadata in metadata_for_query:
+            enterprise_catalog_uuids = set()
+            enterprise_customer_uuids = set()
+
+            for catalog in enterprise_catalogs:
+                enterprise_catalog_uuids.add(str(catalog.uuid))
+                enterprise_customer_uuids.add(str(catalog.enterprise_uuid))
+
+            content_key = metadata.content_key
+            related_catalogs_for_keys[content_key] = {
+                'enterprise_catalog_uuids': list(enterprise_catalog_uuids),
+                'enterprise_customer_uuids': list(enterprise_customer_uuids),
+            }
+
+    return related_catalogs_for_keys
+
+
 def associate_content_metadata_with_query(metadata, catalog_query):
     """
     Creates or (possibly) updates a ContentMetadata object for each entry in `metadata`,
@@ -299,8 +344,9 @@ def associate_content_metadata_with_query(metadata, catalog_query):
     Only updates an existing ContentMetadata object if its `json_metadata` field
     differs from the data provided in `metadata`.
 
-    metadata: List of content metadata dictionaries.
-    catalog_query: CatalogQuery object
+    Arguments:
+        metadata (list): List of content metadata dictionaries.
+        catalog_query (CatalogQuery): CatalogQuery object
 
     Returns:
         list: The list of content_keys for the metadata associated with the query.
