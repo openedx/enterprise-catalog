@@ -1,6 +1,6 @@
+import copy
 import logging
 
-from algoliasearch.search_client import SearchClient
 from django.utils.text import slugify
 from langcodes import Language
 from six.moves.urllib.parse import (
@@ -77,39 +77,6 @@ def is_any_course_run_enrollable(course_runs):
     return False
 
 
-def initialize_algolia_index(index_name, app_id, api_key):
-    """
-    Creates an Algolia client and initializes an index with the given name.
-
-    Initializing an index will create it if it does not yet exist.
-
-    Arguments:
-        index_name (str): name of the Algolia index
-        app_id (str): APPLICATION_ID to connect to Algolia
-        api_key (str): API_KEY to connect to Algolia
-
-    Returns:
-        dict: an Algolia index or None if we cannot initialize an Algolia index
-    """
-    if not index_name:
-        logger.error('Could not initialize Algolia index due to missing index name.')
-        # can't do much without an index_name, so return None
-        return None
-
-    algolia_client = None
-    if app_id and api_key:
-        algolia_client = SearchClient.create(app_id, api_key)
-        if algolia_client:
-            return algolia_client.init_index(index_name)
-
-    logger.error(
-        'Could not initialize Algolia\'s %s index due to missing Algolia settings: %s',
-        index_name,
-        ['APPLICATION_ID', 'API_KEY'],
-    )
-    return None
-
-
 def get_algolia_object_id(uuid):
     """
     Given a uuid, returns an object_id to use for Algolia indexing.
@@ -124,38 +91,23 @@ def get_algolia_object_id(uuid):
     return object_id
 
 
-def add_uuids_to_courses(content_key, uuids, courses):
+def find_index_in_courses_for_content_key(content_key, courses):
     """
-    Adds associated enterprise_catalog_uuids and enterprise_customer_uuids to a course.
+    Finds the index of a content_key within a list of courses
 
     Arguments:
-        content_key (str): content_key of a course that we want to add uuids for
-        uuids (dict): a dictionary containing both enterprise_catalog_uuids and enterprise_customer_uuids
-        courses (list): a list of courses
+        content_key (str): the content key for which you want to know the index of
+        courses (list): list of course objects
 
     Returns:
-        list: a list of courses with the uuids added on to the appropriate course
+        course_index (int): index position of where content_key is within the list of courses
+            objects. Returns None if content_key cannot be found.
     """
-    # find index in courses where course key matches content_key
-    course_index = next(
+    content_key_index = next(
         (index for (index, d) in enumerate(courses) if d['key'] == content_key),
         None
     )
-    if course_index is not None:
-        course = courses[course_index].copy()
-        course.update({
-            'objectID': get_algolia_object_id(course['uuid']),
-            'enterprise_catalog_uuids': uuids.get('enterprise_catalog_uuids', []),
-            'enterprise_customer_uuids': uuids.get('enterprise_customer_uuids', []),
-        })
-        courses[course_index] = course
-    else:
-        logger.error(
-            'Could not find course with content key %s from course-discovery discovery',
-            content_key,
-        )
-
-    return courses
+    return content_key_index
 
 
 def get_course_language(course_runs):
@@ -190,16 +142,19 @@ def get_course_availability(course_runs):
     Returns:
         list: a list of availabilities for those course runs (e.g., "Upcoming")
     """
+    DEFAULT_COURSE_AVAILABILITY = 'Archived'
+    COURSE_AVAILABILITY_MESSAGES = {
+        'current': 'Available Now',
+        'upcoming': 'Upcoming',
+    }
+
     availability = set()
 
     for course_run in course_runs:
         run_availability = course_run.get('availability', '').lower()
-        if run_availability == 'current':
-            availability.add('Available now')
-        elif run_availability == 'upcoming':
-            availability.add('Upcoming')
-        else:
-            availability.add('Archived')
+        availability.add(
+            COURSE_AVAILABILITY_MESSAGES.get(run_availability, DEFAULT_COURSE_AVAILABILITY)
+        )
 
     return list(availability)
 
@@ -215,7 +170,7 @@ def get_algolia_object_from_course(course, algolia_fields):
     Returns:
         dict: a dictionary containing only the fields noted in algolia_fields
     """
-    course = course.copy()
+    course = copy.deepcopy(course)
     published_course_runs = list(
         filter(lambda d: d['status'].lower() == 'published', course.get('course_runs', []))
     )
@@ -245,8 +200,9 @@ def create_algolia_objects_from_courses(courses, algolia_fields):
     if not algolia_fields:
         algolia_fields = []
 
-    algolia_objects = []
+    algolia_objects = list()
     for course in courses:
-        algolia_objects.append(get_algolia_object_from_course(course, algolia_fields))
+        algolia_object = get_algolia_object_from_course(course, algolia_fields)
+        algolia_objects.append(algolia_object)
 
     return algolia_objects
