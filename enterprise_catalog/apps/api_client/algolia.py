@@ -22,7 +22,7 @@ class AlgoliaSearchClient:
     ALGOLIA_INDEX_NAME = settings.ALGOLIA.get('INDEX_NAME')
 
     def __init__(self):
-        self.client = None
+        self._client = None
         self.algolia_index = None
 
     def init_index(self):
@@ -45,10 +45,10 @@ class AlgoliaSearchClient:
             )
             return
 
-        self.client = SearchClient.create(self.ALGOLIA_APPLICATION_ID, self.ALGOLIA_API_KEY)
+        self._client = SearchClient.create(self.ALGOLIA_APPLICATION_ID, self.ALGOLIA_API_KEY)
 
         try:
-            self.algolia_index = self.client.init_index(self.ALGOLIA_INDEX_NAME)
+            self.algolia_index = self._client.init_index(self.ALGOLIA_INDEX_NAME)
         except Exception as exc:  # pylint: disable=broad-except
             logger.error(
                 'Could not initialize %s index in Algolia: %s',
@@ -80,7 +80,7 @@ class AlgoliaSearchClient:
                 exc,
             )
 
-    def partial_update_algolia_index(self, algolia_objects):
+    def partially_update_index(self, algolia_objects):
         """
         Performs a partial update of the Algolia index with the specified data.
 

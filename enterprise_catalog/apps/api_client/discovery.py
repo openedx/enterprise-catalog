@@ -98,30 +98,20 @@ class DiscoveryApiClient:
         Returns:
             list: a list of the results, or None if there was an error calling the discovery service.
         """
-        if query_params is None:
-            query_params = {}
-
-        query_params.update({
-            **query_params,
-        })
+        request_params = {}
+        request_params.update(query_params or {})
 
         results = []
         offset = 0
         try:
-            response = self.client.get(
-                self.COURSES_ENDPOINT,
-                params=query_params,
-            ).json()
+            response = self.client.get(self.COURSES_ENDPOINT, params=request_params).json()
             results += response.get('results', [])
 
             # Traverse all results and concatenate results together
             while response.get('next'):
                 offset += OFFSET_SIZE
                 query_params.update({'offset': offset})
-                response = self.client.get(
-                    self.COURSES_ENDPOINT,
-                    params=query_params,
-                ).json()
+                response = self.client.get(self.COURSES_ENDPOINT, params=request_params).json()
                 results += response.get('results', [])
         except Exception as exc:  # pylint: disable=broad-except
             LOGGER.error(
