@@ -8,18 +8,19 @@ from urllib.parse import urljoin
 
 from django.conf import settings
 from edx_rest_api_client.client import OAuthAPIClient
-from simplejson import JSONDecodeError
 
 
 LOGGER = logging.getLogger(__name__)
+
+OFFSET_SIZE = 100
 
 
 class DiscoveryApiClient:
     """
     Object builds an API client to make calls to the Discovery Service.
     """
-    SEARCH_ALL_EXTENSION = 'search/all/'
-    SEARCH_ALL_ENDPOINT = urljoin(settings.DISCOVERY_SERVICE_API_URL, SEARCH_ALL_EXTENSION)
+    SEARCH_ALL_ENDPOINT = urljoin(settings.DISCOVERY_SERVICE_API_URL, 'search/all/')
+    COURSES_ENDPOINT = urljoin(settings.DISCOVERY_SERVICE_API_URL, 'courses/')
 
     def __init__(self):
         self.client = OAuthAPIClient(
@@ -40,13 +41,14 @@ class DiscoveryApiClient:
         """
         Return results from the discovery service's search/all endpoint.
 
-        content_filter_query (dict): some elasticsearch filter
-            e.g. - {'aggregation_key': 'course-v1:some+key+here'}
-        query_params (dict): additional query params for the rest api endpoint
-             we're hitting. e.g. - {'page': 3}
+        Arguments:
+            content_filter_query (dict): some elasticsearch filter
+                e.g. - {'aggregation_key': 'course-v1:some+key+here'}
+            query_params (dict): additional query params for the rest api endpoint
+                we're hitting. e.g. - {'page': 3}
 
-        Returns a list of the results, or `None` if there was an error calling the
-        discovery service.
+        Returns:
+            list: a list of the results, or None if there was an error calling the discovery service.
         """
         if query_params is None:
             query_params = {}
@@ -71,7 +73,7 @@ class DiscoveryApiClient:
                     params=query_params
                 ).json()
                 results += response.get('results', [])
-        except JSONDecodeError as exc:
+        except Exception as exc:  # pylint: disable=broad-except
             LOGGER.error(
                 'Could not retrieve content items from course-discovery (page %s) for catalog query %s: %s',
                 page,
@@ -80,6 +82,46 @@ class DiscoveryApiClient:
             )
             # if a request to discovery fails, return `None` so that callers of this
             # method are aware we weren't able to get all metadata for the given query
+            return None
+
+        return results
+
+    def get_courses(self, query_params=None):
+        """
+        Return results from the discovery service's /courses endpoint.
+
+        Arguments:
+            course_keys (list): list of course keys
+            query_params (dict): additional query params for the rest api endpoint
+                we're hitting. e.g. - {'limit': 100}
+
+        Returns:
+            list: a list of the results, or None if there was an error calling the discovery service.
+        """
+        request_params = {}
+        request_params.update(query_params or {})
+
+        results = []
+        offset = 0
+        try:
+            response = self.client.get(self.COURSES_ENDPOINT, params=request_params).json()
+            results += response.get('results', [])
+
+            # Traverse all results and concatenate results together
+            while response.get('next'):
+                offset += OFFSET_SIZE
+                query_params.update({'offset': offset})
+                response = self.client.get(self.COURSES_ENDPOINT, params=request_params).json()
+                results += response.get('results', [])
+        except Exception as exc:  # pylint: disable=broad-except
+            LOGGER.error(
+                'Could not get courses from course-discovery (offset %d) for query_params %s: %s',
+                offset,
+                query_params,
+                exc,
+            )
+            # if a request to discovery fails, return `None` so that callers of this
+            # method are aware we weren't able to get all the courses
             return None
 
         return results

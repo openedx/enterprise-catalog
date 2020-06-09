@@ -320,8 +320,16 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SOCIAL_AUTH_REDIRECT_IS_HTTPS = False
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
+# URLs
 LMS_BASE_URL = os.environ.get('LMS_BASE_URL', '')
 DISCOVERY_SERVICE_API_URL = os.environ.get('DISCOVERY_SERVICE_API_URL', '')
+
+# Algolia
+ALGOLIA = {
+    'INDEX_NAME': '',
+    'APPLICATION_ID': '',
+    'API_KEY': '',
+}
 
 # Set up system-to-feature roles mapping for edx-rbac
 SYSTEM_TO_FEATURE_ROLE_MAPPING = {
