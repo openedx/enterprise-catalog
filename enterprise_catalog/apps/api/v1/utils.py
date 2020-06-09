@@ -112,7 +112,7 @@ def find_index_in_courses_for_content_key(content_key, courses):
 
 def get_course_language(course_runs):
     """
-    Gets the languages associated with a course.
+    Gets the languages associated with a course. Used for the "Language" facet in Algolia.
 
     Arguments:
         course_runs (list): list of course runs for a course
@@ -134,7 +134,7 @@ def get_course_language(course_runs):
 
 def get_course_availability(course_runs):
     """
-    Gets the availability for a course. Used for adding the "Availability" facet for courses in Algolia.
+    Gets the availability for a course. Used for the "Availability" facet in Algolia.
 
     Arguments:
         course_runs (list): list of course runs for a course
