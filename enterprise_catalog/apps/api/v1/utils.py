@@ -1,4 +1,8 @@
+import copy
+import logging
+
 from django.utils.text import slugify
+from langcodes import Language
 from six.moves.urllib.parse import (
     parse_qs,
     quote_plus,
@@ -7,6 +11,9 @@ from six.moves.urllib.parse import (
     urlsplit,
     urlunsplit,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 def unquote_course_keys(course_keys):
@@ -59,7 +66,7 @@ def is_any_course_run_enrollable(course_runs):
     Iterates over all course runs to check if there any course run that is available for enrollment.
 
     Arguments:
-            course_runs (list): list of course runs
+        course_runs (list): list of course runs
 
     Returns:
         bool: True if enrollable course run is found, else False
@@ -68,3 +75,135 @@ def is_any_course_run_enrollable(course_runs):
         if course_run.get('is_enrollable'):
             return True
     return False
+
+
+def get_algolia_object_id(uuid):
+    """
+    Given a uuid, returns an object_id to use for Algolia indexing.
+
+    Arguments:
+        uuid (str): a course uuid
+
+    Returns:
+        str: the generated Algolia object_id
+    """
+    object_id = 'course-{}'.format(uuid)
+    return object_id
+
+
+def find_index_in_courses_for_content_key(content_key, courses):
+    """
+    Finds the index of a content_key within a list of courses
+
+    Arguments:
+        content_key (str): the content key for which you want to know the index of
+        courses (list): list of course objects
+
+    Returns:
+        course_index (int): index position of where content_key is within the list of courses
+            objects. Returns None if content_key cannot be found.
+    """
+    content_key_index = next(
+        (index for (index, d) in enumerate(courses) if d['key'] == content_key),
+        None
+    )
+    return content_key_index
+
+
+def get_course_language(course_runs):
+    """
+    Gets the languages associated with a course. Used for the "Language" facet in Algolia.
+
+    Arguments:
+        course_runs (list): list of course runs for a course
+
+    Returns:
+        list: a list of supported languages for those course runs
+    """
+    languages = set()
+
+    for course_run in course_runs:
+        content_language = course_run.get('content_language')
+        if not content_language:
+            continue
+        language_name = Language.make(language=content_language).language_name()
+        languages.add(language_name)
+
+    return list(languages)
+
+
+def get_course_availability(course_runs):
+    """
+    Gets the availability for a course. Used for the "Availability" facet in Algolia.
+
+    Arguments:
+        course_runs (list): list of course runs for a course
+
+    Returns:
+        list: a list of availabilities for those course runs (e.g., "Upcoming")
+    """
+    DEFAULT_COURSE_AVAILABILITY = 'Archived'
+    COURSE_AVAILABILITY_MESSAGES = {
+        'current': 'Available Now',
+        'upcoming': 'Upcoming',
+    }
+
+    availability = set()
+
+    for course_run in course_runs:
+        run_availability = course_run.get('availability', '').lower()
+        availability.add(
+            COURSE_AVAILABILITY_MESSAGES.get(run_availability, DEFAULT_COURSE_AVAILABILITY)
+        )
+
+    return list(availability)
+
+
+def _algolia_object_from_course(course, algolia_fields):
+    """
+    Transforms a course into an Algolia object.
+
+    Arguments:
+        course (dict): a course dict
+        algolia_fields (list): list of fields to extract from the course
+
+    Returns:
+        dict: a dictionary containing only the fields noted in algolia_fields
+    """
+    searchable_course = copy.deepcopy(course)
+    published_course_runs = [
+        course_run for course_run in searchable_course.get('course_runs', [])
+        if course_run['status'].lower() == 'published'
+    ]
+    searchable_course.update({
+        'language': get_course_language(published_course_runs),
+        'availability': get_course_availability(published_course_runs),
+    })
+
+    algolia_object = {}
+    for field in algolia_fields:
+        algolia_object[field] = searchable_course.get(field)
+
+    return algolia_object
+
+
+def create_algolia_objects_from_courses(courses, algolia_fields):
+    """
+    Transforms all courses into Algolia objects.
+
+    Arguments:
+        courses (list): list of courses
+        algolia_fields (list): list of fields to extract from courses
+
+    Returns:
+        list: a list of Algolia objects containing only the fields noted in algolia_fields
+    """
+    if not algolia_fields:
+        algolia_fields = []
+
+    algolia_objects = [
+        _algolia_object_from_course(course, algolia_fields)
+        for course in courses
+    ]
+
+    return algolia_objects
