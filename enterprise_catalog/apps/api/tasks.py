@@ -2,6 +2,7 @@ import copy
 import logging
 
 from celery import shared_task
+from celery_utils.logged_task import LoggedTask
 
 from enterprise_catalog.apps.api.v1.utils import (
     create_algolia_objects_from_courses,
@@ -19,7 +20,7 @@ from enterprise_catalog.apps.catalog.models import (
 logger = logging.getLogger(__name__)
 
 
-@shared_task
+@shared_task(base=LoggedTask)
 def index_enterprise_catalog_courses_in_algolia(content_keys, algolia_fields):
     """
     Index a batch of course content into Algolia.
@@ -83,6 +84,6 @@ def index_enterprise_catalog_courses_in_algolia(content_keys, algolia_fields):
     algolia_client.partially_update_index(algolia_objects)
 
 
-@shared_task
+@shared_task(base=LoggedTask)
 def update_catalog_metadata_task(catalog_query_id):
     update_contentmetadata_from_discovery(catalog_query_id)

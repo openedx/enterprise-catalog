@@ -27,3 +27,4 @@ rules
 zipp<2.0
 algoliasearch
 langcodes
+edx-celeryutils
