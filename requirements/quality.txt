@@ -9,8 +9,8 @@ amqp==1.4.9               # via -r requirements/base.txt, kombu
 anyjson==0.3.3            # via -r requirements/base.txt, kombu
 astroid==2.3.3            # via pylint, pylint-celery
 billiard==3.3.0.23        # via -r requirements/base.txt, celery
-celery==3.1.26.post2      # via -r requirements/base.txt
-certifi==2020.4.5.1       # via -r requirements/base.txt, requests
+celery==3.1.26.post2      # via -r requirements/base.txt, edx-celeryutils
+certifi==2020.4.5.2       # via -r requirements/base.txt, requests
 chardet==3.0.4            # via -r requirements/base.txt, requests
 click-log==0.3.2          # via edx-lint
 click==7.1.2              # via click-log, edx-lint
@@ -20,15 +20,16 @@ defusedxml==0.6.0         # via -r requirements/base.txt, djangorestframework-xm
 django-cors-headers==3.3.0  # via -r requirements/base.txt
 django-crum==0.7.6        # via -r requirements/base.txt, edx-rbac
 django-extensions==2.2.9  # via -r requirements/base.txt
-django-model-utils==4.0.0  # via -r requirements/base.txt, edx-rbac
+django-model-utils==4.0.0  # via -r requirements/base.txt, edx-celeryutils, edx-rbac
 django-rest-swagger==2.2.0  # via -r requirements/base.txt
 django-simple-history==2.10.0  # via -r requirements/base.txt
 django-waffle==0.20.0     # via -r requirements/base.txt, edx-django-utils, edx-drf-extensions
-django==2.2.13            # via -r requirements/base.txt, django-cors-headers, django-crum, django-model-utils, djangorestframework, drf-jwt, edx-auth-backends, edx-django-release-util, edx-django-utils, edx-drf-extensions, edx-rbac, jsonfield2, rest-condition
+django==2.2.13            # via -r requirements/base.txt, django-cors-headers, django-crum, django-model-utils, djangorestframework, drf-jwt, edx-auth-backends, edx-celeryutils, edx-django-release-util, edx-django-utils, edx-drf-extensions, edx-rbac, jsonfield2, rest-condition
 djangorestframework-xml==2.0.0  # via -r requirements/base.txt
 djangorestframework==3.11.0  # via -r requirements/base.txt, django-rest-swagger, drf-jwt, edx-drf-extensions, rest-condition
 drf-jwt==1.14.0           # via -r requirements/base.txt, edx-drf-extensions
 edx-auth-backends==3.1.0  # via -r requirements/base.txt
+edx-celeryutils==0.5.0    # via -r requirements/base.txt
 edx-django-release-util==0.4.4  # via -r requirements/base.txt
 edx-django-utils==3.2.3   # via -r requirements/base.txt, edx-drf-extensions
 edx-drf-extensions==6.0.0  # via -r requirements/base.txt, edx-rbac
@@ -36,12 +37,12 @@ edx-lint==1.4.1           # via -r requirements/quality.in
 edx-opaque-keys==2.1.0    # via -r requirements/base.txt, edx-drf-extensions
 edx-rbac==1.2.1           # via -r requirements/base.txt
 edx-rest-api-client==1.9.2  # via -r requirements/base.txt
-future==0.18.2            # via -r requirements/base.txt, pyjwkest
+future==0.18.2            # via -r requirements/base.txt, edx-celeryutils, pyjwkest
 idna==2.9                 # via -r requirements/base.txt, requests
 isort==4.3.21             # via -r requirements/quality.in, pylint
 itypes==1.2.0             # via -r requirements/base.txt, coreapi
 jinja2==2.11.2            # via -r requirements/base.txt, coreschema
-jsonfield2==3.0.3         # via -r requirements/base.txt
+jsonfield2==3.0.3         # via -r requirements/base.txt, edx-celeryutils
 kombu==3.0.37             # via -r requirements/base.txt, celery
 langcodes==2.0.0          # via -r requirements/base.txt
 lazy-object-proxy==1.4.3  # via astroid
