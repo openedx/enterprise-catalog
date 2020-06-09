@@ -134,7 +134,7 @@ def get_course_language(course_runs):
 
 def get_course_availability(course_runs):
     """
-    Gets the availability for a course.
+    Gets the availability for a course. Used for adding the "Availability" facet for courses in Algolia.
 
     Arguments:
         course_runs (list): list of course runs for a course
@@ -170,18 +170,19 @@ def get_algolia_object_from_course(course, algolia_fields):
     Returns:
         dict: a dictionary containing only the fields noted in algolia_fields
     """
-    course = copy.deepcopy(course)
-    published_course_runs = list(
-        filter(lambda d: d['status'].lower() == 'published', course.get('course_runs', []))
-    )
-    course.update({
+    searchable_course = copy.deepcopy(course)
+    published_course_runs = [
+        course_run for course_run in searchable_course.get('course_runs', [])
+        if course_run['status'].lower() == 'published'
+    ]
+    searchable_course.update({
         'language': get_course_language(published_course_runs),
         'availability': get_course_availability(published_course_runs),
     })
 
     algolia_object = {}
     for field in algolia_fields:
-        algolia_object[field] = course.get(field)
+        algolia_object[field] = searchable_course.get(field)
 
     return algolia_object
 
