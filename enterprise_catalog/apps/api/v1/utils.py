@@ -159,7 +159,7 @@ def get_course_availability(course_runs):
     return list(availability)
 
 
-def get_algolia_object_from_course(course, algolia_fields):
+def _algolia_object_from_course(course, algolia_fields):
     """
     Transforms a course into an Algolia object.
 
@@ -201,9 +201,9 @@ def create_algolia_objects_from_courses(courses, algolia_fields):
     if not algolia_fields:
         algolia_fields = []
 
-    algolia_objects = list()
-    for course in courses:
-        algolia_object = get_algolia_object_from_course(course, algolia_fields)
-        algolia_objects.append(algolia_object)
+    algolia_objects = [
+        _algolia_object_from_course(course, algolia_fields)
+        for course in courses
+    ]
 
     return algolia_objects

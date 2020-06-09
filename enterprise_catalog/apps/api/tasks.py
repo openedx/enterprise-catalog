@@ -80,7 +80,7 @@ def index_enterprise_catalog_courses_in_algolia(content_keys, algolia_fields):
 
     # extract out only the fields we care about and send to Algolia index
     algolia_objects = create_algolia_objects_from_courses(courses, algolia_fields)
-    algolia_client.partial_update_algolia_index(algolia_objects)
+    algolia_client.partially_update_index(algolia_objects)
 
 
 @shared_task
