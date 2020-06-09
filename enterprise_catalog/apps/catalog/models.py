@@ -312,8 +312,7 @@ def get_related_enterprise_catalogs_for_content_keys(content_keys):
 
     content_metadata = ContentMetadata.objects.filter(content_key__in=content_keys)
 
-    catalog_queries = CatalogQuery.objects.prefetch_related('contentmetadata_set')
-    catalog_queries = catalog_queries.prefetch_related('enterprise_catalogs')
+    catalog_queries = CatalogQuery.objects.prefetch_related('contentmetadata_set', 'enterprise_catalogs')
     catalog_queries = catalog_queries.filter(contentmetadata__in=content_metadata)
 
     for query in catalog_queries.all():
