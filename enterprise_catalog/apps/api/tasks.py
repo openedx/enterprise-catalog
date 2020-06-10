@@ -35,7 +35,6 @@ def index_enterprise_catalog_courses_in_algolia(content_keys, algolia_fields):
 
     query_params = {
         'keys': ','.join(content_keys),
-        'limit': 100,
         'ordering': 'key',
     }
     try:
