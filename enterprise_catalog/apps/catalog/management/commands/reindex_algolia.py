@@ -127,7 +127,7 @@ class Command(BaseCommand):
         # break up the content_keys in smaller batches, where each batch will spin off its
         # own celery task. this should help performance and prevent errors with having too
         # many content_keys for a GET request to the discovery service's /courses endpoint
-        for keys in self.batch(content_keys, batch_size=250):
+        for keys in self.batch(content_keys, batch_size=50):
             index_enterprise_catalog_courses_in_algolia.delay(
                 content_keys=keys,
                 algolia_fields=ALGOLIA_FIELDS,
