@@ -6,12 +6,12 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Q
 from django.utils.translation import gettext as _
-from edx_rbac.models import UserRole, UserRoleAssignment
 from jsonfield.encoder import JSONEncoder
 from jsonfield.fields import JSONField
 from model_utils.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
 
+from edx_rbac.models import UserRole, UserRoleAssignment
 from enterprise_catalog.apps.api.v1.utils import (
     get_enterprise_utm_context,
     update_query_parameters,

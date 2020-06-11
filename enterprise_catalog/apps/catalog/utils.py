@@ -6,13 +6,13 @@ import hashlib
 import json
 from logging import getLogger
 
-from edx_rbac.utils import feature_roles_from_jwt
 from edx_rest_framework_extensions.auth.jwt.authentication import (
     get_decoded_jwt_from_auth,
 )
 from edx_rest_framework_extensions.auth.jwt.cookies import \
     get_decoded_jwt as get_decoded_jwt_from_cookie
 
+from edx_rbac.utils import feature_roles_from_jwt
 from enterprise_catalog.apps.catalog.constants import COURSE_RUN
 
 

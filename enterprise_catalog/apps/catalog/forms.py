@@ -4,8 +4,8 @@ Forms to be used in enterprise catalog Django admin.
 """
 from django import forms
 from django.core.exceptions import ValidationError
-from edx_rbac.admin import UserRoleAssignmentAdminForm
 
+from edx_rbac.admin import UserRoleAssignmentAdminForm
 from enterprise_catalog.apps.catalog.models import (
     CatalogQuery,
     EnterpriseCatalogRoleAssignment,

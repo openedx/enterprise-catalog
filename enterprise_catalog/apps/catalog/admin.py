@@ -1,8 +1,8 @@
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
-from edx_rbac.admin import UserRoleAssignmentAdmin
 
+from edx_rbac.admin import UserRoleAssignmentAdmin
 from enterprise_catalog.apps.catalog.constants import (
     admin_model_changes_allowed,
 )
