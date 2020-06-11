@@ -6,13 +6,14 @@ from celery_utils.logged_task import LoggedTask
 
 from enterprise_catalog.apps.api.v1.utils import (
     create_algolia_objects_from_courses,
-    find_index_in_courses_for_content_key,
     get_algolia_object_id,
 )
 from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
 from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
+from enterprise_catalog.apps.catalog.constants import COURSE
 from enterprise_catalog.apps.catalog.models import (
-    get_related_enterprise_catalogs_for_content_keys,
+    ContentMetadata,
+    related_enterprise_catalogs_for_content_metadata,
     update_contentmetadata_from_discovery,
 )
 
@@ -21,62 +22,123 @@ logger = logging.getLogger(__name__)
 
 
 @shared_task(base=LoggedTask)
-def index_enterprise_catalog_courses_in_algolia(content_keys, algolia_fields):
+def update_full_content_metadata_task(*args, **kwargs):
+    discovery_client = DiscoveryApiClient()
+
+    # fetch all courses from course-discovery
+    query_params = {'ordering': 'key'}
+    courses = discovery_client.get_courses(query_params=query_params)
+
+    if not courses:
+        logger.error('No courses were retrieved from course-discovery.')
+        return
+
+    logger.info('Retrieved %d courses from course-discovery.', len(courses))
+
+    # find all ContentMetadata records with a content type of "course" that are
+    # also part of at least one EnterpriseCatalog
+    content_metadata = ContentMetadata.objects.filter(
+        content_type=COURSE,
+        catalog_queries__enterprise_catalogs__isnull=False,
+    ).distinct()
+
+    if not content_metadata:
+        message = (
+            'There are no ContentMetadata records of content type "%s" that are'
+            ' part of at least one EnterpriseCatalog.'
+        )
+        logger.error(message, COURSE)
+        return
+
+    content_keys = [metadata.content_key for metadata in content_metadata]
+    courses_in_content_metadata = [course for course in courses if course.get('key') in content_keys]
+
+    if not courses_in_content_metadata:
+        logger.error('Could not find any ContentMetadata records that match courses retrieved from course-discovery.')
+        return
+
+    logger.info(
+        'Found %d ContentMetadata records that match courses retrieved from course-discovery.',
+        len(courses_in_content_metadata),
+    )
+
+    # iterate through the matching courses to update the json_metadata field, replacing
+    # the minimal json_metadata retrieved by /search/all/ with the full json_metadata
+    # retrieved by /courses/.
+    updated_metadata_count = 0
+    for course_metadata in courses_in_content_metadata:
+        content_key = course_metadata.get('key')
+        try:
+            metadata_record = ContentMetadata.objects.get(content_key=content_key)
+        except ContentMetadata.DoesNotExist:
+            logger.error('Could not find ContentMetadata record for content_key %s.', content_key)
+            continue
+
+        metadata_record.json_metadata = course_metadata
+        metadata_record.save(update_fields=['json_metadata'])
+        updated_metadata_count += 1
+
+    logger.info(
+        'Successfully updated %d of %d ContentMetadata records with full metadata from course-discovery.',
+        updated_metadata_count,
+        len(courses_in_content_metadata),
+    )
+
+
+@shared_task(base=LoggedTask)
+def index_enterprise_catalog_courses_in_algolia_task(algolia_fields, algolia_settings):
     """
-    Index a batch of course content into Algolia.
+    Index course data in Algolia with enterprise-related fields.
 
     Arguments:
-        content_keys (list): a list of content_keys to index in Algolia
         algolia_fields (list): list of course fields we want to index in Algolia
+        algolia_settings (dict): dictionary of default Algolia index settings
     """
-    # initialize Algolia index
+    if not algolia_fields or not algolia_settings:
+        logger.error('Must provide algolia_fields and algolia_settings as arguments.')
+        return
+
+    # initialize the Algolia index
     algolia_client = AlgoliaSearchClient()
     algolia_client.init_index()
 
-    query_params = {
-        'keys': ','.join(content_keys),
-        'ordering': 'key',
-    }
-    try:
-        discovery_client = DiscoveryApiClient()
-        courses = discovery_client.get_courses(query_params=query_params)
-    except Exception:  # pylint: disable=broad-except
-        courses = None
+    # configure the Algolia index
+    algolia_client.set_index_settings(algolia_settings)
 
-    logger.info(
-        'Retrieved %d courses from course-discovery for %d content keys: %s',
-        len(courses),
-        len(content_keys),
-        content_keys,
-    )
+    # find all ContentMetadata records with a content type of "course" that are
+    # also part of at least one EnterpriseCatalog
+    content_metadata = ContentMetadata.objects.filter(
+        content_type=COURSE,
+        catalog_queries__enterprise_catalogs__isnull=False,
+    ).distinct()
 
-    if not courses:
-        logger.error(
-            'No courses retrieved from course-discovery for content keys: %s',
-            content_keys,
+    if not content_metadata:
+        message = (
+            'There are no ContentMetadata records of content type "%s" that are'
+            ' part of at least one EnterpriseCatalog.'
         )
+        logger.error(message, COURSE)
         return
 
-    # Get related enterprise_catalog_uuids and enterprise_customer_uuids for the provided content_keys
-    related_enterprise_catalogs = get_related_enterprise_catalogs_for_content_keys(content_keys)
+    # find related enterprise_catalog_uuids and enterprise_customer_uuids for each ContentMetadata record
+    related_enterprise_catalogs = related_enterprise_catalogs_for_content_metadata(content_metadata)
 
+    courses = []
     for content_key, uuids in related_enterprise_catalogs.items():
-        # add those enterprise-specific uuids to the appropriate course object within the list of courses
-        course_index = find_index_in_courses_for_content_key(content_key, courses)
-        if course_index is not None:
-            course = copy.deepcopy(courses[course_index])
-            course.update({
-                'objectID': get_algolia_object_id(course['uuid']),
-                'enterprise_catalog_uuids': uuids.get('enterprise_catalog_uuids', []),
-                'enterprise_customer_uuids': uuids.get('enterprise_customer_uuids', []),
-            })
-            courses[course_index] = course
-        else:
-            logger.error(
-                'Could not find content_key "%s" in list of %d courses.',
-                content_key,
-                len(content_keys),
-            )
+        try:
+            metadata_record = ContentMetadata.objects.get(content_key=content_key)
+        except ContentMetadata.DoesNotExist:
+            logger.error('Could not find ContentMetadata record for content_key %s.', content_key)
+            continue
+
+        # add enterprise-related uuids to json_metadata and append to list of courses
+        json_metadata = copy.deepcopy(metadata_record.json_metadata)
+        json_metadata.update({
+            'objectID': get_algolia_object_id(json_metadata.get('uuid')),
+            'enterprise_catalog_uuids': uuids.get('enterprise_catalog_uuids', []),
+            'enterprise_customer_uuids': uuids.get('enterprise_customer_uuids', []),
+        })
+        courses.append(json_metadata)
 
     # extract out only the fields we care about and send to Algolia index
     algolia_objects = create_algolia_objects_from_courses(courses, algolia_fields)

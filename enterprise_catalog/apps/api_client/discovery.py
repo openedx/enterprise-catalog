@@ -2,7 +2,6 @@
 """
 Discovery service api client code.
 """
-
 import logging
 from urllib.parse import urljoin
 
@@ -50,27 +49,29 @@ class DiscoveryApiClient:
         Returns:
             list: a list of the results, or None if there was an error calling the discovery service.
         """
-        if query_params is None:
-            query_params = {}
+        request_params = {}
+        request_params.update(query_params or {})
 
         page = 1
         results = []
         try:
+            LOGGER.info('Retrieving results from course-discovery for page {}...'.format(page))
             response = self.client.post(
                 self.SEARCH_ALL_ENDPOINT,
                 json=catalog_query.content_filter,
-                params=query_params
+                params=request_params,
             ).json()
             results += response.get('results', [])
 
-            # Traverse all pages (new request per page) and concatenate results
+            # Traverse all pages and concatenate results
             while response.get('next'):
                 page += 1
-                query_params.update({'page': page})
+                request_params.update({'page': page})
+                LOGGER.info('Retrieving results from course-discovery for page {}...'.format(page))
                 response = self.client.post(
                     self.SEARCH_ALL_ENDPOINT,
                     json=catalog_query.content_filter,
-                    params=query_params
+                    params=request_params,
                 ).json()
                 results += response.get('results', [])
         except Exception as exc:  # pylint: disable=broad-except
@@ -91,37 +92,42 @@ class DiscoveryApiClient:
         Return results from the discovery service's /courses endpoint.
 
         Arguments:
-            course_keys (list): list of course keys
             query_params (dict): additional query params for the rest api endpoint
                 we're hitting. e.g. - {'limit': 100}
 
         Returns:
             list: a list of the results, or None if there was an error calling the discovery service.
         """
-        request_params = {}
+        request_params = {'limit': OFFSET_SIZE}
         request_params.update(query_params or {})
 
-        results = []
+        courses = []
         offset = 0
         try:
-            response = self.client.get(self.COURSES_ENDPOINT, params=request_params).json()
-            results += response.get('results', [])
+            LOGGER.info('Retrieving courses from course-discovery for offset {}...'.format(offset))
+            response = self.client.get(
+                self.COURSES_ENDPOINT,
+                params=request_params,
+            ).json()
+            courses += response.get('results', [])
 
-            # Traverse all results and concatenate results together
+            # Traverse all pages and concatenate results
             while response.get('next'):
                 offset += OFFSET_SIZE
-                query_params.update({'offset': offset})
-                response = self.client.get(self.COURSES_ENDPOINT, params=request_params).json()
-                results += response.get('results', [])
+                request_params.update({'offset': offset})
+                LOGGER.info('Retrieving courses from course-discovery for offset {}...'.format(offset))
+                response = self.client.get(
+                    self.COURSES_ENDPOINT,
+                    params=request_params,
+                ).json()
+                courses += response.get('results', [])
         except Exception as exc:  # pylint: disable=broad-except
             LOGGER.error(
-                'Could not get courses from course-discovery (offset %d) for query_params %s: %s',
+                'Could not get courses from course-discovery (offset %d) with query params %s: %s',
                 offset,
-                query_params,
+                request_params,
                 exc,
             )
-            # if a request to discovery fails, return `None` so that callers of this
-            # method are aware we weren't able to get all the courses
-            return None
+            courses = []
 
-        return results
+        return courses

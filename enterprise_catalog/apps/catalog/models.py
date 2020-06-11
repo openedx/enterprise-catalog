@@ -304,13 +304,14 @@ class ContentMetadata(TimeStampedModel):
         )
 
 
-def get_related_enterprise_catalogs_for_content_keys(content_keys):
+def related_enterprise_catalogs_for_content_metadata(content_metadata):
     """
-    Get enterprise_catalog_uuids and enterprise_customer_uuids for each of the specified content_keys.
+    Get enterprise_catalog_uuids and enterprise_customer_uuids for the specified ContentMetadata records.
+
+    Arguments:
+        content_metadata (list): list of ContentMetadata records
     """
     related_catalogs_for_keys = {}
-
-    content_metadata = ContentMetadata.objects.filter(content_key__in=content_keys)
 
     catalog_queries = CatalogQuery.objects.prefetch_related('contentmetadata_set', 'enterprise_catalogs')
     catalog_queries = catalog_queries.filter(contentmetadata__in=content_metadata)
@@ -466,40 +467,36 @@ def update_contentmetadata_from_discovery(catalog_query_id):
     except CatalogQuery.DoesNotExist:
         catalog_query = None
 
-    if catalog_query:
-        query_params = {
-            # Omit non-active course runs from the course-discovery results
-            'exclude_expired_course_run': True,
-            # Increase number of results per page for the course-discovery response
-            'page_size': 100,
-            # Ensure paginated results are consistently ordered by `aggregation_key` and `start`
-            'ordering': 'aggregation_key,start',
-        }
-        metadata = client.get_metadata_by_query(catalog_query, query_params=query_params)
+    if not catalog_query:
+        LOGGER.error('Could not find a CatalogQuery with id %s', catalog_query_id)
+        return
 
-        # associate content metadata with a catalog query only when we get valid results
-        # back from the discovery service. if metadata is `None`, an error occurred while
-        # calling discovery and we should not proceed with the below association logic.
-        if metadata is not None:
-            metadata_content_keys = [get_content_key(entry) for entry in metadata]
-            LOGGER.info(
-                'Retrieved %d content items (%d unique) from course-discovery for catalog query %s: %s',
-                len(metadata_content_keys),
-                len(set(metadata_content_keys)),
-                catalog_query,
-                metadata_content_keys
-            )
+    query_params = {
+        # Omit non-active course runs from the course-discovery results
+        'exclude_expired_course_run': True,
+        # Increase number of results per page for the course-discovery response
+        'page_size': 100,
+        # Ensure paginated results are consistently ordered by `aggregation_key` and `start`
+        'ordering': 'aggregation_key,start',
+    }
+    metadata = client.get_metadata_by_query(catalog_query, query_params=query_params)
 
-            associated_content_keys = associate_content_metadata_with_query(metadata, catalog_query)
-            LOGGER.info(
-                'Associated %d content items (%d unique) with catalog query %s: %s',
-                len(associated_content_keys),
-                len(set(associated_content_keys)),
-                catalog_query,
-                associated_content_keys,
-            )
-    else:
-        LOGGER.warning(
-            'Could not find a CatalogQuery with id %s',
-            catalog_query_id,
+    # associate content metadata with a catalog query only when we get valid results
+    # back from the discovery service. if metadata is `None`, an error occurred while
+    # calling discovery and we should not proceed with the below association logic.
+    if metadata is not None:
+        metadata_content_keys = [get_content_key(entry) for entry in metadata]
+        LOGGER.info(
+            'Retrieved %d content items (%d unique) from course-discovery for catalog query %s',
+            len(metadata_content_keys),
+            len(set(metadata_content_keys)),
+            catalog_query,
+        )
+
+        associated_content_keys = associate_content_metadata_with_query(metadata, catalog_query)
+        LOGGER.info(
+            'Associated %d content items (%d unique) with catalog query %s',
+            len(associated_content_keys),
+            len(set(associated_content_keys)),
+            catalog_query,
         )

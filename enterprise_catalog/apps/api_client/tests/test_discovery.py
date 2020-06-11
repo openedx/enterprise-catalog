@@ -34,7 +34,7 @@ class TestDiscoveryApiClient(TestCase):
     @mock.patch('enterprise_catalog.apps.api_client.discovery.OAuthAPIClient')
     def test_get_metadata_by_query_with_error(self, mock_oauth_client):
         """
-        get_metadata_by_query should return None when a call(s) to discovery endpoint fail.
+        get_metadata_by_query should return None when a call to discovery endpoint fails.
         """
         mock_oauth_client.return_value.post.side_effect = JSONDecodeError('error', '{}', 0)
 
@@ -46,4 +46,38 @@ class TestDiscoveryApiClient(TestCase):
         mock_oauth_client.return_value.post.assert_called_once()
 
         expected_response = None
+        self.assertEqual(actual_response, expected_response)
+
+    @mock.patch('enterprise_catalog.apps.api_client.discovery.OAuthAPIClient')
+    def test_get_courses_with_results(self, mock_oauth_client):
+        """
+        get_courses should call discovery endpoint to fetch all courses
+        """
+        mock_oauth_client.return_value.get.return_value.json.return_value = {
+            'results': [{'key': 'fakeX'}],
+        }
+
+        query_params = {'ordering': 'key'}
+        client = DiscoveryApiClient()
+        actual_response = client.get_courses(query_params)
+
+        mock_oauth_client.return_value.get.assert_called_once()
+
+        expected_response = [{'key': 'fakeX'}]
+        self.assertEqual(actual_response, expected_response)
+
+    @mock.patch('enterprise_catalog.apps.api_client.discovery.OAuthAPIClient')
+    def test_get_courses_with_error(self, mock_oauth_client):
+        """
+        get_courses should return empty list when a call to discovery endpoint fails.
+        """
+        mock_oauth_client.return_value.get.side_effect = JSONDecodeError('error', '{}', 0)
+
+        query_params = {'ordering': 'key'}
+        client = DiscoveryApiClient()
+        actual_response = client.get_courses(query_params)
+
+        mock_oauth_client.return_value.get.assert_called_once()
+
+        expected_response = []
         self.assertEqual(actual_response, expected_response)
