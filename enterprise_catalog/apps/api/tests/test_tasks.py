@@ -28,7 +28,7 @@ class EnterpriseCatalogCeleryTaskTests(TestCase):
     @mock.patch('enterprise_catalog.apps.api_client.discovery.OAuthAPIClient')
     def test_update_full_metadata(self, mock_oauth_client):
         """
-        Assert that full course metadata replaces ContentMetadata(s) json_metadata
+        Assert that full course metadata is merged with original json_metadata for all ContentMetadata records.
         """
         course_data_1 = {'key': 'fakeX', 'full_course_only_field': 'test_1'}
         course_data_2 = {'key': 'testX', 'full_course_only_field': 'test_2'}
@@ -39,6 +39,7 @@ class EnterpriseCatalogCeleryTaskTests(TestCase):
 
         enterprise_catalog = EnterpriseCatalogFactory()
         catalog_query = enterprise_catalog.catalog_query
+
         metadata_1 = ContentMetadataFactory(content_type=COURSE, content_key='fakeX')
         metadata_1.catalog_queries.set([catalog_query])
         metadata_2 = ContentMetadataFactory(content_type=COURSE, content_key='testX')
@@ -51,6 +52,17 @@ class EnterpriseCatalogCeleryTaskTests(TestCase):
 
         metadata_1 = ContentMetadata.objects.get(content_key='fakeX')
         metadata_2 = ContentMetadata.objects.get(content_key='testX')
+
+        # add aggregation_key and uuid to course objects since they should now exist
+        # after merging the original json_metadata with the course metadata
+        course_data_1.update({
+            'uuid': metadata_1.json_metadata.get('uuid'),
+            'aggregation_key': 'course:fakeX',
+        })
+        course_data_2.update({
+            'uuid': metadata_2.json_metadata.get('uuid'),
+            'aggregation_key': 'course:testX',
+        })
 
         assert metadata_1.json_metadata == course_data_1
         assert metadata_2.json_metadata == course_data_2

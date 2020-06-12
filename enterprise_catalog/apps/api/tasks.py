@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 def update_full_content_metadata_task(*args, **kwargs):  # pylint: disable=unused-argument
     """
     Traverse discovery's /api/v1/courses endpoint to fetch the full course metadata of all ContentMetadata
-    records with a content type of "course". The course metadata is used to replace the existing contents of
+    records with a content type of "course". The course metadata is merged with the existing contents of
     the json_metadata field for each ContentMetadata record.
     """
     discovery_client = DiscoveryApiClient()
@@ -68,7 +68,11 @@ def update_full_content_metadata_task(*args, **kwargs):  # pylint: disable=unuse
             logger.error('Could not find ContentMetadata record for content_key %s.', content_key)
             continue
 
-        metadata_record.json_metadata = course_metadata
+        # merge the original json_metadata with the full course_metadata to ensure
+        # we're not removing any critical fields, e.g. "aggregation_key".
+        json_metadata = metadata_record.json_metadata.copy()
+        json_metadata.update(course_metadata)
+        metadata_record.json_metadata = json_metadata
         metadata_record.save(update_fields=['json_metadata'])
         updated_metadata_count += 1
 
