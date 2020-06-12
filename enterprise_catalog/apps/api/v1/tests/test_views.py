@@ -562,7 +562,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
 
         if updated_json_metadata.get('uuid'):
             updated_json_metadata['uuid'] = str(updated_json_metadata.get('uuid'))
-        
+
         if updated_json_metadata.get('marketing_url'):
             updated_json_metadata['marketing_url'] = marketing_url.format(
                 updated_json_metadata['marketing_url'],

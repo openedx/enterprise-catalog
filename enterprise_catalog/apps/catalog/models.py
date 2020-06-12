@@ -20,6 +20,7 @@ from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 from enterprise_catalog.apps.catalog.constants import (
     ACCESS_TO_ALL_ENTERPRISES_TOKEN,
     CONTENT_TYPE_CHOICES,
+    COURSE,
     json_serialized_course_modes,
 )
 from enterprise_catalog.apps.catalog.utils import (
@@ -335,6 +336,25 @@ def related_enterprise_catalogs_for_content_metadata(content_metadata):
             }
 
     return related_catalogs_for_keys
+
+
+def course_metadata_used_by_at_least_one_catalog():
+    # find all ContentMetadata records with a content type of "course" that are
+    # also part of at least one EnterpriseCatalog
+    content_metadata = ContentMetadata.objects.filter(
+        content_type=COURSE,
+        catalog_queries__enterprise_catalogs__isnull=False,
+    ).distinct()
+
+    if not content_metadata:
+        message = (
+            'There are no ContentMetadata records of content type "%s" that are'
+            ' part of at least one EnterpriseCatalog.'
+        )
+        LOGGER.error(message, COURSE)
+        return None
+
+    return content_metadata
 
 
 def associate_content_metadata_with_query(metadata, catalog_query):

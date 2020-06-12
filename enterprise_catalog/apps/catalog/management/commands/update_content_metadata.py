@@ -20,15 +20,15 @@ class Command(BaseCommand):
         'Update Content Metadata, along with the associations of Catalog Queries and Content Metadata',
     )
 
-    def run_update_catalog_metadata_task(self, catalog_query):
+    def _run_update_catalog_metadata_task(self, catalog_query):
         message = (
             'Spinning off update_catalog_metadata_task from update_content_metadata command'
             ' to update content_metadata for catalog query %s.'
         )
         logger.info(message, catalog_query)
         return update_catalog_metadata_task.s(catalog_query_id=catalog_query.id)
-    
-    def run_update_full_content_metadata_task(self, *args, **kwargs):
+
+    def _run_update_full_content_metadata_task(self, *args, **kwargs):
         message = (
             'Spinning off update_full_content_metadata_task from update_content_metadata command'
             ' to replace minimal json_metadata from /search/all/ with full json_metadata from /courses/.'
@@ -47,10 +47,10 @@ class Command(BaseCommand):
         # with the full course metadata from /courses/.
         result = chord(
             [
-                self.run_update_catalog_metadata_task(catalog_query) 
+                self._run_update_catalog_metadata_task(catalog_query)
                 for catalog_query in catalog_queries
             ]
-        )(self.run_update_full_content_metadata_task())
+        )(self._run_update_full_content_metadata_task())
 
         if result.ready() and result.successful():
             message = (

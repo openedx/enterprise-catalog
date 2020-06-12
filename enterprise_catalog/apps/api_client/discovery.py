@@ -36,6 +36,19 @@ class DiscoveryApiClient:
     def oauth2_client_secret(self):
         return settings.BACKEND_SERVICE_EDX_OAUTH2_SECRET
 
+    def _retrieve_metadata_for_content_filter(self, content_filter, page, request_params):
+        """
+        Makes a request to discovery's /search/all/ endpoint with the specified
+        content_filter, page, and request_params
+        """
+        LOGGER.info('Retrieving results from course-discovery for page {}...'.format(page))
+        response = self.client.post(
+            self.SEARCH_ALL_ENDPOINT,
+            json=content_filter,
+            params=request_params,
+        ).json()
+        return response
+
     def get_metadata_by_query(self, catalog_query, query_params=None):
         """
         Return results from the discovery service's search/all endpoint.
@@ -55,24 +68,14 @@ class DiscoveryApiClient:
         page = 1
         results = []
         try:
-            LOGGER.info('Retrieving results from course-discovery for page {}...'.format(page))
-            response = self.client.post(
-                self.SEARCH_ALL_ENDPOINT,
-                json=catalog_query.content_filter,
-                params=request_params,
-            ).json()
+            content_filter = catalog_query.content_filter
+            response = self._retrieve_metadata_for_content_filter(content_filter, page, request_params)
             results += response.get('results', [])
-
             # Traverse all pages and concatenate results
             while response.get('next'):
                 page += 1
                 request_params.update({'page': page})
-                LOGGER.info('Retrieving results from course-discovery for page {}...'.format(page))
-                response = self.client.post(
-                    self.SEARCH_ALL_ENDPOINT,
-                    json=catalog_query.content_filter,
-                    params=request_params,
-                ).json()
+                response = self._retrieve_metadata_for_content_filter(content_filter, page, request_params)
                 results += response.get('results', [])
         except Exception as exc:  # pylint: disable=broad-except
             LOGGER.error(
@@ -86,6 +89,17 @@ class DiscoveryApiClient:
             return None
 
         return results
+
+    def _retrieve_courses(self, offset, request_params):
+        """
+        Makes a request to discovery's /api/v1/courses/ endpoint with the specified offset and request_params
+        """
+        LOGGER.info('Retrieving courses from course-discovery for offset {}...'.format(offset))
+        response = self.client.get(
+            self.COURSES_ENDPOINT,
+            params=request_params,
+        ).json()
+        return response
 
     def get_courses(self, query_params=None):
         """
@@ -104,22 +118,13 @@ class DiscoveryApiClient:
         courses = []
         offset = 0
         try:
-            LOGGER.info('Retrieving courses from course-discovery for offset {}...'.format(offset))
-            response = self.client.get(
-                self.COURSES_ENDPOINT,
-                params=request_params,
-            ).json()
-            courses += response.get('results', [])
-
+            response = self._retrieve_courses(offset, request_params)
+            courses += response.get('results')
             # Traverse all pages and concatenate results
             while response.get('next'):
                 offset += OFFSET_SIZE
                 request_params.update({'offset': offset})
-                LOGGER.info('Retrieving courses from course-discovery for offset {}...'.format(offset))
-                response = self.client.get(
-                    self.COURSES_ENDPOINT,
-                    params=request_params,
-                ).json()
+                response = self._retrieve_courses(offset, request_params)
                 courses += response.get('results', [])
         except Exception as exc:  # pylint: disable=broad-except
             LOGGER.error(

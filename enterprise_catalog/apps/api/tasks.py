@@ -10,9 +10,9 @@ from enterprise_catalog.apps.api.v1.utils import (
 )
 from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
 from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
-from enterprise_catalog.apps.catalog.constants import COURSE
 from enterprise_catalog.apps.catalog.models import (
     ContentMetadata,
+    course_metadata_used_by_at_least_one_catalog,
     related_enterprise_catalogs_for_content_metadata,
     update_contentmetadata_from_discovery,
 )
@@ -22,7 +22,12 @@ logger = logging.getLogger(__name__)
 
 
 @shared_task(base=LoggedTask)
-def update_full_content_metadata_task(*args, **kwargs):
+def update_full_content_metadata_task(*args, **kwargs):  # pylint: disable=unused-argument
+    """
+    Traverse discovery's /api/v1/courses endpoint to fetch the full course metadata of all ContentMetadata
+    records with a content type of "course". The course metadata is used to replace the existing contents of
+    the json_metadata field for each ContentMetadata record.
+    """
     discovery_client = DiscoveryApiClient()
 
     # fetch all courses from course-discovery
@@ -37,18 +42,7 @@ def update_full_content_metadata_task(*args, **kwargs):
 
     # find all ContentMetadata records with a content type of "course" that are
     # also part of at least one EnterpriseCatalog
-    content_metadata = ContentMetadata.objects.filter(
-        content_type=COURSE,
-        catalog_queries__enterprise_catalogs__isnull=False,
-    ).distinct()
-
-    if not content_metadata:
-        message = (
-            'There are no ContentMetadata records of content type "%s" that are'
-            ' part of at least one EnterpriseCatalog.'
-        )
-        logger.error(message, COURSE)
-        return
+    content_metadata = course_metadata_used_by_at_least_one_catalog()
 
     content_keys = [metadata.content_key for metadata in content_metadata]
     courses_in_content_metadata = [course for course in courses if course.get('key') in content_keys]
@@ -107,18 +101,7 @@ def index_enterprise_catalog_courses_in_algolia_task(algolia_fields, algolia_set
 
     # find all ContentMetadata records with a content type of "course" that are
     # also part of at least one EnterpriseCatalog
-    content_metadata = ContentMetadata.objects.filter(
-        content_type=COURSE,
-        catalog_queries__enterprise_catalogs__isnull=False,
-    ).distinct()
-
-    if not content_metadata:
-        message = (
-            'There are no ContentMetadata records of content type "%s" that are'
-            ' part of at least one EnterpriseCatalog.'
-        )
-        logger.error(message, COURSE)
-        return
+    content_metadata = course_metadata_used_by_at_least_one_catalog()
 
     # find related enterprise_catalog_uuids and enterprise_customer_uuids for each ContentMetadata record
     related_enterprise_catalogs = related_enterprise_catalogs_for_content_metadata(content_metadata)

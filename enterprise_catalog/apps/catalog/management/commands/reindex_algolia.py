@@ -74,12 +74,12 @@ class Command(BaseCommand):
         """
         Spin off task to reindex course data in Algolia.
         """
-        index_enterprise_catalog_courses_in_algolia_task.delay(
+        async_task = index_enterprise_catalog_courses_in_algolia_task.delay(
             algolia_fields=ALGOLIA_FIELDS,
             algolia_settings=ALGOLIA_INDEX_SETTINGS,
         )
         message = (
-            'Spinning off task index_enterprise_catalog_courses_in_algolia_task from'
+            'Spinning off task index_enterprise_catalog_courses_in_algolia_task (%s) from'
             ' the reindex_algolia command to reindex course data in Algolia.'
         )
-        logger.info(message)
+        logger.info(message, async_task.task_id)

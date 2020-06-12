@@ -16,9 +16,9 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **options):
-        update_full_content_metadata_task.delay()
+        async_task = update_full_content_metadata_task.delay()
         message = (
-            'Spinning off update_full_content_metadata_task from update_full_content_metadata command'
+            'Spinning off update_full_content_metadata_task (%s) from update_full_content_metadata command'
             ' to replace minimal json_metadata from /search/all/ with full json_metadata from /courses/.'
         )
-        logger.info(message)
+        logger.info(message, async_task.task_id)
