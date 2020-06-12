@@ -560,6 +560,9 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         enrollment_url = '{}/enterprise/{}/{}/{}/enroll/?catalog={}&utm_medium=enterprise&utm_source={}'
         marketing_url = '{}?utm_medium=enterprise&utm_source={}'
 
+        if updated_json_metadata.get('uuid'):
+            updated_json_metadata['uuid'] = str(updated_json_metadata.get('uuid'))
+
         if updated_json_metadata.get('marketing_url'):
             updated_json_metadata['marketing_url'] = marketing_url.format(
                 updated_json_metadata['marketing_url'],
@@ -570,7 +573,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
             updated_json_metadata['enrollment_url'] = enrollment_url.format(
                 settings.LMS_BASE_URL,
                 self.enterprise_catalog.enterprise_uuid,
-                'course',
+                COURSE,
                 updated_json_metadata['key'],
                 self.enterprise_catalog.uuid,
                 self.enterprise_catalog.enterprise_name,
@@ -581,7 +584,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
             updated_json_metadata['enrollment_url'] = enrollment_url.format(
                 settings.LMS_BASE_URL,
                 self.enterprise_catalog.enterprise_uuid,
-                'program',
+                PROGRAM,
                 updated_json_metadata['key'],
                 self.enterprise_catalog.uuid,
                 self.enterprise_catalog.enterprise_name,

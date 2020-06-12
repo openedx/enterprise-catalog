@@ -27,11 +27,7 @@ class AlgoliaSearchClient:
 
     def init_index(self):
         """
-        Initializes an index within Algolia with the specified name. Initializing an
-        index will create it if it does not yet exist.
-
-        Returns:
-            dict: an Algolia index or None if we cannot initialize an Algolia index
+        Initializes an index within Algolia. Initializing an index will create it if it doesn't exist.
         """
         if not self.ALGOLIA_INDEX_NAME:
             logger.error('Could not initialize Algolia index due to missing index name.')

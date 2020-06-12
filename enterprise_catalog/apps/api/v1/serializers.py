@@ -67,12 +67,12 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
             logger.error(message, exc, content_filter, catalog_query.id, validated_data)
             raise
 
+        async_task = update_catalog_metadata_task.delay(catalog_query_id=catalog.catalog_query.id)
         message = (
-            'Spinning off update_catalog_metadata_task from create serializer '
+            'Spinning off update_catalog_metadata_task (%s) from create serializer '
             'to update content_metadata for catalog %s'
         )
-        logger.info(message, catalog)
-        update_catalog_metadata_task.delay(catalog_query_id=catalog.catalog_query.id)
+        logger.info(message, async_task.task_id, catalog)
 
         return catalog
 
@@ -87,12 +87,12 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
             defaults={'content_filter': content_filter},
         )
 
+        async_task = update_catalog_metadata_task.delay(catalog_query_id=instance.catalog_query.id)
         message = (
-            'Spinning off update_catalog_metadata_task from update serializer '
+            'Spinning off update_catalog_metadata_task (%s) from update serializer '
             'to update content_metadata for catalog %s'
         )
-        logger.info(message, instance)
-        update_catalog_metadata_task.delay(catalog_query_id=instance.catalog_query.id)
+        logger.info(message, async_task.task_id, instance)
 
         return super().update(instance, validated_data)
 

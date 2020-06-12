@@ -2,7 +2,6 @@
 """
 Discovery service api client code.
 """
-
 import logging
 from urllib.parse import urljoin
 
@@ -37,6 +36,19 @@ class DiscoveryApiClient:
     def oauth2_client_secret(self):
         return settings.BACKEND_SERVICE_EDX_OAUTH2_SECRET
 
+    def _retrieve_metadata_for_content_filter(self, content_filter, page, request_params):
+        """
+        Makes a request to discovery's /search/all/ endpoint with the specified
+        content_filter, page, and request_params
+        """
+        LOGGER.info('Retrieving results from course-discovery for page {}...'.format(page))
+        response = self.client.post(
+            self.SEARCH_ALL_ENDPOINT,
+            json=content_filter,
+            params=request_params,
+        ).json()
+        return response
+
     def get_metadata_by_query(self, catalog_query, query_params=None):
         """
         Return results from the discovery service's search/all endpoint.
@@ -50,28 +62,20 @@ class DiscoveryApiClient:
         Returns:
             list: a list of the results, or None if there was an error calling the discovery service.
         """
-        if query_params is None:
-            query_params = {}
+        request_params = {}
+        request_params.update(query_params or {})
 
         page = 1
         results = []
         try:
-            response = self.client.post(
-                self.SEARCH_ALL_ENDPOINT,
-                json=catalog_query.content_filter,
-                params=query_params
-            ).json()
+            content_filter = catalog_query.content_filter
+            response = self._retrieve_metadata_for_content_filter(content_filter, page, request_params)
             results += response.get('results', [])
-
-            # Traverse all pages (new request per page) and concatenate results
+            # Traverse all pages and concatenate results
             while response.get('next'):
                 page += 1
-                query_params.update({'page': page})
-                response = self.client.post(
-                    self.SEARCH_ALL_ENDPOINT,
-                    json=catalog_query.content_filter,
-                    params=query_params
-                ).json()
+                request_params.update({'page': page})
+                response = self._retrieve_metadata_for_content_filter(content_filter, page, request_params)
                 results += response.get('results', [])
         except Exception as exc:  # pylint: disable=broad-except
             LOGGER.error(
@@ -86,42 +90,49 @@ class DiscoveryApiClient:
 
         return results
 
+    def _retrieve_courses(self, offset, request_params):
+        """
+        Makes a request to discovery's /api/v1/courses/ endpoint with the specified offset and request_params
+        """
+        LOGGER.info('Retrieving courses from course-discovery for offset {}...'.format(offset))
+        response = self.client.get(
+            self.COURSES_ENDPOINT,
+            params=request_params,
+        ).json()
+        return response
+
     def get_courses(self, query_params=None):
         """
         Return results from the discovery service's /courses endpoint.
 
         Arguments:
-            course_keys (list): list of course keys
             query_params (dict): additional query params for the rest api endpoint
                 we're hitting. e.g. - {'limit': 100}
 
         Returns:
             list: a list of the results, or None if there was an error calling the discovery service.
         """
-        request_params = {}
+        request_params = {'limit': OFFSET_SIZE}
         request_params.update(query_params or {})
 
-        results = []
+        courses = []
         offset = 0
         try:
-            response = self.client.get(self.COURSES_ENDPOINT, params=request_params).json()
-            results += response.get('results', [])
-
-            # Traverse all results and concatenate results together
+            response = self._retrieve_courses(offset, request_params)
+            courses += response.get('results')
+            # Traverse all pages and concatenate results
             while response.get('next'):
                 offset += OFFSET_SIZE
-                query_params.update({'offset': offset})
-                response = self.client.get(self.COURSES_ENDPOINT, params=request_params).json()
-                results += response.get('results', [])
+                request_params.update({'offset': offset})
+                response = self._retrieve_courses(offset, request_params)
+                courses += response.get('results', [])
         except Exception as exc:  # pylint: disable=broad-except
             LOGGER.error(
-                'Could not get courses from course-discovery (offset %d) for query_params %s: %s',
+                'Could not get courses from course-discovery (offset %d) with query params %s: %s',
                 offset,
-                query_params,
+                request_params,
                 exc,
             )
-            # if a request to discovery fails, return `None` so that callers of this
-            # method are aware we weren't able to get all the courses
-            return None
+            courses = []
 
-        return results
+        return courses

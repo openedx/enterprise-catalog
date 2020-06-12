@@ -12,10 +12,10 @@ from enterprise_catalog.apps.catalog.tests.factories import (
 class UpdateContentMetadataCommandTests(TestCase):
     command_name = 'update_content_metadata'
 
-    @mock.patch(
-        'enterprise_catalog.apps.catalog.management.commands.update_content_metadata.update_catalog_metadata_task.delay'
-    )
-    def test_update_content_metadata_for_all_queries(self, mock_task):
+    @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.chord')
+    @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.update_catalog_metadata_task')
+    @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.update_full_content_metadata_task')
+    def test_update_content_metadata_for_all_queries(self, mock_full_metadata_task, mock_catalog_task, mock_chord):
         """
         Verify that the job creates an update task for every catalog query
         """
@@ -27,16 +27,17 @@ class UpdateContentMetadataCommandTests(TestCase):
 
         call_command(self.command_name)
 
-        assert mock_task.call_count == 3
+        mock_chord.assert_called_once_with([
+            mock_catalog_task.s(catalog_query_id=catalog_query_a),
+            mock_catalog_task.s(catalog_query_id=catalog_query_b),
+            mock_catalog_task.s(catalog_query_id=catalog_query_c),
+        ])
+        mock_full_metadata_task.s.assert_called_once()
 
-        mock_task.assert_any_call(catalog_query_id=catalog_query_a.id)
-        mock_task.assert_any_call(catalog_query_id=catalog_query_b.id)
-        mock_task.assert_any_call(catalog_query_id=catalog_query_c.id)
-
-    @mock.patch(
-        'enterprise_catalog.apps.catalog.management.commands.update_content_metadata.update_catalog_metadata_task.delay'
-    )
-    def test_update_content_metadata_for_filtered_queries(self, mock_task):
+    @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.chord')
+    @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.update_catalog_metadata_task')
+    @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.update_full_content_metadata_task')
+    def test_update_content_metadata_for_filtered_queries(self, mock_full_metadata_task, mock_catalog_task, mock_chord):
         """
         Verify that the job creates an update task for every catalog query that is used by
         at least one enterprise catalog.
@@ -48,7 +49,8 @@ class UpdateContentMetadataCommandTests(TestCase):
 
         call_command(self.command_name)
 
-        assert mock_task.call_count == 2
-
-        mock_task.assert_any_call(catalog_query_id=catalog_query_a.id)
-        mock_task.assert_any_call(catalog_query_id=catalog_query_b.id)
+        mock_chord.assert_called_once_with([
+            mock_catalog_task.s(catalog_query_id=catalog_query_a),
+            mock_catalog_task.s(catalog_query_id=catalog_query_b),
+        ])
+        mock_full_metadata_task.s.assert_called_once()
