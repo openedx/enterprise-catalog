@@ -339,8 +339,10 @@ def related_enterprise_catalogs_for_content_metadata(content_metadata):
 
 
 def course_metadata_used_by_at_least_one_catalog():
-    # find all ContentMetadata records with a content type of "course" that are
-    # also part of at least one EnterpriseCatalog
+    """
+    Find all ContentMetadata records with a content type of "course" that are also part
+    of at least one EnterpriseCatalog.
+    """
     content_metadata = ContentMetadata.objects.filter(
         content_type=COURSE,
         catalog_queries__enterprise_catalogs__isnull=False,

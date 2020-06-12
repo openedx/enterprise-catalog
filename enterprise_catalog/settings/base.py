@@ -269,11 +269,6 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_MESSAGE_COMPRESSION = 'gzip'
 
-# Results configuration
-CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', '')
-CELERY_IGNORE_RESULT = False
-CELERY_STORE_ERRORS_EVEN_IF_IGNORED = True
-
 # Events configuration
 CELERY_TRACK_STARTED = True
 CELERY_SEND_EVENTS = True
@@ -303,6 +298,11 @@ BROKER_URL = '{0}://{1}:{2}@{3}/{4}'.format(
     CELERY_BROKER_HOSTNAME,
     CELERY_BROKER_VHOST
 )
+
+# Results configuration
+CELERY_RESULT_BACKEND = BROKER_URL
+CELERY_IGNORE_RESULT = False
+CELERY_STORE_ERRORS_EVEN_IF_IGNORED = True
 
 # Celery task time limits.
 # Tasks will be asked to quit after four minutes, and un-gracefully killed

@@ -55,10 +55,6 @@ DISCOVERY_SERVICE_API_URL = 'http://edx.devstack.discovery:18381/api/v1/'
 
 CELERYD_HIJACK_ROOT_LOGGER = True
 CELERY_ALWAYS_EAGER = os.environ.get('CELERY_ALWAYS_EAGER', False)
-CELERY_RESULT_BACKEND = os.environ.get(
-    'CELERY_RESULT_BACKEND',
-    BROKER_URL,
-)
 
 CORS_ORIGIN_WHITELIST = [
     # Enterprise learner portal MFE
