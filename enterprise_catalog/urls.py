@@ -37,12 +37,9 @@ urlpatterns = [
     url(r'^health/$', core_views.health, name='health'),
 ]
 
-if settings.DEBUG:
-    if os.environ.get('ENABLE_DJANGO_TOOLBAR', False):  # pragma: no cover
-        # Disable pylint import error because we don't install django-debug-toolbar
-        # for CI build
-        import debug_toolbar
-        urlpatterns.append(url(r'^__debug__/', include(debug_toolbar.urls)))
+if settings.DEBUG and os.environ.get('ENABLE_DJANGO_TOOLBAR', False):  # pragma: no cover
+    import debug_toolbar
+    urlpatterns.append(url(r'^__debug__/', include(debug_toolbar.urls)))
 
-    if os.environ.get('ENABLE_DJANGO_SILK', False):  # pragma: no cover
-        urlpatterns.append(url(r'^silk/', include('silk.urls', namespace='silk')))
+if os.environ.get('ENABLE_DJANGO_SILK', False):  # pragma: no cover
+    urlpatterns.append(url(r'^silk/', include('silk.urls', namespace='silk')))

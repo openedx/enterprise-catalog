@@ -85,29 +85,11 @@ def get_algolia_object_id(uuid):
         uuid (str): a course uuid
 
     Returns:
-        str: the generated Algolia object_id
+        str: the generated Algolia object_id or None if uuid is not specified
     """
-    object_id = 'course-{}'.format(uuid)
-    return object_id
-
-
-def find_index_in_courses_for_content_key(content_key, courses):
-    """
-    Finds the index of a content_key within a list of courses
-
-    Arguments:
-        content_key (str): the content key for which you want to know the index of
-        courses (list): list of course objects
-
-    Returns:
-        course_index (int): index position of where content_key is within the list of courses
-            objects. Returns None if content_key cannot be found.
-    """
-    content_key_index = next(
-        (index for (index, d) in enumerate(courses) if d['key'] == content_key),
-        None
-    )
-    return content_key_index
+    if uuid:
+        return 'course-{}'.format(uuid)
+    return None
 
 
 def get_course_language(course_runs):
