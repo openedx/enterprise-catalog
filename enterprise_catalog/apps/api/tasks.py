@@ -59,7 +59,7 @@ def update_full_content_metadata_task(*args, **kwargs):  # pylint: disable=unuse
     # iterate through the matching courses to update the json_metadata field, replacing
     # the minimal json_metadata retrieved by /search/all/ with the full json_metadata
     # retrieved by /courses/.
-    updated_metadata_count = 0
+    updated_metadata = []
     for course_metadata in courses_in_content_metadata:
         content_key = course_metadata.get('key')
         try:
@@ -73,12 +73,13 @@ def update_full_content_metadata_task(*args, **kwargs):  # pylint: disable=unuse
         json_metadata = metadata_record.json_metadata.copy()
         json_metadata.update(course_metadata)
         metadata_record.json_metadata = json_metadata
-        metadata_record.save(update_fields=['json_metadata'])
-        updated_metadata_count += 1
+        updated_metadata.append(metadata_record)
+
+    ContentMetadata.objecs.bulk_update(updated_metadata, ['json_metadata'])
 
     logger.info(
         'Successfully updated %d of %d ContentMetadata records with full metadata from course-discovery.',
-        updated_metadata_count,
+        len(updated_metadata),
         len(courses_in_content_metadata),
     )
 
