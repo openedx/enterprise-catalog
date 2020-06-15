@@ -12,7 +12,7 @@ from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
 from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 from enterprise_catalog.apps.catalog.models import (
     ContentMetadata,
-    course_metadata_used_by_at_least_one_catalog,
+    content_metadata_with_type_course,
     related_enterprise_catalogs_for_content_metadata,
     update_contentmetadata_from_discovery,
 )
@@ -40,9 +40,8 @@ def update_full_content_metadata_task(*args, **kwargs):  # pylint: disable=unuse
 
     logger.info('Retrieved %d courses from course-discovery.', len(courses))
 
-    # find all ContentMetadata records with a content type of "course" that are
-    # also part of at least one EnterpriseCatalog
-    content_metadata = course_metadata_used_by_at_least_one_catalog()
+    # find all ContentMetadata records with a content type of "course"
+    content_metadata = content_metadata_with_type_course()
 
     content_keys = [metadata.content_key for metadata in content_metadata]
     courses_in_content_metadata = [course for course in courses if course.get('key') in content_keys]
@@ -75,7 +74,7 @@ def update_full_content_metadata_task(*args, **kwargs):  # pylint: disable=unuse
         metadata_record.json_metadata = json_metadata
         updated_metadata.append(metadata_record)
 
-    ContentMetadata.objecs.bulk_update(updated_metadata, ['json_metadata'])
+    ContentMetadata.objects.bulk_update(updated_metadata, ['json_metadata'])
 
     logger.info(
         'Successfully updated %d of %d ContentMetadata records with full metadata from course-discovery.',
@@ -104,9 +103,8 @@ def index_enterprise_catalog_courses_in_algolia_task(algolia_fields, algolia_set
     # configure the Algolia index
     algolia_client.set_index_settings(algolia_settings)
 
-    # find all ContentMetadata records with a content type of "course" that are
-    # also part of at least one EnterpriseCatalog
-    content_metadata = course_metadata_used_by_at_least_one_catalog()
+    # find all ContentMetadata records with a content type of "course"
+    content_metadata = content_metadata_with_type_course()
 
     # find related enterprise_catalog_uuids and enterprise_customer_uuids for each ContentMetadata record
     related_enterprise_catalogs = related_enterprise_catalogs_for_content_metadata(content_metadata)

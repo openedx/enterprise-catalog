@@ -338,22 +338,14 @@ def related_enterprise_catalogs_for_content_metadata(content_metadata):
     return related_catalogs_for_keys
 
 
-def course_metadata_used_by_at_least_one_catalog():
+def content_metadata_with_type_course():
     """
-    Find all ContentMetadata records with a content type of "course" that are also part
-    of at least one EnterpriseCatalog.
+    Find all ContentMetadata records with a content type of "course".
     """
-    content_metadata = ContentMetadata.objects.filter(
-        content_type=COURSE,
-        catalog_queries__enterprise_catalogs__isnull=False,
-    ).distinct()
+    content_metadata = ContentMetadata.objects.filter(content_type=COURSE)
 
     if not content_metadata:
-        message = (
-            'There are no ContentMetadata records of content type "%s" that are'
-            ' part of at least one EnterpriseCatalog.'
-        )
-        LOGGER.error(message, COURSE)
+        LOGGER.error('There are no ContentMetadata records of content type "%s".', COURSE)
         return None
 
     return content_metadata
