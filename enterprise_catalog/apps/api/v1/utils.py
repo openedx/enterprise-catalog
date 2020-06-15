@@ -155,7 +155,7 @@ def _algolia_object_from_course(course, algolia_fields):
     searchable_course = copy.deepcopy(course)
     published_course_runs = [
         course_run for course_run in searchable_course.get('course_runs', [])
-        if course_run['status'].lower() == 'published'
+        if course_run.get(['status'], '').lower() == 'published'
     ]
     searchable_course.update({
         'language': get_course_language(published_course_runs),
