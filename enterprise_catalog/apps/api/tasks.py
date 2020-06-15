@@ -74,7 +74,7 @@ def update_full_content_metadata_task(*args, **kwargs):  # pylint: disable=unuse
         metadata_record.json_metadata = json_metadata
         updated_metadata.append(metadata_record)
 
-    ContentMetadata.objects.bulk_update(updated_metadata, ['json_metadata'])
+    ContentMetadata.objects.bulk_update(updated_metadata, ['json_metadata'], batch_size=100)
 
     logger.info(
         'Successfully updated %d of %d ContentMetadata records with full metadata from course-discovery.',
