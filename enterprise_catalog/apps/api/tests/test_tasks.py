@@ -70,17 +70,15 @@ class EnterpriseCatalogCeleryTaskTests(TestCase):
     @mock.patch('enterprise_catalog.apps.api.tasks.AlgoliaSearchClient')
     def test_index_algolia(self, mock_search_client):
         ALGOLIA_FIELDS = ['key', 'objectID', 'enterprise_customer_uuids', 'enterprise_catalog_uuids']
-        ALGOLIA_INDEX_SETTINGS = {'searchableAttributes': []}
 
         enterprise_catalog = EnterpriseCatalogFactory()
         catalog_query = enterprise_catalog.catalog_query
         metadata = ContentMetadataFactory(content_type=COURSE, content_key='fakeX')
         metadata.catalog_queries.set([catalog_query])
 
-        tasks.index_enterprise_catalog_courses_in_algolia_task(ALGOLIA_FIELDS, ALGOLIA_INDEX_SETTINGS)
+        tasks.index_enterprise_catalog_courses_in_algolia_task(ALGOLIA_FIELDS, content_keys=['fakeX'])
 
         mock_search_client.return_value.init_index.assert_called_once_with()
-        mock_search_client.return_value.set_index_settings.assert_called_once_with(ALGOLIA_INDEX_SETTINGS)
 
         algolia_objects = []
         algolia_objects.append({
