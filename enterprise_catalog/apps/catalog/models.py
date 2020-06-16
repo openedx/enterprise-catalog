@@ -305,39 +305,6 @@ class ContentMetadata(TimeStampedModel):
         )
 
 
-def related_enterprise_catalogs_for_content_metadata(content_metadata):
-    """
-    Get enterprise_catalog_uuids and enterprise_customer_uuids for the specified ContentMetadata records.
-
-    Arguments:
-        content_metadata (list): list of ContentMetadata records
-    """
-    related_catalogs_for_keys = {}
-
-    catalog_queries = CatalogQuery.objects.prefetch_related('contentmetadata_set', 'enterprise_catalogs')
-    catalog_queries = catalog_queries.filter(contentmetadata__in=content_metadata)
-
-    for query in catalog_queries.all():
-        enterprise_catalogs = query.enterprise_catalogs.all()
-        metadata_for_query = query.contentmetadata_set.all()
-
-        for metadata in metadata_for_query:
-            enterprise_catalog_uuids = set()
-            enterprise_customer_uuids = set()
-
-            for catalog in enterprise_catalogs:
-                enterprise_catalog_uuids.add(str(catalog.uuid))
-                enterprise_customer_uuids.add(str(catalog.enterprise_uuid))
-
-            content_key = metadata.content_key
-            related_catalogs_for_keys[content_key] = {
-                'enterprise_catalog_uuids': list(enterprise_catalog_uuids),
-                'enterprise_customer_uuids': list(enterprise_customer_uuids),
-            }
-
-    return related_catalogs_for_keys
-
-
 def content_metadata_with_type_course():
     """
     Find all ContentMetadata records with a content type of "course".

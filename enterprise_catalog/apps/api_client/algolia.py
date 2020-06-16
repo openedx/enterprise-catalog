@@ -99,11 +99,9 @@ class AlgoliaSearchClient:
             for response in response.raw_responses:
                 object_ids += response.get('objectIDs', [])
                 logger.info(
-                    'Successfully indexed %d (%d unique) courses in Algolia\'s %s index: %s',
+                    'Successfully indexed %d courses in Algolia\'s %s index.',
                     len(object_ids),
-                    len(set(object_ids)),
                     self.ALGOLIA_INDEX_NAME,
-                    object_ids,
                 )
         except Exception as exc:  # pylint: disable=broad-except
             logger.error(

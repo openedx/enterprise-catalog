@@ -13,7 +13,6 @@ from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 from enterprise_catalog.apps.catalog.models import (
     ContentMetadata,
     content_metadata_with_type_course,
-    related_enterprise_catalogs_for_content_metadata,
     update_contentmetadata_from_discovery,
 )
 
@@ -84,45 +83,48 @@ def update_full_content_metadata_task(*args, **kwargs):  # pylint: disable=unuse
 
 
 @shared_task(base=LoggedTask)
-def index_enterprise_catalog_courses_in_algolia_task(algolia_fields, algolia_settings):
+def index_enterprise_catalog_courses_in_algolia_task(algolia_fields, content_keys):
     """
     Index course data in Algolia with enterprise-related fields.
 
     Arguments:
         algolia_fields (list): list of course fields we want to index in Algolia
-        algolia_settings (dict): dictionary of default Algolia index settings
+        content_keys (list): list of content_keys
     """
-    if not algolia_fields or not algolia_settings:
-        logger.error('Must provide algolia_fields and algolia_settings as arguments.')
+    if not algolia_fields or not content_keys:
+        logger.error('Must provide algolia_fields and content_keys as arguments.')
         return
 
     # initialize the Algolia index
     algolia_client = AlgoliaSearchClient()
     algolia_client.init_index()
 
-    # configure the Algolia index
-    algolia_client.set_index_settings(algolia_settings)
-
-    # find all ContentMetadata records with a content type of "course"
-    content_metadata = content_metadata_with_type_course()
-
-    # find related enterprise_catalog_uuids and enterprise_customer_uuids for each ContentMetadata record
-    related_enterprise_catalogs = related_enterprise_catalogs_for_content_metadata(content_metadata)
+    # retrieve ContentMetadata records in bulk
+    content_metadata_records = ContentMetadata.objects.in_bulk(
+        content_keys,
+        field_name='content_key'
+    ).values()
+    content_metadata = list(content_metadata_records)
 
     courses = []
-    for content_key, uuids in related_enterprise_catalogs.items():
-        try:
-            metadata_record = ContentMetadata.objects.get(content_key=content_key)
-        except ContentMetadata.DoesNotExist:
-            logger.error('Could not find ContentMetadata record for content_key %s.', content_key)
-            continue
+    # iterate through ContentMetadata records, retrieving the enterprise catalog uuids and
+    # enterprise customer uuids associated with each ContentMetadata record
+    for metadata_record in content_metadata:
+        enterprise_customer_uuids = set()
+        enterprise_catalog_uuids = set()
+        associated_queries = metadata_record.catalog_queries.all()
+        for query in associated_queries:
+            associated_catalogs = query.enterprise_catalogs.values('uuid', 'enterprise_uuid')
+            for catalog in associated_catalogs:
+                enterprise_catalog_uuids.add(str(catalog['uuid']))
+                enterprise_customer_uuids.add(str(catalog['enterprise_uuid']))
 
-        # add enterprise-related uuids to json_metadata and append to list of courses
+        # add enterprise-related uuids to json_metadata
         json_metadata = copy.deepcopy(metadata_record.json_metadata)
         json_metadata.update({
             'objectID': get_algolia_object_id(json_metadata.get('uuid')),
-            'enterprise_catalog_uuids': uuids.get('enterprise_catalog_uuids', []),
-            'enterprise_customer_uuids': uuids.get('enterprise_customer_uuids', []),
+            'enterprise_catalog_uuids': list(enterprise_catalog_uuids),
+            'enterprise_customer_uuids': list(enterprise_customer_uuids),
         })
         courses.append(json_metadata)
 
