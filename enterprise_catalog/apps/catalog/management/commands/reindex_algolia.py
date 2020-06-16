@@ -5,35 +5,34 @@ from django.core.management.base import BaseCommand
 from enterprise_catalog.apps.api.tasks import (
     index_enterprise_catalog_courses_in_algolia_task,
 )
+from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
+from enterprise_catalog.apps.catalog.models import (
+    content_metadata_with_type_course,
+)
 
 
 logger = logging.getLogger(__name__)
 
+BATCH_SIZE = 250
+
 # keep attributes from course objects that we explicitly want in Algolia
 ALGOLIA_FIELDS = [
-    'availability',
     'additional_information',
-    'card_image_url',
+    'availability',
+    'card_image_url',  # for display on course cards
     'enterprise_catalog_uuids',
     'enterprise_customer_uuids',
-    'entitlements',
-    'expected_learning_items',
-    'extra_description',
-    'faq',
     'full_description',
     'key',  # for links to course about pages from the Learner Portal search page
     'language',
     'level_type',
     'objectID',  # required by Algolia, e.g. "course-{uuid}"
-    'outcome',
-    'owners',
+    'partners',
     'programs',
     'recent_enrollment_count',
     'short_description',
     'subjects',
-    'syllabus_raw',
     'title',
-    'uuid',
 ]
 
 # default configuration for the index
@@ -43,17 +42,17 @@ ALGOLIA_INDEX_SETTINGS = {
         'unordered(full_description)',
         'unordered(short_description)',
         'unordered(additional_information)',
-        'owners.name',
+        'partners',
     ],
     'attributesForFaceting': [
+        'availability',
         'enterprise_catalog_uuids',
         'enterprise_customer_uuids',
-        'availability',
         'language',
         'level_type',
-        'owners.name',
-        'programs.type',
-        'subjects.name',
+        'partners',
+        'programs',
+        'subjects',
     ],
     'unretrievableAttributes': [
         'enterprise_catalog_uuids',
@@ -70,16 +69,49 @@ class Command(BaseCommand):
         'Reindex course data in Algolia, adding on enterprise-specific metadata'
     )
 
+    def batch(self, iterable, batch_size=1):
+        """
+        Break up an iterable into equal-sized batches.
+
+        Arguments:
+            iterable (e.g. list): an iterable to batch
+            batch_size (int): the size of each batch. Defaults to 1.
+        Returns:
+            generator: iterates through each batch of an iterable
+        """
+        iterable_len = len(iterable)
+        for index in range(0, iterable_len, batch_size):
+            yield iterable[index:min(index + batch_size, iterable_len)]
+
     def handle(self, *args, **options):
         """
-        Spin off task to reindex course data in Algolia.
+        Initializes and configures the settings for an Algolia index, and then spins off
+        a task for each batch of content_keys to reindex course data in Algolia.
         """
-        async_task = index_enterprise_catalog_courses_in_algolia_task.delay(
-            algolia_fields=ALGOLIA_FIELDS,
-            algolia_settings=ALGOLIA_INDEX_SETTINGS,
-        )
-        message = (
-            'Spinning off task index_enterprise_catalog_courses_in_algolia_task (%s) from'
-            ' the reindex_algolia command to reindex course data in Algolia.'
-        )
-        logger.info(message, async_task.task_id)
+        # initialize the Algolia index
+        algolia_client = AlgoliaSearchClient()
+        algolia_client.init_index()
+
+        # configure the Algolia index
+        algolia_client.set_index_settings(ALGOLIA_INDEX_SETTINGS)
+
+        # retrieve content_keys for all ContentMetadata records with a content type of "course"
+        course_content_metadata = content_metadata_with_type_course()
+        content_metadata_keys = []
+        if course_content_metadata:
+            content_metadata_keys = [
+                metadata['content_key']
+                for metadata in course_content_metadata.values('content_key')
+            ]
+
+        # batch the content keys and spin off a new task for each batch
+        for content_keys_batch in self.batch(content_metadata_keys, batch_size=BATCH_SIZE):
+            async_task = index_enterprise_catalog_courses_in_algolia_task.delay(
+                algolia_fields=ALGOLIA_FIELDS,
+                content_keys=content_keys_batch,
+            )
+            message = (
+                'Spinning off task index_enterprise_catalog_courses_in_algolia_task (%s) from'
+                ' the reindex_algolia command to reindex %d courses in Algolia.'
+            )
+            logger.info(message, async_task.task_id, len(content_keys_batch))
