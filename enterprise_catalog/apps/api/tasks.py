@@ -100,11 +100,10 @@ def index_enterprise_catalog_courses_in_algolia_task(algolia_fields, content_key
     algolia_client.init_index()
 
     # retrieve ContentMetadata records in bulk
-    content_metadata_records = ContentMetadata.objects.in_bulk(
+    content_metadata = list(ContentMetadata.objects.in_bulk(
         content_keys,
         field_name='content_key'
-    ).values()
-    content_metadata = list(content_metadata_records)
+    ).values())
 
     courses = []
     # iterate through ContentMetadata records, retrieving the enterprise catalog uuids and
