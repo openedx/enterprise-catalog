@@ -16,6 +16,13 @@ CONTENT_TYPE_CHOICES = [
     (PROGRAM, 'Program'),
 ]
 
+# ContentFilter field types for validation.
+CONTENT_FILTER_FIELD_TYPES = {
+    'key': {'type': list, 'subtype': str},
+    'aggregation_key': {'type': list, 'subtype': str},
+    'first_enrollable_paid_seat_price__lte': {'type': str}
+}
+
 # Course mode sorting based on slug
 COURSE_MODE_SORT_ORDER = ['verified', 'professional', 'no-id-professional', 'audit', 'honor']
 
