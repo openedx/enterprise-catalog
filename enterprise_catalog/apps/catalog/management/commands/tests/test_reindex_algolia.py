@@ -4,11 +4,13 @@ from django.test import TestCase
 
 from enterprise_catalog.apps.catalog.constants import COURSE
 from enterprise_catalog.apps.catalog.management.commands.reindex_algolia import (
-    ALGOLIA_INDEX_SETTINGS,
     ALGOLIA_FIELDS,
+    ALGOLIA_INDEX_SETTINGS,
     BATCH_SIZE,
 )
-from enterprise_catalog.apps.catalog.tests.factories import ContentMetadataFactory
+from enterprise_catalog.apps.catalog.tests.factories import (
+    ContentMetadataFactory,
+)
 
 
 class ReindexAlgoliaCommandTests(TestCase):
