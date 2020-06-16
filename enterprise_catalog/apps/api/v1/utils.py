@@ -141,6 +141,72 @@ def get_course_availability(course_runs):
     return list(availability)
 
 
+def get_course_partners(course):
+    """
+    Gets list of partners associated with the course. Used for the "Partners" facet and
+    searchable attribute in Algolia.
+
+    Arguments:
+        course (dict): a dictionary representing a course
+
+    Returns:
+        list: a list of partners associated with the course
+    """
+    partners = set()
+    owners = course.get('owners', [])
+
+    for owner in owners:
+        partner_name = owner.get('name')
+        if partner_name:
+            partners.add(partner_name)
+
+    return list(partners)
+
+
+def get_course_program_types(course):
+    """
+    Gets list of program types associated with the course. Used for the "Programs"
+    facet in Algolia.
+
+    Arguments:
+        course (dict): a dictionary representing a course
+
+    Returns:
+        list: a list of program types associated with the course
+    """
+    program_types = set()
+    programs = course.get('programs', [])
+
+    for program in programs:
+        program_type = program.get('type')
+        if program_type:
+            program_types.add(program_type)
+
+    return list(program_types)
+
+
+def get_course_subjects(course):
+    """
+    Gets list of subject names associated with the course. Used for the "Subjects"
+    facet in Algolia.
+
+    Arguments:
+        course (dict): a dictionary representing a course
+
+    Returns:
+        list: a list of subject names associated with the course
+    """
+    subject_names = set()
+    subjects = course.get('subjects', [])
+
+    for subject in subjects:
+        subject_name = subject.get('name')
+        if subject_name:
+            subject_names.add(subject_name)
+
+    return list(subject_names)
+
+
 def _algolia_object_from_course(course, algolia_fields):
     """
     Transforms a course into an Algolia object.
@@ -160,6 +226,9 @@ def _algolia_object_from_course(course, algolia_fields):
     searchable_course.update({
         'language': get_course_language(published_course_runs),
         'availability': get_course_availability(published_course_runs),
+        'partners': get_course_partners(searchable_course),
+        'programs': get_course_program_types(searchable_course),
+        'subjects': get_course_subjects(searchable_course),
     })
 
     algolia_object = {}
