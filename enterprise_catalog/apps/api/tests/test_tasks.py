@@ -6,7 +6,7 @@ from unittest import mock
 from django.test import TestCase
 
 from enterprise_catalog.apps.api import tasks
-from enterprise_catalog.apps.catalog.constants import COURSE
+from enterprise_catalog.apps.catalog.constants import COURSE, COURSE_RUN
 from enterprise_catalog.apps.catalog.models import ContentMetadata
 from enterprise_catalog.apps.catalog.tests.factories import (
     CatalogQueryFactory,
@@ -69,22 +69,42 @@ class EnterpriseCatalogCeleryTaskTests(TestCase):
 
     @mock.patch('enterprise_catalog.apps.api.tasks.AlgoliaSearchClient')
     def test_index_algolia(self, mock_search_client):
+        """
+        Assert that the correct data is sent to Algolia index, with the expected enterprise
+        catalog and enterprise customer associations.
+        """
         ALGOLIA_FIELDS = ['key', 'objectID', 'enterprise_customer_uuids', 'enterprise_catalog_uuids']
 
-        enterprise_catalog = EnterpriseCatalogFactory()
-        catalog_query = enterprise_catalog.catalog_query
-        metadata = ContentMetadataFactory(content_type=COURSE, content_key='fakeX')
-        metadata.catalog_queries.set([catalog_query])
+        # set up new catalog, query, and metadata for a course
+        enterprise_catalog_courses = EnterpriseCatalogFactory()
+        courses_catalog_query = enterprise_catalog_courses.catalog_query
+        course_metadata = ContentMetadataFactory(content_type=COURSE, content_key='fakeX')
+        course_metadata.catalog_queries.set([courses_catalog_query])
+
+        # set up new catalog, query, and metadata for a course run
+        enterprise_catalog_course_runs = EnterpriseCatalogFactory()
+        course_runs_catalog_query = enterprise_catalog_course_runs.catalog_query
+        course_run_metadata = ContentMetadataFactory(content_type=COURSE_RUN, parent_content_key='fakeX')
+        course_run_metadata.catalog_queries.set([course_runs_catalog_query])
 
         tasks.index_enterprise_catalog_courses_in_algolia_task(ALGOLIA_FIELDS, content_keys=['fakeX'])
 
+        # verify Algolia index is initialized
         mock_search_client.return_value.init_index.assert_called_once_with()
 
-        algolia_objects = []
-        algolia_objects.append({
-            'key': metadata.content_key,
-            'objectID': 'course-{}'.format(metadata.json_metadata.get('uuid')),
-            'enterprise_customer_uuids': [str(enterprise_catalog.enterprise_uuid)],
-            'enterprise_catalog_uuids': [str(enterprise_catalog.uuid)],
+        # create expected Algolia data
+        expected_catalog_uuids = [enterprise_catalog_courses.uuid, enterprise_catalog_course_runs.uuid]
+        expected_customer_uuids = [
+            enterprise_catalog_courses.enterprise_uuid,
+            enterprise_catalog_course_runs.enterprise_uuid,
+        ]
+        expected_algolia_objects = []
+        expected_algolia_objects.append({
+            'key': course_metadata.content_key,
+            'objectID': 'course-{}'.format(course_metadata.json_metadata.get('uuid')),
+            'enterprise_catalog_uuids': [str(uuid) for uuid in sorted(expected_catalog_uuids)],
+            'enterprise_customer_uuids': [str(uuid) for uuid in sorted(expected_customer_uuids)],
         })
-        mock_search_client.return_value.partially_update_index.assert_called_once_with(algolia_objects)
+
+        # verify partially_update_index is called with the correct Algolia object data
+        mock_search_client.return_value.partially_update_index.assert_called_once_with(expected_algolia_objects)

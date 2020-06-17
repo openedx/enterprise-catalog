@@ -3,6 +3,7 @@ import logging
 
 from celery import shared_task
 from celery_utils.logged_task import LoggedTask
+from django.db.models import Q
 
 from enterprise_catalog.apps.api.v1.utils import (
     create_algolia_objects_from_courses,
@@ -108,32 +109,36 @@ def index_enterprise_catalog_courses_in_algolia_task(algolia_fields, content_key
     query = Q(content_key__in=content_keys) | Q(parent_content_key__in=content_keys)
     content_metadata = ContentMetadata.objects.filter(query)
 
-    # iterate through ContentMetadata records, retrieving the enterprise_catalog_uuids and
-    # enterprise_customer_uuids associated with each ContentMetadata record, storing them
-    # in a dictionary with the course's content_key as a key for later retrieval.
+    # iterate through ContentMetadata records, retrieving the enterprise_catalog_uuids
+    # and enterprise_customer_uuids associated with each ContentMetadata record (either
+    # a course or a course run), storing them in a dictionary with the related course's
+    # content_key as a key for later retrieval. the course's content_key is determined by
+    # the content_key field if the metadata is a `COURSE` or by the parent_content_key
+    # field if the metadata is a `COURSE_RUN`.
     for metadata in content_metadata:
         is_course_content_type = metadata.content_type == COURSE
         course_content_key = metadata.content_key if is_course_content_type else metadata.parent_content_key
         associated_queries = metadata.catalog_queries.all()
+        enterprise_catalog_uuids = set()
+        enterprise_customer_uuids = set()
         for query in associated_queries:
             associated_catalogs = query.enterprise_catalogs.values('uuid', 'enterprise_uuid')
             for catalog in associated_catalogs:
-                enterprise_uuids = {}
+                enterprise_catalog_uuids.add(str(catalog['uuid']))
+                enterprise_customer_uuids.add(str(catalog['enterprise_uuid']))
 
-                if hasattr(enterprise_uuids_for_courses, course_content_key):
-                    enterprise_uuids = enterprise_uuids_for_courses[course_content_key]
+        existing_uuids = copy.deepcopy(enterprise_uuids_for_courses.get(course_content_key, {}))
 
-                # add to existing set of uuids, if it exists, for both catalogs and customers
-                catalog_uuids = enterprise_uuids.get('enterprise_catalog_uuids', set())
-                catalog_uuids.add(str(catalog['uuid']))
-                customer_uuids = enterprise_uuids.get('enterprise_customer_uuids', set())
-                customer_uuids.add(str(catalog['enterprise_uuid']))
+        # add to any existing enterprise catalog uuids
+        existing_catalog_uuids = existing_uuids.get('enterprise_catalog_uuids', set())
+        existing_uuids['enterprise_catalog_uuids'] = existing_catalog_uuids.union(enterprise_catalog_uuids)
 
-                # override the existing value with the newly added set of uuids
-                enterprise_uuids_for_courses[course_content_key] = {
-                    'enterprise_catalog_uuids': catalog_uuids,
-                    'enterprise_customer_uuids': customer_uuids,
-                }
+        # add to any existing enterprise customer uuids
+        existing_customer_uuids = existing_uuids.get('enterprise_customer_uuids', set())
+        existing_uuids['enterprise_customer_uuids'] = existing_customer_uuids.union(enterprise_customer_uuids)
+
+        # replace the enterprise-related uuids with the updates ones for the course
+        enterprise_uuids_for_courses[course_content_key] = existing_uuids
 
     # iterate through only the courses, retrieving the enterprise-related uuids from the
     # dictionary created above, and append each course to the list of courses with the added
@@ -146,8 +151,8 @@ def index_enterprise_catalog_courses_in_algolia_task(algolia_fields, content_key
         json_metadata = copy.deepcopy(metadata.json_metadata)
         json_metadata.update({
             'objectID': get_algolia_object_id(json_metadata.get('uuid')),
-            'enterprise_catalog_uuids': list(enterprise_uuids['enterprise_catalog_uuids']),
-            'enterprise_customer_uuids': list(enterprise_uuids['enterprise_customer_uuids']),
+            'enterprise_catalog_uuids': sorted(list(enterprise_uuids.get('enterprise_catalog_uuids', {}))),
+            'enterprise_customer_uuids': sorted(list(enterprise_uuids.get('enterprise_customer_uuids', {}))),
         })
         courses.append(json_metadata)
 
