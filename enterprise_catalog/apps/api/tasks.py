@@ -1,9 +1,9 @@
 import copy
 import logging
+from collections import defaultdict
 
 from celery import shared_task
 from celery_utils.logged_task import LoggedTask
-from collections import defaultdict
 from django.db.models import Q
 
 from enterprise_catalog.apps.api.v1.utils import (
@@ -143,8 +143,8 @@ def index_enterprise_catalog_courses_in_algolia_task(algolia_fields, content_key
         json_metadata = copy.deepcopy(metadata.json_metadata)
         json_metadata.update({
             'objectID': get_algolia_object_id(json_metadata.get('uuid')),
-            'enterprise_catalog_uuids': sorted(list(catalog_uuids_by_course_key[course_content_key])),
-            'enterprise_customer_uuids': sorted(list(customer_uuids_by_course_key[course_content_key])),
+            'enterprise_catalog_uuids': sorted(list(catalog_uuids_by_course_key[content_key])),
+            'enterprise_customer_uuids': sorted(list(customer_uuids_by_course_key[content_key])),
         })
         courses.append(json_metadata)
 
