@@ -1,8 +1,10 @@
 import copy
 import logging
+from collections import defaultdict
 
 from celery import shared_task
 from celery_utils.logged_task import LoggedTask
+from django.db.models import Q
 
 from enterprise_catalog.apps.api.v1.utils import (
     create_algolia_objects_from_courses,
@@ -10,6 +12,7 @@ from enterprise_catalog.apps.api.v1.utils import (
 )
 from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
 from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
+from enterprise_catalog.apps.catalog.constants import COURSE
 from enterprise_catalog.apps.catalog.models import (
     ContentMetadata,
     content_metadata_with_type_course,
@@ -99,31 +102,49 @@ def index_enterprise_catalog_courses_in_algolia_task(algolia_fields, content_key
     algolia_client = AlgoliaSearchClient()
     algolia_client.init_index()
 
-    # retrieve ContentMetadata records in bulk
-    content_metadata = list(ContentMetadata.objects.in_bulk(
-        content_keys,
-        field_name='content_key'
-    ).values())
-
     courses = []
-    # iterate through ContentMetadata records, retrieving the enterprise catalog uuids and
-    # enterprise customer uuids associated with each ContentMetadata record
-    for metadata_record in content_metadata:
-        enterprise_customer_uuids = set()
+    catalog_uuids_by_course_key = defaultdict(set)
+    customer_uuids_by_course_key = defaultdict(set)
+
+    # retrieve ContentMetadata records that match the specified content_keys in the
+    # content_key or parent_content_key. returns both courses and course runs.
+    query = Q(content_key__in=content_keys) | Q(parent_content_key__in=content_keys)
+    content_metadata = ContentMetadata.objects.filter(query)
+
+    # iterate through ContentMetadata records, retrieving the enterprise_catalog_uuids
+    # and enterprise_customer_uuids associated with each ContentMetadata record (either
+    # a course or a course run), storing them in a dictionary with the related course's
+    # content_key as a key for later retrieval. the course's content_key is determined by
+    # the content_key field if the metadata is a `COURSE` or by the parent_content_key
+    # field if the metadata is a `COURSE_RUN`.
+    for metadata in content_metadata:
+        is_course_content_type = metadata.content_type == COURSE
+        course_content_key = metadata.content_key if is_course_content_type else metadata.parent_content_key
+        associated_queries = metadata.catalog_queries.all()
         enterprise_catalog_uuids = set()
-        associated_queries = metadata_record.catalog_queries.all()
+        enterprise_customer_uuids = set()
         for query in associated_queries:
             associated_catalogs = query.enterprise_catalogs.values('uuid', 'enterprise_uuid')
             for catalog in associated_catalogs:
                 enterprise_catalog_uuids.add(str(catalog['uuid']))
                 enterprise_customer_uuids.add(str(catalog['enterprise_uuid']))
 
+        # add to any existing enterprise catalog uuids or enterprise customer uuids
+        catalog_uuids_by_course_key[course_content_key].update(enterprise_catalog_uuids)
+        customer_uuids_by_course_key[course_content_key].update(enterprise_customer_uuids)
+
+    # iterate through only the courses, retrieving the enterprise-related uuids from the
+    # dictionary created above, and append each course to the list of courses with the added
+    # fields (e.g., objectID, enterprise_customer_uuids).
+    course_content_metadata = content_metadata.filter(content_type=COURSE)
+    for metadata in course_content_metadata:
+        content_key = metadata.content_key
         # add enterprise-related uuids to json_metadata
-        json_metadata = copy.deepcopy(metadata_record.json_metadata)
+        json_metadata = copy.deepcopy(metadata.json_metadata)
         json_metadata.update({
             'objectID': get_algolia_object_id(json_metadata.get('uuid')),
-            'enterprise_catalog_uuids': list(enterprise_catalog_uuids),
-            'enterprise_customer_uuids': list(enterprise_customer_uuids),
+            'enterprise_catalog_uuids': sorted(list(catalog_uuids_by_course_key[content_key])),
+            'enterprise_customer_uuids': sorted(list(customer_uuids_by_course_key[content_key])),
         })
         courses.append(json_metadata)
 
