@@ -3,6 +3,7 @@ import logging
 
 from celery import shared_task
 from celery_utils.logged_task import LoggedTask
+from collections import defaultdict
 from django.db.models import Q
 
 from enterprise_catalog.apps.api.v1.utils import (
@@ -102,7 +103,8 @@ def index_enterprise_catalog_courses_in_algolia_task(algolia_fields, content_key
     algolia_client.init_index()
 
     courses = []
-    enterprise_uuids_for_courses = {}
+    catalog_uuids_by_course_key = defaultdict(set)
+    customer_uuids_by_course_key = defaultdict(set)
 
     # retrieve ContentMetadata records that match the specified content_keys in the
     # content_key or parent_content_key. returns both courses and course runs.
@@ -127,18 +129,9 @@ def index_enterprise_catalog_courses_in_algolia_task(algolia_fields, content_key
                 enterprise_catalog_uuids.add(str(catalog['uuid']))
                 enterprise_customer_uuids.add(str(catalog['enterprise_uuid']))
 
-        existing_uuids = copy.deepcopy(enterprise_uuids_for_courses.get(course_content_key, {}))
-
-        # add to any existing enterprise catalog uuids
-        existing_catalog_uuids = existing_uuids.get('enterprise_catalog_uuids', set())
-        existing_uuids['enterprise_catalog_uuids'] = existing_catalog_uuids.union(enterprise_catalog_uuids)
-
-        # add to any existing enterprise customer uuids
-        existing_customer_uuids = existing_uuids.get('enterprise_customer_uuids', set())
-        existing_uuids['enterprise_customer_uuids'] = existing_customer_uuids.union(enterprise_customer_uuids)
-
-        # replace the enterprise-related uuids with the updates ones for the course
-        enterprise_uuids_for_courses[course_content_key] = existing_uuids
+        # add to any existing enterprise catalog uuids or enterprise customer uuids
+        catalog_uuids_by_course_key[course_content_key].update(enterprise_catalog_uuids)
+        customer_uuids_by_course_key[course_content_key].update(enterprise_customer_uuids)
 
     # iterate through only the courses, retrieving the enterprise-related uuids from the
     # dictionary created above, and append each course to the list of courses with the added
@@ -146,13 +139,12 @@ def index_enterprise_catalog_courses_in_algolia_task(algolia_fields, content_key
     course_content_metadata = content_metadata.filter(content_type=COURSE)
     for metadata in course_content_metadata:
         content_key = metadata.content_key
-        enterprise_uuids = enterprise_uuids_for_courses[content_key]
         # add enterprise-related uuids to json_metadata
         json_metadata = copy.deepcopy(metadata.json_metadata)
         json_metadata.update({
             'objectID': get_algolia_object_id(json_metadata.get('uuid')),
-            'enterprise_catalog_uuids': sorted(list(enterprise_uuids.get('enterprise_catalog_uuids', {}))),
-            'enterprise_customer_uuids': sorted(list(enterprise_uuids.get('enterprise_customer_uuids', {}))),
+            'enterprise_catalog_uuids': sorted(list(catalog_uuids_by_course_key[course_content_key])),
+            'enterprise_customer_uuids': sorted(list(customer_uuids_by_course_key[course_content_key])),
         })
         courses.append(json_metadata)
 
