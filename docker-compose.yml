@@ -47,7 +47,6 @@ services:
       CELERY_BROKER_PASSWORD: password
       DJANGO_SETTINGS_MODULE: enterprise_catalog.settings.devstack
       ENABLE_DJANGO_TOOLBAR: 1
-      ENABLE_DJANGO_SILK: 1
 
   worker:
     build:
