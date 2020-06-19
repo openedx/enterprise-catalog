@@ -6,7 +6,8 @@ from django import forms
 from django.core.exceptions import ValidationError
 from edx_rbac.admin import UserRoleAssignmentAdminForm
 
-from enterprise_catalog.apps.catalog.constants import CONTENT_FILTER_FIELD_TYPES as cftypes
+from enterprise_catalog.apps.catalog.constants import \
+    CONTENT_FILTER_FIELD_TYPES as cftypes
 from enterprise_catalog.apps.catalog.models import (
     CatalogQuery,
     EnterpriseCatalogRoleAssignment,
