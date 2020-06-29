@@ -9,10 +9,6 @@ class TestCatalogQueryAdmin(TestCase):
     @ddt.data(
         ({'content_filter': {'key': 'coursev1:course1'}}, ["Content filter 'key' must be of type <class 'list'>"]),
         (
-            {'content_filter': {'aggregation_key': 'courserun:course'}},
-            ["Content filter 'aggregation_key' must be of type <class 'list'>"],
-        ),
-        (
             {'content_filter': {'first_enrollable_paid_seat_price__lte': [12]}},
             ["Content filter 'first_enrollable_paid_seat_price__lte' must be of type <class 'str'>"]
         ),
