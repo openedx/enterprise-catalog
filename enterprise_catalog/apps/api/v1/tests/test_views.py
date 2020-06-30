@@ -683,12 +683,9 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         self.assertEqual(uuid.UUID(response_data['enterprise_customer']), self.enterprise_catalog.enterprise_uuid)
 
         # Check that the page contains all the metadata
-        expected_metadata = sorted([
-            self._get_expected_json_metadata(item)
-            for item in metadata
-        ], key=itemgetter('key'))
+        expected_metadata = [self._get_expected_json_metadata(item) for item in metadata]
         actual_metadata = response_data['results']
-        self.assertEqual(actual_metadata, expected_metadata)
+        self.assertCountEqual(actual_metadata, expected_metadata)
 
 
 class EnterpriseCatalogRefreshDataFromDiscoveryTests(APITestMixin):
