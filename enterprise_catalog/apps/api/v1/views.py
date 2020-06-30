@@ -182,12 +182,10 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
     def get_queryset(self):
         """
         Returns all of the json of content metadata associated with the catalog.
-
-        Note that the metadata is ordered by content key.
         """
         enterprise_catalog = self.get_enterprise_catalog()
-        ordered_metadata = enterprise_catalog.content_metadata.order_by('content_key')
-        return ordered_metadata
+        # Avoids ordering the content metadata by any field on that model to avoid using a temporary table / filesort
+        return enterprise_catalog.content_metadata.order_by('catalog_queries')
 
     def get_response_with_enterprise_fields(self, response):
         """
