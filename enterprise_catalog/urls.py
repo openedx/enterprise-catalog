@@ -29,6 +29,7 @@ admin.autodiscover()
 
 urlpatterns = [
     url(r'', include(oauth2_urlpatterns)),
+    url(r'', include('csrf.urls')),  # Include csrf urls from edx-drf-extensions
     url(r'^admin/', admin.site.urls),
     url(r'^api/', include(api_urls), name='api'),
     url(r'^api-docs/', get_swagger_view(title='Enterprise Catalog API')),
