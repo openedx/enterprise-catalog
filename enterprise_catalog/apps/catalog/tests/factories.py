@@ -65,9 +65,10 @@ class ContentMetadataFactory(factory.DjangoModelFactory):
             'key': self.content_key,
             'uuid': str(uuid4()),
         }
-        if self.content_key == COURSE:
+        if self.content_type == COURSE:
             json_metadata.update({
-                'marketing_url': 'http://marketing.url/{}'.format(self.content_key),
+                'marketing_url': 'https://marketing.url/{}'.format(self.content_key),
+                'original_image': {'src': 'https://fake.url/image.jpg'},
             })
         return json_metadata
 

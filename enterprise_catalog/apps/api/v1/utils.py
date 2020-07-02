@@ -207,6 +207,22 @@ def get_course_subjects(course):
     return list(subject_names)
 
 
+def get_course_card_image_url(course):
+    """
+    Gets the appropriate image to use for course cards.
+
+    Arguments:
+        course (dict): a dictionary representing a course
+
+    Returns:
+        str: the url for the course card image
+    """
+    original_image = course.get('original_image')
+    if original_image:
+        return original_image.get('src')
+    return None
+
+
 def _algolia_object_from_course(course, algolia_fields):
     """
     Transforms a course into an Algolia object.
@@ -229,6 +245,7 @@ def _algolia_object_from_course(course, algolia_fields):
         'partners': get_course_partners(searchable_course),
         'programs': get_course_program_types(searchable_course),
         'subjects': get_course_subjects(searchable_course),
+        'card_image_url': get_course_card_image_url(searchable_course),
     })
 
     algolia_object = {}
