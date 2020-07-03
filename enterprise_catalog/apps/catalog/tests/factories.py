@@ -19,6 +19,7 @@ from enterprise_catalog.apps.core.models import User
 
 
 USER_PASSWORD = 'password'
+FAKE_IMAGE_URL = 'https://fake.url/image.jpg'
 
 
 class CatalogQueryFactory(factory.DjangoModelFactory):
@@ -66,9 +67,14 @@ class ContentMetadataFactory(factory.DjangoModelFactory):
             'uuid': str(uuid4()),
         }
         if self.content_type == COURSE:
+            owners = [{
+                'name': 'Partner Name',
+                'logo_image_url': FAKE_IMAGE_URL,
+            }]
             json_metadata.update({
                 'marketing_url': 'https://marketing.url/{}'.format(self.content_key),
-                'original_image': {'src': 'https://fake.url/image.jpg'},
+                'original_image': {'src': FAKE_IMAGE_URL},
+                'owners': owners,
             })
         return json_metadata
 

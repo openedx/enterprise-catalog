@@ -150,17 +150,21 @@ def get_course_partners(course):
         course (dict): a dictionary representing a course
 
     Returns:
-        list: a list of partners associated with the course
+        list: a list of partner metadata associated with the course
     """
-    partners = set()
+    partners = []
     owners = course.get('owners', [])
 
     for owner in owners:
         partner_name = owner.get('name')
         if partner_name:
-            partners.add(partner_name)
+            partner_metadata = {
+                'name': partner_name,
+                'logo_image_url': owner.get('logo_image_url'),
+            }
+            partners.append(partner_metadata)
 
-    return list(partners)
+    return partners
 
 
 def get_course_program_types(course):

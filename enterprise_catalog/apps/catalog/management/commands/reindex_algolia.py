@@ -50,7 +50,7 @@ ALGOLIA_INDEX_SETTINGS = {
         'enterprise_customer_uuids',
         'language',
         'level_type',
-        'partners',
+        'partners.name',
         'programs',
         'subjects',
     ],
