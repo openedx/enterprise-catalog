@@ -73,17 +73,7 @@ class EnterpriseCatalogCeleryTaskTests(TestCase):
         assert metadata_1.json_metadata == course_data_1
         assert metadata_2.json_metadata == course_data_2
 
-    @mock.patch('enterprise_catalog.apps.api.tasks.AlgoliaSearchClient')
-    def test_index_algolia(self, mock_search_client):
-        """
-        Assert that the correct data is sent to Algolia index, with the expected enterprise
-        catalog and enterprise customer associations.
-        """
-        ALGOLIA_FIELDS = [
-            'key', 'objectID', 'card_image_url', 'partners',
-            'enterprise_customer_uuids', 'enterprise_catalog_uuids',
-        ]
-
+    def _set_up_factory_data_for_algolia(self):
         # set up new catalog, query, and metadata for a course
         enterprise_catalog_courses = EnterpriseCatalogFactory()
         courses_catalog_query = enterprise_catalog_courses.catalog_query
@@ -96,31 +86,94 @@ class EnterpriseCatalogCeleryTaskTests(TestCase):
         course_run_metadata = ContentMetadataFactory(content_type=COURSE_RUN, parent_content_key='fakeX')
         course_run_metadata.catalog_queries.set([course_runs_catalog_query])
 
+        expected_catalog_uuids = sorted([
+            str(enterprise_catalog_courses.uuid),
+            str(enterprise_catalog_course_runs.uuid)
+        ])
+        expected_customer_uuids = sorted([
+            str(enterprise_catalog_courses.enterprise_uuid),
+            str(enterprise_catalog_course_runs.enterprise_uuid),
+        ])
+
+        return {
+            'catalog_uuids': expected_catalog_uuids,
+            'customer_uuids': expected_customer_uuids,
+            'course_metadata': course_metadata,
+        }
+
+    @mock.patch('enterprise_catalog.apps.api.tasks.AlgoliaSearchClient')
+    def test_index_algolia_with_all_uuids(self, mock_search_client):
+        """
+        Assert that the correct data is sent to Algolia index, with the expected enterprise
+        catalog and enterprise customer associations.
+        """
+        ALGOLIA_FIELDS = ['key', 'objectID', 'enterprise_customer_uuids', 'enterprise_catalog_uuids']
+
+        algolia_data = self._set_up_factory_data_for_algolia()
+
         tasks.index_enterprise_catalog_courses_in_algolia_task(ALGOLIA_FIELDS, content_keys=['fakeX'])
 
         # verify Algolia index is initialized
         mock_search_client.return_value.init_index.assert_called_once_with()
 
         # create expected Algolia data
-        expected_catalog_uuids = [enterprise_catalog_courses.uuid, enterprise_catalog_course_runs.uuid]
-        expected_customer_uuids = [
-            enterprise_catalog_courses.enterprise_uuid,
-            enterprise_catalog_course_runs.enterprise_uuid,
-        ]
-        expected_course_card_image = course_metadata.json_metadata.get('original_image')
-        course_owners = course_metadata.json_metadata.get('owners')
-        expected_partners = [{
-            'name': course_owners[0]['name'],
-            'logo_image_url': course_owners[0]['logo_image_url'],
-        }]
         expected_algolia_objects = []
+        course_uuid = algolia_data['course_metadata'].json_metadata.get('uuid')
         expected_algolia_objects.append({
-            'key': course_metadata.content_key,
-            'objectID': 'course-{}'.format(course_metadata.json_metadata.get('uuid')),
-            'enterprise_catalog_uuids': [str(uuid) for uuid in sorted(expected_catalog_uuids)],
-            'enterprise_customer_uuids': [str(uuid) for uuid in sorted(expected_customer_uuids)],
-            'card_image_url': expected_course_card_image.get('src'),
-            'partners': expected_partners,
+            'key': algolia_data['course_metadata'].content_key,
+            'objectID': 'course-{}-catalog-uuids-0'.format(course_uuid),
+            'enterprise_catalog_uuids': algolia_data['catalog_uuids'],
+        })
+        expected_algolia_objects.append({
+            'key': algolia_data['course_metadata'].content_key,
+            'objectID': 'course-{}-customer-uuids-0'.format(course_uuid),
+            'enterprise_customer_uuids': algolia_data['customer_uuids'],
+        })
+
+        # verify partially_update_index is called with the correct Algolia object data
+        mock_search_client.return_value.partially_update_index.assert_called_once_with(expected_algolia_objects)
+
+    @mock.patch('enterprise_catalog.apps.api.tasks.AlgoliaSearchClient')
+    def test_index_algolia_with_batched_uuids(self, mock_search_client):
+        """
+        Assert that the correct data is sent to Algolia index, with the expected enterprise
+        catalog and enterprise customer associations.
+        """
+        ALGOLIA_FIELDS = ['key', 'objectID', 'enterprise_customer_uuids', 'enterprise_catalog_uuids']
+
+        algolia_data = self._set_up_factory_data_for_algolia()
+
+        tasks.index_enterprise_catalog_courses_in_algolia_task(
+            ALGOLIA_FIELDS,
+            content_keys=['fakeX'],
+            uuid_batch_size=1,
+        )
+
+        # verify Algolia index is initialized
+        mock_search_client.return_value.init_index.assert_called_once_with()
+
+        # create expected Algolia data
+        expected_algolia_objects = []
+        course_uuid = algolia_data['course_metadata'].json_metadata.get('uuid')
+        expected_algolia_objects.append({
+            'key': algolia_data['course_metadata'].content_key,
+            'objectID': 'course-{}-catalog-uuids-0'.format(course_uuid),
+            'enterprise_catalog_uuids': [algolia_data['catalog_uuids'][0]],
+        })
+        expected_algolia_objects.append({
+            'key': algolia_data['course_metadata'].content_key,
+            'objectID': 'course-{}-catalog-uuids-1'.format(course_uuid),
+            'enterprise_catalog_uuids': [algolia_data['catalog_uuids'][1]],
+        })
+        expected_algolia_objects.append({
+            'key': algolia_data['course_metadata'].content_key,
+            'objectID': 'course-{}-customer-uuids-0'.format(course_uuid),
+            'enterprise_customer_uuids': [algolia_data['customer_uuids'][0]],
+        })
+        expected_algolia_objects.append({
+            'key': algolia_data['course_metadata'].content_key,
+            'objectID': 'course-{}-customer-uuids-1'.format(course_uuid),
+            'enterprise_customer_uuids': [algolia_data['customer_uuids'][1]],
         })
 
         # verify partially_update_index is called with the correct Algolia object data

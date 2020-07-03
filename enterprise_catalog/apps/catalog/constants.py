@@ -35,6 +35,8 @@ SYSTEM_ENTERPRISE_OPERATOR_ROLE = 'enterprise_openedx_operator'
 
 ACCESS_TO_ALL_ENTERPRISES_TOKEN = '*'
 
+DEFAULT_UUID_BATCH_SIZE = 100
+
 
 def json_serialized_course_modes():
     """

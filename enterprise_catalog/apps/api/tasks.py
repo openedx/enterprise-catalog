@@ -12,12 +12,16 @@ from enterprise_catalog.apps.api.v1.utils import (
 )
 from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
 from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
-from enterprise_catalog.apps.catalog.constants import COURSE
+from enterprise_catalog.apps.catalog.constants import (
+    COURSE,
+    DEFAULT_UUID_BATCH_SIZE,
+)
 from enterprise_catalog.apps.catalog.models import (
     ContentMetadata,
     content_metadata_with_type_course,
     update_contentmetadata_from_discovery,
 )
+from enterprise_catalog.apps.catalog.utils import batch
 
 
 logger = logging.getLogger(__name__)
@@ -86,7 +90,9 @@ def update_full_content_metadata_task(*args, **kwargs):  # pylint: disable=unuse
 
 
 @shared_task(base=LoggedTask)
-def index_enterprise_catalog_courses_in_algolia_task(algolia_fields, content_keys):
+def index_enterprise_catalog_courses_in_algolia_task(
+    algolia_fields, content_keys, uuid_batch_size=DEFAULT_UUID_BATCH_SIZE
+):
     """
     Index course data in Algolia with enterprise-related fields.
 
@@ -134,8 +140,12 @@ def index_enterprise_catalog_courses_in_algolia_task(algolia_fields, content_key
         customer_uuids_by_course_key[course_content_key].update(enterprise_customer_uuids)
 
     # iterate through only the courses, retrieving the enterprise-related uuids from the
-    # dictionary created above, and append each course to the list of courses with the added
-    # fields (e.g., objectID, enterprise_customer_uuids).
+    # dictionary created above. there is at least 2 duplicate course records per course,
+    # each including the catalog uuids and customer uuids respectively.
+    #
+    # if the number of uuids for both catalogs/customers exceeds uuid_batch_size, then
+    # create duplicate course records, batching the uuids (flattened records) to reduce
+    # the payload size of the Algolia objects.
     course_content_metadata = content_metadata.filter(content_type=COURSE)
     for metadata in course_content_metadata:
         content_key = metadata.content_key
@@ -143,10 +153,44 @@ def index_enterprise_catalog_courses_in_algolia_task(algolia_fields, content_key
         json_metadata = copy.deepcopy(metadata.json_metadata)
         json_metadata.update({
             'objectID': get_algolia_object_id(json_metadata.get('uuid')),
-            'enterprise_catalog_uuids': sorted(list(catalog_uuids_by_course_key[content_key])),
-            'enterprise_customer_uuids': sorted(list(customer_uuids_by_course_key[content_key])),
         })
-        courses.append(json_metadata)
+
+        catalog_uuid_count = len(catalog_uuids_by_course_key[content_key])
+        customer_uuid_count = len(customer_uuids_by_course_key[content_key])
+
+        if catalog_uuid_count <= uuid_batch_size:
+            json_metadata_with_uuids = copy.deepcopy(json_metadata)
+            json_metadata_with_uuids.update({
+                'objectID': '{}-catalog-uuids-0'.format(json_metadata['objectID']),
+                'enterprise_catalog_uuids': sorted(list(catalog_uuids_by_course_key[content_key])),
+            })
+            courses.append(json_metadata_with_uuids)
+        else:
+            catalog_uuids = sorted(list(catalog_uuids_by_course_key[content_key]))
+            for batch_index, catalog_uuid_batch in enumerate(batch(catalog_uuids, batch_size=uuid_batch_size)):
+                updated_json_metadata = copy.deepcopy(json_metadata)
+                updated_json_metadata.update({
+                    'objectID': '{}-catalog-uuids-{}'.format(json_metadata['objectID'], batch_index),
+                    'enterprise_catalog_uuids': catalog_uuid_batch,
+                })
+                courses.append(updated_json_metadata)
+
+        if customer_uuid_count <= uuid_batch_size:
+            updated_json_metadata = copy.deepcopy(json_metadata)
+            updated_json_metadata.update({
+                'objectID': '{}-customer-uuids-0'.format(json_metadata['objectID']),
+                'enterprise_customer_uuids': sorted(list(customer_uuids_by_course_key[content_key])),
+            })
+            courses.append(updated_json_metadata)
+        else:
+            customer_uuids = sorted(list(customer_uuids_by_course_key[content_key]))
+            for batch_index, customer_uuid_batch in enumerate(batch(customer_uuids, batch_size=uuid_batch_size)):
+                json_metadata_with_uuids = copy.deepcopy(json_metadata)
+                json_metadata_with_uuids.update({
+                    'objectID': '{}-customer-uuids-{}'.format(json_metadata['objectID'], batch_index),
+                    'enterprise_customer_uuids': customer_uuid_batch,
+                })
+                courses.append(json_metadata_with_uuids)
 
     # extract out only the fields we care about and send to Algolia index
     algolia_objects = create_algolia_objects_from_courses(courses, algolia_fields)
