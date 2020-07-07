@@ -150,17 +150,21 @@ def get_course_partners(course):
         course (dict): a dictionary representing a course
 
     Returns:
-        list: a list of partners associated with the course
+        list: a list of partner metadata associated with the course
     """
-    partners = set()
+    partners = []
     owners = course.get('owners', [])
 
     for owner in owners:
         partner_name = owner.get('name')
         if partner_name:
-            partners.add(partner_name)
+            partner_metadata = {
+                'name': partner_name,
+                'logo_image_url': owner.get('logo_image_url'),
+            }
+            partners.append(partner_metadata)
 
-    return list(partners)
+    return partners
 
 
 def get_course_program_types(course):
@@ -207,6 +211,22 @@ def get_course_subjects(course):
     return list(subject_names)
 
 
+def get_course_card_image_url(course):
+    """
+    Gets the appropriate image to use for course cards.
+
+    Arguments:
+        course (dict): a dictionary representing a course
+
+    Returns:
+        str: the url for the course card image
+    """
+    original_image = course.get('original_image')
+    if original_image:
+        return original_image.get('src')
+    return None
+
+
 def _algolia_object_from_course(course, algolia_fields):
     """
     Transforms a course into an Algolia object.
@@ -229,6 +249,7 @@ def _algolia_object_from_course(course, algolia_fields):
         'partners': get_course_partners(searchable_course),
         'programs': get_course_program_types(searchable_course),
         'subjects': get_course_subjects(searchable_course),
+        'card_image_url': get_course_card_image_url(searchable_course),
     })
 
     algolia_object = {}
