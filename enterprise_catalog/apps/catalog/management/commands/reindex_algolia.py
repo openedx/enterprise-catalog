@@ -23,7 +23,7 @@ ALGOLIA_FIELDS = [
     'enterprise_catalog_uuids',
     'enterprise_customer_uuids',
     'full_description',
-    'key',  # for links to course about pages from the Learner Portal search page
+    'key',  # for links to Course about pages from the Learner Portal search page
     'language',
     'level_type',
     'objectID',  # required by Algolia, e.g. "course-{uuid}"
@@ -50,7 +50,7 @@ ALGOLIA_INDEX_SETTINGS = {
         'enterprise_customer_uuids',
         'language',
         'level_type',
-        'partners',
+        'partners.name',
         'programs',
         'subjects',
     ],

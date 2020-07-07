@@ -58,10 +58,16 @@ class EnterpriseCatalogCeleryTaskTests(TestCase):
         course_data_1.update({
             'uuid': metadata_1.json_metadata.get('uuid'),
             'aggregation_key': 'course:fakeX',
+            'marketing_url': metadata_1.json_metadata.get('marketing_url'),
+            'original_image': metadata_1.json_metadata.get('original_image'),
+            'owners': metadata_1.json_metadata.get('owners'),
         })
         course_data_2.update({
             'uuid': metadata_2.json_metadata.get('uuid'),
             'aggregation_key': 'course:testX',
+            'marketing_url': metadata_2.json_metadata.get('marketing_url'),
+            'original_image': metadata_2.json_metadata.get('original_image'),
+            'owners': metadata_2.json_metadata.get('owners'),
         })
 
         assert metadata_1.json_metadata == course_data_1
@@ -73,7 +79,10 @@ class EnterpriseCatalogCeleryTaskTests(TestCase):
         Assert that the correct data is sent to Algolia index, with the expected enterprise
         catalog and enterprise customer associations.
         """
-        ALGOLIA_FIELDS = ['key', 'objectID', 'enterprise_customer_uuids', 'enterprise_catalog_uuids']
+        ALGOLIA_FIELDS = [
+            'key', 'objectID', 'card_image_url', 'partners',
+            'enterprise_customer_uuids', 'enterprise_catalog_uuids',
+        ]
 
         # set up new catalog, query, and metadata for a course
         enterprise_catalog_courses = EnterpriseCatalogFactory()
@@ -98,12 +107,20 @@ class EnterpriseCatalogCeleryTaskTests(TestCase):
             enterprise_catalog_courses.enterprise_uuid,
             enterprise_catalog_course_runs.enterprise_uuid,
         ]
+        expected_course_card_image = course_metadata.json_metadata.get('original_image')
+        course_owners = course_metadata.json_metadata.get('owners')
+        expected_partners = [{
+            'name': course_owners[0]['name'],
+            'logo_image_url': course_owners[0]['logo_image_url'],
+        }]
         expected_algolia_objects = []
         expected_algolia_objects.append({
             'key': course_metadata.content_key,
             'objectID': 'course-{}'.format(course_metadata.json_metadata.get('uuid')),
             'enterprise_catalog_uuids': [str(uuid) for uuid in sorted(expected_catalog_uuids)],
             'enterprise_customer_uuids': [str(uuid) for uuid in sorted(expected_customer_uuids)],
+            'card_image_url': expected_course_card_image.get('src'),
+            'partners': expected_partners,
         })
 
         # verify partially_update_index is called with the correct Algolia object data
