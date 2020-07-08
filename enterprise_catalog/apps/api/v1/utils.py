@@ -153,7 +153,7 @@ def get_course_partners(course):
         list: a list of partner metadata associated with the course
     """
     partners = []
-    owners = course.get('owners', [])
+    owners = course.get('owners') or []
 
     for owner in owners:
         partner_name = owner.get('name')
@@ -194,6 +194,10 @@ def get_course_subjects(course):
     Gets list of subject names associated with the course. Used for the "Subjects"
     facet in Algolia.
 
+    `course.get('subjects')` may be either:
+        - a list of strings, e.g. ['Communication']
+        - a list of dictionaries, e.g. [{'name': 'Communication'}]
+
     Arguments:
         course (dict): a dictionary representing a course
 
@@ -201,12 +205,13 @@ def get_course_subjects(course):
         list: a list of subject names associated with the course
     """
     subject_names = set()
-    subjects = course.get('subjects', [])
-
-    if len(subjects) > 0 and isinstance(subjects[0], str):
-        logger.info('Subjects for course %s: %s', course.get('key'), subjects)
+    subjects = course.get('subjects') or []
 
     for subject in subjects:
+        if isinstance(subject, str):
+            subject_names.add(subject)
+            continue
+
         subject_name = subject.get('name')
         if subject_name:
             subject_names.add(subject_name)
