@@ -263,7 +263,7 @@ def _algolia_object_from_course(course, algolia_fields):
     algolia_object = {}
     for field in algolia_fields:
         field_value = searchable_course.get(field)
-        if field_value:
+        if field_value is not None:
             algolia_object[field] = field_value
 
     return algolia_object
