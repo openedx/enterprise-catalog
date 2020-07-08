@@ -155,6 +155,10 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
                 content_resource='course',
                 content_key=content_key,
             )
+            json_metadata['xapi_activity_id'] = enterprise_catalog.get_xapi_activity_id(
+                content_resource=content_type,
+                content_key=content_key,
+            )
             if content_type == COURSE:
                 course_runs = json_metadata.get('course_runs', [])
                 json_metadata['active'] = is_any_course_run_enrollable(course_runs)
