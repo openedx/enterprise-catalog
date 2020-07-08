@@ -201,10 +201,7 @@ def get_course_subjects(course):
         list: a list of subject names associated with the course
     """
     subject_names = set()
-    subjects = course.get('subjects', [])
-
-    if len(subjects) > 0 and isinstance(subjects[0], str):
-        logger.info('Subjects for course %s: %s', course.get('key'), subjects)
+    subjects = course.get('subjects') or []
 
     for subject in subjects:
         subject_name = subject.get('name')
