@@ -559,6 +559,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
 
         enrollment_url = '{}/enterprise/{}/{}/{}/enroll/?catalog={}&utm_medium=enterprise&utm_source={}'
         marketing_url = '{}?utm_medium=enterprise&utm_source={}'
+        xapi_activity_id = '{}/xapi/activities/{}/{}'
 
         if updated_json_metadata.get('uuid'):
             updated_json_metadata['uuid'] = str(updated_json_metadata.get('uuid'))
@@ -577,6 +578,11 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
                 updated_json_metadata['key'],
                 self.enterprise_catalog.uuid,
                 self.enterprise_catalog.enterprise_name,
+            )
+            updated_json_metadata['xapi_activity_id'] = xapi_activity_id.format(
+                settings.LMS_BASE_URL,
+                content_type,
+                updated_json_metadata['key'],
             )
             if content_type == COURSE:
                 updated_json_metadata['active'] = False
