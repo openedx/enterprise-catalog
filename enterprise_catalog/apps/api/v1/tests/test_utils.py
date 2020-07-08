@@ -31,11 +31,10 @@ class EnterpriseCatalogApiUtilsTests(TestCase):
     @ddt.unpack
     def test_get_course_card_image_url(self, course_metadata, expected_image_url):
         """
-        Assert get_course_partners returns the expected partner metadata for various inputs.
+        Assert get_course_card_image_url returns the expected course card image url.
         """
         card_image_url = get_course_card_image_url(course_metadata)
-        assert card_image_url == card_image_url
-
+        assert card_image_url == expected_image_url
 
     @ddt.data(
         (
@@ -80,7 +79,6 @@ class EnterpriseCatalogApiUtilsTests(TestCase):
         """
         course_partners = get_course_partners(course_metadata)
         assert course_partners == expected_partners
-
 
     @ddt.data(
         (
