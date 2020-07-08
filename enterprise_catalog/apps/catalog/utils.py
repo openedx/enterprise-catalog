@@ -90,3 +90,18 @@ def get_sorted_string_from_json(json_metadata):
         string: The json metadata as a sorted string
     """
     return sorted(json.dumps(json_metadata))
+
+
+def batch(iterable, batch_size=1):
+    """
+    Break up an iterable into equal-sized batches.
+
+    Arguments:
+        iterable (e.g. list): an iterable to batch
+        batch_size (int): the size of each batch. Defaults to 1.
+    Returns:
+        generator: iterates through each batch of an iterable
+    """
+    iterable_len = len(iterable)
+    for index in range(0, iterable_len, batch_size):
+        yield iterable[index:min(index + batch_size, iterable_len)]

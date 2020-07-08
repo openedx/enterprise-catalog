@@ -9,6 +9,7 @@ from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
 from enterprise_catalog.apps.catalog.models import (
     content_metadata_with_type_course,
 )
+from enterprise_catalog.apps.catalog.utils import batch
 
 
 logger = logging.getLogger(__name__)
@@ -37,6 +38,8 @@ ALGOLIA_FIELDS = [
 
 # default configuration for the index
 ALGOLIA_INDEX_SETTINGS = {
+    'attributeForDistinct': 'key',
+    'distinct': True,
     'searchableAttributes': [
         'unordered(title)',
         'unordered(full_description)',
@@ -69,20 +72,6 @@ class Command(BaseCommand):
         'Reindex course data in Algolia, adding on enterprise-specific metadata'
     )
 
-    def batch(self, iterable, batch_size=1):
-        """
-        Break up an iterable into equal-sized batches.
-
-        Arguments:
-            iterable (e.g. list): an iterable to batch
-            batch_size (int): the size of each batch. Defaults to 1.
-        Returns:
-            generator: iterates through each batch of an iterable
-        """
-        iterable_len = len(iterable)
-        for index in range(0, iterable_len, batch_size):
-            yield iterable[index:min(index + batch_size, iterable_len)]
-
     def handle(self, *args, **options):
         """
         Initializes and configures the settings for an Algolia index, and then spins off
@@ -105,7 +94,7 @@ class Command(BaseCommand):
             ]
 
         # batch the content keys and spin off a new task for each batch
-        for content_keys_batch in self.batch(content_metadata_keys, batch_size=BATCH_SIZE):
+        for content_keys_batch in batch(content_metadata_keys, batch_size=BATCH_SIZE):
             async_task = index_enterprise_catalog_courses_in_algolia_task.delay(
                 algolia_fields=ALGOLIA_FIELDS,
                 content_keys=content_keys_batch,
