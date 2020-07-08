@@ -241,6 +241,28 @@ class EnterpriseCatalog(TimeStampedModel):
 
         return update_query_parameters(url, params)
 
+    def get_xapi_activity_id(self, content_resource, content_key):
+        """
+        Return enterprise xAPI activity identifier with the catalog information
+        for the given content key.  Note that the xAPI activity identifier is a
+        well-formed IRI/URI but not necessarily a resolvable URL.
+
+        Arguments:
+            content_resource (str): The content resource to use in the URL (i.e., "course", "program")
+            content_key (str): The content key for the course to be displayed.
+
+        Returns:
+            (str): Enterprise landing page url.
+        """
+        if not content_key or not content_resource:
+            return None
+        xapi_activity_id = '{}/xapi/activities/{}/{}'.format(
+            settings.LMS_BASE_URL,
+            content_resource,
+            content_key,
+        )
+        return xapi_activity_id
+
 
 class ContentMetadata(TimeStampedModel):
     """
