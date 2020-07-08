@@ -194,6 +194,10 @@ def get_course_subjects(course):
     Gets list of subject names associated with the course. Used for the "Subjects"
     facet in Algolia.
 
+    `course.get('subjects')` may be either:
+        - a list of strings, e.g. ['Communication']
+        - a list of dictionaries, e.g. [{'name': 'Communication'}]
+
     Arguments:
         course (dict): a dictionary representing a course
 
@@ -204,6 +208,10 @@ def get_course_subjects(course):
     subjects = course.get('subjects') or []
 
     for subject in subjects:
+        if isinstance(subject, str):
+            subject_names.add(subject)
+            continue
+
         subject_name = subject.get('name')
         if subject_name:
             subject_names.add(subject_name)
