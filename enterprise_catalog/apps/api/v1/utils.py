@@ -153,7 +153,7 @@ def get_course_partners(course):
         list: a list of partner metadata associated with the course
     """
     partners = []
-    owners = course.get('owners', [])
+    owners = course.get('owners') or []
 
     for owner in owners:
         partner_name = owner.get('name')

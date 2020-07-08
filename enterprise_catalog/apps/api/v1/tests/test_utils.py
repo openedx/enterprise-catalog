@@ -1,7 +1,11 @@
 import ddt
 from django.test import TestCase
 
-from enterprise_catalog.apps.api.v1.utils import get_course_subjects
+from enterprise_catalog.apps.api.v1.utils import (
+    get_course_card_image_url,
+    get_course_partners,
+    get_course_subjects,
+)
 
 
 @ddt.ddt
@@ -9,6 +13,74 @@ class EnterpriseCatalogApiUtilsTests(TestCase):
     """
     Tests for enterprise_catalog.apps.api.v1.utils.
     """
+
+    @ddt.data(
+        (
+            {'original_image': {'src': 'https://fake.image'}},
+            'https://fake.image',
+        ),
+        (
+            {'original_image': None},
+            None,
+        ),
+        (
+            {'original_image': {}},
+            None,
+        ),
+    )
+    @ddt.unpack
+    def test_get_course_card_image_url(self, course_metadata, expected_image_url):
+        """
+        Assert get_course_partners returns the expected partner metadata for various inputs.
+        """
+        card_image_url = get_course_card_image_url(course_metadata)
+        assert card_image_url == card_image_url
+
+
+    @ddt.data(
+        (
+            {'owners': None},
+            [],
+        ),
+        (
+            {'owners': []},
+            [],
+        ),
+        (
+            {
+                'owners': [
+                    {
+                        'name': 'Test Org Name',
+                        'logo_image_url': 'https://fake.image1',
+                        'ignored_attr': None,
+                    },
+                    {
+                        'name': 'Another Org Name',
+                        'logo_image_url': 'https://fake.image2',
+                        'ignored_attr': None,
+                    },
+                ]
+            },
+            [
+                {
+                    'name': 'Test Org Name',
+                    'logo_image_url': 'https://fake.image1',
+                },
+                {
+                    'name': 'Another Org Name',
+                    'logo_image_url': 'https://fake.image2',
+                },
+            ],
+        ),
+    )
+    @ddt.unpack
+    def test_get_course_partners(self, course_metadata, expected_partners):
+        """
+        Assert get_course_partners returns the expected partner metadata for various inputs.
+        """
+        course_partners = get_course_partners(course_metadata)
+        assert course_partners == expected_partners
+
 
     @ddt.data(
         (
