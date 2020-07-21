@@ -15,6 +15,8 @@ do
 done
 sleep 5
 
+./provision-dependencies.sh
+
 # Run migrations
 echo -e "${GREEN}Running migrations for ${name}...${NC}"
 docker exec -t enterprise.catalog.app bash -c "cd /edx/app/${name}/${name}/ && make migrate"

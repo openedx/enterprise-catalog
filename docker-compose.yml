@@ -7,8 +7,6 @@ services:
       MYSQL_ROOT_PASSWORD: ""
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       MYSQL_DATABASE: "enterprise_catalog"
-    networks:
-      - devstack_default
     volumes:
       - enterprise_catalog_mysql:/var/lib/mysql
     # Uncomment these lines to access the database from localhost
@@ -41,8 +39,8 @@ services:
       - memcached
       - mysql
       - worker
-    networks:
-      - devstack_default
+      - lms
+      - discovery
     # Allows attachment to this container using 'docker attach <containerID>'.
     stdin_open: true
     tty: true
@@ -71,8 +69,6 @@ services:
       CELERY_BROKER_PASSWORD: password
       DJANGO_SETTINGS_MODULE: enterprise_catalog.settings.devstack
     hostname: worker.catalog.enterprise
-    networks:
-      - devstack_default
     ports:
       - "18161:18161"
     restart: always
@@ -82,9 +78,80 @@ services:
     volumes:
       - .:/edx/app/enterprise_catalog/enterprise_catalog
 
-networks:
-  devstack_default:
-    external: true
+  ####################################
+  # HACKS FOR DEVSTACK 2.0 SPIKE
+  ####################################
+
+  lms:
+    command: bash -c 'source /edx/app/edxapp/edxapp_env && while true; do python /edx/app/edxapp/edx-platform/manage.py lms runserver 0.0.0.0:18000 --settings devstack_docker; sleep 2; done'
+    container_name: edx.devstack.lms
+    hostname: lms.devstack.edx
+    depends_on:
+      - mysql
+      - memcached
+    stdin_open: true
+    tty: true
+    environment:
+      NO_PYTHON_UNINSTALL: 1
+      NO_INSTALL_PREREQS: 1
+      DJANGO_WATCHMAN_TIMEOUT: 30
+      DJANGO_SETTINGS_MODULE: lms.envs.devstack
+    image: edxops/edxapp:latest
+    ports:
+      - "18000:18000"
+    volumes:
+      - edxapp_lms_assets:/edx/var/edxapp/staticfiles/
+
+  discovery:
+    container_name: edx.devstack.discovery
+    hostname: discovery.devstack.edx
+    depends_on:
+      - mysql
+      - elasticsearch
+      - memcached
+    stdin_open: true
+    tty: true
+    environment:
+      TEST_ELASTICSEARCH_URL: "http://edx.devstack.elasticsearch:9200"
+      DJANGO_WATCHMAN_TIMEOUT: 30
+    image: kyle-course-discovery:latest
+    ports:
+      - "18381:18381"
+    volumes:
+      - discovery_assets:/edx/var/discovery/
+
+  mysql:
+    command: mysqld --character-set-server=utf8 --collation-server=utf8_general_ci
+    container_name: edx.devstack.mysql
+    hostname: mysql.devstack.edx
+    environment:
+      MYSQL_ROOT_PASSWORD: ""
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    image: mysql:5.6
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  memcached:
+    container_name: edx.devstack.memcached
+    hostname: memcached.devstack.edx
+    image: memcached:1.5.10-alpine
+
+  elasticsearch:
+    container_name: edx.devstack.elasticsearch
+    hostname: elasticsearch.devstack.edx
+    image: edxops/elasticsearch:devstack
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+      - elasticsearch_data:/usr/share/elasticsearch/logs
+
+
+  ####################################
+  # END HACKS
+  ####################################
 
 volumes:
   enterprise_catalog_mysql:
+  edxapp_lms_assets:
+  discovery_assets:
+  elasticsearch_data:
+  mysql_data:
