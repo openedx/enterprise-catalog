@@ -34,7 +34,8 @@ services:
     depends_on:
       - mysql
       - worker
-      - lms
+      - hack-lms
+      - hack-discovery
     networks:
       - devstack_default
     # Allows attachment to this container using 'docker attach <containerID>'.
@@ -80,13 +81,12 @@ services:
   # HACKS FOR DEVSTACK 2.0 SPIKE
   ####################################
 
-  lms:
-    # command: bash -c 'source /edx/app/edxapp/edxapp_env && while true; do python /edx/app/edxapp/edx-platform/manage.py lms runserver 0.0.0.0:18000 --settings devstack_docker; sleep 2; done'
+  hack-lms:
     container_name: "edx.${COMPOSE_PROJECT_NAME:-devstack}.lms"
     hostname: lms.devstack.edx
     depends_on:
-      - lms-mysql
-      - memcached
+      - hack-mysql
+      - hack-memcached
     # Allows attachment to the LMS service using 'docker attach <containerID>'.
     stdin_open: true
     tty: true
@@ -104,7 +104,31 @@ services:
     volumes:
       - edxapp_lms_assets:/edx/var/edxapp/staticfiles/
 
-  lms-mysql:
+  hack-discovery:
+    container_name: "edx.${COMPOSE_PROJECT_NAME:-devstack}.discovery"
+    hostname: discovery.devstack.edx
+    depends_on:
+      - hack-mysql
+      - hack-elasticsearch
+      - hack-memcached
+    # Allows attachment to the discovery service using 'docker attach <containerID>'.
+    stdin_open: true
+    tty: true
+    environment:
+      TEST_ELASTICSEARCH_URL: "http://edx.devstack.elasticsearch:9200"
+      ENABLE_DJANGO_TOOLBAR: 1
+      DJANGO_WATCHMAN_TIMEOUT: 30
+    image: openedx/course-discovery:${OPENEDX_RELEASE:-latest}
+    networks:
+      default:
+        aliases:
+          - edx.devstack.discovery
+    ports:
+      - "18381:18381"
+    volumes:
+      - discovery_assets:/edx/var/discovery/
+
+  hack-mysql:
     command: mysqld --character-set-server=utf8 --collation-server=utf8_general_ci
     container_name: "edx.${COMPOSE_PROJECT_NAME:-devstack}.mysql"
     hostname: mysql.devstack.edx
@@ -121,7 +145,7 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
 
-  memcached:
+  hack-memcached:
     container_name: "edx.${COMPOSE_PROJECT_NAME:-devstack}.memcached"
     hostname: memcached.devstack.edx
     image: memcached:1.5.10-alpine
@@ -129,6 +153,23 @@ services:
       default:
         aliases:
           - edx.devstack.memcached
+
+  hack-elasticsearch:
+    container_name: "edx.${COMPOSE_PROJECT_NAME:-devstack}.elasticsearch"
+    hostname: elasticsearch.devstack.edx
+    image: edxops/elasticsearch:devstack
+    networks:
+      default:
+        aliases:
+          - edx.devstack.elasticsearch
+    # TODO: What to do about these forwarded ports? They'll conflict with ports forwarded by the Vagrant VM.
+    # ports:
+    #   - "9200:9200"
+    #   - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+      - elasticsearch_data:/usr/share/elasticsearch/logs
+
 
   ####################################
   # END HACKS
@@ -141,4 +182,6 @@ networks:
 volumes:
   enterprise_catalog_mysql:
   edxapp_lms_assets:
+  discovery_assets:
+  elasticsearch_data:
   mysql_data:
