@@ -88,7 +88,8 @@ services:
       NO_PYTHON_UNINSTALL: 1
       NO_INSTALL_PREREQS: 1
       DJANGO_WATCHMAN_TIMEOUT: 30
-    image: edxops/edxapp:${OPENEDX_RELEASE:-latest}
+      DJANGO_SETTINGS_MODULE: lms.envs.devstack
+    image: edxops/edxapp:latest
     ports:
       - "18000:18000"
     volumes:
@@ -105,11 +106,10 @@ services:
     tty: true
     environment:
       TEST_ELASTICSEARCH_URL: "http://edx.devstack.elasticsearch:9200"
-      ENABLE_DJANGO_TOOLBAR: 1
       DJANGO_WATCHMAN_TIMEOUT: 30
-    image: openedx/course-discovery:${OPENEDX_RELEASE:-latest}
+    image: kyle-course-discovery:latest
     ports:
-      - "18381:8381"
+      - "18381:18381"
     volumes:
       - discovery_assets:/edx/var/discovery/
 
@@ -121,10 +121,6 @@ services:
       MYSQL_ROOT_PASSWORD: ""
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
     image: mysql:5.6
-    networks:
-      default:
-        aliases:
-          - edx.devstack.mysql
     volumes:
       - mysql_data:/var/lib/mysql
 
