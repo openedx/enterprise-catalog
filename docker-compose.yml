@@ -32,8 +32,8 @@ services:
     depends_on:
       - mysql
       - worker
-      - hack-lms
-      - hack-discovery
+      - lms
+      - discovery
     # Allows attachment to this container using 'docker attach <containerID>'.
     stdin_open: true
     tty: true
@@ -75,13 +75,13 @@ services:
   # HACKS FOR DEVSTACK 2.0 SPIKE
   ####################################
 
-  hack-lms:
+  lms:
     command: bash -c 'source /edx/app/edxapp/edxapp_env && while true; do python /edx/app/edxapp/edx-platform/manage.py lms runserver 0.0.0.0:18000 --settings devstack_docker; sleep 2; done'
     container_name: edx.devstack.lms
     hostname: lms.devstack.edx
     depends_on:
-      - hack-mysql
-      - hack-memcached
+      - mysql
+      - memcached
     stdin_open: true
     tty: true
     environment:
@@ -95,13 +95,13 @@ services:
     volumes:
       - edxapp_lms_assets:/edx/var/edxapp/staticfiles/
 
-  hack-discovery:
+  discovery:
     container_name: edx.devstack.discovery
     hostname: discovery.devstack.edx
     depends_on:
-      - hack-mysql
-      - hack-elasticsearch
-      - hack-memcached
+      - mysql
+      - elasticsearch
+      - memcached
     stdin_open: true
     tty: true
     environment:
@@ -113,7 +113,7 @@ services:
     volumes:
       - discovery_assets:/edx/var/discovery/
 
-  hack-mysql:
+  mysql:
     command: mysqld --character-set-server=utf8 --collation-server=utf8_general_ci
     container_name: edx.devstack.mysql
     hostname: mysql.devstack.edx
@@ -124,12 +124,12 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
 
-  hack-memcached:
+  memcached:
     container_name: edx.devstack.memcached
     hostname: memcached.devstack.edx
     image: memcached:1.5.10-alpine
 
-  hack-elasticsearch:
+  elasticsearch:
     container_name: edx.devstack.elasticsearch
     hostname: elasticsearch.devstack.edx
     image: edxops/elasticsearch:devstack
