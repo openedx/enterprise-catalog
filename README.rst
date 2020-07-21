@@ -13,6 +13,8 @@ Getting Started
 
 Check out the `initial steps <docs/getting_started.rst>`_ for getting started with the Enterprise catalog service.
 
+enterprise-catalog is currently prototyping Decentralized Devstack(DD), if you would like to try it out, see instructions to get started in `DD workflows doc <docs/decentralized_devstack_workflows.rst>`_
+
 License
 -------
 
