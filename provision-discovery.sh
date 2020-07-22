@@ -7,7 +7,7 @@ log "Runing migrations for Discovery database..."
 service_exec_management discovery migrate
 
 log "Create an edx superuser in Discovery..."
-service_create_edx_user discovery
+# service_create_edx_user discovery
 
 log "Creating Discovery users and API applications for integrating with LMS..."
 create_lms_integration_for_service discovery 18381

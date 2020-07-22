@@ -45,12 +45,7 @@ service_exec(){
 	service="$1"
 	shift
 	command_and_args="$*"
-	# TODO: Remove conditional when we have slim LMS image.
-	if [[ "$service" == lms ]]; then
-		docker-compose exec -T lms bash -c "source /edx/app/edxapp/edxapp_env && cd /edx/app/edxapp/edx-platform && $command_and_args"
-	else
-		docker-compose exec -T "$service" bash -c "$command_and_args"
-	fi
+	docker-compose exec -T "$service" bash -c "$command_and_args"
 }
 
 # Execute a Django management command in a service's container.

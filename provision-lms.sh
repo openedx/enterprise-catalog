@@ -3,7 +3,10 @@
 # Include utilities.
 source provisioning-utils.sh
 
+# TODO: Replace this with 
 log "Runing migrations for LMS database..."
+export SHA="$(service_exec lms cat /edx/app/edx-platform/edx-platform/common/test/db_cache/bok_choy_migrations.sha1)"
+
 service_exec_management lms migrate
 
 log "Runing migrations for LMS courseware student module history (CSMH) database..."

@@ -42,7 +42,7 @@ services:
       NO_INSTALL_PREREQS: 1
       DJANGO_WATCHMAN_TIMEOUT: 30
       DJANGO_SETTINGS_MODULE: lms.envs.devstack
-    image: kdmccormick96/edx-platform:latest
+    image: openedx/edx-platform:latest
     ports:
       - "18000:18000"
     volumes:
