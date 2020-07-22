@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Include utilities.
-source devstack/include.sh
+source provisioning-utils.sh
 
 log "Runing migrations for LMS database..."
 service_exec_management lms migrate

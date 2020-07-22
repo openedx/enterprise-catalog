@@ -10,19 +10,21 @@ log_major "Starting provisioning process..."
 ## docker-compose pull --include-deps app
 
 log_major "Bringing up containers..."
-docker-compose up --detach --build app
+docker-compose up --detach app
 
-log_major "Waiting a few seconds to make sure MySQL is ready..."
-until docker exec -i enterprise.catalog.mysql mysql -u root -se "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = 'root')" &> /dev/null
+log_major "Waiting until we can run a MySQL query..."
+until docker-compose exec -T mysql mysql -u root -se "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = 'root')" &> /dev/null
 do
   printf "."
   sleep 1
 done
+
+log_major "Waiting a few seconds to make sure MySQL is ready..."
 sleep 5
 
 for dependency in lms discovery ; do
 	log_major "Provisioning dependency: ${dependency}..."
-	devstack/provision-"$dependency".sh
+	./provision-"$dependency".sh
 done
 
 log_major "Provisioning app..."

@@ -6,7 +6,8 @@ TOX = ''
         migrate html_coverage upgrade extract_translation dummy_translations \
         compile_translations fake_translations  pull_translations \
         push_translations start-devstack open-devstack  pkg-devstack \
-        detect_changed_source_translations validate_translations
+        detect_changed_source_translations validate_translations \
+        docker.build docker.push docker.build.push
 
 define BROWSER_PYSCRIPT
 import os, webbrowser, sys
@@ -137,9 +138,15 @@ detect_changed_source_translations: ## check if translation files are up-to-date
 validate_translations: fake_translations detect_changed_source_translations ## install fake translations and check if translation files are up-to-date
 
 # Docker commands below
+# TODO curate
 
 dev.build:
-	docker build .
+	docker build . --tag kdmccormick96/enterprise-catalog # TODO
+
+dev.push: dev.build
+	docker push kdmccormick96/enterprise-catalog # TODO
+
+dev.build.push: dev.build dev.push # TODO
 
 dev.provision:
 	bash ./provision-catalog.sh
@@ -168,7 +175,7 @@ dev.stop: # Stops containers so they can be restarted
 	docker-compose stop
 
 %-shell: ## Run a shell, as root, on the specified service container
-	docker exec -u 0 -it enterprise.catalog.$* env TERM=$(TERM) bash
+	docker-compose exec -u 0 $* env TERM=$(TERM) bash
 
 %-logs: ## View the logs of the specified service container
 	docker-compose logs -f --tail=500 $*
