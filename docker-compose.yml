@@ -9,7 +9,6 @@ services:
     # image: edxops/enterprise_catalog:devstack
     build:
       context: .
-      dockerfile: Dockerfile
     container_name: edx.devstack.enterprise-catalog
     hostname: app.catalog.enterprise
     volumes:
@@ -39,7 +38,6 @@ services:
     # image: edxops/enterprise_catalog:devstack
     build:
       context: .
-      dockerfile: Dockerfile
     command: bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && celery -A enterprise_catalog worker -l DEBUG'
     container_name: edx.devstack.enterprise-catalog-worker
     depends_on:

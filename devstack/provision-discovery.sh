@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# Should be run from root of repository.
-# Example:
-#  $ devstack/provision-discovery.sh
+
+# Include utilities.
 source devstack/include.sh
 
 log "Runing migrations for Discovery database..."
