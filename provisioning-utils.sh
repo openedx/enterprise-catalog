@@ -16,24 +16,32 @@ BOLD_YELLOW='\033[1;33m'
 BOLD_RED='\033[1;31m'
 NC='\033[0m' # No Color
 
+export LAST_MAJOR_LOG_SECONDS=""
+
 # TODO document
 log_major(){
-	echo -e "${BOLD_GREEN}<<<$(date +%T)>>> $*${NC}"
+	if [[ -n "$LAST_MAJOR_LOG_SECONDS" ]]; then
+		elapsed=$(("$SECONDS" - "$LAST_MAJOR_LOG_SECONDS"))
+	else
+		elapsed=0
+	fi
+	LAST_MAJOR_LOG_SECONDS="$SECONDS"
+	echo -e "${BOLD_GREEN}[$(date +%T) (${SECONDS}s total, ${elapsed}s since)] $*${NC}"
 }
 
 # TODO document
 log(){
-	echo -e "${GREEN}<<<$(date +%T)>>> $*${NC}"
+	echo -e "${GREEN}[$(date +%T)] $*${NC}"
 }
 
 # TODO document
 log_warning(){
-	echo -e "${BOLD_YELLOW}<<<$(date +%T)>>> $*${NC}"
+	echo -e "${BOLD_YELLOW}[$(date +%T)] $*${NC}"
 }
 
 # TODO document
 log_error(){
-	echo -e "${BOLD_RED}<<<$(date +%T)>>> $*${NC}"
+	echo -e "${BOLD_RED}[$(date +%T)] $*${NC}"
 }
 
 # Execute a shell command in a service's container.

@@ -5,6 +5,7 @@ source provisioning-utils.sh
 
 log_major "Starting provisioning process..."
 
+log_major "Bringing down any existing containers..."
 docker-compose down
 
 # TODO put this back.
@@ -26,7 +27,7 @@ sleep 5
 
 # Ensure that the MySQL databases and users are created for dependencies
 # (A no-op for databases and users that already exist).
-echo -e "${GREEN}Ensuring MySQL databases and users exist...${NC}"
+log_major "Ensuring MySQL databases and users exist..."
 docker-compose exec -T mysql bash -c "mysql -uroot mysql" < provision.sql
 
 for dependency in lms discovery ; do
