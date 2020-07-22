@@ -43,8 +43,8 @@ services:
       DJANGO_WATCHMAN_TIMEOUT: 30
       LMS_CFG: /edx/app/edx-platform/edx-platform/lms/lms.yml
       DJANGO_SETTINGS_MODULE: lms.envs.devstack
-    image: openedx/edx-platform:latest-devstack
       LMS_CFG: /edx/app/edx-platform/edx-platform/lms/lms.yml
+    image: openedx/edx-platform:latest-devstack
     ports:
       - "18000:18000"
     volumes:
