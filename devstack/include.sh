@@ -83,3 +83,36 @@ service_exec_python(){
 	fi
 	service_exec "$service" "echo '${python_code}' | python ./manage.py ${edxapp_service_variant} shell"
 }
+
+# TODO document
+service_create_edx_user(){
+	service="$1"
+	service_exec_management "$service" manage_user edx edx@example.com --superuser --staff
+	service_exec_python "$service" "\
+	from django.contrib.auth import get_user_model; \
+	User = get_user_model(); \
+	user = User.objects.get(username=\"edx\"); \
+	user.set_password(\"edx\"); user.save()\
+	"
+}
+
+# TODO document
+create_lms_integration_for_service(){
+	service_name="$1"
+	service_port="$2"
+	service_exec_management lms manage_user \
+		"$service_name"_worker "$service_name"_worker@example.com \
+		--staff --superuser
+	service_exec_management lms create_dot_application \
+		--grant-type authorization-code \
+		--skip-authorization \
+		--redirect-uris "http://localhost:${service_port}/complete/edx-oauth2/" \
+		--client-id  "$service_name"-sso-key \
+		--client-secret  "$service_name"-sso-secret \
+		--scopes 'user_id' "$service_name"-sso "$service_name"_worker
+	service_exec_management lms create_dot_application \
+		--grant-type client-credentials  \
+		--client-id "$service_name"-backend-service-key  \
+		--client-secret "$service_name"-backend-service-secret \
+		"$service_name"-backend-service "$service_name"_worker 
+}

@@ -17,15 +17,7 @@ service_exec_management lms migrate --database student_module_history
 ## service_exec lms paver update_assets lms
 
 log "Creating a superuser for LMS..."
-service_exec_management lms --settings=devstack_docker manage_user edx edx@example.com --superuser --staff
-
-log "Setting LMS superuser password to 'edx'..."
-service_exec_python lms "\
-from django.contrib.auth import get_user_model; \
-User = get_user_model(); \
-user = User.objects.get(username=\"edx\"); \
-user.set_password(\"edx\"); user.save()\
-"
+service_create_edx_user lms
 
 log "Provisioning a retirement service account user for LMS..."
 service_exec_management lms manage_user retirement_service_worker retirement_service_worker@example.com --staff --superuser

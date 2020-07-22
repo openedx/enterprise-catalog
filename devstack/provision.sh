@@ -22,11 +22,10 @@ do
 done
 sleep 5
 
-log_major "Provisioning dependency: lms..."
-devstack/provision-lms.sh
-
-log_major "Provisioning dependency: discovery..."
-devstack/provision-discovery.sh
+for dependency in lms discovery ; do
+	log_major "Provisioning dependency: ${dependency}..."
+	devstack/provision-"$dependency".sh
+done
 
 log_major "Provisioning app..."
 devstack/provision-app.sh
