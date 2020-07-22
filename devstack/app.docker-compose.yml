@@ -1,0 +1,64 @@
+version: "3.8"
+
+# TODO: Stop naming containers.
+
+services:
+
+  app:
+    # Uncomment this line to use the official catalog base image
+    # image: edxops/enterprise_catalog:devstack
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: edx.devstack.enterprise-catalog
+    hostname: app.catalog.enterprise
+    volumes:
+      - .:/edx/app/enterprise_catalog/enterprise_catalog
+      - ../src:/edx/src:cached
+    ports:
+      - "18160:18160"
+    depends_on:
+      - discovery
+      - enterprise-catalog-worker
+      - lms
+      - mysql
+    # Allows attachment to this container using 'docker attach <containerID>'.
+    stdin_open: true
+    tty: true
+    environment:
+      CELERY_ALWAYS_EAGER: 'false'
+      CELERY_BROKER_TRANSPORT: redis
+      CELERY_BROKER_HOSTNAME: edx.devstack.redis:6379
+      CELERY_BROKER_VHOST: 0
+      CELERY_BROKER_PASSWORD: password
+      DJANGO_SETTINGS_MODULE: enterprise_catalog.settings.devstack
+      ENABLE_DJANGO_TOOLBAR: 1
+
+  worker:
+    # Uncomment this line to use the official catalog base image
+    # image: edxops/enterprise_catalog:devstack
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && celery -A enterprise_catalog worker -l DEBUG'
+    container_name: edx.devstack.enterprise-catalog-worker
+    depends_on:
+      - discovery
+      - lms
+      - mysql
+    environment:
+      CELERY_ALWAYS_EAGER: 'false'
+      CELERY_BROKER_TRANSPORT: redis
+      CELERY_BROKER_HOSTNAME: edx.devstack.redis:6379
+      CELERY_BROKER_VHOST: 0
+      CELERY_BROKER_PASSWORD: password
+      DJANGO_SETTINGS_MODULE: enterprise_catalog.settings.devstack
+    hostname: worker.catalog.enterprise
+    ports:
+      - "18161:18161"
+    restart: always
+    # Allows attachment to this container using 'docker attach <containerID>'.
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/edx/app/enterprise_catalog/enterprise_catalog

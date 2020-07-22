@@ -1,0 +1,79 @@
+version: "3.8"
+
+# TODO: Stop naming containers.
+
+services:
+
+  discovery:
+    container_name: edx.devstack.discovery
+    hostname: discovery.devstack.edx
+    depends_on:
+      - mysql
+      - elasticsearch
+      - memcached
+    stdin_open: true
+    tty: true
+    environment:
+      TEST_ELASTICSEARCH_URL: "http://edx.devstack.elasticsearch:9200"
+      DJANGO_WATCHMAN_TIMEOUT: 30
+    image: kyle-course-discovery:latest
+    ports:
+      - "18381:18381"
+    volumes:
+      - discovery_assets:/edx/var/discovery/
+
+  elasticsearch:
+    container_name: edx.devstack.elasticsearch
+    hostname: elasticsearch.devstack.edx
+    image: edxops/elasticsearch:devstack
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+      - elasticsearch_data:/usr/share/elasticsearch/logs
+
+  lms:
+    command: bash -c 'source /edx/app/edxapp/edxapp_env && while true; do python /edx/app/edxapp/edx-platform/manage.py lms runserver 0.0.0.0:18000 --settings devstack_docker; sleep 2; done'
+    container_name: edx.devstack.lms
+    hostname: lms.devstack.edx
+    depends_on:
+      - mysql
+      - memcached
+    stdin_open: true
+    tty: true
+    environment:
+      NO_PYTHON_UNINSTALL: 1
+      NO_INSTALL_PREREQS: 1
+      DJANGO_WATCHMAN_TIMEOUT: 30
+      DJANGO_SETTINGS_MODULE: lms.envs.devstack
+    image: edxops/edxapp:latest
+    ports:
+      - "18000:18000"
+    volumes:
+      - edxapp_lms_assets:/edx/var/edxapp/staticfiles/
+
+  memcached:
+    container_name: edx.devstack.memcached
+    hostname: memcached.devstack.edx
+    image: memcached:1.5.10-alpine
+
+  mysql:
+    command: mysqld --character-set-server=utf8 --collation-server=utf8_general_ci
+    container_name: edx.devstack.mysql
+    hostname: mysql.devstack.edx
+    environment:
+      MYSQL_ROOT_PASSWORD: ""
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    image: mysql:5.6
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  redis:
+    container_name: "edx.${COMPOSE_PROJECT_NAME:-devstack}.redis"
+    hostname: redis.devstack.edx
+    image: redis:2.8
+    command: redis-server --requirepass password
+
+volumes:
+  edxapp_lms_assets:
+  discovery_assets:
+  elasticsearch_data:
+  mysql_data:
