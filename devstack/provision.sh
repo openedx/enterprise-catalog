@@ -12,7 +12,7 @@ log_major "Pulling latest images..."
 docker-compose pull --include-deps app
 
 log_major "Bringing up containers..."
-docker-compose up --detatch --build app
+docker-compose up --detach --build app
 
 log_major "Waiting a few seconds to make sure MySQL is ready..."
 until docker exec -i enterprise.catalog.mysql mysql -u root -se "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = 'root')" &> /dev/null

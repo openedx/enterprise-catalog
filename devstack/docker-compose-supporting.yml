@@ -1,4 +1,4 @@
-version: "3.8"
+version: "3.7"
 
 # TODO: Stop naming containers.
 
@@ -14,9 +14,9 @@ services:
     stdin_open: true
     tty: true
     environment:
-      TEST_ELASTICSEARCH_URL: "http://edx.devstack.elasticsearch:9200"
+      TEST_ELASTICSEARCH_URL: http://edx.devstack.elasticsearch:9200
       DJANGO_WATCHMAN_TIMEOUT: 30
-    image: kyle-course-discovery:latest
+    image: kdmccormick96/course-discovery:latest
     ports:
       - "18381:18381"
     volumes:
@@ -67,10 +67,10 @@ services:
       - mysql_data:/var/lib/mysql
 
   redis:
-    container_name: "edx.${COMPOSE_PROJECT_NAME:-devstack}.redis"
+    command: redis-server --requirepass password
+    container_name: edx.devstack.redis
     hostname: redis.devstack.edx
     image: redis:2.8
-    command: redis-server --requirepass password
 
 volumes:
   edxapp_lms_assets:

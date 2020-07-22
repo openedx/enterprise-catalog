@@ -1,4 +1,4 @@
-version: "3.8"
+version: "3.7"
 
 # TODO: Stop naming containers.
 
@@ -19,7 +19,7 @@ services:
       - "18160:18160"
     depends_on:
       - discovery
-      - enterprise-catalog-worker
+      - worker
       - lms
       - mysql
     # Allows attachment to this container using 'docker attach <containerID>'.
