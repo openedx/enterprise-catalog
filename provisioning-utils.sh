@@ -89,13 +89,11 @@ service_exec_python(){
 # TODO document
 service_create_edx_user(){
 	service="$1"
-	service_exec_management "$service" manage_user edx edx@example.com --superuser --staff
 	service_exec_python "$service" "\
-	from django.contrib.auth import get_user_model; \
-	User = get_user_model(); \
-	user = User.objects.get(username=\"edx\"); \
-	user.set_password(\"edx\"); user.save()\
-	"
+from django.contrib.auth import get_user_model; \
+User = get_user_model(); \
+User.objects.create_superuser(\"edx\", \"edx@example.com\", \"edx\") if not User.objects.filter(username=\"edx\").exists() else None \
+"
 }
 
 # TODO document
