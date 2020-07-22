@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 # Utilities to be included into provisioning scripts.
 
+# Echo all commands being run back to console.
+set -x
+
+# Strictness: fail on errors and undefined variables.
 set -e
 set -o pipefail
 set -u
-set -x
 
 # Colored text.
 BOLD_GREEN='\033[1;32m'
@@ -13,18 +16,22 @@ BOLD_YELLOW='\033[1;33m'
 BOLD_RED='\033[1;31m'
 NC='\033[0m' # No Color
 
+# TODO document
 log_major(){
 	echo -e "${BOLD_GREEN}<<<$(date +%T)>>> $*${NC}"
 }
 
+# TODO document
 log(){
 	echo -e "${GREEN}<<<$(date +%T)>>> $*${NC}"
 }
 
+# TODO document
 log_warning(){
 	echo -e "${BOLD_YELLOW}<<<$(date +%T)>>> $*${NC}"
 }
 
+# TODO document
 log_error(){
 	echo -e "${BOLD_RED}<<<$(date +%T)>>> $*${NC}"
 }

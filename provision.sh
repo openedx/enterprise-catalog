@@ -1,15 +1,13 @@
 #!/usr/bin/env bash
 
 # Include utilities.
-source devstack/include.sh
-
-# TODO: Fail if we are not in correct dir.
+source provisioning-utils.sh
 
 log_major "Starting provisioning process..."
 
-log_major "Pulling latest images..."
 # TODO put this back.
-#docker-compose pull --include-deps app
+## log_major "Pulling latest images..."
+## docker-compose pull --include-deps app
 
 log_major "Bringing up containers..."
 docker-compose up --detach --build app
