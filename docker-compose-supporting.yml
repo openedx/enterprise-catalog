@@ -36,6 +36,7 @@ services:
     depends_on:
       - mysql
       - memcached
+      - mongo
     stdin_open: true
     tty: true
     environment:
