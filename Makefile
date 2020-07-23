@@ -166,7 +166,7 @@ dev.up.build:
 	docker-compose up -d --build
 
 dev.down: # Kills containers and all of their data that isn't in volumes
-	docker-compose down
+	docker-compose downing
 
 dev.destroy: dev.down #Kills containers and destroys volumes. If you get an error after running this, also run: docker volume rm portal-designer_designer_mysql
 	docker volume rm enterprise-catalog_enterprise_catalog_mysql
@@ -199,3 +199,9 @@ travis_docker_push: travis_docker_tag travis_docker_auth ## push to docker hub
 	docker push "openedx/enterprise-catalog:$$TRAVIS_COMMIT"
 	docker push "openedx/enterprise-catalog:latest-newrelic"
 	docker push "openedx/enterprise-catalog:$$TRAVIS_COMMIT-newrelic"
+
+# TODO: for decentralized devstack hacking; to be removed.
+try_provision:
+	docker-compose stop lms discovery || true
+	docker-compose rm -f lms discovery || true
+	./provision.sh

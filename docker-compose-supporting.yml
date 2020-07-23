@@ -52,6 +52,17 @@ services:
     hostname: memcached.devstack.edx
     image: memcached:1.5.10-alpine
 
+  mongo:
+    # We use WiredTiger in all environments. In development environments we use small files
+    # to conserve disk space, and disable the journal for a minor performance gain.
+    # See https://docs.mongodb.com/v3.0/reference/program/mongod/#options for complete details.
+    command: mongod --smallfiles --nojournal --storageEngine wiredTiger
+    container_name: edx.devstack.mongo
+    hostname: mongo.devstack.edx
+    image: mongo:${MONGO_VERSION:-3.6.17}
+    volumes:
+      - mongo_data:/data/db
+
   mysql:
     command: mysqld --character-set-server=utf8 --collation-server=utf8_general_ci
     container_name: edx.devstack.mysql
@@ -74,3 +85,4 @@ volumes:
   discovery_assets:
   elasticsearch_data:
   mysql_data:
+  mongo_data:
