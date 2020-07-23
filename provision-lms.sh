@@ -3,10 +3,10 @@
 # Include utilities.
 source provisioning-utils.sh
 
-# TODO: Replace this with 
-log_step "lms: Running migrations for default database..."
-export SHA="$(service_exec lms cat /edx/app/edx-platform/edx-platform/common/test/db_cache/bok_choy_migrations.sha1)"
+# TOOD: Use some sort of database dump to speed the rest of these steps up.
+export db_sha="$(service_exec lms cat /edx/app/edx-platform/edx-platform/common/test/db_cache/bok_choy_migrations.sha1)"
 
+log_step "lms: Running migrations for default database..."
 service_exec_management lms migrate
 
 log_step "lms: Running migrations for courseware student module history (CSMH) database..."
@@ -22,7 +22,10 @@ log_step "lms: Creating a superuser..."
 service_create_edx_user lms
 
 log_step "lms: Provisioning a retirement service account user..."
-service_exec_management lms manage_user retirement_service_worker retirement_service_worker@example.com --staff --superuser
-service_exec_management lms create_dot_application retirement_service_worker retirement
+service_exec_management lms manage_user \
+	--staff --superuser \
+	retirement_service_worker retirement_service_worker@example.com
+service_exec_management lms create_dot_application \
+	retirement retirement_service_worker
 
 log_message "Done provisioning LMS."

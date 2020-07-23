@@ -15,7 +15,7 @@ BOLD_YELLOW='\033[1;33m'
 BOLD_RED='\033[1;31m'
 NC='\033[0m' # No Color
 
-export LAST_MAJOR_LOG_SECONDS=""
+export LAST_MAJOR_LOG_SECONDS="${LAST_MAJOR_LOG_SECONDS:-}"
 
 # TODO document
 log_step(){
@@ -24,7 +24,7 @@ log_step(){
 	else
 		elapsed=0
 	fi
-	LAST_MAJOR_LOG_SECONDS="$SECONDS"
+	export LAST_MAJOR_LOG_SECONDS="$SECONDS"
 	echo -e "${BOLD_GREEN}[$(date +%T)][${SECONDS}s total, ${elapsed}s since] $*${NC}"
 }
 
@@ -62,7 +62,8 @@ service_exec(){
 #   service_exec_management discovery createsuperuser
 service_exec_management(){
 	service="$1"
-	management_command_and_args="$2"
+	shift
+	management_command_and_args="$*"
 	# If LMS/Studio, handle weird manage.py that expects lms/cms argument.
 	if [[ "$service" == lms ]]; then
 		edxapp_service_variant=lms
