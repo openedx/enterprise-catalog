@@ -15,7 +15,7 @@ BOLD_YELLOW='\033[1;33m'
 BOLD_RED='\033[1;31m'
 NC='\033[0m' # No Color
 
-export LAST_MAJOR_LOG_SECONDS="${LAST_MAJOR_LOG_SECONDS:-}"
+LAST_MAJOR_LOG_SECONDS="${LAST_MAJOR_LOG_SECONDS:-}"
 
 # TODO document
 log_step(){
@@ -24,7 +24,7 @@ log_step(){
 	else
 		elapsed=0
 	fi
-	export LAST_MAJOR_LOG_SECONDS="$SECONDS"
+	LAST_MAJOR_LOG_SECONDS="$SECONDS"
 	echo -e "${BOLD_GREEN}[$(date +%T)][${SECONDS}s total, ${elapsed}s since] $*${NC}"
 }
 

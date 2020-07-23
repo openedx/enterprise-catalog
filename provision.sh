@@ -26,14 +26,17 @@ done
 log_step "Waiting a few seconds to make sure MySQL is ready..."
 sleep 5
 
-# Ensure that the MySQL databases and users are created for dependencies
-# (A no-op for databases and users that already exist).
 log_step "Ensuring MySQL databases and users exist..."
 docker-compose exec -T mysql bash -c "mysql -uroot mysql" < provision-mysql.sql
 
+# Run provisioning scripts for dependencies.
+# We call provision-lms.sh, provision-discovery.sh, etc., and log an error
+# if they fail.
+# 'source' tells bash to run in the same shell. This makes the timestamps
+# in the log messages work correctly.
 for dependency in lms discovery ; do
 	log_message "Provisioning dependency: ${dependency}..."
-	if ! ./provision-"$dependency".sh ; then
+	if ! source ./provision-"$dependency".sh ; then
 		log_error "Error occured while provisioning ${dependency}; stopping."
 		exit 1
 	fi
