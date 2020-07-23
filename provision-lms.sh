@@ -6,6 +6,16 @@ source provisioning-utils.sh
 # TOOD: Use some sort of database dump to speed the rest of these steps up.
 db_sha="$(service_exec lms cat /edx/app/edx-platform/edx-platform/common/test/db_cache/bok_choy_migrations.sha1)"
 
+log_step "lms: Making sure MongoDB is ready..."
+until docker-compose exec -T mongo bash -c 'mongo --eval "printjson(db.serverStatus())"' &> /dev/null
+do
+  printf "."
+  sleep 1
+done
+
+log_step "MongoDB ready. Creating MongoDB users..."
+docker-compose exec -T mongo bash -c "mongo" < provision-mongo.js
+
 log_step "lms: Running migrations for default database..."
 service_exec_management lms migrate
 
@@ -17,16 +27,6 @@ service_exec_management lms migrate --database student_module_history
 ## service_exec lms rm /edx/app/edxapp/edx-platform/.prereqs_cache/Node_prereqs.sha1
 ## log "Compiling static assets for LMS..."
 ## service_exec lms paver update_assets lms
-
-log_step "lms: Making sure MongoDB is ready..."
-until docker-compose exec -T mongo bash -c 'mongo --eval "printjson(db.serverStatus())"' &> /dev/null
-do
-  printf "."
-  sleep 1
-done
-
-log_step "MongoDB ready. Creating MongoDB users..."
-docker-compose exec -T mongo bash -c "mongo" < provision-mongo.js
 
 log_step "lms: Creating a superuser..."
 service_create_edx_user lms
