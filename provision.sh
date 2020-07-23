@@ -5,13 +5,13 @@ source provisioning-utils.sh
 
 log_step "Starting provisioning process..."
 
-# TODO put this back.
-## log_step "Bringing down any existing containers..."
-## docker-compose down
+## TODO put this back.
+# log_step "Bringing down any existing containers..."
+# docker-compose down
 
-# TODO put this back.
-## log_step "Pulling latest images..."
-## docker-compose pull --include-deps app
+## TODO put this back.
+# log_step "Pulling latest images..."
+# docker-compose pull --include-deps app
 
 log_step "Bringing up containers..."
 docker-compose up --detach app
@@ -50,20 +50,20 @@ service_create_edx_user app
 log_step "app: Creating users and API applications for integrating with LMS..."
 create_lms_integration_for_service enterprise_catalog 18160
 
-# TODO: Handle https://github.com/edx/enterprise-catalog/blob/master/docs/getting_started.rst#permissions
+## TODO: Handle https://github.com/edx/enterprise-catalog/blob/master/docs/getting_started.rst#permissions
 
-# TODO: Do we still need this?
-# If so, the username should be enterprise_catalog_worker, not enterprise_worker.
-## log_step "Granting enterprise_worker user in permissions..."
-## service_exec_python lms "\
-## from django.contrib.auth import get_user_model; \
-## from django.contrib.auth.models import Permission; \
-## User = get_user_model(); \
-## enterprise_worker = User.objects.get(username='enterprise_worker'); \
-## enterprise_model_permissions = list(Permission.objects.filter(content_type__app_label='enterprise')); \
-## enterprise_worker.user_permissions.add(*enterprise_model_permissions); \
-## enterprise_worker.save(); \
-## "
+## TODO: Do we still need this? It came from edx/devstack:entprise/provision.sh
+## If so, the username should be enterprise_catalog_worker, not enterprise_worker.
+# log_step "Granting enterprise_worker user in permissions..."
+# service_exec_python lms "\
+# from django.contrib.auth import get_user_model; \
+# from django.contrib.auth.models import Permission; \
+# User = get_user_model(); \
+# enterprise_worker = User.objects.get(username='enterprise_worker'); \
+# enterprise_model_permissions = list(Permission.objects.filter(content_type__app_label='enterprise')); \
+# enterprise_worker.user_permissions.add(*enterprise_model_permissions); \
+# enterprise_worker.save(); \
+# "
 
 log_step "Restarting all containers..."
 docker-compose restart

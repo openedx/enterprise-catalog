@@ -30,9 +30,10 @@ service_exec_management discovery create_or_update_partner \
 	--organizations-api-url "http://edx.devstack.lms:18000/api/organizations/v0/" \
 	--lms-url "http://edx.devstack.lms:18000/"
 
-# TODO: Do we need Ecom for this?
-log_step "discovery: Refreshing course metadata..."
-service_exec_management discovery refresh_course_metadata
+## TODO: We need ecom for this, probably.
+## Removing for now, but it might block enterprise-catalog usage.
+# log_step "discovery: Refreshing course metadata..."
+# service_exec_management discovery refresh_course_metadata
 
 log_step "discovery: Running ./manage.py update_index..."
 service_exec_management discovery update_index --disable-change-limit
