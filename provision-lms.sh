@@ -4,12 +4,12 @@
 source provisioning-utils.sh
 
 # TODO: Replace this with 
-log "Runing migrations for LMS database..."
+log_step "lms: Running migrations for default database..."
 export SHA="$(service_exec lms cat /edx/app/edx-platform/edx-platform/common/test/db_cache/bok_choy_migrations.sha1)"
 
 service_exec_management lms migrate
 
-log "Runing migrations for LMS courseware student module history (CSMH) database..."
+log_step "lms: Running migrations for courseware student module history (CSMH) database..."
 service_exec_management lms migrate --database student_module_history
 
 # TODO: can we handle assets during provisioning? and do we even need it for slim LMS? for login, probably...
@@ -18,11 +18,11 @@ service_exec_management lms migrate --database student_module_history
 ## log "Compiling static assets for LMS..."
 ## service_exec lms paver update_assets lms
 
-log "Creating a superuser for LMS..."
+log_step "lms: Creating a superuser..."
 service_create_edx_user lms
 
-log "Provisioning a retirement service account user for LMS..."
+log_step "lms: Provisioning a retirement service account user..."
 service_exec_management lms manage_user retirement_service_worker retirement_service_worker@example.com --staff --superuser
 service_exec_management lms create_dot_application retirement_service_worker retirement
 
-log "Done provisioning LMS."
+log_message "Done provisioning LMS."
