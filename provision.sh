@@ -29,7 +29,7 @@ sleep 5
 # Ensure that the MySQL databases and users are created for dependencies
 # (A no-op for databases and users that already exist).
 log_step "Ensuring MySQL databases and users exist..."
-docker-compose exec -T mysql bash -c "mysql -uroot mysql" < provision.sql
+docker-compose exec -T mysql bash -c "mysql -uroot mysql" < provision-mysql.sql
 
 for dependency in lms discovery ; do
 	log_message "Provisioning dependency: ${dependency}..."
