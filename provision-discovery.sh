@@ -35,7 +35,9 @@ service_exec_management discovery create_or_update_partner \
 # log_step "discovery: Refreshing course metadata..."
 # service_exec_management discovery refresh_course_metadata
 
-log_step "discovery: Running ./manage.py update_index..."
-service_exec_management discovery update_index --disable-change-limit
+## TODO: This is giving us an error because it can't connect to elasticsearch.
+## Removing for now; unclear whether we need it.
+# log_step "discovery: Running ./manage.py update_index..."
+# service_exec_management discovery update_index --disable-change-limit
 
 log_message "Done provisioning Discovery."
