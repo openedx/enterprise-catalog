@@ -41,7 +41,7 @@ services:
     environment:
       NO_INSTALL_PREREQS: 1
       DJANGO_WATCHMAN_TIMEOUT: 30
-    image: kdmccormick96/edx-platform
+    image: kdmccormick96/edx-platform:latest
     ports:
       - "18000:18000"
     volumes:
