@@ -1,5 +1,5 @@
 CREATE DATABASE IF NOT EXISTS enterprise_catalog;
-GRANT ALL ON credentials.* TO 'entcatalog001'@'%' IDENTIFIED BY 'password';
+GRANT ALL ON enterprise_catalog.* TO 'entcatalog001'@'%' IDENTIFIED BY 'password';
 
 CREATE DATABASE IF NOT EXISTS discovery;
 GRANT ALL ON discovery.* TO 'discov001'@'%' IDENTIFIED BY 'password';

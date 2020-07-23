@@ -16,6 +16,8 @@ done
 log_step "MongoDB ready. Creating MongoDB users..."
 docker-compose exec -T mongo bash -c "mongo" < provision-mongo.js
 
+# TODO: Make sure this handles squashed migrations idempotently 
+# (e.g. enterprise/migrations/0001_squashed_0092_auto_20200312_1650.py)
 log_step "lms: Running migrations for default database..."
 service_exec_management lms migrate
 
