@@ -16,6 +16,8 @@ done
 log_step "MongoDB ready. Adding default MongoDB data..."
 service_exec mongo mongorestore /data/dump
 
+log_step "MongoDB ready. Creating MongoDB users..."
+docker-compose exec -T mongo bash -c "mongo" < provision-mongo.js
 
 log_step "Adding default MySQL data from dump..."
 
