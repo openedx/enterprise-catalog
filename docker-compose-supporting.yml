@@ -75,7 +75,6 @@ services:
     image: mysql:5.6
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./provision-mysql_from-devstack.sql:/docker-entrypoint-initdb.d/edxapp.sql
 
   redis:
     command: redis-server --requirepass password
