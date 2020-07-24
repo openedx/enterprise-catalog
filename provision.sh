@@ -57,7 +57,10 @@ done
 
 log_message "Provisioning app..."
 
-log_step "lms: Ensuring MySQL databases and users exist..."
+log_step "app: Bringing up container(s)..."
+docker-compose up -d app
+
+log_step "app: Ensuring MySQL databases and users exist..."
 docker-compose exec -T mysql bash -c "mysql -uroot mysql" < provision-mysql-app.sql
 
 log_step "app: Running migrations..."
