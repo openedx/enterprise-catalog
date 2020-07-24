@@ -7,7 +7,7 @@ TOX = ''
         compile_translations fake_translations  pull_translations \
         push_translations start-devstack open-devstack  pkg-devstack \
         detect_changed_source_translations validate_translations \
-        docker.build docker.push docker.build.push
+        docker.build docker.push docker.build.push shellcheck
 
 define BROWSER_PYSCRIPT
 import os, webbrowser, sys
@@ -200,8 +200,5 @@ travis_docker_push: travis_docker_tag travis_docker_auth ## push to docker hub
 	docker push "openedx/enterprise-catalog:latest-newrelic"
 	docker push "openedx/enterprise-catalog:$$TRAVIS_COMMIT-newrelic"
 
-# TODO: for decentralized devstack hacking; to be removed.
-try_provision:
-	docker-compose stop lms discovery || true
-	docker-compose rm -f lms discovery || true
-	./provision.sh
+shellcheck:
+	shellcheck *.sh -x

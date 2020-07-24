@@ -25,7 +25,9 @@ log_step(){
 		elapsed=0
 	fi
 	LAST_MAJOR_LOG_SECONDS="$SECONDS"
-	echo -e "${BOLD_GREEN}[$(date +%T)][${SECONDS}s total, ${elapsed}s since] $*${NC}"
+	total="total=$(printf "%03d" "$SECONDS")s"
+	prevstep="prevstep=$(printf "%03d" "$elapsed")s"
+	echo -e "${BOLD_GREEN}[$(date +%T)][${prevstep}][${total}] $*${NC}"
 }
 
 # TODO document

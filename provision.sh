@@ -47,6 +47,8 @@ fi
 # in the log messages work correctly.
 for dependency in lms discovery ; do
 	log_message "Provisioning dependency: ${dependency}..."
+	# shellcheck source=provision-lms.sh
+	# shellcheck source=provision-discovery.sh
 	if ! source ./provision-"$dependency".sh ; then
 		log_error "Error occured while provisioning ${dependency}; stopping."
 		exit 1
