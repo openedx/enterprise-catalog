@@ -42,28 +42,6 @@ if ! is_mysql_ready; then
 	sleep 5
 fi
 
-log_step "Adding default MySQL data from dump..."
-docker-compose exec -T mysql /usr/bin/mysql edxapp < provision-mysql_from-devstack.sql
-
-log_step "Ensuring MySQL databases and users exist..."
-docker-compose exec -T mysql bash -c "mysql -uroot mysql" < provision-mysql.sql
-
-log_step "lms: Making sure MongoDB is ready..."
-until docker-compose exec -T mongo bash -c 'mongo --eval "printjson(db.serverStatus())"' &> /dev/null
-do
-  printf "."
-  sleep 1
-done
-
-log_step "MongoDB ready. Creating MongoDB users..."
-docker-compose exec -T mongo bash -c "mongo" < provision-mongo.js
-
-log_step "MongoDB ready. Adding default MongoDB data..."
-service_exec mongo mongorestore --gzip /data/dump
-
-log_step "Bringing up app containers..."
-docker-compose up --detach app
-
 # Run provisioning scripts for dependencies.
 # We call provision-lms.sh, provision-discovery.sh, etc., and log an error
 # if they fail.
@@ -78,6 +56,9 @@ for dependency in lms discovery ; do
 done
 
 log_message "Provisioning app..."
+
+log_step "lms: Ensuring MySQL databases and users exist..."
+docker-compose exec -T mysql bash -c "mysql -uroot mysql" < provision-mysql-app.sql
 
 log_step "app: Running migrations..."
 service_exec app make migrate

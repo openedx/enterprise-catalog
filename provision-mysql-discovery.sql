@@ -1,0 +1,4 @@
+CREATE DATABASE IF NOT EXISTS discovery;
+GRANT ALL ON discovery.* TO 'discov001'@'%' IDENTIFIED BY 'password';
+
+FLUSH PRIVILEGES;
