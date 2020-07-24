@@ -3,9 +3,6 @@
 # Include utilities.
 source provisioning-utils.sh
 
-# TOOD: Use some sort of database dump to speed the rest of these steps up.
-db_sha="$(service_exec lms cat /edx/app/edx-platform/edx-platform/common/test/db_cache/bok_choy_migrations.sha1)"
-
 log_step "lms: Making sure MongoDB is ready..."
 until docker-compose exec -T mongo bash -c 'mongo --eval "printjson(db.serverStatus())"' &> /dev/null
 do
@@ -20,7 +17,6 @@ log_step "MongoDB ready. Creating MongoDB users..."
 docker-compose exec -T mongo bash -c "mongo" < provision-mongo.js
 
 log_step "Adding default MySQL data from dump..."
-
 cat provision-mysql_from-devstack.sql | docker-compose exec -T mysql /usr/bin/mysql edxapp
 
 # TODO: Make sure this handles squashed migrations idempotently 

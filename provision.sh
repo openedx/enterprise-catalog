@@ -26,6 +26,12 @@ done
 log_step "Waiting a few seconds to make sure MySQL is ready..."
 sleep 5
 
+if ! docker-compose exec -T mysql mysql -u root -se "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = 'root')" &> /dev/null ; then
+	log_step "Restarting MySQL because it died."
+	docker-compose up -d mysql
+	sleep 5
+fi
+
 log_step "Ensuring MySQL databases and users exist..."
 docker-compose exec -T mysql bash -c "mysql -uroot mysql" < provision-mysql.sql
 
