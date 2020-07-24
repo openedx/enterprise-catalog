@@ -63,7 +63,7 @@ services:
     image: mongo:${MONGO_VERSION:-3.6.17}
     volumes:
       - mongo_data:/data/db
-      - lms_mongo_dump:/data/dump
+      - ./lms_mongo_dump:/data/dump
 
   mysql:
     command: mysqld --character-set-server=utf8 --collation-server=utf8_general_ci
@@ -88,4 +88,3 @@ volumes:
   elasticsearch_data:
   mysql_data:
   mongo_data:
-  lms_mongo_dump:
