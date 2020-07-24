@@ -5,13 +5,11 @@ source provisioning-utils.sh
 
 log_step "Starting provisioning process..."
 
-## TODO put this back.
-# log_step "Bringing down any existing containers..."
-# docker-compose down
+log_step "Bringing down any existing containers..."
+docker-compose down
 
-## TODO put this back.
-# log_step "Pulling latest images..."
-# docker-compose pull --include-deps app
+log_step "Pulling latest images..."
+docker-compose pull --include-deps app
 
 log_step "Bringing up database containers..."
 docker-compose up --detach mysql mongo elasticsearch
