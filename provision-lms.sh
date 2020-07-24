@@ -16,6 +16,11 @@ done
 log_step "MongoDB ready. Adding default MongoDB data..."
 service_exec mongo mongorestore /data/dump
 
+
+log_step "Adding default MySQL data from dump..."
+
+cat provision-mysql_from-devstack.sql | docker-compose exec -T mysql /usr/bin/mysql edxapp
+
 # TODO: Make sure this handles squashed migrations idempotently 
 # (e.g. enterprise/migrations/0001_squashed_0092_auto_20200312_1650.py)
 #log_step "lms: Running migrations for default database..."
@@ -31,14 +36,5 @@ service_exec mongo mongorestore /data/dump
 # log "Compiling static assets for LMS..."
 # service_exec lms paver update_assets lms
 
-log_step "lms: Creating a superuser..."
-service_create_edx_user lms
-
-log_step "lms: Provisioning a retirement service account user..."
-service_exec_management lms manage_user \
-	--staff --superuser \
-	retirement_service_worker retirement_service_worker@example.com
-service_exec_management lms create_dot_application \
-	retirement retirement_service_worker
 
 log_message "Done provisioning LMS."
