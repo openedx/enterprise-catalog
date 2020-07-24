@@ -19,6 +19,9 @@ docker-compose exec -T mongo bash -c "mongo" < provision-mongo.js
 log_step "Adding default MySQL data from dump..."
 cat provision-mysql_from-devstack.sql | docker-compose exec -T mysql /usr/bin/mysql edxapp
 
+log_step "Ensuring MySQL databases and users exist again..."
+docker-compose exec -T mysql bash -c "mysql -uroot mysql" < provision-mysql.sql
+
 # TODO: Make sure this handles squashed migrations idempotently 
 # (e.g. enterprise/migrations/0001_squashed_0092_auto_20200312_1650.py)
 #log_step "lms: Running migrations for default database..."
