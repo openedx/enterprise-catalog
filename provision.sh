@@ -16,19 +16,29 @@ log_step "Starting provisioning process..."
 log_step "Bringing up containers..."
 docker-compose up --detach app
 
+is_mysql_ready(){
+	docker-compose exec \
+		-T mysql mysql \
+		-u root \
+		-se "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = 'root')" \
+		&> /dev/null
+}
+
 log_step "Waiting until we can run a MySQL query..."
-until docker-compose exec -T mysql mysql -u root -se "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = 'root')" &> /dev/null
+until is_mysql_ready
 do
   printf "."
   sleep 1
 done
 
+# A fresh MySQL container with no databases may die and need to be restarted.
+# So, we wait 5 seconds, and if MySQL has died, restart it and wait 5 more seconds.
+# See https://github.com/docker-library/mysql/issues/245 for why this is necessary.
 log_step "Waiting a few seconds to make sure MySQL is ready..."
 sleep 5
-
-if ! docker-compose exec -T mysql mysql -u root -se "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = 'root')" &> /dev/null ; then
+if ! is_mysql_ready; then
 	log_step "Restarting MySQL because it died."
-	docker-compose up -d mysql
+	docker-compose restart mysql
 	sleep 5
 fi
 
