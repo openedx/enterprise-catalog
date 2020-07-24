@@ -13,16 +13,17 @@ do
   sleep 1
 done
 
-log_step "MongoDB ready. Creating MongoDB users..."
-docker-compose exec -T mongo bash -c "mongo" < provision-mongo.js
+log_step "MongoDB ready. Adding default MongoDB data..."
+service_exec mongo mongorestore /data/dump
 
 # TODO: Make sure this handles squashed migrations idempotently 
 # (e.g. enterprise/migrations/0001_squashed_0092_auto_20200312_1650.py)
-log_step "lms: Running migrations for default database..."
-service_exec_management lms migrate
+#log_step "lms: Running migrations for default database..."
+#service_exec_management lms migrate
 
-log_step "lms: Running migrations for courseware student module history (CSMH) database..."
-service_exec_management lms migrate --database student_module_history
+#log_step "lms: Running migrations for courseware student module history (CSMH) database..."
+#service_exec_management lms migrate --database student_module_history
+
 
 ## TODO: can we handle assets during provisioning? and do we even need it for slim LMS? for login, probably...
 # log "Fixing missing vendor file by clearing the cache..."
