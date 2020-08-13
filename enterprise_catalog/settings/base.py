@@ -332,6 +332,13 @@ ALGOLIA = {
     'API_KEY': '',
 }
 
+# Temporary algolia settings for new index
+ALGOLIA_NEW = {
+    'INDEX_NAME': '',
+    'APPLICATION_ID': '',
+    'API_KEY': '',
+}
+
 # Set up system-to-feature roles mapping for edx-rbac
 SYSTEM_TO_FEATURE_ROLE_MAPPING = {
     SYSTEM_ENTERPRISE_CATALOG_ADMIN_ROLE: [ENTERPRISE_CATALOG_ADMIN_ROLE],
