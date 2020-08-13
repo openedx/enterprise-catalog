@@ -10,7 +10,7 @@ from enterprise_catalog.apps.catalog.management.commands.reindex_algolia import 
     ALGOLIA_FIELDS,
     ALGOLIA_INDEX_SETTINGS,
     BATCH_SIZE,
-    should_index,
+    should_index_course,
 )
 from enterprise_catalog.apps.catalog.tests.factories import (
     ContentMetadataFactory,
@@ -29,7 +29,7 @@ class ReindexAlgoliaCommandTests(TestCase):
         {'expected_result': True},
     )
     @ddt.unpack
-    def test_should_index(
+    def test_should_index_course(
         self,
         expected_result,
         has_advertised_course_run=True,
@@ -60,10 +60,10 @@ class ReindexAlgoliaCommandTests(TestCase):
             content_type=COURSE,
             json_metadata=json_metadata,
         )
-        assert should_index(course_metadata) is expected_result
+        assert should_index_course(course_metadata) is expected_result
 
     @mock.patch(
-        'enterprise_catalog.apps.catalog.management.commands.reindex_algolia.should_index'
+        'enterprise_catalog.apps.catalog.management.commands.reindex_algolia.should_index_course'
     )
     @mock.patch(
         'enterprise_catalog.apps.catalog.management.commands.reindex_algolia.AlgoliaSearchClient'
@@ -71,12 +71,12 @@ class ReindexAlgoliaCommandTests(TestCase):
     @mock.patch(
         'enterprise_catalog.apps.catalog.management.commands.reindex_algolia.index_enterprise_catalog_courses_in_algolia_task'
     )
-    def test_reindex_algolia(self, mock_task, mock_search_client, mock_should_index):
+    def test_reindex_algolia(self, mock_task, mock_search_client, mock_should_index_course):
         """
         Verify that the job spins off the correct number of index_enterprise_catalog_courses_in_algolia_task
         """
         # Mock that all courses should be indexed
-        mock_should_index.return_value = True
+        mock_should_index_course.return_value = True
         # create enough ContentMetadata records to force more than 1 batch of content keys
         content_metadata = ContentMetadataFactory.create_batch(
             BATCH_SIZE + 1,

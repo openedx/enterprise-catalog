@@ -17,10 +17,10 @@ class AlgoliaSearchClient:
     Object builds an API client to make calls to an Algolia index.
     """
 
+    ALGOLIA_APPLICATION_ID = settings.ALGOLIA.get('APPLICATION_ID')
+    ALGOLIA_API_KEY = settings.ALGOLIA.get('API_KEY')
     # Temporarily prefer the new algolia index if it exists
-    ALGOLIA_APPLICATION_ID = settings.ALGOLIA_NEW.get('APPLICATION_ID') or settings.ALGOLIA.get('APPLICATION_ID')
-    ALGOLIA_API_KEY = settings.ALGOLIA_NEW.get('API_KEY') or settings.ALGOLIA.get('API_KEY')
-    ALGOLIA_INDEX_NAME = settings.ALGOLIA_NEW.get('INDEX_NAME') or settings.ALGOLIA.get('INDEX_NAME')
+    ALGOLIA_INDEX_NAME = settings.ALGOLIA.get('INDEX_NAME_NEW') or settings.ALGOLIA.get('INDEX_NAME')
 
     def __init__(self):
         self._client = None

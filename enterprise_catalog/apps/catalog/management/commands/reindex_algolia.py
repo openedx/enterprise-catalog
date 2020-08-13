@@ -67,7 +67,7 @@ ALGOLIA_INDEX_SETTINGS = {
 }
 
 
-def should_index(course_metadata):
+def should_index_course(course_metadata):
     """
     Replicates the B2C index check of whether a certain course should be indexed for search.
 
@@ -122,7 +122,7 @@ class Command(BaseCommand):
         all_course_content_metadata = content_metadata_with_type_course()
         # Only use the course content metadata that should be indexed for Algolia using the B2C logic
         indexable_content_keys = [course_content_metadata.content_key for course_content_metadata
-                                  in all_course_content_metadata if should_index(course_content_metadata)]
+                                  in all_course_content_metadata if should_index_course(course_content_metadata)]
 
         # batch the content keys and spin off a new task for each batch
         for content_keys_batch in batch(indexable_content_keys, batch_size=BATCH_SIZE):
