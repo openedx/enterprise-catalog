@@ -19,7 +19,8 @@ class AlgoliaSearchClient:
 
     ALGOLIA_APPLICATION_ID = settings.ALGOLIA.get('APPLICATION_ID')
     ALGOLIA_API_KEY = settings.ALGOLIA.get('API_KEY')
-    ALGOLIA_INDEX_NAME = settings.ALGOLIA.get('INDEX_NAME')
+    # Temporarily prefer the new algolia index if it exists
+    ALGOLIA_INDEX_NAME = settings.ALGOLIA.get('INDEX_NAME_NEW') or settings.ALGOLIA.get('INDEX_NAME')
 
     def __init__(self):
         self._client = None
