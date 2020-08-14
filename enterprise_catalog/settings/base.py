@@ -327,8 +327,6 @@ DISCOVERY_SERVICE_API_URL = os.environ.get('DISCOVERY_SERVICE_API_URL', '')
 
 # Algolia
 ALGOLIA = {
-    # Temporary algolia setting for new index
-    'INDEX_NAME_NEW': '',
     'INDEX_NAME': '',
     'APPLICATION_ID': '',
     'API_KEY': '',
