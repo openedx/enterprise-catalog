@@ -22,7 +22,7 @@ USER_PASSWORD = 'password'
 FAKE_IMAGE_URL = 'https://fake.url/image.jpg'
 
 
-class CatalogQueryFactory(factory.DjangoModelFactory):
+class CatalogQueryFactory(factory.django.DjangoModelFactory):
     """
     Test factory for the `CatalogQuery` model
     """
@@ -32,7 +32,7 @@ class CatalogQueryFactory(factory.DjangoModelFactory):
     content_filter = factory.Dict({'content_type': factory.Faker('word')})
 
 
-class EnterpriseCatalogFactory(factory.DjangoModelFactory):
+class EnterpriseCatalogFactory(factory.django.DjangoModelFactory):
     """
     Test factory for the `EnterpriseCatalog` model
     """
@@ -48,7 +48,7 @@ class EnterpriseCatalogFactory(factory.DjangoModelFactory):
     publish_audit_enrollment_urls = False   # Default to False
 
 
-class ContentMetadataFactory(factory.DjangoModelFactory):
+class ContentMetadataFactory(factory.django.DjangoModelFactory):
     """
     Test factory for the `ContentMetadata` model
     """
@@ -79,7 +79,7 @@ class ContentMetadataFactory(factory.DjangoModelFactory):
         return json_metadata
 
 
-class UserFactory(factory.DjangoModelFactory):
+class UserFactory(factory.django.DjangoModelFactory):
     username = factory.Faker('user_name')
     password = factory.PostGenerationMethodCall('set_password', USER_PASSWORD)
     email = factory.Faker('email')
@@ -93,7 +93,7 @@ class UserFactory(factory.DjangoModelFactory):
         model = User
 
 
-class EnterpriseCatalogFeatureRoleFactory(factory.DjangoModelFactory):
+class EnterpriseCatalogFeatureRoleFactory(factory.django.DjangoModelFactory):
     """
     Test factory for the `EnterpriseCatalogFeatureRole` model.
     """
@@ -103,7 +103,7 @@ class EnterpriseCatalogFeatureRoleFactory(factory.DjangoModelFactory):
         model = EnterpriseCatalogFeatureRole
 
 
-class EnterpriseCatalogRoleAssignmentFactory(factory.DjangoModelFactory):
+class EnterpriseCatalogRoleAssignmentFactory(factory.django.DjangoModelFactory):
     """
     Test factory for the `EnterpriseCatalogRoleAssignment` model.
     """
