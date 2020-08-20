@@ -11,6 +11,7 @@ services:
       - mysql
       - elasticsearch
       - memcached
+      - lms
     stdin_open: true
     tty: true
     environment:
@@ -42,7 +43,8 @@ services:
     environment:
       NO_INSTALL_PREREQS: 1
       DJANGO_WATCHMAN_TIMEOUT: 30
-    image: kdmccormick96/edx-platform:latest
+    # TODO(jinder): I temporarily put a "-devstack" below, it was necessary to run locally, there must be a better way
+    image: kdmccormick96/edx-platform:latest-devstack
     ports:
       - "18000:18000"
     volumes:
