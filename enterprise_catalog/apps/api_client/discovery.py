@@ -6,35 +6,20 @@ import logging
 from urllib.parse import urljoin
 
 from django.conf import settings
-from edx_rest_api_client.client import OAuthAPIClient
 
+from enterprise_catalog.apps.api_client.base_oauth import BaseOAuthClient
 
 LOGGER = logging.getLogger(__name__)
 
 OFFSET_SIZE = 100
 
 
-class DiscoveryApiClient:
+class DiscoveryApiClient(BaseOAuthClient):
     """
     Object builds an API client to make calls to the Discovery Service.
     """
     SEARCH_ALL_ENDPOINT = urljoin(settings.DISCOVERY_SERVICE_API_URL, 'search/all/')
     COURSES_ENDPOINT = urljoin(settings.DISCOVERY_SERVICE_API_URL, 'courses/')
-
-    def __init__(self):
-        self.client = OAuthAPIClient(
-            settings.SOCIAL_AUTH_EDX_OAUTH2_URL_ROOT.strip('/'),
-            self.oauth2_client_id,
-            self.oauth2_client_secret
-        )
-
-    @property
-    def oauth2_client_id(self):
-        return settings.BACKEND_SERVICE_EDX_OAUTH2_KEY
-
-    @property
-    def oauth2_client_secret(self):
-        return settings.BACKEND_SERVICE_EDX_OAUTH2_SECRET
 
     def _retrieve_metadata_for_content_filter(self, content_filter, page, request_params):
         """
