@@ -15,6 +15,12 @@ services:
     # ports:
     #  - "3307:3306"
 
+  memcached:
+    image: memcached:1.6.6
+    container_name: enterprise.catalog.memcached
+    networks:
+      - devstack_default
+
   app:
     # Uncomment this line to use the official catalog base image
     # image: edxops/enterprise_catalog:devstack
@@ -32,6 +38,7 @@ services:
     ports:
       - "18160:18160"
     depends_on:
+      - memcached
       - mysql
       - worker
     networks:
