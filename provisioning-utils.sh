@@ -20,7 +20,7 @@ LAST_MAJOR_LOG_SECONDS="${LAST_MAJOR_LOG_SECONDS:-}"
 # TODO document
 log_step(){
 	if [[ -n "$LAST_MAJOR_LOG_SECONDS" ]]; then
-		elapsed=$(("$SECONDS" - "$LAST_MAJOR_LOG_SECONDS"))
+		elapsed=$((SECONDS - LAST_MAJOR_LOG_SECONDS))
 	else
 		elapsed=0
 	fi
@@ -50,7 +50,7 @@ log_error(){
 #   service_exec SERVICE COMMAND [ARGS...]
 # Examples:
 #   service_exec discovery make migrate
-service_exec(){ 
+service_exec(){
 	service="$1"
 	shift
 	command_and_args="$*"
@@ -124,5 +124,5 @@ create_lms_integration_for_service(){
 		--grant-type client-credentials  \
 		--client-id "$service_name"-backend-service-key  \
 		--client-secret "$service_name"-backend-service-secret \
-		"$service_name"-backend-service "$service_name"_worker 
+		"$service_name"-backend-service "$service_name"_worker
 }
