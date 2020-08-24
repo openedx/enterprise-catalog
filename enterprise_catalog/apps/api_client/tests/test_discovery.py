@@ -11,7 +11,7 @@ from enterprise_catalog.apps.catalog.tests.factories import CatalogQueryFactory
 class TestDiscoveryApiClient(TestCase):
     """ DiscoveryApiClient tests. """
 
-    @mock.patch('enterprise_catalog.apps.api_client.discovery.OAuthAPIClient')
+    @mock.patch('enterprise_catalog.apps.api_client.base_oauth.OAuthAPIClient')
     def test_get_metadata_by_query_with_results(self, mock_oauth_client):
         """
         get_metadata_by_query should call discovery endpoint, but not call
@@ -31,7 +31,7 @@ class TestDiscoveryApiClient(TestCase):
         expected_response = [{'key': 'fakeX'}]
         self.assertEqual(actual_response, expected_response)
 
-    @mock.patch('enterprise_catalog.apps.api_client.discovery.OAuthAPIClient')
+    @mock.patch('enterprise_catalog.apps.api_client.base_oauth.OAuthAPIClient')
     def test_get_metadata_by_query_with_error(self, mock_oauth_client):
         """
         get_metadata_by_query should return None when a call to discovery endpoint fails.
@@ -48,7 +48,7 @@ class TestDiscoveryApiClient(TestCase):
         expected_response = None
         self.assertEqual(actual_response, expected_response)
 
-    @mock.patch('enterprise_catalog.apps.api_client.discovery.OAuthAPIClient')
+    @mock.patch('enterprise_catalog.apps.api_client.base_oauth.OAuthAPIClient')
     def test_get_courses_with_results(self, mock_oauth_client):
         """
         get_courses should call discovery endpoint to fetch all courses
@@ -66,7 +66,7 @@ class TestDiscoveryApiClient(TestCase):
         expected_response = [{'key': 'fakeX'}]
         self.assertEqual(actual_response, expected_response)
 
-    @mock.patch('enterprise_catalog.apps.api_client.discovery.OAuthAPIClient')
+    @mock.patch('enterprise_catalog.apps.api_client.base_oauth.OAuthAPIClient')
     def test_get_courses_with_error(self, mock_oauth_client):
         """
         get_courses should return empty list when a call to discovery endpoint fails.

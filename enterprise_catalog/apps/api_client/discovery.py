@@ -9,6 +9,7 @@ from django.conf import settings
 
 from enterprise_catalog.apps.api_client.base_oauth import BaseOAuthClient
 
+
 LOGGER = logging.getLogger(__name__)
 
 OFFSET_SIZE = 100

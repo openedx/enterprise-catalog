@@ -1,11 +1,8 @@
-import logging
 from urllib.parse import urljoin
 
 from django.conf import settings
 
 from enterprise_catalog.apps.api_client.base_oauth import BaseOAuthClient
-
-LOGGER = logging.getLogger(__name__)
 
 
 class EnterpriseApiClient(BaseOAuthClient):
