@@ -21,6 +21,11 @@ Once the server is up and running you can view the enterprise catalog at http://
 
 You can login with the username *edx* and password *edx*.
 
+Admin Access
+------------
+To access the Django admin pages in stage or production, follow the instructions in https://openedx.atlassian.net/wiki/spaces/SRE/pages/691568641/Django+Administration
+on "Django Admin Pages for Newer Microservices". Please contact the enterprise titans squad if you need someone to grant you admin access.
+
 Makefile Commands
 --------------------
 The `Makefile <../Makefile>`_ includes numerous commands to start the service, but the basic commands are the following:
