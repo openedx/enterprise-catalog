@@ -140,13 +140,17 @@ validate_translations: fake_translations detect_changed_source_translations ## i
 # Docker commands below
 # TODO curate
 
-dev.build:
-	docker build . --tag kdmccormick96/enterprise-catalog # TODO
+dev.dd.build:
+	docker build . --target app --tag kdmccormick96/enterprise-catalog # TODO
 
-dev.push: dev.build
+dev.dd.push: dev.build
 	docker push kdmccormick96/enterprise-catalog # TODO
 
-dev.build.push: dev.build dev.push # TODO
+def.dd.pull:
+	docker-compose down --volumes && docker-compose pull --include-deps app
+
+dev.dd.provision:
+	bash ./provision.sh
 
 dev.provision:
 	bash ./provision-catalog.sh
@@ -166,7 +170,7 @@ dev.up.build:
 	docker-compose up -d --build
 
 dev.down: # Kills containers and all of their data that isn't in volumes
-	docker-compose downing
+	docker-compose down
 
 dev.destroy: dev.down #Kills containers and destroys volumes. If you get an error after running this, also run: docker volume rm portal-designer_designer_mysql
 	docker volume rm enterprise-catalog_enterprise_catalog_mysql
