@@ -1,26 +1,23 @@
-# -*- coding: utf-8 -*-
 """
 Discovery service api client code.
 """
 import logging
-from urllib.parse import urljoin
-
-from django.conf import settings
 
 from enterprise_catalog.apps.api_client.base_oauth import BaseOAuthClient
+from enterprise_catalog.apps.api_client.constants import (
+    COURSES_ENDPOINT,
+    OFFSET_SIZE,
+    SEARCH_ALL_ENDPOINT,
+)
 
 
 LOGGER = logging.getLogger(__name__)
-
-OFFSET_SIZE = 100
 
 
 class DiscoveryApiClient(BaseOAuthClient):
     """
     Object builds an API client to make calls to the Discovery Service.
     """
-    SEARCH_ALL_ENDPOINT = urljoin(settings.DISCOVERY_SERVICE_API_URL, 'search/all/')
-    COURSES_ENDPOINT = urljoin(settings.DISCOVERY_SERVICE_API_URL, 'courses/')
 
     def _retrieve_metadata_for_content_filter(self, content_filter, page, request_params):
         """
@@ -29,7 +26,7 @@ class DiscoveryApiClient(BaseOAuthClient):
         """
         LOGGER.info('Retrieving results from course-discovery for page {}...'.format(page))
         response = self.client.post(
-            self.SEARCH_ALL_ENDPOINT,
+            SEARCH_ALL_ENDPOINT,
             json=content_filter,
             params=request_params,
         ).json()
@@ -82,7 +79,7 @@ class DiscoveryApiClient(BaseOAuthClient):
         """
         LOGGER.info('Retrieving courses from course-discovery for offset {}...'.format(offset))
         response = self.client.get(
-            self.COURSES_ENDPOINT,
+            COURSES_ENDPOINT,
             params=request_params,
         ).json()
         return response

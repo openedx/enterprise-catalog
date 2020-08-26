@@ -1,16 +1,13 @@
-from urllib.parse import urljoin
-
-from django.conf import settings
-
 from enterprise_catalog.apps.api_client.base_oauth import BaseOAuthClient
+from enterprise_catalog.apps.api_client.constants import (
+    ENTERPRISE_CUSTOMER_ENDPOINT,
+)
 
 
 class EnterpriseApiClient(BaseOAuthClient):
     """
     API client to make calls to edx-enterprise API endpoints.
     """
-    ENTERPRISE_API_URL = urljoin(settings.LMS_BASE_URL, '/enterprise/api/v1/')
-    CUSTOMER_ENDPOINT = urljoin(ENTERPRISE_API_URL, 'enterprise-customer/')
 
     def get_enterprise_customer(self, customer_uuid):
         """
@@ -25,7 +22,7 @@ class EnterpriseApiClient(BaseOAuthClient):
         """
         query_params = {'uuid': customer_uuid}
         response = self.client.get(
-            self.CUSTOMER_ENDPOINT,
+            ENTERPRISE_CUSTOMER_ENDPOINT,
             params=query_params
         ).json()
         results = response.get('results', [])
