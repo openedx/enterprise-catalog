@@ -22,7 +22,8 @@ from enterprise_catalog.apps.catalog.constants import (
     ACCESS_TO_ALL_ENTERPRISES_TOKEN,
     CONTENT_TYPE_CHOICES,
     COURSE,
-    json_serialized_course_modes, PROGRAM,
+    PROGRAM,
+    json_serialized_course_modes,
 )
 from enterprise_catalog.apps.catalog.utils import (
     get_content_filter_hash,

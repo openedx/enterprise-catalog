@@ -18,7 +18,11 @@ from enterprise_catalog.apps.catalog.models import (
     CatalogQuery,
     EnterpriseCatalog,
 )
-from enterprise_catalog.apps.catalog.utils import get_content_filter_hash, get_parent_content_key
+from enterprise_catalog.apps.catalog.utils import (
+    get_content_filter_hash,
+    get_parent_content_key,
+)
+
 
 logger = logging.getLogger(__name__)
 
