@@ -173,7 +173,8 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
                         content_key=course_run.get('key'),
                         parent_content_key=content_key,
                     )
-        elif content_type == PROGRAM:
+        elif content_type is PROGRAM:
+            # This URL will always be blank because json_metadata['key'] doesn't exist for programs
             json_metadata['enrollment_url'] = enterprise_catalog.get_content_enrollment_url(
                 content_resource=PROGRAM,
                 content_key=content_key,

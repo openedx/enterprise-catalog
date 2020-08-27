@@ -4,9 +4,8 @@ Interface to Enterprise Customer details from edx-enterprise API using a volatil
 from django.conf import settings
 from django.core.cache import cache
 
-from enterprise_catalog.apps.api_client.enterprise import EnterpriseApiClient
-
 from .constants import ENTERPRISE_CUSTOMER_CACHE_KEY_TPL
+from .enterprise import EnterpriseApiClient
 
 
 class EnterpriseCustomerDetails:

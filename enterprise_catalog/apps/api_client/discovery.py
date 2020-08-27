@@ -3,12 +3,8 @@ Discovery service api client code.
 """
 import logging
 
-from enterprise_catalog.apps.api_client.base_oauth import BaseOAuthClient
-from enterprise_catalog.apps.api_client.constants import (
-    COURSES_ENDPOINT,
-    OFFSET_SIZE,
-    SEARCH_ALL_ENDPOINT,
-)
+from .base_oauth import BaseOAuthClient
+from .constants import COURSES_ENDPOINT, OFFSET_SIZE, SEARCH_ALL_ENDPOINT
 
 
 LOGGER = logging.getLogger(__name__)
