@@ -27,11 +27,11 @@ docker-compose up --detach lms
 
 # TODO: Make sure this handles squashed migrations idempotently 
 # (e.g. enterprise/migrations/0001_squashed_0092_auto_20200312_1650.py)
-#log_step "lms: Running migrations for default database..."
-#service_exec_management lms migrate
+log_step "lms: Running migrations for default database..."
+service_exec_management lms migrate
 
-#log_step "lms: Running migrations for courseware student module history (CSMH) database..."
-#service_exec_management lms migrate --database student_module_history
+log_step "lms: Running migrations for courseware student module history (CSMH) database..."
+service_exec_management lms migrate --database student_module_history
 
 
 ## TODO: can we handle assets during provisioning? and do we even need it for slim LMS? for login, probably...
