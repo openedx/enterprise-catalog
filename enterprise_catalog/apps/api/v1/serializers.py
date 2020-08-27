@@ -18,8 +18,7 @@ from enterprise_catalog.apps.catalog.models import (
     CatalogQuery,
     EnterpriseCatalog,
 )
-from enterprise_catalog.apps.catalog.utils import get_content_filter_hash
-
+from enterprise_catalog.apps.catalog.utils import get_content_filter_hash, get_parent_content_key
 
 logger = logging.getLogger(__name__)
 
@@ -142,6 +141,7 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
         json_metadata = instance.json_metadata.copy()
         marketing_url = json_metadata.get('marketing_url')
         content_key = json_metadata.get('key')
+        parent_content_key = get_parent_content_key(json_metadata)
 
         if marketing_url:
             marketing_url = update_query_parameters(
@@ -152,25 +152,28 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
 
         if content_type in (COURSE, COURSE_RUN):
             json_metadata['enrollment_url'] = enterprise_catalog.get_content_enrollment_url(
-                content_resource='course',
+                content_resource=COURSE,
                 content_key=content_key,
+                parent_content_key=parent_content_key,
             )
             json_metadata['xapi_activity_id'] = enterprise_catalog.get_xapi_activity_id(
                 content_resource=content_type,
                 content_key=content_key,
             )
-            if content_type == COURSE:
+            if content_type is COURSE:
                 course_runs = json_metadata.get('course_runs', [])
                 json_metadata['active'] = is_any_course_run_enrollable(course_runs)
                 for course_run in course_runs:
                     course_run['enrollment_url'] = enterprise_catalog.get_content_enrollment_url(
-                        content_resource='course',
+                        content_resource=COURSE,
                         content_key=course_run.get('key'),
+                        parent_content_key=content_key,
                     )
         elif content_type == PROGRAM:
             json_metadata['enrollment_url'] = enterprise_catalog.get_content_enrollment_url(
-                content_resource='program',
+                content_resource=PROGRAM,
                 content_key=content_key,
+                parent_content_key=parent_content_key,
             )
 
         return json_metadata

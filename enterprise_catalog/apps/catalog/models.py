@@ -17,11 +17,12 @@ from enterprise_catalog.apps.api.v1.utils import (
     update_query_parameters,
 )
 from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
+from enterprise_catalog.apps.api_client.enterprise import EnterpriseApiClient
 from enterprise_catalog.apps.catalog.constants import (
     ACCESS_TO_ALL_ENTERPRISES_TOKEN,
     CONTENT_TYPE_CHOICES,
     COURSE,
-    json_serialized_course_modes,
+    json_serialized_course_modes, PROGRAM,
 )
 from enterprise_catalog.apps.catalog.utils import (
     get_content_filter_hash,
@@ -213,31 +214,56 @@ class EnterpriseCatalog(TimeStampedModel):
         # if the filtered content metadata exists, the specified content_keys exist in the catalog
         return self.content_metadata.filter(query).exists()
 
-    def get_content_enrollment_url(self, content_resource, content_key):
+    def get_content_enrollment_url(self, content_resource, content_key, parent_content_key):
         """
         Return enterprise content enrollment page url with the catalog information for the given content key.
+
+        If the enterprise customer's Learner Portal (LP) is enabled, the LP course page URL is returned.
 
         Arguments:
             content_resource (str): The content resource to use in the URL (i.e., "course", "program")
             content_key (str): The content key for the course to be displayed.
+            parent_content_key (str):
 
         Returns:
-            (str): Enterprise landing page url.
+            (str): Enterprise landing page URL OR Enterprise Learner Portal course page URL.
         """
-        if not content_key or not content_resource:
+        if not (content_key and content_resource):
             return None
 
-        url = '{}/enterprise/{}/{}/{}/enroll/'.format(
-            settings.LMS_BASE_URL,
-            self.enterprise_uuid,
-            content_resource,
-            content_key,
-        )
-        params = get_enterprise_utm_context(self.enterprise_name)
-        params['catalog'] = self.uuid
+        # TODO: create interface to cache enterprise customer details
+        api_client = EnterpriseApiClient()
+        enterprise_customer = api_client.get_enterprise_customer(self.enterprise_uuid)
+        learner_portal_enabled = enterprise_customer['enable_learner_portal']
 
+        params = get_enterprise_utm_context(self.enterprise_name)
         if self.publish_audit_enrollment_urls:
             params['audit'] = 'true'
+
+        if learner_portal_enabled and content_resource is not PROGRAM:
+            # parent_content_key is our way of telling if this is a course run
+            # since this function is never called with COURSE_RUN as content_resource
+            if parent_content_key:
+                course_key = parent_content_key
+                # adding course_run_key to the params for rendering the correct info
+                # on the LP course page and enrolling in the intended course run
+                params['course_run_key'] = content_key
+            else:
+                course_key = content_key
+            url = '{}/{}/course/{}'.format(
+                settings.ENTERPRISE_LEARNER_PORTAL_BASE_URL,
+                enterprise_customer['slug'],
+                course_key
+            )
+        else:
+            # Catalog param only needed for legacy (non-LP) enrollment URL
+            params['catalog'] = self.uuid
+            url = '{}/enterprise/{}/{}/{}/enroll/'.format(
+                settings.LMS_BASE_URL,
+                self.enterprise_uuid,
+                content_resource,
+                content_key,
+            )
 
         return update_query_parameters(url, params)
 

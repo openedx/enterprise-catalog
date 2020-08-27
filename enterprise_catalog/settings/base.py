@@ -324,6 +324,7 @@ STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 # URLs
 LMS_BASE_URL = os.environ.get('LMS_BASE_URL', '')
 DISCOVERY_SERVICE_API_URL = os.environ.get('DISCOVERY_SERVICE_API_URL', '')
+ENTERPRISE_LEARNER_PORTAL_BASE_URL = os.environ.get('ENTERPRISE_LEARNER_PORTAL_BASE_URL', '')
 
 # Algolia
 ALGOLIA = {
