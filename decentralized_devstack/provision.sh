@@ -56,7 +56,7 @@ for dependency in lms discovery ; do
 done
 
 log_message "Provisioning app..."
-source ./provision-app.sh
+source ./../provision-app.sh
 
 log_step "Restarting all containers..."
 docker-compose restart

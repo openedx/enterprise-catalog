@@ -4,10 +4,10 @@
 source provisioning-utils.sh
 
 log_step "lms: Ensuring MySQL databases and users exist..."
-docker-compose exec -T mysql bash -c "mysql -uroot mysql" < provision-mysql-lms.sql
+docker-compose exec -T mysql bash -c "mysql -uroot mysql" < decentralized_devstack/provision-mysql-lms.sql
 
 log_step "lms: Adding default MySQL data from dump..."
-docker-compose exec -T mysql /usr/bin/mysql edxapp < provision-mysql-lms-data.sql
+docker-compose exec -T mysql /usr/bin/mysql edxapp < decentralized_devstack/provision-mysql-lms-data.sql
 
 log_step "lms: Making sure MongoDB is ready..."
 until docker-compose exec -T mongo bash -c 'mongo --eval "printjson(db.serverStatus())"' &> /dev/null
@@ -17,7 +17,7 @@ do
 done
 
 log_step "lms: Creating MongoDB users..."
-docker-compose exec -T mongo bash -c "mongo" < provision-mongo.js
+docker-compose exec -T mongo bash -c "mongo" < decentralized_devstack/provision-mongo.js
 
 log_step "lms: Adding default MongoDB data..."
 service_exec mongo mongorestore --gzip /data/dump
