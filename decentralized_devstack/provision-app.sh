@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Include utilities.
-source provisioning-utils.sh
+source decentralized_devstack/provisioning-utils.sh
 
 log_step "app: Bringing up container(s)..."
 docker-compose up --build --detach app

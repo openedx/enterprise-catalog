@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Include utilities.
-source provisioning-utils.sh
+source decentralized_devstack/provisioning-utils.sh
 
 log_step "lms: Ensuring MySQL databases and users exist..."
 docker-compose exec -T mysql bash -c "mysql -uroot mysql" < decentralized_devstack/provision-mysql-lms.sql
