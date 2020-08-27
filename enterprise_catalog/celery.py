@@ -6,6 +6,7 @@ from django.conf import settings
 
 
 app = Celery('enterprise_catalog', )
+app.conf.task_protocol = 1
 
 # - namespace='CELERY' means all celery-related configuration keys
 #   should have a `CELERY_` prefix.
