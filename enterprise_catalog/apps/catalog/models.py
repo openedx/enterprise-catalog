@@ -17,15 +17,18 @@ from enterprise_catalog.apps.api.v1.utils import (
     update_query_parameters,
 )
 from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
-from enterprise_catalog.apps.api_client.enterprise import EnterpriseApiClient
-from enterprise_catalog.apps.catalog.constants import (
+from enterprise_catalog.apps.api_client.enterprise_cache import (
+    EnterpriseCustomerDetails,
+)
+
+from .constants import (
     ACCESS_TO_ALL_ENTERPRISES_TOKEN,
     CONTENT_TYPE_CHOICES,
     COURSE,
     PROGRAM,
     json_serialized_course_modes,
 )
-from enterprise_catalog.apps.catalog.utils import (
+from .utils import (
     get_content_filter_hash,
     get_content_key,
     get_content_type,
@@ -224,7 +227,8 @@ class EnterpriseCatalog(TimeStampedModel):
         Arguments:
             content_resource (str): The content resource to use in the URL (i.e., "course", "program")
             content_key (str): The content key for the course to be displayed.
-            parent_content_key (str):
+            parent_content_key (str): The content key for the course that is parent of the given course run key.
+                                      This argument will be None if a course or program key is passed.
 
         Returns:
             (str): Enterprise landing page URL OR Enterprise Learner Portal course page URL.
@@ -232,15 +236,12 @@ class EnterpriseCatalog(TimeStampedModel):
         if not (content_key and content_resource):
             return None
 
-        # TODO: create interface to cache enterprise customer details
-        api_client = EnterpriseApiClient()
-        enterprise_customer = api_client.get_enterprise_customer(self.enterprise_uuid)
-        learner_portal_enabled = enterprise_customer['enable_learner_portal']
-
         params = get_enterprise_utm_context(self.enterprise_name)
         if self.publish_audit_enrollment_urls:
             params['audit'] = 'true'
 
+        enterprise_customer = EnterpriseCustomerDetails(self.enterprise_uuid).customer_data
+        learner_portal_enabled = enterprise_customer.get('enable_learner_portal', False)
         if learner_portal_enabled and content_resource is not PROGRAM:
             # parent_content_key is our way of telling if this is a course run
             # since this function is never called with COURSE_RUN as content_resource

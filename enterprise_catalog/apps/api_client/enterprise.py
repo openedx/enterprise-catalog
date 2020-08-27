@@ -1,7 +1,5 @@
-from enterprise_catalog.apps.api_client.base_oauth import BaseOAuthClient
-from enterprise_catalog.apps.api_client.constants import (
-    ENTERPRISE_CUSTOMER_ENDPOINT,
-)
+from .base_oauth import BaseOAuthClient
+from .constants import ENTERPRISE_CUSTOMER_ENDPOINT
 
 
 class EnterpriseApiClient(BaseOAuthClient):
