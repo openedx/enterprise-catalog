@@ -18,7 +18,7 @@ Initialize and Provision
     .. code-block:: bash
 
         $ docker-compose down --volumes && docker-compose pull --include-deps app && docker ps
-        $ ./provision.sh
+        $ ./decentralized_devstack/provision.sh
 
     4. Run the following to attach to your LMS container:
 
