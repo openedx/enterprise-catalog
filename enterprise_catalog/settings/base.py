@@ -310,6 +310,11 @@ CELERY_STORE_ERRORS_EVEN_IF_IGNORED = True
 CELERY_TASK_SOFT_TIME_LIMIT = 240
 CELERY_TASK_TIME_LIMIT = 300
 
+BROKER_TRANSPORT_OPTIONS = {
+    'fanout_patterns': True,
+    'fanout_prefix': True,
+}
+
 """############################# END CELERY ##################################"""
 
 MEDIA_STORAGE_BACKEND = {
