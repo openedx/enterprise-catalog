@@ -64,7 +64,7 @@ marisa-trie==0.7.5        # via -r requirements/base.txt, langcodes
 markupsafe==1.1.1         # via -r requirements/base.txt, jinja2
 mccabe==0.6.1             # via pylint
 mock==3.0.5               # via -r requirements/test.in
-more-itertools==8.4.0     # via pytest
+more-itertools==8.5.0     # via pytest
 mysqlclient==2.0.1        # via -r requirements/base.txt
 newrelic==5.16.2.147      # via -r requirements/base.txt, edx-django-utils
 oauthlib==3.1.0           # via -r requirements/base.txt, requests-oauthlib, social-auth-core
