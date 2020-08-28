@@ -26,6 +26,7 @@ from enterprise_catalog.apps.catalog.tests.factories import (
     ContentMetadataFactory,
     EnterpriseCatalogFactory,
 )
+from enterprise_catalog.apps.catalog.utils import get_parent_content_key
 
 
 @ddt.ddt
@@ -531,6 +532,7 @@ class EnterpriseCatalogContainsContentItemsTests(APITestMixin):
         self.assert_correct_contains_response(url, False)
 
 
+@ddt.ddt
 class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
     """
     Tests on the get_content_metadata endpoint
@@ -550,14 +552,17 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         """
         return reverse('api:v1:enterprise-catalog-get-content-metadata', kwargs={'uuid': enterprise_catalog.uuid})
 
-    def _get_expected_json_metadata(self, content_metadata):
+    def _get_expected_json_metadata(self, content_metadata, learner_portal_enabled):
         """
         Helper to get the expected json_metadata from the passed in content_metadata instance
         """
         content_type = content_metadata.content_type
         updated_json_metadata = content_metadata.json_metadata.copy()
 
-        enrollment_url = '{}/enterprise/{}/{}/{}/enroll/?catalog={}&utm_medium=enterprise&utm_source={}'
+        if learner_portal_enabled and content_type in (COURSE, COURSE_RUN):
+            enrollment_url = '{}/{}/course/{}?{}utm_medium=enterprise&utm_source={}'
+        else:
+            enrollment_url = '{}/enterprise/{}/{}/{}/enroll/?catalog={}&utm_medium=enterprise&utm_source={}'
         marketing_url = '{}?utm_medium=enterprise&utm_source={}'
         xapi_activity_id = '{}/xapi/activities/{}/{}'
 
@@ -571,14 +576,29 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
             )
 
         if content_type in (COURSE, COURSE_RUN):
-            updated_json_metadata['enrollment_url'] = enrollment_url.format(
-                settings.LMS_BASE_URL,
-                self.enterprise_catalog.enterprise_uuid,
-                COURSE,
-                updated_json_metadata['key'],
-                self.enterprise_catalog.uuid,
-                self.enterprise_catalog.enterprise_name,
-            )
+            if learner_portal_enabled:
+                if content_type == COURSE:
+                    course_run_key_param = ''
+                    course_key = updated_json_metadata['key']
+                else:
+                    course_run_key_param = 'course_run_key={}&'.format(updated_json_metadata['key'])
+                    course_key = get_parent_content_key(updated_json_metadata)
+                updated_json_metadata['enrollment_url'] = enrollment_url.format(
+                    settings.ENTERPRISE_LEARNER_PORTAL_BASE_URL,
+                    self.enterprise_slug,
+                    course_key,
+                    course_run_key_param,
+                    self.enterprise_catalog.enterprise_name
+                )
+            else:
+                updated_json_metadata['enrollment_url'] = enrollment_url.format(
+                    settings.LMS_BASE_URL,
+                    self.enterprise_catalog.enterprise_uuid,
+                    COURSE,
+                    updated_json_metadata['key'],
+                    self.enterprise_catalog.uuid,
+                    self.enterprise_catalog.enterprise_name,
+                )
             updated_json_metadata['xapi_activity_id'] = xapi_activity_id.format(
                 settings.LMS_BASE_URL,
                 content_type,
@@ -642,10 +662,21 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['results'], [])
 
-    def test_get_content_metadata(self):
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
+    @ddt.data(
+        False,
+        True
+    )
+    def test_get_content_metadata(self, learner_portal_enabled, mock_api_client):
         """
         Verify the get_content_metadata endpoint returns all the metadata associated with a particular catalog
         """
+        mock_api_client.return_value.get_enterprise_customer.return_value = {
+            'slug': self.enterprise_slug,
+            'enable_learner_portal': learner_portal_enabled,
+        }
+        # Reset sequence to 10 to avoid sorting issue with 0, 1, 10, 2
+        ContentMetadataFactory.reset_sequence(10)
         # Create enough metadata to force pagination
         metadata = ContentMetadataFactory.create_batch(api_settings.PAGE_SIZE + 1)
         self.add_metadata_to_catalog(self.enterprise_catalog, metadata)
@@ -660,7 +691,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
 
         # Check that the first page contains all but the last metadata
         expected_metadata = sorted([
-            self._get_expected_json_metadata(item)
+            self._get_expected_json_metadata(item, learner_portal_enabled)
             for item in metadata
         ], key=itemgetter('key'))
         actual_metadata = response_data['results']
@@ -671,11 +702,20 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         self.assertEqual(second_page_response.status_code, status.HTTP_200_OK)
         self.assertEqual(second_page_response.json()['results'], [expected_metadata[-1]])
 
-    def test_get_content_metadata_traverse_pagination(self):
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
+    @ddt.data(
+        False,
+        True
+    )
+    def test_get_content_metadata_traverse_pagination(self, learner_portal_enabled, mock_api_client):
         """
         Verify the get_content_metadata endpoint returns all metadata on one page if the traverse pagination query
         parameter is added.
         """
+        mock_api_client.return_value.get_enterprise_customer.return_value = {
+            'slug': self.enterprise_slug,
+            'enable_learner_portal': learner_portal_enabled,
+        }
         # Create enough metadata to force pagination (if the query parameter wasn't sent)
         metadata = ContentMetadataFactory.create_batch(api_settings.PAGE_SIZE + 1)
         self.add_metadata_to_catalog(self.enterprise_catalog, metadata)
@@ -689,7 +729,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         self.assertEqual(uuid.UUID(response_data['enterprise_customer']), self.enterprise_catalog.enterprise_uuid)
 
         # Check that the page contains all the metadata
-        expected_metadata = [self._get_expected_json_metadata(item) for item in metadata]
+        expected_metadata = [self._get_expected_json_metadata(item, learner_portal_enabled) for item in metadata]
         actual_metadata = response_data['results']
         self.assertCountEqual(actual_metadata, expected_metadata)
 
