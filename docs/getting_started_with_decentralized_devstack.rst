@@ -1,12 +1,14 @@
 Getting Started
 ===============
 
-If you have not already done so, install create/activate a `virtualenv`_. Unless otherwise stated, assume all terminal code
-below is executed within the virtualenv.
+If you have not already done so, install create/activate a Python 3.8 `virtualenv`_.
+Unless otherwise stated, assume all terminal code below
+is executed within the virtualenv.
 
 .. _virtualenv: https://virtualenvwrapper.readthedocs.org/en/latest/
 
 You will also need to install docker and docker-compose.
+The latter can be installed in the venv with `pip install docker-compose`.
 
 
 Initialize and Provision
@@ -17,14 +19,7 @@ Initialize and Provision
 
     .. code-block:: bash
 
-        $ docker-compose down --volumes && docker-compose pull --include-deps app && docker ps
         $ ./provision.sh
-
-    4. Run the following to attach to your LMS container:
-
-    .. code-block:: bash
-
-        $ docker attach edx.devstack.lms
 
 Viewing Enterprise Catalog
 --------------------------
@@ -34,7 +29,7 @@ You can login with the username *edx* and password *edx*.
 
 Makefile Commands
 --------------------
-The `Makefile <../Makefile>`_ includes numerous commands to start the service, but the basic commands are the following:
+The `Makefile <../Makefile>`_ includes numerous commands to interact with the service, but the basic commands are the following:
 
 Open the shell to the enterprise catalog container for manual commands
 
@@ -52,7 +47,10 @@ Migrating Catalog Data from LMS to the Catalog Service
 ------------------------------------------------------
 You may already have enterprise catalog data persisted in your local LMS (edx-platform) database.  The edx-enterprise
 library provides a `migrate_enterprise_catalogs <https://github.com/edx/edx-enterprise/blob/master/enterprise/management/commands/migrate_enterprise_catalogs.py>`_
-management command that will copy those existing catalogs and their metadata into your local catalog service.  From your **devstack** directory, do the following:
+management command that will copy those existing catalogs and their metadata into your local catalog service.
+
+First, make sure to run `docker-compose down` in this repo.
+Then from your **devstack** directory, do the following:
 
    #. ``make dev.up.lms+redis``
    #. ``make lms-shell``
