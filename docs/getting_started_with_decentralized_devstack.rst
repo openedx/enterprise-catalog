@@ -1,7 +1,7 @@
 Getting Started
 ===============
 
-If you have not already done so, install create/activate a Python 3.8 `virtualenv`_.
+If you have not already done so, install create/activate a Python 3.5 or 3.8 `virtualenv`_.
 Unless otherwise stated, assume all terminal code below
 is executed within the virtualenv.
 
