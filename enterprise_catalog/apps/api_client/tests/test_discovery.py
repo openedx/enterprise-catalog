@@ -4,8 +4,9 @@ import mock
 from django.test import TestCase
 from simplejson import JSONDecodeError
 
-from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 from enterprise_catalog.apps.catalog.tests.factories import CatalogQueryFactory
+
+from ..discovery import DiscoveryApiClient
 
 
 class TestDiscoveryApiClient(TestCase):

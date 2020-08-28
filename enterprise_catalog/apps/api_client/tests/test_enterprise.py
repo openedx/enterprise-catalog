@@ -4,8 +4,8 @@ from uuid import uuid4
 import ddt
 from django.test import TestCase
 
-from enterprise_catalog.apps.api_client.constants import ENTERPRISE_CUSTOMER_ENDPOINT
-from enterprise_catalog.apps.api_client.enterprise import EnterpriseApiClient
+from ..constants import ENTERPRISE_CUSTOMER_ENDPOINT
+from ..enterprise import EnterpriseApiClient
 
 
 @ddt.ddt
