@@ -7,13 +7,12 @@ is executed within the virtualenv.
 
 .. _virtualenv: https://virtualenvwrapper.readthedocs.org/en/latest/
 
-You will also need to install docker and docker-compose.
-The latter can be installed in the venv with `pip install docker-compose`.
+You will also need to install docker.
 
 
 Initialize and Provision
 ------------------------
-    1. Verify that your virtual environment is active before proceeding
+    1. Verify that your virtual environment is active and all requirements installed (`make requirements`) before proceeding
     2. Clone the enterprise-catalog repo and **cd into that directory**
     3. Run the following to provision a new enterprise catalog environment:
 
