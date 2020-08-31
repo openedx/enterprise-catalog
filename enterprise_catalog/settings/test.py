@@ -1,6 +1,7 @@
 import os
 
 from enterprise_catalog.settings.base import *
+import tempfile
 
 LMS_BASE_URL = 'https://edx.test.lms'
 DISCOVERY_SERVICE_API_URL = 'https://edx.test.discovery/'
@@ -21,3 +22,6 @@ DATABASES = {
 # CELERY
 CELERY_ALWAYS_EAGER = True
 # END CELERY
+
+results_dir = tempfile.TemporaryDirectory()
+CELERY_RESULT_BACKEND = 'file://{}'.format(results_dir.name)
