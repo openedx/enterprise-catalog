@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
 # Include utilities.
-source provisioning-utils.sh
+source decentralized_devstack/provisioning-utils.sh
 
 log_step "discovery: Ensuring MySQL databases and users exist..."
-docker-compose exec -T mysql bash -c "mysql -uroot mysql" < provision-mysql-discovery.sql
+docker-compose exec -T mysql bash -c "mysql -uroot mysql" < decentralized_devstack/provision-mysql-discovery.sql
 
 log_step "discovery: Bringing up container"
 docker-compose up -d discovery
