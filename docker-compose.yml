@@ -10,7 +10,7 @@ services:
     build:
       context: "."
     image: kdmccormick96/enterprise-catalog  # TODO: Change to openedx.
-    container_name: edx.devstack.enterprise-catalog
+    container_name: enterprise-catalog.local.edx.org
     hostname: app.catalog.enterprise
     volumes:
       - .:/edx/app/enterprise_catalog/enterprise_catalog
@@ -28,7 +28,7 @@ services:
     environment:
       CELERY_ALWAYS_EAGER: 'false'
       CELERY_BROKER_TRANSPORT: redis
-      CELERY_BROKER_HOSTNAME: edx.devstack.redis:6379
+      CELERY_BROKER_HOSTNAME: redis.local.edx.org:6379
       CELERY_BROKER_VHOST: 0
       CELERY_BROKER_PASSWORD: password
       DJANGO_SETTINGS_MODULE: enterprise_catalog.settings.devstack
@@ -41,7 +41,7 @@ services:
       context: "."
     image: kdmccormick96/enterprise-catalog  # TODO: Change to openedx.
     command: bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && celery -A enterprise_catalog worker -l DEBUG'
-    container_name: edx.devstack.enterprise-catalog-worker
+    container_name: enterprise-catalog-worker.local.edx.org
     depends_on:
       - discovery
       - lms
@@ -49,7 +49,7 @@ services:
     environment:
       CELERY_ALWAYS_EAGER: 'false'
       CELERY_BROKER_TRANSPORT: redis
-      CELERY_BROKER_HOSTNAME: edx.devstack.redis:6379
+      CELERY_BROKER_HOSTNAME: redis.local.edx.org:6379
       CELERY_BROKER_VHOST: 0
       CELERY_BROKER_PASSWORD: password
       DJANGO_SETTINGS_MODULE: enterprise_catalog.settings.devstack
@@ -64,7 +64,7 @@ services:
       - .:/edx/app/enterprise_catalog/enterprise_catalog
 
   discovery:
-    container_name: edx.devstack.discovery
+    container_name: discovery.local.edx.org
     hostname: discovery.devstack.edx
     depends_on:
       - mysql
@@ -74,7 +74,7 @@ services:
     stdin_open: true
     tty: true
     environment:
-      TEST_ELASTICSEARCH_URL: http://edx.devstack.elasticsearch:9200
+      TEST_ELASTICSEARCH_URL: http://elasticsearch.local.edx.org:9200
       DJANGO_WATCHMAN_TIMEOUT: 30
     image: kdmccormick96/course-discovery:latest
     ports:
@@ -83,7 +83,7 @@ services:
       - discovery_assets:/edx/var/discovery/
 
   elasticsearch:
-    container_name: edx.devstack.elasticsearch
+    container_name: elasticsearch.local.edx.org
     hostname: elasticsearch.devstack.edx
     image: edxops/elasticsearch:devstack
     volumes:
@@ -91,7 +91,7 @@ services:
       - elasticsearch_data:/usr/share/elasticsearch/logs
 
   lms:
-    container_name: edx.devstack.lms
+    container_name: lms.local.edx.org
     hostname: lms.devstack.edx
     depends_on:
       - mysql
@@ -110,7 +110,7 @@ services:
       - edxapp_lms_assets:/edx/var/edxapp/staticfiles/
 
   memcached:
-    container_name: edx.devstack.memcached
+    container_name: memcached.local.edx.org
     hostname: memcached.devstack.edx
     image: memcached:1.5.10-alpine
 
@@ -119,7 +119,7 @@ services:
     # to conserve disk space, and disable the journal for a minor performance gain.
     # See https://docs.mongodb.com/v3.0/reference/program/mongod/#options for complete details.
     command: mongod --smallfiles --nojournal --storageEngine wiredTiger
-    container_name: edx.devstack.mongo
+    container_name: mongo.local.edx.org
     hostname: mongo.devstack.edx
     image: mongo:${MONGO_VERSION:-3.6.17}
     volumes:
@@ -128,7 +128,7 @@ services:
 
   mysql:
     command: mysqld --character-set-server=utf8 --collation-server=utf8_general_ci
-    container_name: edx.devstack.mysql
+    container_name: mysql.local.edx.org
     hostname: mysql.devstack.edx
     environment:
       MYSQL_ROOT_PASSWORD: ""
@@ -139,7 +139,7 @@ services:
 
   redis:
     command: redis-server --requirepass password
-    container_name: edx.devstack.redis
+    container_name: redis.local.edx.org
     hostname: redis.devstack.edx
     image: redis:2.8
 

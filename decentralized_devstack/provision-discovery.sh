@@ -31,10 +31,10 @@ service_exec_management discovery create_or_update_partner \
 	--site-domain localhost:18381 \
 	--code edx \
 	--name edX \
-	--courses-api-url "http://edx.devstack.lms:18000/api/courses/v1/" \
-	--ecommerce-api-url "http://edx.devstack.ecommerce:18130/api/v2/" \
-	--organizations-api-url "http://edx.devstack.lms:18000/api/organizations/v0/" \
-	--lms-url "http://edx.devstack.lms:18000/"
+	--courses-api-url "http://lms.local.edx.org:18000/api/courses/v1/" \
+	--ecommerce-api-url "http://ecommerce.local.edx.org:18130/api/v2/" \
+	--organizations-api-url "http://lms.local.edx.org:18000/api/organizations/v0/" \
+	--lms-url "http://lms.local.edx.org:18000/"
 
 ## TODO: We need ecom for this, probably.
 ## Removing for now, but it might block enterprise-catalog usage.
