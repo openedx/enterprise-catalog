@@ -76,6 +76,7 @@ services:
     environment:
       TEST_ELASTICSEARCH_URL: http://elasticsearch.local.edx.org:9200
       DJANGO_WATCHMAN_TIMEOUT: 30
+    # this should eventually be changed to openedx/course-discovery:latest-devstack
     image: kdmccormick96/course-discovery:latest
     ports:
       - "18381:18381"

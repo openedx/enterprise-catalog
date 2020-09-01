@@ -1,13 +1,13 @@
 from enterprise_catalog.settings.local import *
 
 # Generic OAuth2 variables irrespective of SSO/backend service key types.
-OAUTH2_PROVIDER_URL = 'http://edx.devstack.lms:18000/oauth2'
+OAUTH2_PROVIDER_URL = 'http://lms.local.edx.org:18000/oauth2'
 
 # OAuth2 variables specific to social-auth/SSO login use case.
 SOCIAL_AUTH_EDX_OAUTH2_KEY = os.environ.get('SOCIAL_AUTH_EDX_OAUTH2_KEY', 'enterprise_catalog-sso-key')
 SOCIAL_AUTH_EDX_OAUTH2_SECRET = os.environ.get('SOCIAL_AUTH_EDX_OAUTH2_SECRET', 'enterprise_catalog-sso-secret')
 SOCIAL_AUTH_EDX_OAUTH2_ISSUER = os.environ.get('SOCIAL_AUTH_EDX_OAUTH2_ISSUER', 'http://localhost:18000')
-SOCIAL_AUTH_EDX_OAUTH2_URL_ROOT = os.environ.get('SOCIAL_AUTH_EDX_OAUTH2_URL_ROOT', 'http://edx.devstack.lms:18000')
+SOCIAL_AUTH_EDX_OAUTH2_URL_ROOT = os.environ.get('SOCIAL_AUTH_EDX_OAUTH2_URL_ROOT', 'http://lms.local.edx.org:18000')
 SOCIAL_AUTH_EDX_OAUTH2_LOGOUT_URL = os.environ.get('SOCIAL_AUTH_EDX_OAUTH2_LOGOUT_URL', 'http://localhost:18000/logout')
 SOCIAL_AUTH_EDX_OAUTH2_PUBLIC_URL_ROOT = os.environ.get(
     'SOCIAL_AUTH_EDX_OAUTH2_PUBLIC_URL_ROOT', 'http://localhost:18000',
@@ -41,7 +41,7 @@ DATABASES = {
         'NAME': os.environ.get('DB_NAME', 'enterprise_catalog'),
         'USER': os.environ.get('DB_USER', 'entcatalog001'),
         'PASSWORD': os.environ.get('DB_PASSWORD', 'password'),
-        'HOST': os.environ.get('DB_HOST', 'edx.devstack.mysql'),
+        'HOST': os.environ.get('DB_HOST', 'mysql.local.edx.org'),
         'PORT': os.environ.get('DB_PORT', 3306),
         'ATOMIC_REQUESTS': False,
         'CONN_MAX_AGE': 60,
@@ -50,8 +50,8 @@ DATABASES = {
 
 ALLOWED_HOSTS = ['*']
 
-LMS_BASE_URL = 'http://edx.devstack.lms:18000'
-DISCOVERY_SERVICE_API_URL = 'http://edx.devstack.discovery:18381/api/v1/'
+LMS_BASE_URL = 'http://lms.local.edx.org:18000'
+DISCOVERY_SERVICE_API_URL = 'http://discovery.local.edx.org:18381/api/v1/'
 
 CELERYD_HIJACK_ROOT_LOGGER = True
 CELERY_ALWAYS_EAGER = (
