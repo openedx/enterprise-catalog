@@ -79,7 +79,7 @@ services:
     # this should eventually be changed to openedx/course-discovery:latest-devstack
     image: kdmccormick96/course-discovery:latest
     ports:
-      - "18381:18381"
+      - "8381:8381"
     volumes:
       - discovery_assets:/edx/var/discovery/
 
@@ -106,7 +106,7 @@ services:
     # TODO(jinder): I temporarily put a "-devstack" below, it was necessary to run locally, there must be a better way
     image: kdmccormick96/edx-platform:latest-devstack
     ports:
-      - "18000:18000"
+      - "8000:8000"
     volumes:
       - edxapp_lms_assets:/edx/var/edxapp/staticfiles/
 
