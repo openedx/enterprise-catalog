@@ -53,8 +53,7 @@ log_error(){
 service_exec(){
 	service="$1"
 	shift
-	command_and_args="$*"
-	docker-compose exec -T "$service" bash -c "$command_and_args"
+	docker-compose exec -T "$service" "$@"
 }
 
 # Execute a Django management command in a service's container.
@@ -65,16 +64,14 @@ service_exec(){
 service_exec_management(){
 	service="$1"
 	shift
-	management_command_and_args="$*"
 	# If LMS/Studio, handle weird manage.py that expects lms/cms argument.
+        declare -a edxapp_service_args
 	if [[ "$service" == lms ]]; then
-		edxapp_service_variant=lms
+		edxapp_service_args=(lms)
 	elif [[ "$service" == studio ]]; then
-		edxapp_service_variant=cms
-	else
-		edxapp_service_variant=""
+		edxapp_service_args=(cms)
 	fi
-	service_exec "$service" "python ./manage.py ${edxapp_service_variant} ${management_command_and_args}"
+	service_exec "$service" python ./manage.py "${edxapp_service_args[@]}" "$@"
 }
 
 # Execute Python code through the Django shell of a service's container.
@@ -86,14 +83,13 @@ service_exec_python(){
 	service="$1"
 	python_code="$2"
 	# If LMS/Studio, handle weird manage.py that expects lms/cms argument.
+        declare -a edxapp_service_args
 	if [[ "$service" == lms ]]; then
-		edxapp_service_variant=lms
+		edxapp_service_args=(lms)
 	elif [[ "$service" == studio ]]; then
-		edxapp_service_variant=cms
-	else
-		edxapp_service_variant=""
+		edxapp_service_args=(cms)
 	fi
-	service_exec "$service" "echo '${python_code}' | python ./manage.py ${edxapp_service_variant} shell"
+	echo "${python_code}" | service_exec "$service" python ./manage.py "${edxapp_service_args[@]}" shell
 }
 
 # TODO document
