@@ -12,7 +12,7 @@ else
   docker-compose exec -T mysql mysql -uroot mysql < decentralized_devstack/provision-mysql-lms.sql
 
   log_step "lms: Adding default MySQL data from dump..."
-  docker-compose exec -T mysql /usr/bin/mysql edxapp < decentralized_devstack/provision-mysql-lms-data.sql
+  docker-compose exec -T mysql mysql edxapp < decentralized_devstack/provision-mysql-lms-data.sql
 fi
 
 log_step "lms: Making sure MongoDB is ready..."
