@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 
+# Change working directory to the root of the repo
+DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")"; pwd)"
+cd -- "$DIR"/..
+
 # Include utilities.
+# shellcheck source=provisioning-utils.sh
 source decentralized_devstack/provisioning-utils.sh
 
 log_step "Starting provisioning process..."
