@@ -5,9 +5,8 @@ source decentralized_devstack/provisioning-utils.sh
 
 # only load mysql schema if database does not exist, this way reprovisioning will not overwrite data
 edxapp_count=$(docker-compose exec mysql mysql -uroot --skip-column-names -se "SELECT COUNT(*) FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME='edxapp';" 2>/dev/null | tr -d $'\r')
-if [[ "${edxapp_count}" = "1" ]];
-then
-log_step "LMS DB exists, skipping lms schema load.."
+if [[ "${edxapp_count}" = "1" ]]; then
+  log_step "LMS DB exists, skipping lms schema load.."
 else
   log_step "lms: Ensuring MySQL databases and users exist..."
   docker-compose exec -T mysql bash -c "mysql -uroot mysql" < decentralized_devstack/provision-mysql-lms.sql
