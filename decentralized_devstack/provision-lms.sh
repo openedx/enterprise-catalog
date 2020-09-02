@@ -3,11 +3,17 @@
 # Include utilities.
 source decentralized_devstack/provisioning-utils.sh
 
-log_step "lms: Ensuring MySQL databases and users exist..."
-docker-compose exec -T mysql bash -c "mysql -uroot mysql" < decentralized_devstack/provision-mysql-lms.sql
+# only load mysql schema if database does not exist, this way reprovisioning will not overwrite data
+edxapp_count=$(docker-compose exec mysql mysql -uroot --skip-column-names -se "SELECT COUNT(*) FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME='edxapp';" 2>/dev/null | tr -d $'\r')
+if [[ "${edxapp_count}" = "1" ]]; then
+  log_step "LMS DB exists, skipping lms schema load.."
+else
+  log_step "lms: Ensuring MySQL databases and users exist..."
+  docker-compose exec -T mysql mysql -uroot mysql < decentralized_devstack/provision-mysql-lms.sql
 
-log_step "lms: Adding default MySQL data from dump..."
-docker-compose exec -T mysql /usr/bin/mysql edxapp < decentralized_devstack/provision-mysql-lms-data.sql
+  log_step "lms: Adding default MySQL data from dump..."
+  docker-compose exec -T mysql mysql edxapp < decentralized_devstack/provision-mysql-lms-data.sql
+fi
 
 log_step "lms: Making sure MongoDB is ready..."
 until docker-compose exec -T mongo bash -c 'mongo --eval "printjson(db.serverStatus())"' &> /dev/null
