@@ -26,7 +26,7 @@ log_step "lms: Creating MongoDB users..."
 docker-compose exec -T mongo bash -c "mongo" < decentralized_devstack/provision-mongo.js
 
 log_step "lms: Adding default MongoDB data..."
-service_exec mongo mongorestore --gzip /data/dump
+service_exec mongo mongorestore --drop --gzip /data/dump
 
 log_step "lms: Bringing up LMS..."
 docker-compose up --detach lms
@@ -38,7 +38,5 @@ service_exec_management lms migrate
 
 log_step "lms: Running migrations for courseware student module history (CSMH) database..."
 service_exec_management lms migrate --database student_module_history
-
-
 
 log_message "Done provisioning LMS."
