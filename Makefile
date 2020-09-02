@@ -184,21 +184,25 @@ attach: ## Runs docker attach enterprise.catalog.app
 	docker attach enterprise.catalog.app
 
 docker_build: ## Builds with the latest enterprise catalog
-	docker build . --target app -t "openedx/enterprise-catalog:latest"
-	docker build . --target newrelic -t "openedx/enterprise-catalog:latest-newrelic"
+	docker build . --target app -t openedx/enterprise-catalog:latest
+	docker build . --target devstack -t openedx/enterprise-catalog:latest-devstack
+	docker build . --target newrelic -t openedx/enterprise-catalog:latest-newrelic
 
 travis_docker_auth:
 	echo "$$DOCKER_PASSWORD" | docker login -u "$$DOCKER_USERNAME" --password-stdin
 
 travis_docker_tag: docker_build
-	docker build . --target app -t "openedx/enterprise-catalog:$$TRAVIS_COMMIT"
-	docker build . --target newrelic -t "openedx/enterprise-catalog:$$TRAVIS_COMMIT-newrelic"
+	docker tag openedx/enterprise-catalog:latest openedx/enterprise-catalog:${GITHUB_SHA}
+	docker tag openedx/enterprise-catalog:latest-devstack openedx/enterprise-catalog:${GITHUB_SHA}-devstack
+	docker tag openedx/enterprise-catalog:latest-newrelic openedx/enterprise-catalog:${GITHUB_SHA}-newrelic
 
 travis_docker_push: travis_docker_tag travis_docker_auth ## push to docker hub
-	docker push "openedx/enterprise-catalog:latest"
-	docker push "openedx/enterprise-catalog:$$TRAVIS_COMMIT"
-	docker push "openedx/enterprise-catalog:latest-newrelic"
-	docker push "openedx/enterprise-catalog:$$TRAVIS_COMMIT-newrelic"
+	docker push openedx/enterprise-catalog:latest
+	docker push openedx/enterprise-catalog:${GITHUB_SHA}
+	docker push openedx/enterprise-catalog:latest-devstack
+	docker push openedx/enterprise-catalog:${GITHUB_SHA}-devstack
+	docker push openedx/enterprise-catalog:latest-newrelic
+	docker push openedx/enterprise-catalog:${GITHUB_SHA}-newrelic
 
 shellcheck:
 	shellcheck *.sh -x

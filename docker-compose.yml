@@ -16,7 +16,7 @@ services:
       - .:/edx/app/enterprise_catalog/enterprise_catalog
       - ../src:/edx/src:cached
     ports:
-      - "18160:18160"
+      - "8160:8160"
     depends_on:
       - discovery
       - worker
@@ -55,7 +55,7 @@ services:
       DJANGO_SETTINGS_MODULE: enterprise_catalog.settings.devstack
     hostname: worker.catalog.enterprise
     ports:
-      - "18161:18161"
+      - "8161:8161"
     restart: always
     # Allows attachment to this container using 'docker attach <containerID>'.
     stdin_open: true
@@ -78,7 +78,7 @@ services:
       DJANGO_WATCHMAN_TIMEOUT: 30
     image: kdmccormick96/course-discovery:latest
     ports:
-      - "18381:18381"
+      - "8381:1381"
     volumes:
       - discovery_assets:/edx/var/discovery/
 
@@ -105,7 +105,7 @@ services:
     # TODO(jinder): I temporarily put a "-devstack" below, it was necessary to run locally, there must be a better way
     image: kdmccormick96/edx-platform:latest-devstack
     ports:
-      - "18000:18000"
+      - "8000:8000"
     volumes:
       - edxapp_lms_assets:/edx/var/edxapp/staticfiles/
 
