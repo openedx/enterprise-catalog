@@ -9,7 +9,7 @@ if [[ "${edxapp_count}" = "1" ]]; then
   log_step "LMS DB exists, skipping lms schema load.."
 else
   log_step "lms: Ensuring MySQL databases and users exist..."
-  docker-compose exec -T mysql bash -c "mysql -uroot mysql" < decentralized_devstack/provision-mysql-lms.sql
+  docker-compose exec -T mysql mysql -uroot mysql < decentralized_devstack/provision-mysql-lms.sql
 
   log_step "lms: Adding default MySQL data from dump..."
   docker-compose exec -T mysql /usr/bin/mysql edxapp < decentralized_devstack/provision-mysql-lms-data.sql
