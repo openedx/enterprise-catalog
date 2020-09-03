@@ -27,13 +27,13 @@ done
 log_step "Starting provisioning process..."
 
 if [ "$SHOULD_RESET" = true ] ; then
-	echo 'Bringing down existing containers and starting provisioning from scratch!'
+	log_step 'Bringing down existing containers and starting provisioning from scratch...'
 	docker-compose down --volume
 else
 	log_step "Bringing down any existing containers..."
 	docker-compose down
 fi
-
+sadjflkajs
 log_step "Pulling latest images..."
 docker-compose pull --include-deps app
 
