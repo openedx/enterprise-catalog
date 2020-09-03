@@ -18,7 +18,6 @@ Initialize and Provision
 
     .. code-block:: bash
 
-        $ docker-compose pull --include-deps app && docker ps
         $ ./decentralized_devstack/provision.sh
 
 Viewing Enterprise Catalog

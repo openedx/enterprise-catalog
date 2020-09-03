@@ -205,4 +205,4 @@ travis_docker_push: travis_docker_tag travis_docker_auth ## push to docker hub
 	docker push openedx/enterprise-catalog:${GITHUB_SHA}-newrelic
 
 shellcheck:
-	shellcheck *.sh -x
+	shellcheck --external-sources decentralized_devstack/*.sh
