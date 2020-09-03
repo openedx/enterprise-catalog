@@ -1,15 +1,11 @@
 version: "3.7"
 
-# TODO: Stop naming containers.
-
 services:
 
   app:
-    # Uncomment this line to use the official catalog base image
-    # image: edxops/enterprise_catalog:devstack
     build:
       context: "."
-    image: kdmccormick96/enterprise-catalog  # TODO: Change to openedx.
+      target: devstack
     container_name: edx.devstack.enterprise-catalog
     hostname: app.catalog.enterprise
     volumes:
@@ -35,11 +31,9 @@ services:
       ENABLE_DJANGO_TOOLBAR: 1
 
   worker:
-    # Uncomment this line to use the official catalog base image
-    # image: edxops/enterprise_catalog:devstack
     build:
       context: "."
-    image: kdmccormick96/enterprise-catalog  # TODO: Change to openedx.
+      target: devstack
     command: bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && celery -A enterprise_catalog worker -l DEBUG'
     container_name: edx.devstack.enterprise-catalog-worker
     depends_on:
@@ -64,6 +58,7 @@ services:
       - .:/edx/app/enterprise_catalog/enterprise_catalog
 
   discovery:
+    image: openedx/discovery:latest-devstack
     container_name: edx.devstack.discovery
     hostname: discovery.devstack.edx
     depends_on:
@@ -76,7 +71,6 @@ services:
     environment:
       TEST_ELASTICSEARCH_URL: http://edx.devstack.elasticsearch:9200
       DJANGO_WATCHMAN_TIMEOUT: 30
-    image: kdmccormick96/course-discovery:latest
     ports:
       - "8381:1381"
     volumes:
@@ -91,6 +85,7 @@ services:
       - elasticsearch_data:/usr/share/elasticsearch/logs
 
   lms:
+    image: openedx/edx-platform:latest-devstack
     container_name: edx.devstack.lms
     hostname: lms.devstack.edx
     depends_on:
@@ -102,8 +97,6 @@ services:
     environment:
       NO_INSTALL_PREREQS: 1
       DJANGO_WATCHMAN_TIMEOUT: 30
-    # TODO(jinder): I temporarily put a "-devstack" below, it was necessary to run locally, there must be a better way
-    image: kdmccormick96/edx-platform:latest-devstack
     ports:
       - "8000:8000"
     volumes:
