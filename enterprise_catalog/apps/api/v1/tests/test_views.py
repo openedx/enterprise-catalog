@@ -675,7 +675,11 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
             'slug': self.enterprise_slug,
             'enable_learner_portal': learner_portal_enabled,
         }
-        # Reset sequence to 10 to avoid sorting issue with 0, 1, 10, 2
+        # The ContentMetadataFactory creates content with keys that are generated using a string builder with a
+        # factory sequence (index is appended onto each content key). The results are sorted by key which creates
+        # an unexpected sorting of [key0, key1, key10, key2, ...] so the test fails on
+        # self.assertEqual(actual_metadata, expected_metadata[:-1]). By resetting the factory sequence to start at
+        # 10 we avoid that sorting issue.
         ContentMetadataFactory.reset_sequence(10)
         # Create enough metadata to force pagination
         metadata = ContentMetadataFactory.create_batch(api_settings.PAGE_SIZE + 1)

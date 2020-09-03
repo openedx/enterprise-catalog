@@ -4,7 +4,11 @@ Discovery service api client code.
 import logging
 
 from .base_oauth import BaseOAuthClient
-from .constants import COURSES_ENDPOINT, OFFSET_SIZE, SEARCH_ALL_ENDPOINT
+from .constants import (
+    DISCOVERY_COURSES_ENDPOINT,
+    DISCOVERY_OFFSET_SIZE,
+    DISCOVERY_SEARCH_ALL_ENDPOINT,
+)
 
 
 LOGGER = logging.getLogger(__name__)
@@ -22,7 +26,7 @@ class DiscoveryApiClient(BaseOAuthClient):
         """
         LOGGER.info('Retrieving results from course-discovery for page {}...'.format(page))
         response = self.client.post(
-            SEARCH_ALL_ENDPOINT,
+            DISCOVERY_SEARCH_ALL_ENDPOINT,
             json=content_filter,
             params=request_params,
         ).json()
@@ -75,7 +79,7 @@ class DiscoveryApiClient(BaseOAuthClient):
         """
         LOGGER.info('Retrieving courses from course-discovery for offset {}...'.format(offset))
         response = self.client.get(
-            COURSES_ENDPOINT,
+            DISCOVERY_COURSES_ENDPOINT,
             params=request_params,
         ).json()
         return response
@@ -91,7 +95,7 @@ class DiscoveryApiClient(BaseOAuthClient):
         Returns:
             list: a list of the results, or None if there was an error calling the discovery service.
         """
-        request_params = {'limit': OFFSET_SIZE}
+        request_params = {'limit': DISCOVERY_OFFSET_SIZE}
         request_params.update(query_params or {})
 
         courses = []
@@ -101,7 +105,7 @@ class DiscoveryApiClient(BaseOAuthClient):
             courses += response.get('results')
             # Traverse all pages and concatenate results
             while response.get('next'):
-                offset += OFFSET_SIZE
+                offset += DISCOVERY_OFFSET_SIZE
                 request_params.update({'offset': offset})
                 response = self._retrieve_courses(offset, request_params)
                 courses += response.get('results', [])

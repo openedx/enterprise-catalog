@@ -240,8 +240,8 @@ class EnterpriseCatalog(TimeStampedModel):
         if self.publish_audit_enrollment_urls:
             params['audit'] = 'true'
 
-        enterprise_customer = EnterpriseCustomerDetails(self.enterprise_uuid).customer_data
-        learner_portal_enabled = enterprise_customer.get('enable_learner_portal', False)
+        enterprise_customer = EnterpriseCustomerDetails(self.enterprise_uuid)
+        learner_portal_enabled = enterprise_customer.learner_portal_enabled
         if learner_portal_enabled and content_resource is not PROGRAM:
             # parent_content_key is our way of telling if this is a course run
             # since this function is never called with COURSE_RUN as content_resource
@@ -254,7 +254,7 @@ class EnterpriseCatalog(TimeStampedModel):
                 course_key = content_key
             url = '{}/{}/course/{}'.format(
                 settings.ENTERPRISE_LEARNER_PORTAL_BASE_URL,
-                enterprise_customer['slug'],
+                enterprise_customer.slug,
                 course_key
             )
         else:

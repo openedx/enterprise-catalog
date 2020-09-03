@@ -26,6 +26,20 @@ class EnterpriseCustomerDetails:
         self.uuid = uuid
         self.customer_data = _get_enterprise_customer_data(uuid)
 
+    @property
+    def learner_portal_enabled(self):
+        """
+        Return if Enterprise Customer Learner Portal is enabled OR False if unavailable.
+        """
+        return self.customer_data.get('enable_learner_portal', False)
+
+    @property
+    def slug(self):
+        """
+        Return Enterprise Customer slug OR empty string if unavailable.
+        """
+        return self.customer_data.get('slug', '')
+
 
 def _get_enterprise_customer_data(uuid):
     """
