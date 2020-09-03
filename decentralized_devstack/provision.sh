@@ -9,13 +9,13 @@ cd -- "$DIR"/..
 source decentralized_devstack/provisioning-utils.sh
 
 # whether provision script should overwrite existing data
-SHOULD_RESET=false
+START_FROM_SCRATCH=false
 # Loop through arguments and process them
 for arg in "$@"
 do
 	case $arg in
-		--reset)
-		SHOULD_RESET=true
+		--from-scratch)
+		START_FROM_SCRATCH=true
 		shift # Remove --reset from processing
 		;;
 		*)
@@ -26,9 +26,9 @@ done
 
 log_step "Starting provisioning process..."
 
-if [ "$SHOULD_RESET" = true ] ; then
+if [ "$START_FROM_SCRATCH" = true ] ; then
 	log_step 'Bringing down existing containers and starting provisioning from scratch...'
-	docker-compose down --volume
+	docker-compose down --volumes
 else
 	log_step "Bringing down any existing containers..."
 	docker-compose down
