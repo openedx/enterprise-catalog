@@ -3,7 +3,6 @@ version: "3.7"
 services:
 
   app:
-    image: openedx/enterprise_catalog:latest-devstack
     build:
       context: "."
       target: devstack
@@ -32,7 +31,6 @@ services:
       ENABLE_DJANGO_TOOLBAR: 1
 
   worker:
-    image: openedx/enterprise_catalog:latest-devstack
     build:
       context: "."
       target: devstack
