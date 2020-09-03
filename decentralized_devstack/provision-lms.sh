@@ -27,10 +27,11 @@ docker-compose exec -T mongo bash -c "mongo" < decentralized_devstack/provision-
 
 log_step "lms: Adding default MongoDB data, piping errors to mongorestore.log"
 # if this command is run on database with default data, it will throw out errors complaining about
-# duplicates(E11000 duplicate key error collection), we are  ignoring these errors(by piping errors to mongoresotre.log)
+# duplicates(E11000 duplicate key error collection), we are  ignoring these errors(by piping errors to mongorestore.log)
 # because mongorestore behaves how we want it to: Not replace data that already exists
 # Possible problems: this hides real errors that occur
 service_exec mongo mongorestore --gzip /data/dump 2>mongorestore.log
+head mongorestore.log
 
 log_step "lms: Bringing up LMS..."
 docker-compose up --detach lms
