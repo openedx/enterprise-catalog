@@ -8,10 +8,31 @@ cd -- "$DIR"/..
 # shellcheck source=provisioning-utils.sh
 source decentralized_devstack/provisioning-utils.sh
 
+# whether provision script should overwrite existing data
+SHOULD_RESET=false
+# Loop through arguments and process them
+for arg in "$@"
+do
+	case $arg in
+		--reset)
+		SHOULD_RESET=true
+		shift # Remove --reset from processing
+		;;
+		*)
+		shift # Remove generic argument from processing
+		;;
+	esac
+done
+
 log_step "Starting provisioning process..."
 
-log_step "Bringing down any existing containers..."
-docker-compose down
+if [ "$SHOULD_RESET" = true ] ; then
+	echo 'Bringing down existing containers and starting provisioning from scratch!'
+	docker-compose down --volume
+else
+	log_step "Bringing down any existing containers..."
+	docker-compose down
+fi
 
 log_step "Pulling latest images..."
 docker-compose pull --include-deps app
