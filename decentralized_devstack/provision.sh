@@ -33,7 +33,7 @@ else
 	log_step "Bringing down any existing containers..."
 	docker-compose down
 fi
-sadjflkajs
+
 log_step "Pulling latest images..."
 docker-compose pull --include-deps app
 
