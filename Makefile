@@ -166,7 +166,7 @@ dev.up.build:  ## Runs docker-compose -up -d --build
 	docker-compose up -d --build
 
 dev.down: ## Kills containers and all of their data that isn't in volumes
-	docker-compose downing
+	docker-compose down
 
 dev.destroy: dev.down ## Kills containers and destroys volumes. If you get an error after running this, also run: docker volume rm portal-designer_designer_mysql
 	docker volume rm enterprise-catalog_enterprise_catalog_mysql
