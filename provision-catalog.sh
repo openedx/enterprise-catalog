@@ -1,5 +1,6 @@
 # Echo all commands being run back to console.
 set -x
+set -e
 
 name="enterprise_catalog"
 port="18160"
