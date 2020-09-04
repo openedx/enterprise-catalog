@@ -25,10 +25,10 @@ done
 log_step "lms: Creating MongoDB users..."
 docker-compose exec -T mongo bash -c "mongo" < decentralized_devstack/provision-mongo.js
 
-log_step "lms: Adding default MongoDB data, piping errors to mongorestore.log"
+log_step "lms: Adding default MongoDB data..."
 # FYI, without --quiet flag below, when this command is run on database which was previously provisioned,
 # it will throw out errors complaining about duplicates(E11000 duplicate key error collection),
-# we are  ignoring these errors(by piping errors to mongorestore.log),
+# we are  ignoring these errors(using --quiet flag),
 # because mongorestore behaves how we want it to: Not replace data that already exists
 service_exec mongo mongorestore --quiet --gzip /data/dump 
 
