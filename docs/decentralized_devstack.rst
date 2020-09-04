@@ -22,6 +22,7 @@ Initialize and Provision
     3. Uncomment `TODO` in .env file
     4. Run the following to provision a new enterprise catalog environment
 
+
     .. code-block:: bash
 
         $ ./decentralized_devstack/provision.sh
