@@ -170,8 +170,8 @@ dev.stop: ## Stops containers so they can be restarted
 %-logs: ## View the logs of the specified service container
 	docker-compose logs -f --tail=500 $*
 
-attach: ## Runs docker attach enterprise.catalog.app
-	docker attach enterprise.catalog.app
+%-attach: ## Attach terminal I/O to the specified service container
+	docker attach enterprise.catalog.$*
 
 docker_build: ## Builds with the latest enterprise catalog
 	docker build . --target app -t "openedx/enterprise-catalog:latest"

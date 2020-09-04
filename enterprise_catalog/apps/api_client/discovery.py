@@ -1,40 +1,23 @@
-# -*- coding: utf-8 -*-
 """
 Discovery service api client code.
 """
 import logging
-from urllib.parse import urljoin
 
-from django.conf import settings
-from edx_rest_api_client.client import OAuthAPIClient
+from .base_oauth import BaseOAuthClient
+from .constants import (
+    DISCOVERY_COURSES_ENDPOINT,
+    DISCOVERY_OFFSET_SIZE,
+    DISCOVERY_SEARCH_ALL_ENDPOINT,
+)
 
 
 LOGGER = logging.getLogger(__name__)
 
-OFFSET_SIZE = 100
 
-
-class DiscoveryApiClient:
+class DiscoveryApiClient(BaseOAuthClient):
     """
     Object builds an API client to make calls to the Discovery Service.
     """
-    SEARCH_ALL_ENDPOINT = urljoin(settings.DISCOVERY_SERVICE_API_URL, 'search/all/')
-    COURSES_ENDPOINT = urljoin(settings.DISCOVERY_SERVICE_API_URL, 'courses/')
-
-    def __init__(self):
-        self.client = OAuthAPIClient(
-            settings.SOCIAL_AUTH_EDX_OAUTH2_URL_ROOT.strip('/'),
-            self.oauth2_client_id,
-            self.oauth2_client_secret
-        )
-
-    @property
-    def oauth2_client_id(self):
-        return settings.BACKEND_SERVICE_EDX_OAUTH2_KEY
-
-    @property
-    def oauth2_client_secret(self):
-        return settings.BACKEND_SERVICE_EDX_OAUTH2_SECRET
 
     def _retrieve_metadata_for_content_filter(self, content_filter, page, request_params):
         """
@@ -43,7 +26,7 @@ class DiscoveryApiClient:
         """
         LOGGER.info('Retrieving results from course-discovery for page {}...'.format(page))
         response = self.client.post(
-            self.SEARCH_ALL_ENDPOINT,
+            DISCOVERY_SEARCH_ALL_ENDPOINT,
             json=content_filter,
             params=request_params,
         ).json()
@@ -96,7 +79,7 @@ class DiscoveryApiClient:
         """
         LOGGER.info('Retrieving courses from course-discovery for offset {}...'.format(offset))
         response = self.client.get(
-            self.COURSES_ENDPOINT,
+            DISCOVERY_COURSES_ENDPOINT,
             params=request_params,
         ).json()
         return response
@@ -112,7 +95,7 @@ class DiscoveryApiClient:
         Returns:
             list: a list of the results, or None if there was an error calling the discovery service.
         """
-        request_params = {'limit': OFFSET_SIZE}
+        request_params = {'limit': DISCOVERY_OFFSET_SIZE}
         request_params.update(query_params or {})
 
         courses = []
@@ -122,7 +105,7 @@ class DiscoveryApiClient:
             courses += response.get('results')
             # Traverse all pages and concatenate results
             while response.get('next'):
-                offset += OFFSET_SIZE
+                offset += DISCOVERY_OFFSET_SIZE
                 request_params.update({'offset': offset})
                 response = self._retrieve_courses(offset, request_params)
                 courses += response.get('results', [])
