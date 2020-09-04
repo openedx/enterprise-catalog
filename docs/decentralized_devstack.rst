@@ -1,6 +1,6 @@
 Getting Started
 ===============
-
+TODO: add a little snipit here to explain decentralized_devstack
 
 Starting from scratch
 ---------------------
@@ -13,15 +13,13 @@ is executed within the virtualenv.
 
 You will also need to install docker.
 
-
 Initialize and Provision
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
     1. Clone the enterprise-catalog repo and **cd into that directory**
     2. Verify that your virtual environment is active and all requirements installed (`make requirements`) before proceeding
-    3. Uncomment `TODO` in .env file
+    3. open .env file and uncomment the line `COMPOSE_FILE=decentralized_devstack/docker-compose.yml` by removing "#" symbol
     4. Run the following to provision a new enterprise catalog environment
-
 
 .. code-block:: bash
 
@@ -35,6 +33,12 @@ Once the server is up and running you can view the enterprise catalog at http://
 You can login with the username *edx* and password *edx*.
 
 
-Toggle between decentralized_devstack and normal devstack
+Toggle between Decentralized Devstack and normal Devstack
 ---------------------------------------------------------
+
+To switch to Decentralized Devstack, open .env file and uncomment the line `COMPOSE_FILE=decentralized_devstack/docker-compose.yml` by removing "#" symbol
+
+To switch to normal Devstack, open .env file and comment out the line `COMPOSE_FILE=decentralized_devstack/docker-compose.yml` using "#" symbol
+
+
 
