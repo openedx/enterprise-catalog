@@ -16,14 +16,14 @@ else
 fi
 
 log_step "lms: Making sure MongoDB is ready..."
-until docker-compose exec -T mongo bash -c 'mongo --eval "printjson(db.serverStatus())"' &> /dev/null
+until docker-compose exec -T mongo mongo --eval "printjson(db.serverStatus())" &> /dev/null
 do
   printf "."
   sleep 1
 done
 
 log_step "lms: Creating MongoDB users..."
-docker-compose exec -T mongo bash -c "mongo" < decentralized_devstack/provision-mongo.js
+docker-compose exec -T mongo mongo < decentralized_devstack/provision-mongo.js
 
 log_step "lms: Adding default MongoDB data..."
 service_exec mongo mongorestore --gzip /data/dump

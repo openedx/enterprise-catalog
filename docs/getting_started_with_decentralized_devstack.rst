@@ -12,13 +12,13 @@ You will also need to install docker.
 
 Initialize and Provision
 ------------------------
-    1. Verify that your virtual environment is active and all requirements installed (`make requirements`) before proceeding
-    2. Clone the enterprise-catalog repo and **cd into that directory**
-    3. Run the following to provision a new enterprise catalog environment:
+1. Verify that your virtual environment is active and all requirements installed (``make requirements``) before proceeding
+2. Clone the enterprise-catalog repo and **cd into that directory**
+3. Run the following to provision a new enterprise catalog environment:
 
-    .. code-block:: bash
+.. code-block:: bash
 
-        $ ./decentralized_devstack/provision.sh
+    $ ./decentralized_devstack/provision.sh
 
 Viewing Enterprise Catalog
 --------------------------
@@ -48,12 +48,12 @@ You may already have enterprise catalog data persisted in your local LMS (edx-pl
 library provides a `migrate_enterprise_catalogs <https://github.com/edx/edx-enterprise/blob/master/enterprise/management/commands/migrate_enterprise_catalogs.py>`_
 management command that will copy those existing catalogs and their metadata into your local catalog service.
 
-First, make sure to run `docker-compose down` in this repo.
+First, make sure to run ``docker-compose down`` in this repo.
 Then from your **devstack** directory, do the following:
 
-   #. ``make dev.up.lms+redis``
-   #. ``make lms-shell``
-   #. ``./manage.py lms migrate_enterprise_catalogs --api_user enterprise_catalog_worker``
+#. ``make dev.up.lms+redis``
+#. ``make lms-shell``
+#. ``./manage.py lms migrate_enterprise_catalogs --api_user enterprise_catalog_worker``
 
 Advanced Setup Outside Docker
 =============================
@@ -73,16 +73,16 @@ Configuring Enterprise catalog service to communicate with other IDAs using OAut
 provider (LMS) and updating the Django settings for this project with the generated client credentials.
 
 A new OAuth 2.0 client can be created when using Devstack by visiting ``http://127.0.0.1:18000/admin/oauth2_provider/application/``.
-    1. Click the :guilabel:`Add Application` button.
-    2. Leave the user field blank.
-    3. Specify the name of this service, ``Enterprise catalog service``, as the client name.
-    4. Set the :guilabel:`URL` to the root path of this service: ``http://127.0.0.1:8003/``.
-    5. Set the :guilabel:`Redirect URL` to the complete endpoint: ``http://127.0.0.1:18150/complete/edx-oauth2/``.
-    6. Copy the :guilabel:`Client ID` and :guilabel:`Client Secret` values. They will be used later.
-    7. Select :guilabel:`Confidential` as the client type.
-    8. Select :guilabel:`Authorization code` as the authorization grant type.
-    9. Click :guilabel:`Save`.
 
+1. Click the :guilabel:`Add Application` button.
+2. Leave the user field blank.
+3. Specify the name of this service, ``Enterprise catalog service``, as the client name.
+4. Set the :guilabel:`URL` to the root path of this service: ``http://127.0.0.1:8003/``.
+5. Set the :guilabel:`Redirect URL` to the complete endpoint: ``http://127.0.0.1:18150/complete/edx-oauth2/``.
+6. Copy the :guilabel:`Client ID` and :guilabel:`Client Secret` values. They will be used later.
+7. Select :guilabel:`Confidential` as the client type.
+8. Select :guilabel:`Authorization code` as the authorization grant type.
+9. Click :guilabel:`Save`.
 
 
 Now that you have the client credentials, you can update your settings (ideally in

@@ -5,9 +5,7 @@
 set -x
 
 # Strictness: fail on errors and undefined variables.
-set -e
-set -o pipefail
-set -u
+set -eu -o pipefail
 
 # Colored text.
 BOLD_GREEN='\033[1;32m'
