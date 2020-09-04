@@ -7,7 +7,7 @@ log_step "app: Bringing up container(s)..."
 docker-compose up --build --detach app
 
 log_step "app: Ensuring MySQL databases and users exist..."
-docker-compose exec -T mysql bash -c "mysql -uroot mysql" < decentralized_devstack/provision-mysql-app.sql
+docker-compose exec -T mysql mysql -uroot mysql < decentralized_devstack/provision-mysql-app.sql
 
 log_step "app: Running migrations..."
 service_exec app make migrate
