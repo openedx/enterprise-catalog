@@ -20,13 +20,13 @@ services:
     # image: edxops/enterprise_catalog:devstack
     build:
       context: .
-      target: legacy_devapp
+      dockerfile: Dockerfile
     container_name: enterprise.catalog.app
     hostname: app.catalog.enterprise
     volumes:
       - .:/edx/app/enterprise_catalog/enterprise_catalog
       - ../src:/edx/src:cached
-    # This should be the same as the `CMD` in the devapp build stage
+    # This should be the same as the `CMD` in the legacy devapp build stage
     # of the Dockerfile
     command: bash -c 'gunicorn --reload --workers=2 --name enterprise_catalog -b :18160 -c /edx/app/enterprise_catalog/enterprise_catalog/enterprise_catalog/docker_gunicorn_configuration.py --log-file - --max-requests=1000 enterprise_catalog.wsgi:application'
     ports:
@@ -51,7 +51,7 @@ services:
   worker:
     build:
       context: .
-      target: legacy_devapp
+      dockerfile: Dockerfile
     command: bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && celery -A enterprise_catalog worker -l DEBUG'
     container_name: enterprise.catalog.worker
     depends_on:
