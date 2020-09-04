@@ -52,6 +52,7 @@ ALLOWED_HOSTS = ['*']
 
 LMS_BASE_URL = 'http://edx.devstack.lms:18000'
 DISCOVERY_SERVICE_API_URL = 'http://edx.devstack.discovery:18381/api/v1/'
+ENTERPRISE_LEARNER_PORTAL_BASE_URL = 'http://localhost:8734'
 
 CELERYD_HIJACK_ROOT_LOGGER = True
 CELERY_ALWAYS_EAGER = (
