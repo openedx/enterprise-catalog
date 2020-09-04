@@ -23,9 +23,9 @@ Initialize and Provision
     4. Run the following to provision a new enterprise catalog environment
 
 
-    .. code-block:: bash
+.. code-block:: bash
 
-        $ ./decentralized_devstack/provision.sh
+    $ ./decentralized_devstack/provision.sh
 
 Viewing Enterprise Catalog
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
