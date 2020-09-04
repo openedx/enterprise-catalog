@@ -20,11 +20,8 @@ Initialize and Provision
     1. Clone the enterprise-catalog repo and **cd into that directory**
     2. Verify that your virtual environment is active and all requirements installed (`make requirements`) before proceeding
     3. Uncomment `TODO` in .env file
-    4. Run the following to provision a new enterprise catalog environment:
-
-.. code-block:: bash
-
-    $ ./decentralized_devstack/provision.sh
+    4. Run the following to provision a new enterprise catalog environment::
+        $ ./decentralized_devstack/provision.sh
 
 Viewing Enterprise Catalog
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
