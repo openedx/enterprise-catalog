@@ -9,13 +9,13 @@ Getting Started from scratch
 1. Clone the enterprise-catalog repo and **cd into that directory**
 2. Create and activate either python 3.5 or 3.8 virtual environment, for more info: `virtualenv`_
 3. install requirements by running: `make requirements`
-3. open .env file and uncomment the line `COMPOSE_FILE=decentralized_devstack/docker-compose.yml` by removing "#" symbol
-4. provision Decentralized devstack by running: `./decentralized_devstack/provision.sh`
-5. Once provisioning has successfully run, you can view the enterprise catalog at http://localhost:18160/admin
+4. open .env file and uncomment the line `COMPOSE_FILE=decentralized_devstack/docker-compose.yml` by removing "#" symbol
+5. provision Decentralized devstack by running: `./decentralized_devstack/provision.sh`
+6. Once provisioning has successfully run, you can view the enterprise catalog at http://localhost:18160/admin
 
   - You can login with the username *edx* and password *edx*.
 
-6. start developing!
+7. start developing!
 
 .. _virtualenv: https://virtualenvwrapper.readthedocs.org/en/latest/
 
