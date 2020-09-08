@@ -4,9 +4,7 @@ Decentralized Devstack(DD) Workflows
 .. role:: bash(code)
    :language: bash
 
-.. _Getting Started from scratch:
-
-Getting Started from scratch
+Getting started from scratch
 ----------------------------
 
 #. Clone the enterprise-catalog repo and **cd into that directory**
