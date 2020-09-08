@@ -11,9 +11,11 @@ We use docker-compose to define and run all the containers necessary for enterpr
 - check which containers are running: `docker ps`
 
 `Docker-compose cheatsheet`_
+
 `Official compose documentation`_
 
 .. _ Docker-compose cheatsheet: https://devhints.io/docker-compose
+
 .. _ Official compose documentation: https://docs.docker.com/compose/
 
 Enterprise-catlog FAQ
