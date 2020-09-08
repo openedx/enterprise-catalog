@@ -12,7 +12,7 @@ Getting Started from scratch
 4. provision Decentralized devstack by running: `./decentralized_devstack/provision.sh`
 5. Once provisioning has successfully run, you can view the enterprise catalog at http://localhost:18160/admin
 
-    - You can login with the username *edx* and password *edx*.
+  - You can login with the username *edx* and password *edx*.
 
 6. start developing!
 
@@ -33,7 +33,7 @@ if you haven't setup Decentralized Devstack previously
 4. provision Decentralized devstack by running: `./decentralized_devstack/provision.sh`
 5. once provisioning has successfully run, you can view the enterprise catalog at http://localhost:18160/admin
 
-    - You can login with the username *edx* and password *edx*.
+  - You can login with the username *edx* and password *edx*.
 
 6. start developing!
 
@@ -46,7 +46,7 @@ if you've already provisioned Decentralized Devstack
 4. run `docker-compose up -d` to bring up DD
 5. you can view the enterprise catalog at http://localhost:18160/admin
 
-    - You can login with the username *edx* and password *edx*.
+  - You can login with the username *edx* and password *edx*.
 
 6. start developing!
 
