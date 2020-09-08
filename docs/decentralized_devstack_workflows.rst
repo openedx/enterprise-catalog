@@ -60,7 +60,7 @@ To switch to Legacy Devstack
 3. cd into edx/devstack directory and run `make dev.up.lms`(you might also have to run `dev.pull.lms` before)
 4. cd into edx/enterprise-catalog directory and follow instructions in docs/getting_started.rst
 
-.. Note:: These instructions assume you have setup legacy devstack correctly before.
+.. note:: These instructions assume you have setup legacy devstack correctly before.
 
 Turning on Decentralized Devstack
 ---------------------------------
@@ -81,7 +81,7 @@ Restarting everything from scratch
 
 Prerequisites: You have toggled to enterprise_catalog's DD(if not, see instructions above)
 
-.. Warning:: This will irreversibly remove all decentralized devstack related containers, networks, and volumes.
+.. warning:: This will irreversibly remove all decentralized devstack related containers, networks, and volumes.
 
 1. run `docker-compose down -v`
 2. provision Decentralized devstack by running: `./decentralized_devstack/provision.sh`
