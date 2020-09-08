@@ -27,9 +27,7 @@ docker-compose exec -T mongo bash -c "mongo" < decentralized_devstack/provision-
 
 log_step "lms: Adding default MongoDB data..."
 # FYI, without --quiet flag below, when this command is run on database which was previously provisioned,
-# it will throw out errors complaining about duplicates(E11000 duplicate key error collection),
-# we are  ignoring these errors(using --quiet flag),
-# because mongorestore behaves how we want it to: Not replace data that already exists
+# it will complaining about duplicates(E11000 duplicate key error collection)
 service_exec mongo mongorestore --quiet --gzip /data/dump 
 
 log_step "lms: Bringing up LMS..."
