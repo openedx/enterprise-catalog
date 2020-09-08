@@ -2,7 +2,7 @@
 name="enterprise_catalog"
 port="18160"
 
-docker-compose up -d
+docker-compose up -d --build
 
 # Install requirements
 # Can be skipped right now because we're using the --build flag on docker-compose. This will need to be changed once we move to devstack.
