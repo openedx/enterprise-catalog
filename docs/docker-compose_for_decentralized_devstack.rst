@@ -25,14 +25,14 @@ How do I run make migrate on enterprise-catalog?
 
 You have two options: 
 
-1) Run following command: docker exec -it enterprise.catalog.app bash -c 'make migrate'
-2) Enter shell and run command from inside containers:
+#. Run following command: docker exec -it enterprise.catalog.app bash -c 'make migrate'
+#. Enter shell and run command from inside containers:
 
-  - To enter shell: `docker-compose exec app bash`
+   * To enter shell: `docker-compose exec app bash`
 
-    + You command line should now be in enterprise-catalog directory in container.
-    + From here, you can run any django/python related commands to interact with enterprise-catalog service
+     + You command line should now be in enterprise-catalog directory in container.
+     + From here, you can run any django/python related commands to interact with enterprise-catalog service
 
-  - Run: `make migrate`
+   * Run: `make migrate`
 
 FYI, to run another general command like `python3 manage.py makemigrations` on service, just replace `make migrate` above with general command.
