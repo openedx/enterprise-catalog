@@ -33,12 +33,14 @@ Once the server is up and running you can view the enterprise catalog at http://
 You can login with the username *edx* and password *edx*.
 
 
-Toggle between Decentralized Devstack and normal Devstack
+Toggle between Decentralized Devstack and legacy Devstack
 ---------------------------------------------------------
 
 To switch to Decentralized Devstack, open .env file and uncomment the line `COMPOSE_FILE=decentralized_devstack/docker-compose.yml` by removing "#" symbol
 
-To switch to normal Devstack, open .env file and comment out the line `COMPOSE_FILE=decentralized_devstack/docker-compose.yml` using "#" symbol
+To switch to legacy Devstack, open .env file and comment out the line `COMPOSE_FILE=decentralized_devstack/docker-compose.yml` using "#" symbol
+
+.. Note:: Depending on the state of your local dev environment, you might have to rerun provisioning after toggling between the two devstacks
 
 
 
