@@ -36,8 +36,4 @@ You have two options:
 
   - Run: `make migrate`
 
-FYI, to run `python3 manage.py makemigrations` on service, just replace `make migrate` above with `python3 manage.py makemigrations`
-
-
-
-
+FYI, to run another general command like `python3 manage.py makemigrations` on service, just replace `make migrate` above with general command.
