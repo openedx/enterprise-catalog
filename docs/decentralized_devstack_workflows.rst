@@ -1,6 +1,7 @@
 Decentralized Devstack(DD) Workflows
 ====================================
-TODO: add a little snipit here to explain decentralized_devstack
+
+.. _Getting Started from scratch:
 
 Getting Started from scratch
 ----------------------------
@@ -53,17 +54,39 @@ if you've already provisioned Decentralized Devstack
 To switch to Legacy Devstack
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
 1. cd into edx/enterprise-catalog directory and run `docker-compose down` to turn off any local docker-compose containers(defined in docker_compose.yml files)
 2. open .env file and comment out the line `COMPOSE_FILE=decentralized_devstack/docker-compose.yml` by adding "#" symbol
 3. cd into edx/devstack directory and run `make dev.up.lms`(you might also have to run `dev.pull.lms` before)
 4. cd into edx/enterprise-catalog directory and follow instructions in docs/getting_started.rst
+
+.. Note:: These instructions assume you have setup legacy devstack correctly before.
 
 Turning on Decentralized Devstack
 ---------------------------------
 
 Prerequisites: You have toggled to enterprise_catalog's DD, it has already been provisioned(if not, see instructions above)
 
+- run `docker-compose up -d`
 
+Turning off Decentralized Devstack
+---------------------------------
 
+Prerequisites: You have toggled to enterprise_catalog's DD, it has already been provisioned(if not, see instructions above)
 
+- run `docker-compose down`
 
+Restarting everything from scratch
+----------------------------------
+
+Prerequisites: You have toggled to enterprise_catalog's DD(if not, see instructions above)
+
+.. Warning:: This will irreversibly remove all decentralized devstack related containers, networks, and volumes.
+
+1. run `docker-compose down -v`
+2. provision Decentralized devstack by running: `./decentralized_devstack/provision.sh`
+3. Once provisioning has successfully run, you can view the enterprise catalog at http://localhost:18160/admin
+
+  - You can login with the username *edx* and password *edx*.
+
+4. start developing!
