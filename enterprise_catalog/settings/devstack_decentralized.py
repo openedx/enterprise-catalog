@@ -1,16 +1,20 @@
+"""
+Settings file for decentralized devstack
+"""
+
 from enterprise_catalog.settings.local import *
 
 # Generic OAuth2 variables irrespective of SSO/backend service key types.
-OAUTH2_PROVIDER_URL = 'http://edx.devstack.lms:18000/oauth2'
+OAUTH2_PROVIDER_URL = 'http://edx.devstack.lms:8000/oauth2'
 
 # OAuth2 variables specific to social-auth/SSO login use case.
 SOCIAL_AUTH_EDX_OAUTH2_KEY = os.environ.get('SOCIAL_AUTH_EDX_OAUTH2_KEY', 'enterprise_catalog-sso-key')
 SOCIAL_AUTH_EDX_OAUTH2_SECRET = os.environ.get('SOCIAL_AUTH_EDX_OAUTH2_SECRET', 'enterprise_catalog-sso-secret')
-SOCIAL_AUTH_EDX_OAUTH2_ISSUER = os.environ.get('SOCIAL_AUTH_EDX_OAUTH2_ISSUER', 'http://localhost:18000')
-SOCIAL_AUTH_EDX_OAUTH2_URL_ROOT = os.environ.get('SOCIAL_AUTH_EDX_OAUTH2_URL_ROOT', 'http://edx.devstack.lms:18000')
-SOCIAL_AUTH_EDX_OAUTH2_LOGOUT_URL = os.environ.get('SOCIAL_AUTH_EDX_OAUTH2_LOGOUT_URL', 'http://localhost:18000/logout')
+SOCIAL_AUTH_EDX_OAUTH2_ISSUER = os.environ.get('SOCIAL_AUTH_EDX_OAUTH2_ISSUER', 'http://localhost:8000')
+SOCIAL_AUTH_EDX_OAUTH2_URL_ROOT = os.environ.get('SOCIAL_AUTH_EDX_OAUTH2_URL_ROOT', 'http://edx.devstack.lms:8000')
+SOCIAL_AUTH_EDX_OAUTH2_LOGOUT_URL = os.environ.get('SOCIAL_AUTH_EDX_OAUTH2_LOGOUT_URL', 'http://localhost:8000/logout')
 SOCIAL_AUTH_EDX_OAUTH2_PUBLIC_URL_ROOT = os.environ.get(
-    'SOCIAL_AUTH_EDX_OAUTH2_PUBLIC_URL_ROOT', 'http://localhost:18000',
+    'SOCIAL_AUTH_EDX_OAUTH2_PUBLIC_URL_ROOT', 'http://localhost:8000',
 )
 
 # OAuth2 variables specific to backend service API calls.
@@ -19,7 +23,7 @@ BACKEND_SERVICE_EDX_OAUTH2_SECRET = os.environ.get('BACKEND_SERVICE_EDX_OAUTH2_S
 
 JWT_AUTH.update({
     'JWT_SECRET_KEY': 'lms-secret',
-    'JWT_ISSUER': 'http://localhost:18000/oauth2',
+    'JWT_ISSUER': 'http://localhost:8000/oauth2',
     'JWT_AUDIENCE': None,
     'JWT_VERIFY_AUDIENCE': False,
     'JWT_PUBLIC_SIGNING_JWK_SET': (
@@ -30,7 +34,7 @@ JWT_AUTH.update({
     ),
     'JWT_ISSUERS': [{
         'AUDIENCE': 'lms-key',
-        'ISSUER': 'http://localhost:18000/oauth2',
+        'ISSUER': 'http://localhost:8000/oauth2',
         'SECRET_KEY': 'lms-secret',
     }],
 })
@@ -39,9 +43,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': os.environ.get('DB_NAME', 'enterprise_catalog'),
-        'USER': os.environ.get('DB_USER', 'root'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-        'HOST': os.environ.get('DB_HOST', 'enterprise.catalog.mysql'),
+        'USER': os.environ.get('DB_USER', 'entcatalog001'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'password'),
+        'HOST': os.environ.get('DB_HOST', 'edx.devstack.mysql'),
         'PORT': os.environ.get('DB_PORT', 3306),
         'ATOMIC_REQUESTS': False,
         'CONN_MAX_AGE': 60,
@@ -50,8 +54,8 @@ DATABASES = {
 
 ALLOWED_HOSTS = ['*']
 
-LMS_BASE_URL = 'http://edx.devstack.lms:18000'
-DISCOVERY_SERVICE_API_URL = 'http://edx.devstack.discovery:18381/api/v1/'
+LMS_BASE_URL = 'http://edx.devstack.lms:8000'
+DISCOVERY_SERVICE_API_URL = 'http://edx.devstack.discovery:8381/api/v1/'
 ENTERPRISE_LEARNER_PORTAL_BASE_URL = 'http://localhost:8734'
 
 CELERYD_HIJACK_ROOT_LOGGER = True
