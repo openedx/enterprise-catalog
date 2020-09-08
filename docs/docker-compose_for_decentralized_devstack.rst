@@ -1,14 +1,17 @@
 Docker-compose for Decentralized Devstack
 =========================================
 
+.. role:: bash(code)
+   :language: bash
+
 We use docker-compose to define and run all the containers necessary for enterprise-catalog service. For decentralized devstack, the service is defined in decentralized-docker-compose.yml file. You should be able to interface with DD using the following docker-compose commands:
 
-- start DD: `docker-compose up -d`
-- end a DD sesssion: `docker-compose down`
-- update images: `docker-compose pull`
-- enter enterprise-catalog's bash shell: `docker-compose exec app bash`
-- see enterise-catalog's logs: `docker-compose logs -f app`
-- check which containers are running: `docker ps`
+- start DD: :bash:`docker-compose up -d`
+- end a DD sesssion: :bash:`docker-compose down`
+- update images: :bash:`docker-compose pull`
+- enter enterprise-catalog's bash shell: :bash:`docker-compose exec app bash`
+- see enterise-catalog's logs: :bash:`docker-compose logs -f app`
+- check which containers are running: :bash:`docker ps`
 
 To learn more see: `Docker-compose cheatsheet`_ and `Official compose documentation`_
 
@@ -25,14 +28,14 @@ How do I run make migrate on enterprise-catalog?
 
 You have two options: 
 
-#. Run following command: docker exec -it enterprise.catalog.app bash -c 'make migrate'
+#. Run following command: :bash:`docker exec -it enterprise.catalog.app bash -c 'make migrate'`
 #. Enter shell and run command from inside containers:
 
-   * To enter shell: `docker-compose exec app bash`
+   * To enter shell: :bash:`docker-compose exec app bash`
 
      + You command line should now be in enterprise-catalog directory in container.
      + From here, you can run any django/python related commands to interact with enterprise-catalog service
 
-   * Run: `make migrate`
+   * Run: :bash:`make migrate`
 
-FYI, to run another general command like `python3 manage.py makemigrations` on service, just replace `make migrate` above with general command.
+FYI, to run another general command like :bash:`python3 manage.py makemigrations` on service, just replace :bash:`make migrate` above with general command.
