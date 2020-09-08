@@ -9,7 +9,7 @@ Accepted
 Context
 -------
 
-Enterprise-catalog will be one of the first services to test Decentraliszed Devstack(DD). One of the goals for DD is to minimize or even eleminate the need to run any migrations in lms to develop in enterprise-catalog. To do this, we decided to use premade data dumps on necessary data for lms.
+Enterprise-catalog will be one of the first services to test Decentralized Devstack (DD). One of the goals for DD is to minimize or even eliminate the need to run any migrations in lms to develop in enterprise-catalog. To do this, we decided to use premade data dumps on necessary data for lms.
 
 Since this is the begining of DD, the methods of providing necessary data to a general service's DD has not been established. A generalized solution has been proposed in `OEP-37`_, but it does not yet exist.
 
