@@ -7,7 +7,9 @@ TOX = ''
         compile_translations fake_translations  pull_translations \
         push_translations start-devstack open-devstack  pkg-devstack \
         detect_changed_source_translations validate_translations \
-        docker.build docker.push docker.build.push shellcheck
+        dev.provision dev.init dev.makemigrations dev.migrate dev.up \
+        dev.up.build dev.down dev.destroy dev.stop docker_build travis_docker_auth \
+        travis_docker_tag travis_docker_push shellcheck
 
 
 define BROWSER_PYSCRIPT
