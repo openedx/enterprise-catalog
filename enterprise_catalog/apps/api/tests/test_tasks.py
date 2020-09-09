@@ -25,7 +25,7 @@ class EnterpriseCatalogCeleryTaskTests(TestCase):
         tasks.update_catalog_metadata_task(catalog_query.id)
         update_contentmetadata_from_discovery_mock.assert_called_with(catalog_query.id)
 
-    @mock.patch('enterprise_catalog.apps.api_client.discovery.OAuthAPIClient')
+    @mock.patch('enterprise_catalog.apps.api_client.base_oauth.OAuthAPIClient')
     def test_update_full_metadata(self, mock_oauth_client):
         """
         Assert that full course metadata is merged with original json_metadata for all ContentMetadata records.
