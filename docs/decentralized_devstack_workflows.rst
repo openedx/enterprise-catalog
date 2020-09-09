@@ -1,18 +1,20 @@
 Decentralized Devstack(DD) Workflows
 ====================================
 
+This document contains guides to various common workflows, **please update** if you see any missing workflows or wrong information.
+
 .. role:: bash(code)
    :language: bash
 
 Getting started from scratch
 ----------------------------
 
-#. Clone the enterprise-catalog repo and **cd into that directory**
-#. Create and activate either python 3.5 or 3.8 virtual environment, for more info: `virtualenv`_
-#. install requirements by running: `make requirements`
+#. clone the enterprise-catalog repo and **cd into that directory**
+#. create and activate either python 3.5 or 3.8 virtual environment, for more info: `virtualenv`_
+#. run :bash:`make requirements` to install requirements.
 #. open .env file and uncomment the line :bash:`COMPOSE_FILE=decentralized_devstack/docker-compose.yml` by removing "#" symbol
 #. provision Decentralized devstack by running: :bash:`$ ./decentralized_devstack/provision.sh`
-#. Once provisioning has successfully run, you can view the enterprise catalog at http://localhost:18160/admin
+#. once provisioning has successfully run, you can view the enterprise catalog at http://localhost:18160/admin
 
    * You can login with the username *edx* and password *edx*.
 
@@ -26,7 +28,7 @@ Toggle between Decentralized Devstack and legacy Devstack
 To switch to Decentralized Devstack
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-if you haven't setup Decentralized Devstack previously
+If you haven't setup Decentralized Devstack previously
 ``````````````````````````````````````````````````````
 
 #. cd into edx/devstack directory and run `make down` to turn off legacy devstack
@@ -39,7 +41,7 @@ if you haven't setup Decentralized Devstack previously
 
 6. start developing!
 
-if you've already provisioned Decentralized Devstack
+If you've already provisioned Decentralized Devstack
 ````````````````````````````````````````````````````
 
 #. cd into edx/devstack directory and run `make down` to turn off legacy devstack
@@ -68,25 +70,39 @@ Turning on Decentralized Devstack
 
 Prerequisites: You have toggled to enterprise_catalog's DD, it has already been provisioned(if not, see instructions above)
 
-- run :bash:`$ docker-compose up -d`
+#. run :bash:`$ docker-compose up -d`
 
 Turning off Decentralized Devstack
----------------------------------
+----------------------------------
 
-Prerequisites: You have toggled to enterprise_catalog's DD, it has already been provisioned(if not, see instructions above)
+Prerequisites: You have toggled to enterprise_catalog's DD(if not, see instructions above)
 
-- run :bash:`$ docker-compose down`
+#. run :bash:`$ docker-compose down`
+
+Debugging Decentralized Devstack
+--------------------------------
+
+This is a grab bag of ideas that might help:
+
+- check to make sure `COMPOSE_FILE=decentralized_devstack/docker-compose.yml` is uncommented in .env file
+- run :bash:`docker-compose ps` or/and :bash:`docker ps` to see which containers are up/running
+
+  * if you see a container missing, start it in attached mode to see what logs it outputs by running: :bash:`docker-compose up <container_name>`
+- enter container's shell by running: :bash:`docker-compose exec <container_name> bash`
+
+  * once in container's shell, do your normal python/django/general tool debugging
+
 
 Restarting everything from scratch
 ----------------------------------
 
 Prerequisites: You have toggled to enterprise_catalog's DD(if not, see instructions above)
 
-.. warning:: This will irreversibly remove all decentralized devstack related containers, networks, and volumes.
+.. WARNING:: This will irreversibly remove all decentralized devstack related containers, networks, and volumes.
 
 #. run :bash:`$ docker-compose down -v`
 #. provision Decentralized devstack by running: :bash:`$ ./decentralized_devstack/provision.sh`
-#. Once provisioning has successfully run, you can view the enterprise catalog at http://localhost:18160/admin
+#. once provisioning has successfully run, you can view the enterprise catalog at http://localhost:18160/admin
 
    * You can login with the username *edx* and password *edx*.
 

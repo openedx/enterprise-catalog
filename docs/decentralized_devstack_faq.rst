@@ -4,23 +4,6 @@ Docker-compose for Decentralized Devstack
 .. role:: bash(code)
    :language: bash
 
-We use docker-compose to define and run all the containers necessary for enterprise-catalog service. For decentralized devstack, the service is defined in decentralized-docker-compose.yml file. You should be able to interface with DD using the following docker-compose commands:
-
-- start DD: :bash:`docker-compose up -d`
-- end a DD sesssion: :bash:`docker-compose down`
-- update images: :bash:`docker-compose pull`
-- enter enterprise-catalog's bash shell: :bash:`docker-compose exec app bash`
-- see enterise-catalog's logs: :bash:`docker-compose logs -f app`
-- check which containers are running: :bash:`docker ps`
-
-To learn more see: `Docker-compose cheatsheet`_ and `Official compose documentation`_
-
-.. _ Docker-compose cheatsheet: https://devhints.io/docker-compose
-.. _ Official compose documentation: https://docs.docker.com/compose/
-
-Enterprise-catlog FAQ
----------------------
-
 As you use DD, please add any questions and answers that you think would be useful to others to this doc
 
 How do I run make migrate on enterprise-catalog?
