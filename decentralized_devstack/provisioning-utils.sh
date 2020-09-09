@@ -63,13 +63,15 @@ service_exec_management(){
 	service="$1"
 	shift
 	# If LMS/Studio, handle weird manage.py that expects lms/cms argument.
-        declare -a edxapp_service_args
 	if [[ "$service" == lms ]]; then
-		edxapp_service_args=(lms)
+		edxapp_service_variant=lms
 	elif [[ "$service" == studio ]]; then
-		edxapp_service_args=(cms)
+		edxapp_service_variant=cms
+	else
+		edxapp_service_variant=""
 	fi
-	service_exec "$service" python ./manage.py "${edxapp_service_args[@]}" "$@"
+	# $edxapp_service_variant has to be unquoted here
+	service_exec "$service" python ./manage.py $edxapp_service_variant "$@"
 }
 
 # Execute Python code through the Django shell of a service's container.
@@ -81,13 +83,15 @@ service_exec_python(){
 	service="$1"
 	python_code="$2"
 	# If LMS/Studio, handle weird manage.py that expects lms/cms argument.
-        declare -a edxapp_service_args
 	if [[ "$service" == lms ]]; then
-		edxapp_service_args=(lms)
+		edxapp_service_variant=lms
 	elif [[ "$service" == studio ]]; then
-		edxapp_service_args=(cms)
+		edxapp_service_variant=cms
+	else
+		edxapp_service_variant=""
 	fi
-	echo "${python_code}" | service_exec "$service" python ./manage.py "${edxapp_service_args[@]}" shell
+	# $edxapp_service_variant has to be unquoted here
+	echo "${python_code}" | service_exec "$service" python ./manage.py $edxapp_service_variant shell
 }
 
 # TODO document
