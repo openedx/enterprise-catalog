@@ -16,17 +16,21 @@ else
 fi
 
 log_step "lms: Making sure MongoDB is ready..."
-until docker-compose exec -T mongo bash -c 'mongo --eval "printjson(db.serverStatus())"' &> /dev/null
+until docker-compose exec -T mongo mongo --eval "printjson(db.serverStatus())" &> /dev/null
 do
   printf "."
   sleep 1
 done
 
 log_step "lms: Creating MongoDB users..."
-docker-compose exec -T mongo bash -c "mongo" < decentralized_devstack/provision-mongo.js
+docker-compose exec -T mongo mongo < decentralized_devstack/provision-mongo.js
 
 log_step "lms: Adding default MongoDB data..."
-service_exec mongo mongorestore --gzip /data/dump
+# When mongorestore is run on database which was previously provisioned,
+# it will exit with code zero (which is OK for our purposes) but also will emit
+# a large number of warnings about duplicates (E11000 duplicate key error collection).
+# The --quiet flag is to make the logs less noisy.
+service_exec mongo mongorestore --quiet --gzip /data/dump 
 
 log_step "lms: Bringing up LMS..."
 docker-compose up --detach lms
@@ -38,7 +42,5 @@ service_exec_management lms migrate
 
 log_step "lms: Running migrations for courseware student module history (CSMH) database..."
 service_exec_management lms migrate --database student_module_history
-
-
 
 log_message "Done provisioning LMS."

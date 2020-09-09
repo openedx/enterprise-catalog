@@ -1,1 +1,0 @@
-{"options":{},"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_","ns":"edxapp.fs.files"},{"v":{"$numberInt":"2"},"key":{"filename":{"$numberInt":"1"},"uploadDate":{"$numberInt":"1"}},"name":"filename_1_uploadDate_1","ns":"edxapp.fs.files"}],"uuid":"e4eb72fddb5f49d8b605e749f9731516"}

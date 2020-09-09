@@ -1,30 +1,42 @@
-version: "3.7"
-
-# TODO: Stop naming containers.
-
+version: "2.1"
 services:
+  mysql:
+    image: mysql:5.6
+    container_name: enterprise.catalog.mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ""
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: "enterprise_catalog"
+    networks:
+      - devstack_default
+    volumes:
+      - enterprise_catalog_mysql:/var/lib/mysql
+    # Uncomment these lines to access the database from localhost
+    # ports:
+    #  - "3307:3306"
+
   app:
     # Uncomment this line to use the official catalog base image
     # image: edxops/enterprise_catalog:devstack
     build:
-      context: "."
-    image: kdmccormick96/enterprise-catalog  # TODO: Change to openedx.
-    container_name: edx.devstack.enterprise-catalog
+      context: .
+      dockerfile: Dockerfile
+    container_name: enterprise.catalog.app
     hostname: app.catalog.enterprise
     volumes:
       - .:/edx/app/enterprise_catalog/enterprise_catalog
       - ../src:/edx/src:cached
-    # This should be the same as the `CMD` in the devapp build stage
+
+    # This should be the same as the `CMD` in the legacy devapp build stage
     # of the Dockerfile
     command: bash -c 'gunicorn --reload --workers=2 --name enterprise_catalog -b :18160 -c /edx/app/enterprise_catalog/enterprise_catalog/enterprise_catalog/docker_gunicorn_configuration.py --log-file - --max-requests=1000 enterprise_catalog.wsgi:application'
     ports:
-      - "8160:8160"
+      - "18160:18160"
     depends_on:
-      - memcached
       - mysql
       - worker
-      - lms
-      - discovery
+    networks:
+      - devstack_default
     # Allows attachment to this container using 'docker attach <containerID>'.
     stdin_open: true
     tty: true
@@ -38,16 +50,12 @@ services:
       ENABLE_DJANGO_TOOLBAR: 1
 
   worker:
-    # Uncomment this line to use the official catalog base image
-    # image: edxops/enterprise_catalog:devstack
     build:
-      context: "."
-    image: kdmccormick96/enterprise-catalog  # TODO: Change to openedx.
+      context: .
+      dockerfile: Dockerfile
     command: bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && celery -A enterprise_catalog worker -l DEBUG'
-    container_name: edx.devstack.enterprise-catalog-worker
+    container_name: enterprise.catalog.worker
     depends_on:
-      - discovery
-      - lms
       - mysql
     environment:
       CELERY_ALWAYS_EAGER: 'false'
@@ -57,8 +65,10 @@ services:
       CELERY_BROKER_PASSWORD: password
       DJANGO_SETTINGS_MODULE: enterprise_catalog.settings.devstack
     hostname: worker.catalog.enterprise
+    networks:
+      - devstack_default
     ports:
-      - "8161:8161"
+      - "18161:18161"
     restart: always
     # Allows attachment to this container using 'docker attach <containerID>'.
     stdin_open: true
@@ -66,90 +76,9 @@ services:
     volumes:
       - .:/edx/app/enterprise_catalog/enterprise_catalog
 
-  discovery:
-    container_name: edx.devstack.discovery
-    hostname: discovery.devstack.edx
-    depends_on:
-      - mysql
-      - elasticsearch
-      - memcached
-      - lms
-    stdin_open: true
-    tty: true
-    environment:
-      TEST_ELASTICSEARCH_URL: http://edx.devstack.elasticsearch:9200
-      DJANGO_WATCHMAN_TIMEOUT: 30
-    image: kdmccormick96/course-discovery:latest
-    ports:
-      - "8381:1381"
-    volumes:
-      - discovery_assets:/edx/var/discovery/
-
-  elasticsearch:
-    container_name: edx.devstack.elasticsearch
-    hostname: elasticsearch.devstack.edx
-    image: edxops/elasticsearch:devstack
-    volumes:
-      - elasticsearch_data:/usr/share/elasticsearch/data
-      - elasticsearch_data:/usr/share/elasticsearch/logs
-
-  lms:
-    container_name: edx.devstack.lms
-    hostname: lms.devstack.edx
-    depends_on:
-      - mysql
-      - memcached
-      - mongo
-    stdin_open: true
-    tty: true
-    environment:
-      NO_INSTALL_PREREQS: 1
-      DJANGO_WATCHMAN_TIMEOUT: 30
-    # TODO(jinder): I temporarily put a "-devstack" below, it was necessary to run locally, there must be a better way
-    image: kdmccormick96/edx-platform:latest-devstack
-    ports:
-      - "8000:8000"
-    volumes:
-      - edxapp_lms_assets:/edx/var/edxapp/staticfiles/
-
-  memcached:
-    container_name: edx.devstack.memcached
-    hostname: memcached.devstack.edx
-    image: memcached:1.5.10-alpine
-
-  mongo:
-    # We use WiredTiger in all environments. In development environments we use small files
-    # to conserve disk space, and disable the journal for a minor performance gain.
-    # See https://docs.mongodb.com/v3.0/reference/program/mongod/#options for complete details.
-    command: mongod --smallfiles --nojournal --storageEngine wiredTiger
-    container_name: edx.devstack.mongo
-    hostname: mongo.devstack.edx
-    image: mongo:${MONGO_VERSION:-3.6.17}
-    volumes:
-      - mongo_data:/data/db
-      - ./decentralized_devstack/data_dumps/lms_mongo_dump:/data/dump
-
-  mysql:
-    command: mysqld --character-set-server=utf8 --collation-server=utf8_general_ci
-    container_name: edx.devstack.mysql
-    hostname: mysql.devstack.edx
-    environment:
-      MYSQL_ROOT_PASSWORD: ""
-      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-    image: mysql:5.6
-    volumes:
-      - mysql_data:/var/lib/mysql
-
-  redis:
-    command: redis-server --requirepass password
-    container_name: edx.devstack.redis
-    hostname: redis.devstack.edx
-    image: redis:2.8
-
+networks:
+  devstack_default:
+    external: true
 
 volumes:
-  edxapp_lms_assets:
-  discovery_assets:
-  elasticsearch_data:
-  mysql_data:
-  mongo_data:
+  enterprise_catalog_mysql:

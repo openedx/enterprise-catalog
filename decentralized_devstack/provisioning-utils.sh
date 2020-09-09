@@ -5,9 +5,7 @@
 set -x
 
 # Strictness: fail on errors and undefined variables.
-set -e
-set -o pipefail
-set -u
+set -eu -o pipefail
 
 # Colored text.
 BOLD_GREEN='\033[1;32m'
@@ -53,8 +51,7 @@ log_error(){
 service_exec(){
 	service="$1"
 	shift
-	command_and_args="$*"
-	docker-compose exec -T "$service" bash -c "$command_and_args"
+	docker-compose exec -T "$service" "$@"
 }
 
 # Execute a Django management command in a service's container.
@@ -65,7 +62,6 @@ service_exec(){
 service_exec_management(){
 	service="$1"
 	shift
-	management_command_and_args="$*"
 	# If LMS/Studio, handle weird manage.py that expects lms/cms argument.
 	if [[ "$service" == lms ]]; then
 		edxapp_service_variant=lms
@@ -74,7 +70,8 @@ service_exec_management(){
 	else
 		edxapp_service_variant=""
 	fi
-	service_exec "$service" "python ./manage.py ${edxapp_service_variant} ${management_command_and_args}"
+	# $edxapp_service_variant has to be unquoted here
+	service_exec "$service" python ./manage.py $edxapp_service_variant "$@"
 }
 
 # Execute Python code through the Django shell of a service's container.
@@ -93,7 +90,8 @@ service_exec_python(){
 	else
 		edxapp_service_variant=""
 	fi
-	service_exec "$service" "echo '${python_code}' | python ./manage.py ${edxapp_service_variant} shell"
+	# $edxapp_service_variant has to be unquoted here
+	echo "${python_code}" | service_exec "$service" python ./manage.py $edxapp_service_variant shell
 }
 
 # TODO document

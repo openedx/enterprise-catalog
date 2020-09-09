@@ -4,7 +4,7 @@
 source decentralized_devstack/provisioning-utils.sh
 
 log_step "discovery: Ensuring MySQL databases and users exist..."
-docker-compose exec -T mysql bash -c "mysql -uroot mysql" < decentralized_devstack/provision-mysql-discovery.sql
+docker-compose exec -T mysql mysql -uroot mysql < decentralized_devstack/provision-mysql-discovery.sql
 
 log_step "discovery: Bringing up container"
 docker-compose up -d discovery
@@ -23,7 +23,7 @@ create_lms_integration_for_service discovery 18381
 ## service_exec discovery make static
 
 log_step "discovery: Removing files in /edx/var/discovery..." 
-service_exec discovery rm -rf /edx/var/discovery/*
+service_exec discovery bash -c 'rm -rf /edx/var/discovery/*'
 
 log_step "discovery: Creating partner model..."
 service_exec_management discovery create_or_update_partner \
