@@ -8,7 +8,7 @@ Below is a list of common commands used during development in Decentralized Devs
 
 - start DD: :bash:`docker-compose up -d`
 
-  * this will run containers in detached mode, remove -d if you want all logs to output in current terminal
+  * this will run containers in detached mode, remove `-d` if you want all logs to output in current terminal
 
 - end a DD sesssion: :bash:`docker-compose down`
 - update images: :bash:`docker-compose pull`
@@ -25,13 +25,12 @@ Below is a list of common commands used during development in Decentralized Devs
 - check which containers are running: :bash:`docker ps`
 
   * lists all running containers in docker engine.
-  * To only see containers related to images declared in docker-compose file, run: :bash:`docker-compose ps`
+  * to only see containers related to images declared in docker-compose file, run: :bash:`docker-compose ps`
 
 - destroy current DD: :bash:`docker-compose down -v`
-- To provision: :bash:`./decentralized_devstack/provision.sh`
+- provision: :bash:`./decentralized_devstack/provision.sh`
 
 We use docker-compose to define and run all the containers necessary for enterprise-catalog service. For decentralized devstack, the service is defined in decentralized-docker-compose.yml file. To learn more see: `Docker-compose cheatsheet`_ and `Official compose documentation`_
 
 .. _ Docker-compose cheatsheet: https://devhints.io/docker-compose
 .. _ Official compose documentation: https://docs.docker.com/compose/
-
