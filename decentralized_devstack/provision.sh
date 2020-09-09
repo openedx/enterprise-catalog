@@ -5,7 +5,6 @@ DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")"; pwd)"
 cd -- "$DIR"/..
 
 # Include utilities.
-# shellcheck source=provisioning-utils.sh
 source decentralized_devstack/provisioning-utils.sh
 
 log_step "Starting provisioning process..."
@@ -52,8 +51,8 @@ fi
 # in the log messages work correctly.
 for dependency in lms discovery ; do
 	log_message "Provisioning dependency: ${dependency}..."
-	# shellcheck source=provision-lms.sh
-	# shellcheck source=provision-discovery.sh
+	# shellcheck source=decentralized_devstack/provision-lms.sh
+	# shellcheck source=decentralized_devstack/provision-discovery.sh
 	if ! source ./decentralized_devstack/provision-"$dependency".sh ; then
 		log_error "Error occured while provisioning ${dependency}; stopping."
 		exit 1

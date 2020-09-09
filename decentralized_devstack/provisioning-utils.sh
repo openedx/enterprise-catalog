@@ -71,7 +71,7 @@ service_exec_management(){
 		edxapp_service_variant=""
 	fi
 	# $edxapp_service_variant has to be unquoted here
-	service_exec "$service" python ./manage.py $edxapp_service_variant "$@"
+	service_exec "$service" python ./manage.py "$edxapp_service_variant" "$@"
 }
 
 # Execute Python code through the Django shell of a service's container.
@@ -91,7 +91,7 @@ service_exec_python(){
 		edxapp_service_variant=""
 	fi
 	# $edxapp_service_variant has to be unquoted here
-	echo "${python_code}" | service_exec "$service" python ./manage.py $edxapp_service_variant shell
+	echo "${python_code}" | service_exec "$service" python ./manage.py "$edxapp_service_variant" shell
 }
 
 # TODO document
