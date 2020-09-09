@@ -6,7 +6,8 @@ TOX = ''
         migrate html_coverage upgrade extract_translation dummy_translations \
         compile_translations fake_translations  pull_translations \
         push_translations start-devstack open-devstack  pkg-devstack \
-        detect_changed_source_translations validate_translations
+        detect_changed_source_translations validate_translations \
+        docker.build docker.push docker.build.push shellcheck
 
 
 define BROWSER_PYSCRIPT
@@ -25,6 +26,7 @@ ifdef TOXENV
 TOX := tox -- #to isolate each tox environment if TOXENV is defined
 endif
 
+# Generates a help message. Borrowed from https://github.com/pydanny/cookiecutter-djangopackage.
 help: ## display this help message
 	@echo "Please use \`make <target>' where <target> is one of"
 	@perl -nle'print $& if m{^[\.a-zA-Z_-]+:.*?## .*$$}' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m  %-25s\033[0m %s\n", $$1, $$2}'
@@ -137,55 +139,71 @@ detect_changed_source_translations: ## check if translation files are up-to-date
 validate_translations: fake_translations detect_changed_source_translations ## install fake translations and check if translation files are up-to-date
 
 # Docker commands below
+# TODO curate
 
-dev.provision: ## Provision the docker environment
+dev.build:
+	docker build . --tag kdmccormick96/enterprise-catalog # TODO
+
+dev.push: dev.build
+	docker push kdmccormick96/enterprise-catalog # TODO
+
+dev.build.push: dev.build dev.push # TODO
+
+dev.provision:
 	bash ./provision-catalog.sh
 
-dev.init: dev.up dev.migrate ## start the docker container and run migrations
+dev.init: dev.up dev.migrate
 
-dev.makemigrations: ## Create a migration
+dev.makemigrations:
 	docker exec -it enterprise.catalog.app bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && python3 manage.py makemigrations'
 
-dev.migrate: ## Migrates databases. Application and DB server must be up for this to work.
+dev.migrate: # Migrates databases. Application and DB server must be up for this to work.
 	docker exec -it enterprise.catalog.app bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && make migrate'
 
-dev.up: ## Starts all containers
+dev.up: # Starts all containers
 	docker-compose up -d
 
-dev.up.build:  ## Runs docker-compose -up -d --build
+dev.up.build:
 	docker-compose up -d --build
 
-dev.down: ## Kills containers and all of their data that isn't in volumes
-	docker-compose down
+dev.down: # Kills containers and all of their data that isn't in volumes
+	docker-compose downing
 
-dev.destroy: dev.down ## Kills containers and destroys volumes. If you get an error after running this, also run: docker volume rm portal-designer_designer_mysql
+dev.destroy: dev.down #Kills containers and destroys volumes. If you get an error after running this, also run: docker volume rm portal-designer_designer_mysql
 	docker volume rm enterprise-catalog_enterprise_catalog_mysql
 
-dev.stop: ## Stops containers so they can be restarted
+dev.stop: # Stops containers so they can be restarted
 	docker-compose stop
 
 %-shell: ## Run a shell, as root, on the specified service container
-	docker exec -u 0 -it enterprise.catalog.$* env TERM=$(TERM) bash
+	docker-compose exec -u 0 $* env TERM=$(TERM) bash
 
 %-logs: ## View the logs of the specified service container
 	docker-compose logs -f --tail=500 $*
 
-%-attach: ## Attach terminal I/O to the specified service container
-	docker attach enterprise.catalog.$*
+attach:
+	docker attach enterprise.catalog.app
 
 docker_build: ## Builds with the latest enterprise catalog
-	docker build . --target app -t "openedx/enterprise-catalog:latest"
-	docker build . --target newrelic -t "openedx/enterprise-catalog:latest-newrelic"
+	docker build . --target app -t openedx/enterprise-catalog:latest
+	docker build . --target devstack -t openedx/enterprise-catalog:latest-devstack
+	docker build . --target newrelic -t openedx/enterprise-catalog:latest-newrelic
 
 travis_docker_auth:
 	echo "$$DOCKER_PASSWORD" | docker login -u "$$DOCKER_USERNAME" --password-stdin
 
 travis_docker_tag: docker_build
-	docker build . --target app -t "openedx/enterprise-catalog:$$TRAVIS_COMMIT"
-	docker build . --target newrelic -t "openedx/enterprise-catalog:$$TRAVIS_COMMIT-newrelic"
+	docker tag openedx/enterprise-catalog:latest openedx/enterprise-catalog:${GITHUB_SHA}
+	docker tag openedx/enterprise-catalog:latest-devstack openedx/enterprise-catalog:${GITHUB_SHA}-devstack
+	docker tag openedx/enterprise-catalog:latest-newrelic openedx/enterprise-catalog:${GITHUB_SHA}-newrelic
 
 travis_docker_push: travis_docker_tag travis_docker_auth ## push to docker hub
-	docker push "openedx/enterprise-catalog:latest"
-	docker push "openedx/enterprise-catalog:$$TRAVIS_COMMIT"
-	docker push "openedx/enterprise-catalog:latest-newrelic"
-	docker push "openedx/enterprise-catalog:$$TRAVIS_COMMIT-newrelic"
+	docker push openedx/enterprise-catalog:latest
+	docker push openedx/enterprise-catalog:${GITHUB_SHA}
+	docker push openedx/enterprise-catalog:latest-devstack
+	docker push openedx/enterprise-catalog:${GITHUB_SHA}-devstack
+	docker push openedx/enterprise-catalog:latest-newrelic
+	docker push openedx/enterprise-catalog:${GITHUB_SHA}-newrelic
+
+shellcheck:
+	shellcheck *.sh -x

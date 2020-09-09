@@ -59,11 +59,8 @@ FROM app as newrelic
 RUN pip3 install newrelic
 CMD ["newrelic-admin", "run-program", "gunicorn", "--workers=2", "--name", "enterprise_catalog", "-c", "/edx/app/enterprise_catalog/enterprise_catalog/enterprise_catalog/docker_gunicorn_configuration.py", "--log-file", "-", "--max-requests=1000", "enterprise_catalog.wsgi:application"]
 
-FROM app as devapp
-# Dev ports
-EXPOSE 18160
-EXPOSE 18161
+FROM app as devstack
 USER root
 RUN pip3 install -r /edx/app/enterprise_catalog/enterprise_catalog/requirements/dev.txt
 USER app
-CMD ["gunicorn", "--reload", "--workers=2", "--name", "enterprise_catalog", "-b", ":18160", "-c", "/edx/app/enterprise_catalog/enterprise_catalog/enterprise_catalog/docker_gunicorn_configuration.py", "--log-file", "-", "--max-requests=1000", "enterprise_catalog.wsgi:application"]
+CMD ["gunicorn", "--reload", "--workers=2", "--name", "enterprise_catalog", "-b", ":8160", "-c", "/edx/app/enterprise_catalog/enterprise_catalog/enterprise_catalog/docker_gunicorn_configuration.py", "--log-file", "-", "--max-requests=1000", "enterprise_catalog.wsgi:application"]

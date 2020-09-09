@@ -6,6 +6,7 @@
 -r test.txt
 
 diff-cover                # Changeset diff test coverage
+docker-compose            # Tool for orchestrating docker containers; used for devstack
 edx-i18n-tools            # For i18n_tool dummy
 django-debug-toolbar      # For debugging Django
 gunicorn                  # For running the application locally
