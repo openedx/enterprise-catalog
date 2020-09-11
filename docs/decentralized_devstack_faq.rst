@@ -11,7 +11,7 @@ How do I run make migrate on enterprise-catalog?
 
 You have two options: 
 
-#. Run following command: :bash:`docker-compose exec -it app bash -c 'make migrate'`
+#. Run following command: :bash:`docker-compose exec -T app make migrate`
 #. Enter shell and run command from inside containers:
 
    * To enter shell: :bash:`docker-compose exec app bash`
