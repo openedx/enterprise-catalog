@@ -21,6 +21,9 @@ matrix:
     - env: TESTNAME=translations
       script:
         - make validate_translations
+    - env: TESTNAME=shell_quality
+      script:
+        - make shellcheck
 sudo: false
 branches:
   only:
