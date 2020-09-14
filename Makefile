@@ -184,17 +184,17 @@ travis_docker_auth:
 	echo "$$DOCKER_PASSWORD" | docker login -u "$$DOCKER_USERNAME" --password-stdin
 
 travis_docker_tag: docker_build
-	docker tag openedx/enterprise-catalog:latest openedx/enterprise-catalog:${GITHUB_SHA}
-	docker tag openedx/enterprise-catalog:latest-devstack openedx/enterprise-catalog:${GITHUB_SHA}-devstack
-	docker tag openedx/enterprise-catalog:latest-newrelic openedx/enterprise-catalog:${GITHUB_SHA}-newrelic
+	docker tag openedx/enterprise-catalog:latest openedx/enterprise-catalog:${TRAVIS_COMMIT}
+	docker tag openedx/enterprise-catalog:latest-devstack openedx/enterprise-catalog:${TRAVIS_COMMIT}-devstack
+	docker tag openedx/enterprise-catalog:latest-newrelic openedx/enterprise-catalog:${TRAVIS_COMMIT}-newrelic
 
 travis_docker_push: travis_docker_tag travis_docker_auth ## push to docker hub
 	docker push openedx/enterprise-catalog:latest
-	docker push openedx/enterprise-catalog:${GITHUB_SHA}
+	docker push openedx/enterprise-catalog:${TRAVIS_COMMIT}
 	docker push openedx/enterprise-catalog:latest-devstack
-	docker push openedx/enterprise-catalog:${GITHUB_SHA}-devstack
+	docker push openedx/enterprise-catalog:${TRAVIS_COMMIT}-devstack
 	docker push openedx/enterprise-catalog:latest-newrelic
-	docker push openedx/enterprise-catalog:${GITHUB_SHA}-newrelic
+	docker push openedx/enterprise-catalog:${TRAVIS_COMMIT}-newrelic
 
 shellcheck:
 	shellcheck --external-sources decentralized_devstack/*.sh

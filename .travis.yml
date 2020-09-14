@@ -38,4 +38,4 @@ deploy:
   provider: script
   script: make travis_docker_push
   on:
-    branch: master
+    branch: msingh/fix/deploy
