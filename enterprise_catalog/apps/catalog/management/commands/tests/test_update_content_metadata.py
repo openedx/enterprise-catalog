@@ -6,9 +6,14 @@ from enterprise_catalog.apps.catalog.tests.factories import (
     CatalogQueryFactory,
     EnterpriseCatalogFactory,
 )
+from enterprise_catalog.apps.api.tasks import update_catalog_metadata_task
 from enterprise_catalog.apps.catalog.models import (
     ContentMetadata,
     EnterpriseCatalog,
+)
+from enterprise_catalog.apps.catalog.tests.factories import (
+    CatalogQueryFactory,
+    EnterpriseCatalogFactory,
 )
 
 

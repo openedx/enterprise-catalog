@@ -890,9 +890,10 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         response = self.client.get(url)
         assert 'catalog_list' not in response.json().keys()
 
-    def test_contains_catalog_list_parent_key(self):
+    def test_contains_catalog_list(self):
         """
-        Verify the contains_content_items endpoint returns a list of catalogs the course is in if the correct parameter is passed
+        Verify the contains_content_items endpoint returns a list of catalogs the course is in if the correct
+        parameter is passed
         """
         content_metadata = ContentMetadataFactory()
         self.add_metadata_to_catalog(self.enterprise_catalog, [content_metadata])
@@ -929,7 +930,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
 
         url = self._get_contains_content_base_url() + '?course_run_ids=' + parent_content_key + '&get_catalog_list=True'
         response = self.client.get(url).json()
-        assert response['contains_content_items'] == True
+        assert response['contains_content_items'] is True
         catalog_list = response['catalog_list']
         assert set(catalog_list) == set([str(second_catalog.uuid), str(third_catalog.uuid)])
 
