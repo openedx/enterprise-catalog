@@ -78,7 +78,7 @@ style: ## run Python style checker
 lint: ## run Python code linting
 	pylint --rcfile=pylintrc enterprise_catalog *.py
 
-quality: style isort_check lint ## check code style and import sorting, then lint
+quality: travis_clean style isort_check lint ## check code style and import sorting, then lint
 
 pii_check: ## check for PII annotations on all Django models
 	DJANGO_SETTINGS_MODULE=enterprise_catalog.settings.test \
@@ -179,6 +179,9 @@ docker_build: ## Builds with the latest enterprise catalog
 	docker build . --target app -t openedx/enterprise-catalog:latest
 	docker build . --target devstack -t openedx/enterprise-catalog:latest-devstack
 	docker build . --target newrelic -t openedx/enterprise-catalog:latest-newrelic
+
+travis_clean:
+	find . -name '*.pyc' -delete
 
 travis_docker_auth:
 	echo "$$DOCKER_PASSWORD" | docker login -u "$$DOCKER_USERNAME" --password-stdin
