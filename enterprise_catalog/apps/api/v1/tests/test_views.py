@@ -912,7 +912,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
 
     def test_contains_catalog_list_parent_key(self):
         """
-        Verify the contains_content_items endpoint returns a list of catalogs the course is in for multiple catalogs
+        Verify the contains_content_items endpoint returns a list of catalogs the course is in
         """
         content_metadata = ContentMetadataFactory()
         self.add_metadata_to_catalog(self.enterprise_catalog, [content_metadata])
