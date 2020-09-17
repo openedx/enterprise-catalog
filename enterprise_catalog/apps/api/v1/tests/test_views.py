@@ -796,6 +796,13 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         # Set up catalog.has_learner_access permissions
         self.set_up_catalog_learner()
 
+    def tearDown(self):
+        super(EnterpriseCustomerViewSetTests, self).tearDown()
+        # clean up any stale test objects
+        CatalogQuery.objects.all().delete()
+        ContentMetadata.objects.all().delete()
+        EnterpriseCatalog.objects.all().delete()
+
     def _get_contains_content_base_url(self, enterprise_uuid=None):
         """
         Helper to construct the base url for the contains_content_items endpoint
@@ -866,3 +873,77 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
 
         url = self._get_contains_content_base_url() + '?course_run_ids=' + content_key
         self.assert_correct_contains_response(url, True)
+
+    def test_no_catalog_list_given_without_get_catalog_list_query(self):
+        """
+        Verify that the contains_content_items endpoint does not return a list of catalogs without a querystring
+        """
+        content_metadata = ContentMetadataFactory()
+        self.add_metadata_to_catalog(self.enterprise_catalog, [content_metadata])
+
+        # Create a second catalog that has the content we're looking for
+        content_key = 'fake-key+101x'
+        second_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
+        relevant_content = ContentMetadataFactory(content_key=content_key)
+        self.add_metadata_to_catalog(second_catalog, [relevant_content])
+        url = self._get_contains_content_base_url() + '?course_run_ids=' + content_key
+        response = self.client.get(url)
+        assert 'catalog_list' not in response.json().keys()
+
+    def test_contains_catalog_list(self):
+        """
+        Verify the contains_content_items endpoint returns a list of catalogs the course is in if the correct
+        parameter is passed
+        """
+        content_metadata = ContentMetadataFactory()
+        self.add_metadata_to_catalog(self.enterprise_catalog, [content_metadata])
+
+        # Create a two catalogs that have the content we're looking for
+        content_key = 'fake-key+101x'
+        second_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
+        relevant_content = ContentMetadataFactory(content_key=content_key)
+        self.add_metadata_to_catalog(second_catalog, [relevant_content])
+        url = self._get_contains_content_base_url() + '?course_run_ids=' + content_key + '&get_catalog_list=True'
+        self.assert_correct_contains_response(url, True)
+
+        response = self.client.get(url)
+        catalog_list = response.json()['catalog_list']
+        assert set(catalog_list) == set([str(second_catalog.uuid)])
+
+    def test_contains_catalog_list_parent_key(self):
+        """
+        Verify the contains_content_items endpoint returns a list of catalogs the course is in
+        """
+        content_metadata = ContentMetadataFactory()
+        self.add_metadata_to_catalog(self.enterprise_catalog, [content_metadata])
+
+        # Create a two catalogs that have the content we're looking for
+        parent_content_key = 'fake-parent-key+105x'
+        content_key = 'fake-key+101x'
+        second_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
+        relevant_content = ContentMetadataFactory(content_key=content_key, parent_content_key=parent_content_key)
+        self.add_metadata_to_catalog(second_catalog, [relevant_content])
+        content_key_2 = 'fake-key+102x'
+        third_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
+        relevant_content = ContentMetadataFactory(content_key=content_key_2, parent_content_key=parent_content_key)
+        self.add_metadata_to_catalog(third_catalog, [relevant_content])
+
+        url = self._get_contains_content_base_url() + '?course_run_ids=' + parent_content_key + '&get_catalog_list=True'
+        response = self.client.get(url).json()
+        assert response['contains_content_items'] is True
+        catalog_list = response['catalog_list']
+        assert set(catalog_list) == set([str(second_catalog.uuid), str(third_catalog.uuid)])
+
+    def test_contains_catalog_list_content_items_not_in_catalog(self):
+        """
+        Verify the contains_content_items endpoint returns a list of catalogs the course is in for multiple catalogs
+        """
+        content_metadata = ContentMetadataFactory()
+        self.add_metadata_to_catalog(self.enterprise_catalog, [content_metadata])
+
+        content_key = 'fake-key+101x'
+
+        url = self._get_contains_content_base_url() + '?course_run_ids=' + content_key + '&get_catalog_list=True'
+        response = self.client.get(url)
+        catalog_list = response.json()['catalog_list']
+        assert catalog_list == []
