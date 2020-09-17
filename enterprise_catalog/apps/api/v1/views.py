@@ -281,6 +281,17 @@ class EnterpriseCustomerViewSet(BaseViewSet):
     def contains_content_items(self, request, enterprise_uuid, course_run_ids, program_uuids, **kwargs):
         """
         Returns whether or not the specified content is available for the given enterprise.
+        ---
+        parameters:
+            - name: course_run_ids
+              description: Ids of the course runs to check availability of
+              paramType: query
+            - name: program_uuids
+              description: Uuids of the programs to check availability of
+              paramType: query
+            - name: get_catalog_list
+              description: Return a list of catalogs in which the course / program is present
+              paramType: query
         """
         get_catalog_list = request.GET.get('get_catalog_list', False)
         course_run_ids = unquote_course_keys(course_run_ids)
