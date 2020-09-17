@@ -281,15 +281,36 @@ class EnterpriseCustomerViewSet(BaseViewSet):
     def contains_content_items(self, request, enterprise_uuid, course_run_ids, program_uuids, **kwargs):
         """
         Returns whether or not the specified content is available for the given enterprise.
+        ---
+        parameters:
+            - name: course_run_ids
+              description: Ids of the course runs to check availability of
+              paramType: query
+            - name: program_uuids
+              description: Uuids of the programs to check availability of
+              paramType: query
+            - name: get_catalog_list
+              description: Return a list of catalogs in which the course / program is present
+              paramType: query
         """
+        get_catalog_list = request.GET.get('get_catalog_list', False)
         course_run_ids = unquote_course_keys(course_run_ids)
 
         customer_catalogs = EnterpriseCatalog.objects.filter(enterprise_uuid=enterprise_uuid)
-        contains_content_items = False
+        any_catalog_contains_content_items = False
+        catalogs_that_contain_course = []
         for catalog in customer_catalogs:
             contains_content_items = catalog.contains_content_keys(course_run_ids + program_uuids)
-            # Break as soon as we find a catalog that contains the specified content
             if contains_content_items:
-                break
+                any_catalog_contains_content_items = True
+                if not get_catalog_list:
+                    # Break as soon as we find a catalog that contains the specified content
+                    break
+                catalogs_that_contain_course.append(catalog.uuid)
 
-        return Response({'contains_content_items': contains_content_items})
+        response_data = {
+            'contains_content_items': any_catalog_contains_content_items,
+        }
+        if get_catalog_list:
+            response_data['catalog_list'] = catalogs_that_contain_course
+        return Response(response_data)

@@ -29,7 +29,7 @@ class CatalogQueryFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = CatalogQuery
 
-    content_filter = factory.Dict({'content_type': factory.Faker('word')})
+    content_filter = factory.Dict({'content_type': factory.Faker('words', nb=3)})
 
 
 class EnterpriseCatalogFactory(factory.django.DjangoModelFactory):

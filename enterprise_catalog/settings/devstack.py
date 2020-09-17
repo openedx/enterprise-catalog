@@ -62,4 +62,7 @@ CELERY_ALWAYS_EAGER = (
 CORS_ORIGIN_WHITELIST = [
     # Enterprise learner portal MFE
     'http://localhost:8734',
+    'http://localhost:18160',
+    'http://localhost:18000',
+    'http://localhost:18130',
 ]

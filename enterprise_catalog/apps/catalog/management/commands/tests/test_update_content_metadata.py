@@ -2,6 +2,11 @@ import mock
 from django.core.management import call_command
 from django.test import TestCase
 
+from enterprise_catalog.apps.api.tasks import update_catalog_metadata_task
+from enterprise_catalog.apps.catalog.models import (
+    ContentMetadata,
+    EnterpriseCatalog,
+)
 from enterprise_catalog.apps.catalog.tests.factories import (
     CatalogQueryFactory,
     EnterpriseCatalogFactory,
@@ -10,6 +15,12 @@ from enterprise_catalog.apps.catalog.tests.factories import (
 
 class UpdateContentMetadataCommandTests(TestCase):
     command_name = 'update_content_metadata'
+
+    def tearDown(self):
+        super(UpdateContentMetadataCommandTests, self).tearDown()
+        # clean up any stale test objects
+        ContentMetadata.objects.all().delete()
+        EnterpriseCatalog.objects.all().delete()
 
     @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.chord')
     @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.update_catalog_metadata_task')
