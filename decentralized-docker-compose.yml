@@ -40,6 +40,7 @@ services:
       - discovery
       - lms
       - mysql
+      - redis
     environment:
       CELERY_ALWAYS_EAGER: 'false'
       CELERY_BROKER_TRANSPORT: redis
