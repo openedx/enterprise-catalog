@@ -172,6 +172,9 @@ dev.stop: # Stops containers so they can be restarted
 %-logs: ## View the logs of the specified service container
 	docker-compose logs -f --tail=500 $*
 
+%-restart: # Restart the specified service container
+	docker-compose restart $*
+
 %-attach: ## Attach terminal I/O to the specified service container
 	docker attach enterprise.catalog.$*
 

@@ -1,4 +1,5 @@
 import collections
+import json
 from logging import getLogger
 from uuid import uuid4
 
@@ -74,12 +75,22 @@ class CatalogQuery(models.Model):
         self.content_filter_hash = get_content_filter_hash(self.content_filter)
         super(CatalogQuery, self).save(*args, **kwargs)
 
+    def pretty_print_content_filter(self):
+        """
+        Prints the content filter in an indented, more easily readable format.
+        """
+        return json.dumps(self.content_filter, indent=4)
+
     def __str__(self):
         """
         Return human-readable string representation.
         """
-        return "<CatalogQuery with content filter hash '{content_filter_hash}'>".format(
-            content_filter_hash=self.content_filter_hash
+        return (
+            "CatalogQuery with content_filter_hash '{content_filter_hash}' "
+            "and content_filter '{content_filter}'>".format(
+                content_filter_hash=self.content_filter_hash,
+                content_filter=self.pretty_print_content_filter(),
+            )
         )
 
     @property
