@@ -15,9 +15,10 @@ services:
       - "8160:8160"
     depends_on:
       - discovery
-      - worker
       - lms
       - mysql
+      - redis
+      - worker
     # Allows attachment to this container using 'docker attach <containerID>'.
     stdin_open: true
     tty: true
