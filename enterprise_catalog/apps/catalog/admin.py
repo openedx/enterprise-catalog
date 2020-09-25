@@ -44,24 +44,65 @@ class UnchangeableMixin(admin.ModelAdmin):
 @admin.register(ContentMetadata)
 class ContentMetadataAdmin(UnchangeableMixin):
     """ Admin configuration for the custom ContentMetadata model. """
-    list_display = ('id', 'content_key', 'content_type',)
+    list_display = (
+        'content_key',
+        'content_type',
+        'parent_content_key',
+    )
+    list_filter = (
+        'content_type',
+    )
+    search_fields = (
+        'content_key',
+        'parent_content_key',
+    )
 
 
 @admin.register(CatalogQuery)
 class CatalogQueryAdmin(UnchangeableMixin):
     """ Admin configuration for the custom CatalogQuery model. """
-    list_display = ('id',)
+    list_display = (
+        'id',
+        'content_filter_hash',
+        'get_content_filter',
+    )
+    search_fields = (
+        'content_filter_hash',
+    )
+
+    def get_content_filter(self, obj):
+        return obj.pretty_print_content_filter()
+
+    get_content_filter.short_description = 'Content Filter'
+
     form = CatalogQueryForm
 
 
 @admin.register(EnterpriseCatalog)
 class EnterpriseCatalogAdmin(UnchangeableMixin):
     """ Admin configuration for the custom EnterpriseCatalog model. """
-    list_display = ('uuid', 'enterprise_uuid', 'enterprise_name', 'title', 'get_catalog_query',)
+    list_display = (
+        'uuid',
+        'enterprise_uuid',
+        'enterprise_name',
+        'title',
+        'get_catalog_query',
+    )
+    list_filter = (
+        'enterprise_name',
+        'catalog_query',
+    )
+    search_fields = (
+        'uuid',
+        'enterprise_uuid',
+        'enterprise_name',
+        'title',
+        'catalog_query__content_filter_hash__exact'
+    )
 
     def get_catalog_query(self, obj):
         link = reverse("admin:catalog_catalogquery_change", args=[obj.catalog_query.id])
-        return format_html('<a href="{}">{}</a>', link, obj.catalog_query.content_filter_hash)
+        return format_html('<a href="{}">{}</a>', link, obj.catalog_query.pretty_print_content_filter())
 
     get_catalog_query.short_description = 'Catalog Query'
 
@@ -71,7 +112,11 @@ class EnterpriseCatalogRoleAssignmentAdmin(UserRoleAssignmentAdmin):
     """
     Django admin for EnterpriseCatalogRoleAssignment Model.
     """
-    list_display = ('get_username', 'role', 'enterprise_id',)
+    list_display = (
+        'get_username',
+        'role',
+        'enterprise_id',
+    )
 
     def get_username(self, obj):
         return obj.user.username
