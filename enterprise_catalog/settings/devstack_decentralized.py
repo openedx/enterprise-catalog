@@ -58,8 +58,8 @@ LMS_BASE_URL = 'http://edx.devstack.lms:8000'
 DISCOVERY_SERVICE_API_URL = 'http://edx.devstack.discovery:8381/api/v1/'
 ENTERPRISE_LEARNER_PORTAL_BASE_URL = 'http://localhost:8734'
 
-CELERYD_HIJACK_ROOT_LOGGER = True
-CELERY_ALWAYS_EAGER = (
+CELERY_WORKER_HIJACK_ROOT_LOGGER = True
+CELERY_TASK_ALWAYS_EAGER = (
     os.environ.get("CELERY_ALWAYS_EAGER", "false").lower() == "true"
 )
 

@@ -267,23 +267,23 @@ ENTERPRISE_CATALOG_SERVICE_USER = 'enterprise_catalog_service_user'
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_ACCEPT_CONTENT = ['json']
-CELERY_MESSAGE_COMPRESSION = 'gzip'
+CELERY_TASK_COMPRESSION = 'gzip'
 
 # Events configuration
-CELERY_TRACK_STARTED = True
-CELERY_SEND_EVENTS = True
-CELERY_SEND_TASK_SENT_EVENT = True
+CELERY_TASK_TRACK_STARTED = True
+CELERY_WORKER_SEND_TASK_EVENTS = True
+CELERY_TASK_SEND_SENT_EVENT = True
 
 # Celery task routing configuration.
 # Only the enterprise-catalog worker should receive enterprise-catalog tasks.
 # Explicitly define these to avoid name collisions with other services
 # using the same broker and the standard default queue name of "celery".
-CELERY_DEFAULT_EXCHANGE = os.environ.get('CELERY_DEFAULT_EXCHANGE', 'enterprise_catalog')
-CELERY_DEFAULT_ROUTING_KEY = os.environ.get('CELERY_DEFAULT_ROUTING_KEY', 'enterprise_catalog')
-CELERY_DEFAULT_QUEUE = os.environ.get('CELERY_DEFAULT_QUEUE', 'enterprise_catalog.default')
+CELERY_TASK_DEFAULT_EXCHANGE = os.environ.get('CELERY_DEFAULT_EXCHANGE', 'enterprise_catalog')
+CELERY_TASK_DEFAULT_ROUTING_KEY = os.environ.get('CELERY_DEFAULT_ROUTING_KEY', 'enterprise_catalog')
+CELERY_TASK_DEFAULT_QUEUE = os.environ.get('CELERY_DEFAULT_QUEUE', 'enterprise_catalog.default')
 
 # Celery Broker
-# These settings need not be set if CELERY_ALWAYS_EAGER == True, like in Standalone.
+# These settings need not be set if CELERY_TASK_ALWAYS_EAGER == True, like in Standalone.
 # Devstack overrides these in its docker-compose.yml.
 # Production environments can override these to be whatever they want.
 CELERY_BROKER_TRANSPORT = os.environ.get('CELERY_BROKER_TRANSPORT', '')
@@ -291,7 +291,7 @@ CELERY_BROKER_HOSTNAME = os.environ.get('CELERY_BROKER_HOSTNAME', '')
 CELERY_BROKER_VHOST = os.environ.get('CELERY_BROKER_VHOST', '')
 CELERY_BROKER_USER = os.environ.get('CELERY_BROKER_USER', '')
 CELERY_BROKER_PASSWORD = os.environ.get('CELERY_BROKER_PASSWORD', '')
-BROKER_URL = '{0}://{1}:{2}@{3}/{4}'.format(
+CELERY_BROKER_URL = '{0}://{1}:{2}@{3}/{4}'.format(
     CELERY_BROKER_TRANSPORT,
     CELERY_BROKER_USER,
     CELERY_BROKER_PASSWORD,
@@ -300,9 +300,9 @@ BROKER_URL = '{0}://{1}:{2}@{3}/{4}'.format(
 )
 
 # Results configuration
-CELERY_RESULT_BACKEND = BROKER_URL
-CELERY_IGNORE_RESULT = False
-CELERY_STORE_ERRORS_EVEN_IF_IGNORED = True
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+CELERY_TASK_IGNORE_RESULT = False
+CELERY_TASK_STORE_ERRORS_EVEN_IF_IGNORED = True
 
 # Celery task time limits.
 # Tasks will be asked to quit after four minutes, and un-gracefully killed
@@ -310,7 +310,7 @@ CELERY_STORE_ERRORS_EVEN_IF_IGNORED = True
 CELERY_TASK_SOFT_TIME_LIMIT = 240
 CELERY_TASK_TIME_LIMIT = 300
 
-BROKER_TRANSPORT_OPTIONS = {
+CELERY_BROKER_TRANSPORT_OPTIONS = {
     'fanout_patterns': True,
     'fanout_prefix': True,
 }
