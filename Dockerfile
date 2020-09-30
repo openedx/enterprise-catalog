@@ -22,7 +22,6 @@ LABEL maintainer="devops@edx.org"
 # If you add a package here please include a comment above describing what it is used for
 RUN apt-get update && \
 apt-get install -y software-properties-common && \
-apt-get install -y curl && \
 apt-add-repository -y ppa:deadsnakes/ppa && apt-get update && \
 apt-get upgrade -qy && apt-get install language-pack-en locales git \
 libmysqlclient-dev libssl-dev build-essential python3.8-dev python3.8-venv -qy && \
