@@ -1,0 +1,13 @@
+version: "3.7"
+
+services:
+
+  discovery:
+    volumes:
+      - ${COURSE_DISCOVERY_PATH}:/edx/app/discovery/discovery:cached
+
+  lms:
+    volumes:
+      - ${LMS_PATH}:/edx/app/edxapp/edx-platform:cached
+
+

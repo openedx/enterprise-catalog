@@ -42,5 +42,6 @@ service_exec_management lms migrate
 
 log_step "lms: Running migrations for courseware student module history (CSMH) database..."
 service_exec_management lms migrate --database student_module_history
+log_step "lms: Finished migrations for courseware student module history (CSMH) database..."
 
 log_message "Done provisioning LMS."
