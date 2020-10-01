@@ -71,6 +71,7 @@ services:
       CELERY_BROKER_VHOST: 0
       CELERY_BROKER_PASSWORD: password
       DJANGO_SETTINGS_MODULE: enterprise_catalog.settings.devstack
+      COLUMNS: 80
     hostname: worker.catalog.enterprise
     networks:
       - devstack_default
