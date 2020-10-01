@@ -21,7 +21,7 @@ DATABASES = {
 # END IN-MEMORY TEST DATABASE
 
 # CELERY
-CELERY_ALWAYS_EAGER = True
+CELERY_TASK_ALWAYS_EAGER = True
 # END CELERY
 
 results_dir = tempfile.TemporaryDirectory()
