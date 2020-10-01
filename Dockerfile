@@ -20,13 +20,18 @@ LABEL maintainer="devops@edx.org"
 #     MySQL-python for performance gains.
 
 # If you add a package here please include a comment above describing what it is used for
-RUN apt-get update && apt-get upgrade -qy && apt-get install language-pack-en locales git python3.5 python3-pip \
-python3-pip libmysqlclient-dev libssl-dev python3-dev -qy && \
-pip3 install --upgrade pip setuptools && \
+RUN apt-get update && \
+apt-get install -y software-properties-common && \
+apt-add-repository -y ppa:deadsnakes/ppa && apt-get update && \
+apt-get upgrade -qy && apt-get install language-pack-en locales git \
+libmysqlclient-dev libssl-dev build-essential python3.8-dev python3.8-venv -qy && \
 rm -rf /var/lib/apt/lists/*
 
-RUN ln -s /usr/bin/pip3 /usr/bin/pip
-RUN ln -s /usr/bin/python3 /usr/bin/python
+ENV VIRTUAL_ENV=/venv
+RUN python3.8 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+RUN pip install pip==20.2.3 setuptools==50.3.0
 
 RUN locale-gen en_US.UTF-8
 ENV LANG en_US.UTF-8
@@ -42,7 +47,7 @@ RUN useradd -m --shell /bin/false app
 WORKDIR /edx/app/enterprise_catalog/enterprise_catalog
 
 COPY requirements/ /edx/app/enterprise_catalog/enterprise_catalog/requirements/
-RUN pip3 install -r /edx/app/enterprise_catalog/enterprise_catalog/requirements/production.txt
+RUN pip install -r /edx/app/enterprise_catalog/enterprise_catalog/requirements/production.txt
 
 # Code is owned by root so it cannot be modified by the application user.
 # So we copy it before changing users.
@@ -56,13 +61,13 @@ CMD ["gunicorn", "--workers=2", "--name", "enterprise_catalog", "-c", "/edx/app/
 COPY . /edx/app/enterprise_catalog/enterprise_catalog
 
 FROM app as newrelic
-RUN pip3 install newrelic
+RUN pip install newrelic
 CMD ["newrelic-admin", "run-program", "gunicorn", "--workers=2", "--name", "enterprise_catalog", "-c", "/edx/app/enterprise_catalog/enterprise_catalog/enterprise_catalog/docker_gunicorn_configuration.py", "--log-file", "-", "--max-requests=1000", "enterprise_catalog.wsgi:application"]
 
 # Creating image which will be used by Decentralized Devstack
 FROM app as devstack
 USER root
-RUN pip3 install -r /edx/app/enterprise_catalog/enterprise_catalog/requirements/dev.txt
+RUN pip install -r /edx/app/enterprise_catalog/enterprise_catalog/requirements/dev.txt
 USER app
 CMD ["gunicorn", "--reload", "--workers=2", "--name", "enterprise_catalog", "-b", ":8160", "-c", "/edx/app/enterprise_catalog/enterprise_catalog/enterprise_catalog/docker_gunicorn_configuration.py", "--log-file", "-", "--max-requests=1000", "enterprise_catalog.wsgi:application"]
 
@@ -72,6 +77,6 @@ FROM app as legacy_devapp
 EXPOSE 18160
 EXPOSE 18161
 USER root
-RUN pip3 install -r /edx/app/enterprise_catalog/enterprise_catalog/requirements/dev.txt
+RUN pip install -r /edx/app/enterprise_catalog/enterprise_catalog/requirements/dev.txt
 USER app
 CMD ["gunicorn", "--reload", "--workers=2", "--name", "enterprise_catalog", "-b", ":18160", "-c", "/edx/app/enterprise_catalog/enterprise_catalog/enterprise_catalog/docker_gunicorn_configuration.py", "--log-file", "-", "--max-requests=1000", "enterprise_catalog.wsgi:application"]
