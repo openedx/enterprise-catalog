@@ -55,14 +55,14 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = ContentMetadata
 
-    content_key = factory.Sequence(lambda n: 'metadata_item_{}'.format(n))  # pylint: disable=unnecessary-lambda
+    content_key = factory.Sequence(lambda n: f'metadata_item_{n}')  # pylint: disable=unnecessary-lambda
     content_type = factory.Iterator([COURSE_RUN, COURSE, PROGRAM])
     parent_content_key = None   # Default to None
 
     @factory.lazy_attribute
     def json_metadata(self):
         json_metadata = {
-            'aggregation_key': '{}:{}'.format(self.content_type, self.content_key),
+            'aggregation_key': f'{self.content_type}:{self.content_key}',
             'key': self.content_key,
             'uuid': str(uuid4()),
         }
@@ -72,7 +72,7 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
                 'logo_image_url': FAKE_IMAGE_URL,
             }]
             json_metadata.update({
-                'marketing_url': 'https://marketing.url/{}'.format(self.content_key),
+                'marketing_url': f'https://marketing.url/{self.content_key}',
                 'original_image': {'src': FAKE_IMAGE_URL},
                 'owners': owners,
             })

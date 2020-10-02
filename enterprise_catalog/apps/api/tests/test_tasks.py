@@ -121,12 +121,12 @@ class EnterpriseCatalogCeleryTaskTests(TestCase):
         course_uuid = algolia_data['course_metadata'].json_metadata.get('uuid')
         expected_algolia_objects.append({
             'key': algolia_data['course_metadata'].content_key,
-            'objectID': 'course-{}-catalog-uuids-0'.format(course_uuid),
+            'objectID': f'course-{course_uuid}-catalog-uuids-0',
             'enterprise_catalog_uuids': algolia_data['catalog_uuids'],
         })
         expected_algolia_objects.append({
             'key': algolia_data['course_metadata'].content_key,
-            'objectID': 'course-{}-customer-uuids-0'.format(course_uuid),
+            'objectID': f'course-{course_uuid}-customer-uuids-0',
             'enterprise_customer_uuids': algolia_data['customer_uuids'],
         })
 
@@ -157,22 +157,22 @@ class EnterpriseCatalogCeleryTaskTests(TestCase):
         course_uuid = algolia_data['course_metadata'].json_metadata.get('uuid')
         expected_algolia_objects.append({
             'key': algolia_data['course_metadata'].content_key,
-            'objectID': 'course-{}-catalog-uuids-0'.format(course_uuid),
+            'objectID': f'course-{course_uuid}-catalog-uuids-0',
             'enterprise_catalog_uuids': [algolia_data['catalog_uuids'][0]],
         })
         expected_algolia_objects.append({
             'key': algolia_data['course_metadata'].content_key,
-            'objectID': 'course-{}-catalog-uuids-1'.format(course_uuid),
+            'objectID': f'course-{course_uuid}-catalog-uuids-1',
             'enterprise_catalog_uuids': [algolia_data['catalog_uuids'][1]],
         })
         expected_algolia_objects.append({
             'key': algolia_data['course_metadata'].content_key,
-            'objectID': 'course-{}-customer-uuids-0'.format(course_uuid),
+            'objectID': f'course-{course_uuid}-customer-uuids-0',
             'enterprise_customer_uuids': [algolia_data['customer_uuids'][0]],
         })
         expected_algolia_objects.append({
             'key': algolia_data['course_metadata'].content_key,
-            'objectID': 'course-{}-customer-uuids-1'.format(course_uuid),
+            'objectID': f'course-{course_uuid}-customer-uuids-1',
             'enterprise_customer_uuids': [algolia_data['customer_uuids'][1]],
         })
 

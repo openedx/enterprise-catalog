@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Broadly-useful mixins for use in automated tests."""
 
 import uuid
@@ -34,9 +33,9 @@ class JwtMixin():
         """
         payload = generate_unversioned_payload(self.user)
         if system_wide_role:
-            role_data = '{system_wide_role}'.format(system_wide_role=system_wide_role)
+            role_data = f'{system_wide_role}'
             if context is not None:
-                role_data += ':{context}'.format(context=context)
+                role_data += f':{context}'
             payload.update({
                 'roles': [role_data]
             })
@@ -51,9 +50,9 @@ class JwtMixin():
         """
         roles = []
         for role, context in role_context_pairs:
-            role_data = '{role}'.format(role=role)
+            role_data = f'{role}'
             if context is not None:
-                role_data += ':{context}'.format(context=context)
+                role_data += f':{context}'
             roles.append(role_data)
 
         payload = generate_unversioned_payload(self.user)
@@ -74,7 +73,7 @@ class APITestMixin(JwtMixin, APITestCase):
     """
 
     def setUp(self):
-        super(APITestMixin, self).setUp()
+        super().setUp()
         self.enterprise_uuid = uuid.uuid4()
         self.enterprise_name = 'Test Enterprise'
         self.enterprise_slug = 'test-enterprise'

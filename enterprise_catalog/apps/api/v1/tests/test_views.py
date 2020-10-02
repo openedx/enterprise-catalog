@@ -1,9 +1,9 @@
 import uuid
 from collections import OrderedDict
 from operator import itemgetter
+from unittest import mock
 
 import ddt
-import mock
 from django.conf import settings
 from django.db import IntegrityError
 from django.utils.text import slugify
@@ -36,7 +36,7 @@ class EnterpriseCatalogCRUDViewSetTests(APITestMixin):
     """
 
     def setUp(self):
-        super(EnterpriseCatalogCRUDViewSetTests, self).setUp()
+        super().setUp()
         self.set_up_staff()
         self.enterprise_catalog = EnterpriseCatalogFactory(
             enterprise_uuid=self.enterprise_uuid,
@@ -428,7 +428,7 @@ class EnterpriseCatalogContainsContentItemsTests(APITestMixin):
     """
 
     def setUp(self):
-        super(EnterpriseCatalogContainsContentItemsTests, self).setUp()
+        super().setUp()
         # Set up catalog.has_learner_access permissions
         self.set_up_catalog_learner()
         self.enterprise_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
@@ -744,7 +744,7 @@ class EnterpriseCatalogRefreshDataFromDiscoveryTests(APITestMixin):
     """
 
     def setUp(self):
-        super(EnterpriseCatalogRefreshDataFromDiscoveryTests, self).setUp()
+        super().setUp()
         self.set_up_staff()
         self.enterprise_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
 
@@ -785,7 +785,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
     """
 
     def setUp(self):
-        super(EnterpriseCustomerViewSetTests, self).setUp()
+        super().setUp()
         # clean up any stale test objects
         CatalogQuery.objects.all().delete()
         ContentMetadata.objects.all().delete()
@@ -797,7 +797,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         self.set_up_catalog_learner()
 
     def tearDown(self):
-        super(EnterpriseCustomerViewSetTests, self).tearDown()
+        super().tearDown()
         # clean up any stale test objects
         CatalogQuery.objects.all().delete()
         ContentMetadata.objects.all().delete()
@@ -908,7 +908,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
 
         response = self.client.get(url)
         catalog_list = response.json()['catalog_list']
-        assert set(catalog_list) == set([str(second_catalog.uuid)])
+        assert set(catalog_list) == {str(second_catalog.uuid)}
 
     def test_contains_catalog_list_parent_key(self):
         """
@@ -932,7 +932,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         response = self.client.get(url).json()
         assert response['contains_content_items'] is True
         catalog_list = response['catalog_list']
-        assert set(catalog_list) == set([str(second_catalog.uuid), str(third_catalog.uuid)])
+        assert set(catalog_list) == {str(second_catalog.uuid), str(third_catalog.uuid)}
 
     def test_contains_catalog_list_content_items_not_in_catalog(self):
         """

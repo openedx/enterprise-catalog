@@ -24,7 +24,7 @@ class DiscoveryApiClient(BaseOAuthClient):
         Makes a request to discovery's /search/all/ endpoint with the specified
         content_filter, page, and request_params
         """
-        LOGGER.info('Retrieving results from course-discovery for page {}...'.format(page))
+        LOGGER.info(f'Retrieving results from course-discovery for page {page}...')
         response = self.client.post(
             DISCOVERY_SEARCH_ALL_ENDPOINT,
             json=content_filter,
@@ -77,7 +77,7 @@ class DiscoveryApiClient(BaseOAuthClient):
         """
         Makes a request to discovery's /api/v1/courses/ endpoint with the specified offset and request_params
         """
-        LOGGER.info('Retrieving courses from course-discovery for offset {}...'.format(offset))
+        LOGGER.info(f'Retrieving courses from course-discovery for offset {offset}...')
         response = self.client.get(
             DISCOVERY_COURSES_ENDPOINT,
             params=request_params,

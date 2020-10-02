@@ -1,7 +1,7 @@
+from unittest import mock
 from uuid import uuid4
 
 import ddt
-import mock
 from django.core.management import call_command
 from django.test import TestCase
 
