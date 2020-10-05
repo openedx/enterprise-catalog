@@ -9,7 +9,10 @@ from enterprise_catalog.apps.api.tasks import (
     update_full_content_metadata_task,
 )
 from enterprise_catalog.apps.catalog.constants import COURSE
-from enterprise_catalog.apps.catalog.models import CatalogQuery, EnterpriseCatalog
+from enterprise_catalog.apps.catalog.models import (
+    CatalogQuery,
+    EnterpriseCatalog,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -61,15 +64,11 @@ class Command(BaseCommand):
         catalog_uuids = options.get('catalog_uuids')
         if catalog_uuids:
             enterprise_catalogs = EnterpriseCatalog.objects.filter(uuid__in=catalog_uuids)
-            catalog_queries = catalog_queries.filter(
-                enterprise_catalogs__isnull=False,
-                enterprise_catalogs__in=enterprise_catalogs,
-            ).distinct()
+            catalog_queries = catalog_queries.filter(enterprise_catalogs__in=enterprise_catalogs).distinct()
             message = (
                 'Updating {} unique CatalogQuery(s) for EnterpriseCatalog(s) with uuid(s): {}'
             ).format(catalog_queries.count(), catalog_uuids)
             logger.info(message)
-
 
         # create a group of celery tasks that run in parallel to create/update ContentMetadata records
         # and associate those with the appropriate CatalogQuery(s). once all those tasks succeed, run a
