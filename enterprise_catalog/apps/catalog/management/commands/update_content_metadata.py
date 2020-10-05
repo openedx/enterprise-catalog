@@ -1,7 +1,7 @@
 import logging
+from uuid import UUID
 
 from celery import chord
-from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from enterprise_catalog.apps.api.tasks import (
@@ -9,7 +9,10 @@ from enterprise_catalog.apps.api.tasks import (
     update_full_content_metadata_task,
 )
 from enterprise_catalog.apps.catalog.constants import COURSE
-from enterprise_catalog.apps.catalog.models import CatalogQuery
+from enterprise_catalog.apps.catalog.models import (
+    CatalogQuery,
+    EnterpriseCatalog,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -17,8 +20,25 @@ logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     help = (
-        'Update Content Metadata, along with the associations of Catalog Queries and Content Metadata',
+        'Updates Content Metadata, along with the associations of Catalog Queries and Content Metadata. '
+        'Example usage with --catalog_uuids: '
+        './manage.py update_content_metadata --catalog_uuids {catalog_uuid_a} {catalog_uuid_b} ...'
     )
+
+    def add_arguments(self, parser):
+        """
+        Add required arguments to the parser.
+        """
+        parser.add_argument(
+            '--catalog_uuids',
+            dest='catalog_uuids',
+            required=False,
+            nargs='+',
+            type=UUID,
+            metavar='ENTERPRISE_CATALOG_UUID',
+            help='If provided, only updates content metadata for the specified catalog',
+        )
+        super(Command, self).add_arguments(parser)
 
     def _run_update_catalog_metadata_task(self, catalog_query):
         message = (
@@ -40,6 +60,15 @@ class Command(BaseCommand):
         # find all CatalogQuery records used by at least one EnterpriseCatalog to avoid
         # calling /search/all/ for a CatalogQuery that is not currently used by any catalogs.
         catalog_queries = CatalogQuery.objects.filter(enterprise_catalogs__isnull=False).distinct()
+
+        catalog_uuids = options.get('catalog_uuids')
+        if catalog_uuids:
+            enterprise_catalogs = EnterpriseCatalog.objects.filter(uuid__in=catalog_uuids)
+            catalog_queries = catalog_queries.filter(enterprise_catalogs__in=enterprise_catalogs).distinct()
+            message = (
+                'Updating {} unique CatalogQuery(s) for EnterpriseCatalog(s) with uuid(s): {}'
+            ).format(catalog_queries.count(), catalog_uuids)
+            logger.info(message)
 
         # create a group of celery tasks that run in parallel to create/update ContentMetadata records
         # and associate those with the appropriate CatalogQuery(s). once all those tasks succeed, run a
