@@ -138,7 +138,9 @@ def index_enterprise_catalog_courses_in_algolia_task(
     for metadata in content_metadata:
         is_course_content_type = metadata.content_type == COURSE
         course_content_key = metadata.content_key if is_course_content_type else metadata.parent_content_key
-        associated_queries = metadata.catalog_queries.all()
+        associated_queries = metadata.catalog_queries.all().prefetch_related(
+            'enterprise_catalogs',
+        )
         enterprise_catalog_uuids = set()
         enterprise_customer_uuids = set()
         for query in associated_queries:
