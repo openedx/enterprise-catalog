@@ -19,7 +19,6 @@ from enterprise_catalog.apps.catalog.constants import (
 from enterprise_catalog.apps.catalog.models import (
     CatalogQuery,
     ContentMetadata,
-    EnterpriseCatalog,
     content_metadata_with_type_course,
     update_contentmetadata_from_discovery,
 )
