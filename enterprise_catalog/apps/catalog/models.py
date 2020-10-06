@@ -93,18 +93,6 @@ class CatalogQuery(models.Model):
             )
         )
 
-    @property
-    def enterprise_catalogs(self):
-        """
-        Helper to retrieve the enterprise catalogs associated with the catalog query.
-
-        Returns:
-            Queryset: The queryset of associated enterprise catalogs
-        """
-        if not self.enterprise_catalogs:
-            return EnterpriseCatalog.objects.none()
-        return self.enterprise_catalogs.all()
-
 
 class EnterpriseCatalog(TimeStampedModel):
     """

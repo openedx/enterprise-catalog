@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from celery import shared_task
 from celery_utils.logged_task import LoggedTask
-from django.db.models import Q
+from django.db.models import Prefetch, Q
 
 from enterprise_catalog.apps.api.v1.utils import (
     create_algolia_objects_from_courses,
@@ -17,6 +17,7 @@ from enterprise_catalog.apps.catalog.constants import (
     COURSE,
 )
 from enterprise_catalog.apps.catalog.models import (
+    CatalogQuery,
     ContentMetadata,
     content_metadata_with_type_course,
     update_contentmetadata_from_discovery,
@@ -127,7 +128,13 @@ def index_enterprise_catalog_courses_in_algolia_task(
     # retrieve ContentMetadata records that match the specified content_keys in the
     # content_key or parent_content_key. returns both courses and course runs.
     query = Q(content_key__in=content_keys) | Q(parent_content_key__in=content_keys)
-    content_metadata = ContentMetadata.objects.filter(query)
+
+    catalog_queries = CatalogQuery.objects.prefetch_related(
+        'enterprise_catalogs',
+    )
+    content_metadata = ContentMetadata.objects.filter(query).prefetch_related(
+        Prefetch('catalog_queries', queryset=catalog_queries),
+    )
 
     # iterate through ContentMetadata records, retrieving the enterprise_catalog_uuids
     # and enterprise_customer_uuids associated with each ContentMetadata record (either
@@ -138,16 +145,14 @@ def index_enterprise_catalog_courses_in_algolia_task(
     for metadata in content_metadata:
         is_course_content_type = metadata.content_type == COURSE
         course_content_key = metadata.content_key if is_course_content_type else metadata.parent_content_key
-        associated_queries = metadata.catalog_queries.all().prefetch_related(
-            'enterprise_catalogs',
-        )
+        associated_queries = metadata.catalog_queries.all()
         enterprise_catalog_uuids = set()
         enterprise_customer_uuids = set()
         for query in associated_queries:
-            associated_catalogs = query.enterprise_catalogs.values('uuid', 'enterprise_uuid')
+            associated_catalogs = query.enterprise_catalogs.all()
             for catalog in associated_catalogs:
-                enterprise_catalog_uuids.add(str(catalog['uuid']))
-                enterprise_customer_uuids.add(str(catalog['enterprise_uuid']))
+                enterprise_catalog_uuids.add(str(catalog.uuid))
+                enterprise_customer_uuids.add(str(catalog.enterprise_uuid))
 
         # add to any existing enterprise catalog uuids or enterprise customer uuids
         catalog_uuids_by_course_key[course_content_key].update(enterprise_catalog_uuids)
