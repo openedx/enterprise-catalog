@@ -2,7 +2,6 @@ import mock
 from django.core.management import call_command
 from django.test import TestCase
 
-from enterprise_catalog.apps.api.tasks import update_catalog_metadata_task
 from enterprise_catalog.apps.catalog.models import (
     ContentMetadata,
     EnterpriseCatalog,
@@ -61,19 +60,5 @@ class UpdateContentMetadataCommandTests(TestCase):
         mock_chord.assert_called_once_with([
             mock_catalog_task.s(catalog_query_id=self.catalog_query_a),
             mock_catalog_task.s(catalog_query_id=self.catalog_query_b),
-        ])
-        mock_full_metadata_task.s.assert_called_once()
-
-    @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.chord')
-    @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.update_catalog_metadata_task')
-    @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.update_full_content_metadata_task')
-    def test_update_content_metadata_with_args(self, mock_full_metadata_task, mock_catalog_task, mock_chord):
-        """
-        Verify that the job only updates the catalog query associated with the provided catalog_uuid if given.
-        """
-        call_command(self.command_name, catalog_uuids=[self.enterprise_catalog_a.uuid])
-
-        mock_chord.assert_called_once_with([
-            mock_catalog_task.s(catalog_query_id=self.catalog_query_a),
         ])
         mock_full_metadata_task.s.assert_called_once()

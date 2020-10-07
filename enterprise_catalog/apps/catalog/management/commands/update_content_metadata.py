@@ -25,21 +25,6 @@ class Command(BaseCommand):
         './manage.py update_content_metadata --catalog_uuids {catalog_uuid_a} {catalog_uuid_b} ...'
     )
 
-    def add_arguments(self, parser):
-        """
-        Add required arguments to the parser.
-        """
-        parser.add_argument(
-            '--catalog_uuids',
-            dest='catalog_uuids',
-            required=False,
-            nargs='+',
-            type=UUID,
-            metavar='ENTERPRISE_CATALOG_UUID',
-            help='If provided, only updates content metadata for the specified catalog',
-        )
-        super(Command, self).add_arguments(parser)
-
     def _run_update_catalog_metadata_task(self, catalog_query):
         message = (
             'Spinning off update_catalog_metadata_task from update_content_metadata command'
@@ -60,15 +45,6 @@ class Command(BaseCommand):
         # find all CatalogQuery records used by at least one EnterpriseCatalog to avoid
         # calling /search/all/ for a CatalogQuery that is not currently used by any catalogs.
         catalog_queries = CatalogQuery.objects.filter(enterprise_catalogs__isnull=False).distinct()
-
-        catalog_uuids = options.get('catalog_uuids')
-        if catalog_uuids:
-            enterprise_catalogs = EnterpriseCatalog.objects.filter(uuid__in=catalog_uuids)
-            catalog_queries = catalog_queries.filter(enterprise_catalogs__in=enterprise_catalogs).distinct()
-            message = (
-                'Updating {} unique CatalogQuery(s) for EnterpriseCatalog(s) with uuid(s): {}'
-            ).format(catalog_queries.count(), catalog_uuids)
-            logger.info(message)
 
         # create a group of celery tasks that run in parallel to create/update ContentMetadata records
         # and associate those with the appropriate CatalogQuery(s). once all those tasks succeed, run a
