@@ -63,6 +63,8 @@ services:
     image: openedx/discovery:latest-devstack
     container_name: edx.devstack.discovery
     hostname: discovery.devstack.edx
+    links:
+      - "mysql:edx.devstack.mysql57"
     depends_on:
       - mysql
       - elasticsearch
