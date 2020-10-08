@@ -11,8 +11,9 @@ else
   log_step "lms: Ensuring MySQL databases and users exist..."
   docker-compose exec -T mysql mysql -uroot mysql < decentralized_devstack/provision-mysql-lms.sql
 
-  log_step "lms: Adding default MySQL data from dump..."
-  docker-compose exec -T mysql mysql edxapp < decentralized_devstack/provision-mysql-lms-data.sql
+  touch /tmp/provision-mysql-lms-data.sql
+  curl https://raw.githubusercontent.com/edx/edx-platform/master/edxapp.sql > /tmp/provision-mysql-lms-data.sql
+  docker-compose exec -T mysql mysql edxapp < /tmp/provision-mysql-lms-data.sql
 fi
 
 log_step "lms: Making sure MongoDB is ready..."
@@ -34,13 +35,12 @@ service_exec mongo mongorestore --quiet --gzip /data/dump
 
 log_step "lms: Bringing up LMS..."
 docker-compose up --detach lms
-
 # # TODO: Make sure this handles squashed migrations idempotently 
 # # (e.g. enterprise/migrations/0001_squashed_0092_auto_20200312_1650.py)
-log_step "lms: Running migrations for default database..."
-service_exec_management lms migrate
+# log_step "lms: Running migrations for default database..."
+# service_exec_management lms migrate
 
-log_step "lms: Running migrations for courseware student module history (CSMH) database..."
-service_exec_management lms migrate --database student_module_history
+# log_step "lms: Running migrations for courseware student module history (CSMH) database..."
+# service_exec_management lms migrate --database student_module_history
 
 log_message "Done provisioning LMS."
