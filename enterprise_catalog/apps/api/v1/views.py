@@ -1,6 +1,7 @@
 from collections import OrderedDict
 
 import crum
+from celery import chain
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
@@ -18,7 +19,11 @@ from rest_framework.status import HTTP_200_OK
 from rest_framework.views import APIView
 from rest_framework_xml.renderers import XMLRenderer
 
-from enterprise_catalog.apps.api.tasks import update_catalog_metadata_task
+from enterprise_catalog.apps.api.tasks import (
+    index_enterprise_catalog_courses_in_algolia_task,
+    update_catalog_metadata_task,
+    update_full_content_metadata_task,
+)
 from enterprise_catalog.apps.api.v1.decorators import (
     require_at_least_one_query_parameter,
 )
@@ -31,6 +36,7 @@ from enterprise_catalog.apps.api.v1.serializers import (
     EnterpriseCatalogSerializer,
 )
 from enterprise_catalog.apps.api.v1.utils import unquote_course_keys
+from enterprise_catalog.apps.catalog.algolia_utils import ALGOLIA_FIELDS
 from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
 from enterprise_catalog.apps.catalog.rules import (
     enterprises_with_admin_access,
@@ -236,7 +242,7 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
 
 class EnterpriseCatalogRefreshDataFromDiscovery(BaseViewSet, APIView):
     """
-    View to update metadata in Catalog with most recent data from Discovery service
+    View to update metadata with data from the Discovery service and also index course metadata in Algolia.
     """
     permission_required = 'catalog.has_admin_access'
 
@@ -253,7 +259,28 @@ class EnterpriseCatalogRefreshDataFromDiscovery(BaseViewSet, APIView):
     def post(self, request, uuid):
         enterprise_catalog = get_object_or_404(EnterpriseCatalog, uuid=uuid)
         catalog_query_id = enterprise_catalog.catalog_query.id
-        async_task = update_catalog_metadata_task.delay(catalog_query_id=catalog_query_id)
+
+        # Note: It's not immediately obvious, but there's some "auto-magic" passing of parameters through the
+        # signatures used in the chain below. The return value of `update_catalog_metadata_task` (which should be a
+        # list of content_keys that were updated) gets passed as the first value to the
+        # `update_full_content_metadata_task`. The return value from that (which should be the list of content keys
+        # that were updated with the full data from discovery) is likewise passed as the first argument to the
+        # `index_enterprise_catalog_courses_in_algolia_task` (with the other args being whatever you actually put
+        # inside the function call).
+        # See https://docs.celeryproject.org/en/stable/userguide/canvas.html#the-primitives for more information on
+        # partial chains.
+        async_update_metadata_chain = chain(
+            update_catalog_metadata_task.s(catalog_query_id),
+            # Runs the `update_full_content_metadata_task` with the content keys that were associated in the
+            # `update_catalog_metadata_task` to pad the metadata from discovery's /search/all endpoint with additional
+            # data from the /courses endpoint
+            update_full_content_metadata_task.s(),
+            # Runs the indexing task with the indexable course keys that were returned from the
+            # `update_full_content_metadata_task` to index those pieces of ContentMetadata in Algolia
+            index_enterprise_catalog_courses_in_algolia_task.s(ALGOLIA_FIELDS),
+        )
+        async_task = async_update_metadata_chain.apply_async()
+
         return Response({'async_task_id': async_task.task_id}, status=HTTP_200_OK)
 
 

@@ -97,7 +97,10 @@ class DiscoveryApiClient(BaseOAuthClient):
         Returns:
             list: a list of the results, or None if there was an error calling the discovery service.
         """
-        request_params = {'limit': DISCOVERY_OFFSET_SIZE}
+        request_params = {
+            'ordering': 'key',
+            'limit': DISCOVERY_OFFSET_SIZE,
+        }
         request_params.update(query_params or {})
 
         courses = []

@@ -35,7 +35,9 @@ SYSTEM_ENTERPRISE_OPERATOR_ROLE = 'enterprise_openedx_operator'
 
 ACCESS_TO_ALL_ENTERPRISES_TOKEN = '*'
 
-ALGOLIA_UUID_BATCH_SIZE = 100
+DISCOVERY_COURSE_KEY_BATCH_SIZE = 50
+
+TASK_BATCH_SIZE = 250
 
 
 def json_serialized_course_modes():

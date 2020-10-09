@@ -9,6 +9,7 @@ from enterprise_catalog.apps.catalog.models import (
 )
 from enterprise_catalog.apps.catalog.tests.factories import (
     CatalogQueryFactory,
+    ContentMetadataFactory,
     EnterpriseCatalogFactory,
 )
 
@@ -24,11 +25,16 @@ class UpdateContentMetadataCommandTests(TestCase):
         cls.enterprise_catalog_a = EnterpriseCatalogFactory(catalog_query=cls.catalog_query_a)
         cls.enterprise_catalog_b = EnterpriseCatalogFactory(catalog_query=cls.catalog_query_b)
 
+        ContentMetadataFactory.create_batch(3)
+
     def tearDown(self):
         super().tearDown()
         # clean up any stale test objects
         ContentMetadata.objects.all().delete()
         EnterpriseCatalog.objects.all().delete()
+
+    def _get_content_keys(self):
+        return [content_metadata.content_key for content_metadata in ContentMetadata.objects.all()]
 
     @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.chord')
     @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.update_catalog_metadata_task')
@@ -43,7 +49,7 @@ class UpdateContentMetadataCommandTests(TestCase):
             mock_catalog_task.s(catalog_query_id=self.catalog_query_a),
             mock_catalog_task.s(catalog_query_id=self.catalog_query_b),
         ])
-        mock_full_metadata_task.s.assert_called_once()
+        mock_full_metadata_task.si.assert_called_once_with(self._get_content_keys())
 
     @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.chord')
     @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.update_catalog_metadata_task')
@@ -62,4 +68,4 @@ class UpdateContentMetadataCommandTests(TestCase):
             mock_catalog_task.s(catalog_query_id=self.catalog_query_a),
             mock_catalog_task.s(catalog_query_id=self.catalog_query_b),
         ])
-        mock_full_metadata_task.s.assert_called_once()
+        mock_full_metadata_task.si.assert_called_once_with(self._get_content_keys())

@@ -55,7 +55,7 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = ContentMetadata
 
-    content_key = factory.Sequence(lambda n: f'metadata_item_{n}')  # pylint: disable=unnecessary-lambda
+    content_key = factory.Sequence(lambda n: f'metadata_item_{n}')
     content_type = factory.Iterator([COURSE_RUN, COURSE, PROGRAM])
     parent_content_key = None   # Default to None
 
