@@ -1,18 +1,69 @@
+from unittest import mock
+from uuid import uuid4
+
 import ddt
 from django.test import TestCase
 
-from enterprise_catalog.apps.api.v1.utils import (
+from enterprise_catalog.apps.catalog.algolia_utils import (
+    ALGOLIA_INDEX_SETTINGS,
+    _should_index_course,
     get_course_card_image_url,
     get_course_partners,
     get_course_subjects,
+    get_initialized_algolia_client,
+)
+from enterprise_catalog.apps.catalog.constants import COURSE
+from enterprise_catalog.apps.catalog.tests.factories import (
+    ContentMetadataFactory,
 )
 
 
 @ddt.ddt
-class EnterpriseCatalogApiUtilsTests(TestCase):
+class AlgoliaUtilsTests(TestCase):
     """
-    Tests for enterprise_catalog.apps.api.v1.utils.
+    Tests for Algolia utils.
     """
+
+    @ddt.data(
+        {'expected_result': False, 'has_advertised_course_run': False},
+        {'expected_result': False, 'has_owners': False},
+        {'expected_result': False, 'has_url_slug': False},
+        {'expected_result': False, 'advertised_course_run_hidden': True},
+        {'expected_result': True},
+    )
+    @ddt.unpack
+    def test_should_index_course(
+        self,
+        expected_result,
+        has_advertised_course_run=True,
+        has_owners=True,
+        has_url_slug=True,
+        advertised_course_run_hidden=False,
+    ):
+        """
+        Verify that only a course that has a non-hidden advertised course run, at least one owner, and a marketing slug
+        is marked as indexable.
+        """
+        advertised_course_run_uuid = uuid4()
+        course_run_uuid = advertised_course_run_uuid if has_advertised_course_run else uuid4()
+        owners = [{'name': 'edX'}] if has_owners else []
+        url_slug = 'test-slug' if has_url_slug else ''
+        json_metadata = {
+            'advertised_course_run_uuid': advertised_course_run_uuid,
+            'course_runs': [
+                {
+                    'hidden': advertised_course_run_hidden,
+                    'uuid': course_run_uuid,
+                },
+            ],
+            'owners': owners,
+            'url_slug': url_slug,
+        }
+        course_metadata = ContentMetadataFactory.create(
+            content_type=COURSE,
+            json_metadata=json_metadata,
+        )
+        assert _should_index_course(course_metadata) is expected_result
 
     @ddt.data(
         (
@@ -111,3 +162,13 @@ class EnterpriseCatalogApiUtilsTests(TestCase):
         """
         course_subjects = get_course_subjects(course_metadata)
         assert sorted(course_subjects) == sorted(expected_subjects)
+
+    @mock.patch('enterprise_catalog.apps.catalog.algolia_utils.AlgoliaSearchClient')
+    def test_get_initialized_algolia_client(self, mock_search_client):
+        """
+        Verify that `get_initialized_algolia_client` makes calls to initialize the index and configure index settings.
+        """
+        get_initialized_algolia_client()
+
+        mock_search_client.return_value.init_index.assert_called_once()
+        mock_search_client.return_value.set_index_settings.assert_called_once_with(ALGOLIA_INDEX_SETTINGS)

@@ -12,6 +12,7 @@ from rest_framework.reverse import reverse
 from rest_framework.settings import api_settings
 
 from enterprise_catalog.apps.api.v1.tests.mixins import APITestMixin
+from enterprise_catalog.apps.catalog.algolia_utils import ALGOLIA_FIELDS
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
     COURSE_RUN,
@@ -23,6 +24,7 @@ from enterprise_catalog.apps.catalog.models import (
     EnterpriseCatalog,
 )
 from enterprise_catalog.apps.catalog.tests.factories import (
+    CatalogQueryFactory,
     ContentMetadataFactory,
     EnterpriseCatalogFactory,
 )
@@ -698,7 +700,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
             self._get_expected_json_metadata(item, learner_portal_enabled)
             for item in metadata
         ], key=itemgetter('key'))
-        actual_metadata = response_data['results']
+        actual_metadata = sorted(response_data['results'], key=itemgetter('key'))
         self.assertEqual(actual_metadata, expected_metadata[:-1])
 
         # Check that the second page contains the last metadata
@@ -746,19 +748,42 @@ class EnterpriseCatalogRefreshDataFromDiscoveryTests(APITestMixin):
     def setUp(self):
         super().setUp()
         self.set_up_staff()
-        self.enterprise_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
+        self.catalog_query = CatalogQueryFactory()
+        self.enterprise_catalog = EnterpriseCatalogFactory(
+            enterprise_uuid=self.enterprise_uuid,
+            catalog_query=self.catalog_query,
+        )
 
-    @mock.patch('enterprise_catalog.apps.api.v1.views.update_catalog_metadata_task.delay')
-    def test_refresh_catalog_on_post_returns_200_ok(self, mock_task):
+    @mock.patch('enterprise_catalog.apps.api.v1.views.chain')
+    @mock.patch('enterprise_catalog.apps.api.v1.views.update_catalog_metadata_task')
+    @mock.patch('enterprise_catalog.apps.api.v1.views.update_full_content_metadata_task')
+    @mock.patch('enterprise_catalog.apps.api.v1.views.index_enterprise_catalog_courses_in_algolia_task')
+    def test_refresh_catalog(
+        self,
+        mock_index_task,
+        mock_update_full_metadata_task,
+        mock_update_metadata_task,
+        mock_chain,
+    ):
         """
-        Verify the refresh_metadata endpoint returns a status of 200 OK when hit with a valid UUID
+        Verify the refresh_metadata endpoint correctly calls the chain of updating/indexing tasks.
         """
-        mock_task.return_value = mock.Mock()
-        mock_task.return_value.task_id = 'deadbeef-0123456789-deadbeef'
+        # Mock the submitted task id for proper rendering
+        mock_chain().apply_async().task_id = 1
+        # Reset the call count since it was called in the above mock
+        mock_chain.reset_mock()
+
         url = reverse('api:v1:update-enterprise-catalog', kwargs={'uuid': self.enterprise_catalog.uuid})
         response = self.client.post(url)
-        mock_task.assert_called()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Note that since we're mocking celery's chain, the return values from the previous task don't get passed to
+        # the next one, although we do use that functionality in the real view
+        mock_chain.assert_called_once_with(
+            mock_update_metadata_task.s(self.catalog_query.id),
+            mock_update_full_metadata_task.s(),
+            mock_index_task.s(ALGOLIA_FIELDS),
+        )
 
     def test_refresh_catalog_on_get_returns_405_not_allowed(self):
         """
@@ -772,9 +797,8 @@ class EnterpriseCatalogRefreshDataFromDiscoveryTests(APITestMixin):
         """
         Verify the refresh_metadata endpoint returns an HTTP_400_BAD_REQUEST status when passed an invalid ID
         """
-        catalog_uuid = self.enterprise_catalog.uuid
-        EnterpriseCatalog.objects.all().delete()
-        url = reverse('api:v1:update-enterprise-catalog', kwargs={'uuid': catalog_uuid})
+        random_uuid = uuid.uuid4()
+        url = reverse('api:v1:update-enterprise-catalog', kwargs={'uuid': random_uuid})
         response = self.client.post(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 

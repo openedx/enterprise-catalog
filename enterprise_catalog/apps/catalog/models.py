@@ -480,26 +480,20 @@ class EnterpriseCatalogRoleAssignment(UserRoleAssignment):
         return self.__str__()
 
 
-def update_contentmetadata_from_discovery(catalog_query_id):
+def update_contentmetadata_from_discovery(catalog_query):
     """
-    catalog_query_id is a identifer for CatalogQuery objects (int)
-
     Takes a uuid, looks up catalogquery, uses discovery service client to
     grab fresh metadata, and then create/updates ContentMetadata objects.
 
     Omits expired course runs from the updated metadata to match old
     edx-enterprise implementatiion.
+
+    Args:
+        catalog_query (CatalogQuery): The catalog query to pass to discovery's /search/all endpoint.
+    Returns:
+        list of str: Returns the content keys that were associated from the query results.
     """
     client = DiscoveryApiClient()
-
-    try:
-        catalog_query = CatalogQuery.objects.get(id=catalog_query_id)
-    except CatalogQuery.DoesNotExist:
-        catalog_query = None
-
-    if not catalog_query:
-        LOGGER.error('Could not find a CatalogQuery with id %s', catalog_query_id)
-        return
 
     query_params = {
         # Omit non-active course runs from the course-discovery results
@@ -530,3 +524,7 @@ def update_contentmetadata_from_discovery(catalog_query_id):
             len(set(associated_content_keys)),
             catalog_query,
         )
+
+        return associated_content_keys
+
+    return None
