@@ -25,4 +25,4 @@ CELERY_TASK_ALWAYS_EAGER = True
 # END CELERY
 
 results_dir = tempfile.TemporaryDirectory()
-CELERY_RESULT_BACKEND = 'file://{}'.format(results_dir.name)
+CELERY_RESULT_BACKEND = f'file://{results_dir.name}'

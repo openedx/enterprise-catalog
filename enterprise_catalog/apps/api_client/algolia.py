@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Algolia api client code.
 """

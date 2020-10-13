@@ -2,7 +2,6 @@
 
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
 
@@ -24,7 +23,7 @@ class User(AbstractUser):
         Assumes user has authenticated at least once with the OAuth2 provider (LMS).
         """
         try:
-            return self.social_auth.first().extra_data[u'access_token']  # pylint: disable=no-member
+            return self.social_auth.first().extra_data['access_token']  # pylint: disable=no-member
         except Exception:  # pylint: disable=broad-except
             return None
 
@@ -32,8 +31,7 @@ class User(AbstractUser):
         get_latest_by = 'date_joined'
 
     def get_full_name(self):
-        return self.full_name or super(User, self).get_full_name()
+        return self.full_name or super().get_full_name()
 
-    @python_2_unicode_compatible
     def __str__(self):
         return str(self.get_full_name())

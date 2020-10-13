@@ -1,6 +1,6 @@
 """ Tests for discovery api client. """
+from unittest import mock
 
-import mock
 from django.test import TestCase
 from simplejson import JSONDecodeError
 
