@@ -1,0 +1,11 @@
+version: "3.7"
+
+services:
+
+  discovery:
+    image: openedx/discovery:${DISCOVERY_STABLE_TAG}-devstack
+
+  lms:
+    image: openedx/edx-platform:${EDX_PLATFORM_STABLE_TAG}-devstack
+
+

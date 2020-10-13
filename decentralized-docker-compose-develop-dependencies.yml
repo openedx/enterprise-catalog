@@ -8,6 +8,6 @@ services:
 
   lms:
     volumes:
-      - ${LMS_PATH}:/edx/app/edxapp/edx-platform:cached
+      - ${EDX_PLATFORM_PATH}:/edx/app/edxapp/edx-platform:cached
 
 
