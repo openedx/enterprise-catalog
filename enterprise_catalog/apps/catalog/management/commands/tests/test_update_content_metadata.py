@@ -1,4 +1,5 @@
-import mock
+from unittest import mock
+
 from django.core.management import call_command
 from django.test import TestCase
 
@@ -24,7 +25,7 @@ class UpdateContentMetadataCommandTests(TestCase):
         cls.enterprise_catalog_b = EnterpriseCatalogFactory(catalog_query=cls.catalog_query_b)
 
     def tearDown(self):
-        super(UpdateContentMetadataCommandTests, self).tearDown()
+        super().tearDown()
         # clean up any stale test objects
         ContentMetadata.objects.all().delete()
         EnterpriseCatalog.objects.all().delete()

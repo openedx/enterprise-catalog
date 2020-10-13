@@ -1,8 +1,8 @@
 """ Tests for catalog models. """
 
 from collections import OrderedDict
+from unittest import mock
 
-import mock
 from django.test import TestCase
 
 from enterprise_catalog.apps.catalog.constants import (

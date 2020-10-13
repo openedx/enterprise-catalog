@@ -88,7 +88,7 @@ def get_algolia_object_id(uuid):
         str: the generated Algolia object_id or None if uuid is not specified
     """
     if uuid:
-        return 'course-{}'.format(uuid)
+        return f'course-{uuid}'
     return None
 
 

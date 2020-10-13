@@ -73,7 +73,7 @@ class CatalogQuery(models.Model):
 
     def save(self, *args, **kwargs):  # pylint: disable=arguments-differ
         self.content_filter_hash = get_content_filter_hash(self.content_filter)
-        super(CatalogQuery, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     def pretty_print_content_filter(self):
         """
@@ -430,7 +430,7 @@ class EnterpriseCatalogFeatureRole(UserRole):
         """
         Return human-readable string representation.
         """
-        return "EnterpriseCatalogFeatureRole(name={name})".format(name=self.name)
+        return f"EnterpriseCatalogFeatureRole(name={self.name})"
 
     def __repr__(self):
         """

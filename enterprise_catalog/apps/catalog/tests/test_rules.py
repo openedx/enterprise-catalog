@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 """
 Tests for the edx-rbac rules predicates.
 """
 import uuid
+from unittest import mock
 
 import ddt
-import mock
 
 from enterprise_catalog.apps.api.v1.tests.mixins import APITestMixin
 from enterprise_catalog.apps.catalog.constants import (
@@ -28,7 +27,7 @@ class TestCatalogAdminRBACPermissions(APITestMixin):
     """
 
     def setUp(self):
-        super(TestCatalogAdminRBACPermissions, self).setUp()
+        super().setUp()
         # Set up 'catalog.has_admin_access' permissions
         self.set_up_staff()
 
@@ -93,7 +92,7 @@ class TestCatalogLearnerRBACPermissions(APITestMixin):
     Test defined django rules for authorization checks.
     """
     def setUp(self):
-        super(TestCatalogLearnerRBACPermissions, self).setUp()
+        super().setUp()
         # Set up 'catalog.has_learner_access' permissions
         self.set_up_catalog_learner()
 

@@ -4,6 +4,7 @@ python:
 env:
   matrix:
     - TOXENV=django22
+    - TOXENV=django30
   global:
     - DOCKER_USERNAME=edxbuilder
     # encrypted DOCKER_PASSWORD
