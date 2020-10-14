@@ -70,7 +70,7 @@ class TestDiscoveryApiClient(TestCase):
     @mock.patch('enterprise_catalog.apps.api_client.base_oauth.OAuthAPIClient')
     def test_get_courses_with_error(self, mock_oauth_client):
         """
-        get_courses should return empty list when a call to discovery endpoint fails.
+        get_courses should return any courses that may have already been retrieved when the error occurs.
         """
         mock_oauth_client.return_value.get.side_effect = JSONDecodeError('error', '{}', 0)
 

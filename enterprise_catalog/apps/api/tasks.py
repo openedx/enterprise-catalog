@@ -28,12 +28,19 @@ from enterprise_catalog.apps.catalog.utils import batch
 logger = logging.getLogger(__name__)
 
 
-@shared_task(base=LoggedTask)
+# soft_time_limit: 6 minutes (raised from 4)
+# time_limit: 7 minutes (raised from 5)
+@shared_task(base=LoggedTask, soft_time_limit=360, time_limit=420)
 def update_full_content_metadata_task(*args, **kwargs):  # pylint: disable=unused-argument
     """
     Traverse discovery's /api/v1/courses endpoint to fetch the full course metadata of all ContentMetadata
     records with a content type of "course". The course metadata is merged with the existing contents of
     the json_metadata field for each ContentMetadata record.
+
+    Note: This task increases the maximum ``soft_time_limit`` and ``time_limit`` options since the task
+    requires traversing the full pagination of course-discovery's /courses/ endpoint, which was previously
+    exceeding the default ``CELERY_TASK_SOFT_TIME_LIMIT`` and ``CELERY_TASK_TIME_LIMIT``, causing a
+    SoftTimeLimitExceeded exception.
     """
     discovery_client = DiscoveryApiClient()
 
