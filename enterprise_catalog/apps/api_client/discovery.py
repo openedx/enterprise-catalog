@@ -3,6 +3,8 @@ Discovery service api client code.
 """
 import logging
 
+from celery.exceptions import SoftTimeLimitExceeded
+
 from .base_oauth import BaseOAuthClient
 from .constants import (
     DISCOVERY_COURSES_ENDPOINT,
@@ -109,6 +111,13 @@ class DiscoveryApiClient(BaseOAuthClient):
                 request_params.update({'offset': offset})
                 response = self._retrieve_courses(offset, request_params)
                 courses += response.get('results', [])
+        except SoftTimeLimitExceeded as exc:
+            LOGGER.warning(
+                'A task reached the soft time limit while traversing courses. %d courses already retrieved'
+                ' from course-discovery will continue to be processed: %s',
+                len(courses),
+                exc,
+            )
         except Exception as exc:  # pylint: disable=broad-except
             LOGGER.error(
                 'Could not get courses from course-discovery (offset %d) with query params %s: %s',
@@ -116,6 +125,5 @@ class DiscoveryApiClient(BaseOAuthClient):
                 request_params,
                 exc,
             )
-            courses = []
 
         return courses
