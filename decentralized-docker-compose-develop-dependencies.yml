@@ -4,10 +4,10 @@ services:
 
   discovery:
     volumes:
-      - ${COURSE_DISCOVERY_PATH}:/edx/app/discovery/discovery:cached
+      - ${DEVSTACK_WORKSPACE}/course-discovery:/edx/app/discovery/discovery:cached
 
   lms:
     volumes:
-      - ${EDX_PLATFORM_PATH}:/edx/app/edxapp/edx-platform:cached
+      - ${DEVSTACK_WORKSPACE}/edx-platform:/edx/app/edxapp/edx-platform:cached
 
 
