@@ -97,9 +97,9 @@ def update_full_content_metadata_task(content_keys):
 
         courses = _fetch_courses_by_keys(course_keys_for_updating)
         if not courses:
-            logger.error('No courses were retrieved from course-discovery.')
-            return []
-        logger.info('Retrieved %d courses from course-discovery.', len(courses))
+            logger.info('No courses were retrieved from course-discovery in this batch.')
+            continue
+        logger.info('Retrieved %d courses from course-discovery in this batch.', len(courses))
 
         # Iterate through the courses to update the json_metadata field, merging the minimal json_metadata retrieved by
         # /search/all/ with the full json_metadata retrieved by /courses/.
@@ -129,8 +129,12 @@ def update_full_content_metadata_task(content_keys):
             len(courses),
         )
 
-        # Return the course keys that were updated and should be indexed in Algolia by the B2C logic
+        # record the course keys that were updated and should be indexed in Algolia by the B2C logic
         indexable_course_keys.extend(get_indexable_course_keys(updated_metadata))
+
+    logger.info(
+        '{} total course keys were updated and are ready for indexing in Algolia'.format(len(indexable_course_keys))
+    )
     return indexable_course_keys
 
 
