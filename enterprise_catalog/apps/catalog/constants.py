@@ -39,7 +39,7 @@ DISCOVERY_COURSE_KEY_BATCH_SIZE = 50
 
 # Async task constants
 TASK_BATCH_SIZE = 250
-TASK_TIMEOUT = 30 * 60  # Gives tasks 30 minutes to return, otherwise times out
+TASK_TIMEOUT = 45 * 60  # Gives tasks 45 minutes to return, otherwise times out
 
 
 def json_serialized_course_modes():
