@@ -10,6 +10,7 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     get_indexable_course_keys,
     get_initialized_algolia_client,
 )
+from enterprise_catalog.apps.catalog.constants import TASK_TIMEOUT
 from enterprise_catalog.apps.catalog.models import (
     content_metadata_with_type_course,
 )
@@ -44,3 +45,13 @@ class Command(BaseCommand):
             ' the reindex_algolia command to reindex %d courses in Algolia.'
         )
         logger.info(message, async_task.task_id, len(indexable_course_keys))
+
+        # See https://docs.celeryproject.org/en/stable/reference/celery.result.html#celery.result.AsyncResult.get
+        # for documentation
+        async_task.get(timeout=TASK_TIMEOUT, propagate=True)
+        if async_task.successful():
+            message = (
+                'index_enterprise_catalog_courses_in_algolia_task (%s) from command reindex_algolia finished'
+                ' successfully.'
+            )
+            logger.info(message, async_task.task_id)

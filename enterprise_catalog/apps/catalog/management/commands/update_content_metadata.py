@@ -1,5 +1,4 @@
 import logging
-import time
 
 from celery import chord
 from django.core.management.base import BaseCommand
@@ -8,7 +7,7 @@ from enterprise_catalog.apps.api.tasks import (
     update_catalog_metadata_task,
     update_full_content_metadata_task,
 )
-from enterprise_catalog.apps.catalog.constants import COURSE
+from enterprise_catalog.apps.catalog.constants import COURSE, TASK_TIMEOUT
 from enterprise_catalog.apps.catalog.management.utils import (
     get_all_content_keys,
 )
@@ -60,36 +59,23 @@ class Command(BaseCommand):
         # and associate those with the appropriate CatalogQuery(s). once all those tasks succeed, run a
         # callback to update the json_metadata of ContentMetadata records with content type "course"
         # with the full course metadata from /courses/.
-        result = chord(
+        update_chord_task = chord(
             [
                 self._run_update_catalog_metadata_task(catalog_query)
                 for catalog_query in catalog_queries
             ]
         )(self._run_update_full_content_metadata_task())
 
-        # Wait for the task to finish before the command returns,
-        # but do not wait more than 30 minutes.
-        max_wait_seconds = 30 * 60
-        seconds_waited = 0
-        interval_in_seconds = 10
-        while not result.ready():
-            time.sleep(interval_in_seconds)
-            seconds_waited += interval_in_seconds
-            if seconds_waited >= max_wait_seconds:
-                logger.error('The command took longer than {} seconds to be ready.'.format(max_wait_seconds))
-                break
-
-        logger.info('Waited about {} total seconds for the async tasks to complete.'.format(seconds_waited))
-        if result.ready() and result.successful():
+        # See https://docs.celeryproject.org/en/stable/reference/celery.result.html#celery.result.AsyncResult.get
+        # for documentation
+        update_chord_result = update_chord_task.get(
+            timeout=TASK_TIMEOUT,
+            propagate=True,
+        )
+        if update_chord_task.successful():
             message = (
                 'ContentMetadata records were successfully associated with their respective'
                 ' CatalogQuery(s) and ContentMetadata records with content type of "%s" were'
-                ' updated to include full course metadata.'
+                ' updated to include full course metadata. Task finished with result %s.'
             )
-            logger.info(message, COURSE)
-        else:
-            message = (
-                'Could not successfully complete all async tasks spun off from the command. Check'
-                ' the stack trace above for more details.'
-            )
-            logger.error(message)
+            logger.info(message, COURSE, update_chord_result)
