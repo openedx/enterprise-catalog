@@ -10,6 +10,9 @@ from enterprise_catalog.apps.catalog.tests.factories import (
 )
 
 
+PATH_PREFIX = 'enterprise_catalog.apps.catalog.management.commands.reindex_algolia.'
+
+
 class ReindexAlgoliaCommandTests(TestCase):
     command_name = 'reindex_algolia'
 
@@ -17,19 +20,13 @@ class ReindexAlgoliaCommandTests(TestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
-        cls.content_metadata = ContentMetadataFactory.create_batch(3, content_type=COURSE)
+        cls.number_of_metadata_items = 3
+        cls.content_metadata = ContentMetadataFactory.create_batch(cls.number_of_metadata_items, content_type=COURSE)
         cls.content_keys = [metadata.content_key for metadata in cls.content_metadata]
 
-    @mock.patch(
-        'enterprise_catalog.apps.catalog.management.commands.reindex_algolia.get_indexable_course_keys',
-    )
-    @mock.patch(
-        'enterprise_catalog.apps.catalog.management.commands.reindex_algolia.get_initialized_algolia_client',
-        mock.MagicMock(),
-    )
-    @mock.patch(
-        'enterprise_catalog.apps.catalog.management.commands.reindex_algolia.index_enterprise_catalog_courses_in_algolia_task'
-    )
+    @mock.patch(PATH_PREFIX + 'get_indexable_course_keys')
+    @mock.patch(PATH_PREFIX + 'get_initialized_algolia_client', mock.MagicMock())
+    @mock.patch(PATH_PREFIX + 'index_enterprise_catalog_courses_in_algolia_task')
     def test_reindex_algolia(self, mock_task, mock_get_indexable_course_keys):
         """
         Verify that the job spins off the correct number of index_enterprise_catalog_courses_in_algolia_task
@@ -37,9 +34,12 @@ class ReindexAlgoliaCommandTests(TestCase):
         # Mock that all the class content keys are indexable course keys
         mock_get_indexable_course_keys.return_value = self.content_keys
 
-        call_command(self.command_name)
+        with mock.patch(PATH_PREFIX + 'TASK_BATCH_SIZE', 1):
+            call_command(self.command_name)
 
-        mock_task.delay.assert_called_once_with(
-            content_keys=self.content_keys,
-            algolia_fields=ALGOLIA_FIELDS,
-        )
+            assert mock_task.delay.call_count == self.number_of_metadata_items
+            expected_calls = [
+                mock.call(content_keys=[content_key], algolia_fields=ALGOLIA_FIELDS)
+                for content_key in self.content_keys
+            ]
+            mock_task.delay.assert_has_calls(expected_calls, any_order=True)
