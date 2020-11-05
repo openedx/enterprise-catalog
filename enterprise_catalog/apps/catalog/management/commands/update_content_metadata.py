@@ -8,7 +8,9 @@ from enterprise_catalog.apps.api.tasks import (
     update_full_content_metadata_task,
 )
 from enterprise_catalog.apps.catalog.constants import COURSE, TASK_TIMEOUT
-from enterprise_catalog.apps.catalog.management.utils import get_all_content_keys
+from enterprise_catalog.apps.catalog.management.utils import (
+    get_all_content_keys,
+)
 from enterprise_catalog.apps.catalog.models import CatalogQuery
 
 

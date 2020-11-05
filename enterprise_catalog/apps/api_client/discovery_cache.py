@@ -19,16 +19,16 @@ class CatalogQueryMetadata:
 
     Data is cached for 'settings.CATALOG_QUERY_CACHE_TIMEOUT' seconds.
     """
-    def __init__(self, catalog_query_id):
+    def __init__(self, catalog_query):
         """
         Initialize a Catalog Query details instance and load data from
         cache or by using the Discovery API client.
 
         Arguments:
-            catalog_query_id (int): Identifier for the Catalog Query
+            catalog_query (CatalogQuery): Catalog Query to retrieve metadata for
         """
-        self.catalog_query_id = catalog_query_id
-        self.catalog_query_data = self._get_catalog_query_metadata(catalog_query_id)
+        self.catalog_query = catalog_query
+        self.catalog_query_data = self._get_catalog_query_metadata(catalog_query)
 
     @property
     def metadata(self):
@@ -49,7 +49,7 @@ class CatalogQueryMetadata:
             customer_data (dict): Enterprise Customer details OR
                 Empty dictionary if no data found in cache or from API.
         """
-        cache_key = DISCOVERY_CATALOG_QUERY_CACHE_KEY_TPL.format(id=self.catalog_query_id)
+        cache_key = DISCOVERY_CATALOG_QUERY_CACHE_KEY_TPL.format(id=self.catalog_query.id)
         catalog_query_data = cache.get(cache_key)
         if not catalog_query_data:
             client = DiscoveryApiClient()
@@ -65,10 +65,11 @@ class CatalogQueryMetadata:
             if not catalog_query_data:
                 catalog_query_data = []
             cache.set(cache_key, catalog_query_data, settings.DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT)
-            LOGGER.info('CatalogQueryDetails: CACHING CatalogQuery metadata with id %s for %s sec'.format(
-                self.catalog_query_id,
+            LOGGER.info(
+                'CatalogQueryDetails: CACHING CatalogQuery metadata with id %s for %s sec',
+                self.catalog_query.id,
                 settings.DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT,
-            ))
+            )
         return catalog_query_data
 
 

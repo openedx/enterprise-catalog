@@ -20,7 +20,7 @@ from enterprise_catalog.apps.catalog.tests import factories
 class TestModels(TestCase):
     """ Models tests. """
 
-    @mock.patch('enterprise_catalog.apps.catalog.models.DiscoveryApiClient')
+    @mock.patch('enterprise_catalog.apps.api_client.discovery_cache.DiscoveryApiClient')
     def test_contentmetadata_update_from_discovery(self, mock_client):
         """
         update_contentmetadata_from_discovery should update or create

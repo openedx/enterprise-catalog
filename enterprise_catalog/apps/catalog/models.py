@@ -21,6 +21,7 @@ from enterprise_catalog.apps.api_client.enterprise_cache import (
     EnterpriseCustomerDetails,
 )
 
+from ..api_client.discovery_cache import CatalogQueryMetadata
 from .constants import (
     ACCESS_TO_ALL_ENTERPRISES_TOKEN,
     CONTENT_TYPE_CHOICES,
@@ -35,7 +36,6 @@ from .utils import (
     get_parent_content_key,
     get_sorted_string_from_json,
 )
-from ..api_client.discovery_cache import CatalogQueryMetadata
 
 LOGGER = getLogger(__name__)
 
@@ -481,8 +481,8 @@ class EnterpriseCatalogRoleAssignment(UserRoleAssignment):
 
 def update_contentmetadata_from_discovery(catalog_query):
     """
-    Takes a CatalogQuery, uses cache or the Discovery service client to
-    grab fresh metadata then create/update ContentMetadata objects.
+    Takes a CatalogQuery, uses cache or the Discovery API client to
+    retrieve associated metadata, and then creates/updates ContentMetadata objects.
 
     Omits expired course runs from the updated metadata to match old
     edx-enterprise implementation.
@@ -494,7 +494,7 @@ def update_contentmetadata_from_discovery(catalog_query):
     """
 
     # metadata will be an empty dict if unavailable from cache or API.
-    metadata = CatalogQueryMetadata(catalog_query.id).metadata
+    metadata = CatalogQueryMetadata(catalog_query).metadata
 
     # associate content metadata with a catalog query only when we get valid results
     # back from the discovery service. if metadata is `None`, an error occurred while
