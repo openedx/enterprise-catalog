@@ -8,9 +8,7 @@ from enterprise_catalog.apps.api.tasks import (
     update_full_content_metadata_task,
 )
 from enterprise_catalog.apps.catalog.constants import COURSE, TASK_TIMEOUT
-from enterprise_catalog.apps.catalog.management.utils import (
-    get_all_content_keys,
-)
+from enterprise_catalog.apps.catalog.management.utils import get_all_content_keys
 from enterprise_catalog.apps.catalog.models import CatalogQuery
 
 
@@ -50,10 +48,29 @@ class Command(BaseCommand):
         # https://docs.celeryproject.org/en/master/userguide/canvas.html#immutability
         return update_full_content_metadata_task.si(all_content_keys)
 
+    def add_arguments(self, parser):
+        # Argument to specify catalogs to update
+        parser.add_argument(
+            '--catalog_uuids',
+            nargs='+',
+        )
+
     def handle(self, *args, **options):
-        # find all CatalogQuery records used by at least one EnterpriseCatalog to avoid
-        # calling /search/all/ for a CatalogQuery that is not currently used by any catalogs.
-        catalog_queries = CatalogQuery.objects.filter(enterprise_catalogs__isnull=False).distinct()
+        if options['catalog_uuids'] is not None:
+            # find all CatalogQuery records associated with EnterpriseCatalog UUIDs specified in the arguments
+            catalog_queries = CatalogQuery.objects.filter(
+                enterprise_catalogs__isnull=False
+            ).filter(
+                enterprise_catalogs__uuid__in=options['catalog_uuids']
+            ).distinct()
+        else:
+            # find all CatalogQuery records used by at least one EnterpriseCatalog to avoid
+            # calling /search/all/ for a CatalogQuery that is not currently used by any catalogs.
+            catalog_queries = CatalogQuery.objects.filter(enterprise_catalogs__isnull=False).distinct()
+
+        if not catalog_queries:
+            logger.error('No matching CatalogQuery objects found. Exiting.')
+            return
 
         # create a group of celery tasks that run in parallel to create/update ContentMetadata records
         # and associate those with the appropriate CatalogQuery(s). once all those tasks succeed, run a
