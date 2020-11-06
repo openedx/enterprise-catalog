@@ -71,31 +71,3 @@ class CatalogQueryMetadata:
                 settings.DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT,
             )
         return catalog_query_data
-
-
-class CourseData:
-    """
-    Data for a given Course from the Discovery API.
-
-    Data is cached for 'settings.DISCOVERY_COURSE_DATA_CACHE_TIMEOUT' seconds.
-    """
-    def __init__(self):
-        """
-        Initialize an AllCourseData instance and load data from
-        cache or by using the Discovery API client.
-        """
-        self.course_data = _get_course_data()
-
-    @property
-    def data(self):
-        """
-
-        """
-        return self.course_data
-
-
-def _get_course_data():
-    """
-    TODO: doesn't seem like an interface for course data matches the use case
-    """
-    return 0

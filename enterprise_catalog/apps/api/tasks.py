@@ -8,7 +8,9 @@ from django.conf import settings
 from django.core.cache import cache
 from django.db.models import Prefetch, Q
 
-from enterprise_catalog.apps.api_client.constants import DISCOVERY_COURSE_DATA_CACHE_KEY_TPL
+from enterprise_catalog.apps.api_client.constants import (
+    DISCOVERY_COURSE_DATA_CACHE_KEY_TPL,
+)
 from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 from enterprise_catalog.apps.catalog.algolia_utils import (
     ALGOLIA_UUID_BATCH_SIZE,

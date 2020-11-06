@@ -3,7 +3,7 @@
 from collections import OrderedDict
 from unittest import mock
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
@@ -20,6 +20,7 @@ from enterprise_catalog.apps.catalog.tests import factories
 class TestModels(TestCase):
     """ Models tests. """
 
+    @override_settings(DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT=0)
     @mock.patch('enterprise_catalog.apps.api_client.discovery_cache.DiscoveryApiClient')
     def test_contentmetadata_update_from_discovery(self, mock_client):
         """
