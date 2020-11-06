@@ -11,7 +11,7 @@ DISCOVERY_SEARCH_ALL_ENDPOINT = urljoin(settings.DISCOVERY_SERVICE_API_URL, 'sea
 DISCOVERY_COURSES_ENDPOINT = urljoin(settings.DISCOVERY_SERVICE_API_URL, 'courses/')
 DISCOVERY_OFFSET_SIZE = 200
 DISCOVERY_CATALOG_QUERY_CACHE_KEY_TPL = 'catalog_query:{id}'
-DISCOVERY_COURSE_DATA_CACHE_KEY = 'course_data:{key}'
+DISCOVERY_COURSE_DATA_CACHE_KEY_TPL = 'course_data:{key}'
 
 # Enterprise API Client Constants
 ENTERPRISE_API_URL = urljoin(settings.LMS_BASE_URL, '/enterprise/api/v1/')

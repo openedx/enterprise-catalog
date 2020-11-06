@@ -37,6 +37,7 @@ from .utils import (
     get_sorted_string_from_json,
 )
 
+
 LOGGER = getLogger(__name__)
 
 

@@ -66,7 +66,7 @@ class CatalogQueryMetadata:
                 catalog_query_data = []
             cache.set(cache_key, catalog_query_data, settings.DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT)
             LOGGER.info(
-                'CatalogQueryDetails: CACHING CatalogQuery metadata with id %s for %s sec',
+                'CatalogQueryDetails: CACHED CatalogQuery metadata with id %s for %s sec',
                 self.catalog_query.id,
                 settings.DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT,
             )
