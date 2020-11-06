@@ -4,8 +4,11 @@ from collections import defaultdict
 
 from celery import shared_task
 from celery_utils.logged_task import LoggedTask
+from django.conf import settings
+from django.core.cache import cache
 from django.db.models import Prefetch, Q
 
+from enterprise_catalog.apps.api_client.constants import DISCOVERY_COURSE_DATA_CACHE_KEY
 from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 from enterprise_catalog.apps.catalog.algolia_utils import (
     ALGOLIA_UUID_BATCH_SIZE,
@@ -55,15 +58,27 @@ def _fetch_courses_by_keys(course_keys):
     Returns:
         list of dict: Returns a list of dictionaries where each dictionary represents the course data from discovery.
     """
+    courses = []
     discovery_client = DiscoveryApiClient()
+
+    # Check for each course key in cache. If cache hit, remove key from list to be requested from Discovery API.
+    for key in course_keys:
+        cache_key = DISCOVERY_COURSE_DATA_CACHE_KEY.format(key=key)
+        course_data = cache.get(cache_key)
+        if course_data:
+            courses.append(course_data)
+            course_keys.remove(key)
 
     # Batch the course keys into smaller chunks so that we don't send too big of a request to discovery
     batched_course_keys = batch(course_keys, batch_size=DISCOVERY_COURSE_KEY_BATCH_SIZE)
-    courses = []
     for course_keys_chunk in batched_course_keys:
         # Discovery expects the keys param to be in the format ?keys=course1,course2,...
         query_params = {'keys': ','.join(course_keys_chunk)}
-        courses.extend(discovery_client.get_courses(query_params=query_params))
+        course_batch = discovery_client.get_courses(query_params=query_params)
+        courses.extend(course_batch)
+        for course in course_batch:
+            cache_key = DISCOVERY_COURSE_DATA_CACHE_KEY.format(key=course.key)
+            cache.set(cache_key, course, settings.DISCOVERY_COURSE_DATA_CACHE_TIMEOUT)
 
     return courses
 

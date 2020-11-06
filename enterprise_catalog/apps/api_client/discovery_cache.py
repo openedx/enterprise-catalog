@@ -73,9 +73,9 @@ class CatalogQueryMetadata:
         return catalog_query_data
 
 
-class AllCourseData:
+class CourseData:
     """
-    All Course data from the Discovery API /courses endpoint.
+    Data for a given Course from the Discovery API.
 
     Data is cached for 'settings.DISCOVERY_COURSE_DATA_CACHE_TIMEOUT' seconds.
     """
@@ -84,18 +84,18 @@ class AllCourseData:
         Initialize an AllCourseData instance and load data from
         cache or by using the Discovery API client.
         """
-        self.all_course_data = _get_all_course_data()
+        self.course_data = _get_course_data()
 
     @property
-    def course_data(self):
+    def data(self):
         """
 
         """
-        return self.all_course_data
+        return self.course_data
 
 
-def _get_all_course_data():
+def _get_course_data():
     """
-    TODO: implement
+    TODO: doesn't seem like an interface for course data matches the use case
     """
     return 0
