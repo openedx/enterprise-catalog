@@ -12,7 +12,11 @@ else
   docker-compose exec -T mysql mysql -uroot mysql < decentralized_devstack/provision-mysql-lms.sql
 
   touch /tmp/provision-mysql-lms-data.sql
-  curl https://raw.githubusercontent.com/edx/edx-platform/master/edxapp.sql > /tmp/provision-mysql-lms-data.sql
+
+  # read variable out of .env file
+  #TODO: document further
+  EDX_PLATFORM_STABLE_TAG=$(source .env && echo $EDX_PLATFORM_STABLE_TAG)
+  curl https://raw.githubusercontent.com/edx/edx-platform/${EDX_PLATFORM_STABLE_TAG:-master}/edxapp.sql > /tmp/provision-mysql-lms-data.sql
   docker-compose exec -T mysql mysql edxapp < /tmp/provision-mysql-lms-data.sql
 fi
 
@@ -42,5 +46,6 @@ docker-compose up --detach lms
 
 # log_step "lms: Running migrations for courseware student module history (CSMH) database..."
 # service_exec_management lms migrate --database student_module_history
+#log_step "lms: Finished migrations for courseware student module history (CSMH) database..."
 
 log_message "Done provisioning LMS."
