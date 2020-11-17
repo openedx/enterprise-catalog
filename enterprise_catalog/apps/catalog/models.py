@@ -17,19 +17,20 @@ from enterprise_catalog.apps.api.v1.utils import (
     get_enterprise_utm_context,
     update_query_parameters,
 )
+from enterprise_catalog.apps.api_client.discovery_cache import (
+    CatalogQueryMetadata,
+)
 from enterprise_catalog.apps.api_client.enterprise_cache import (
     EnterpriseCustomerDetails,
 )
-
-from ..api_client.discovery_cache import CatalogQueryMetadata
-from .constants import (
+from enterprise_catalog.apps.catalog.constants import (
     ACCESS_TO_ALL_ENTERPRISES_TOKEN,
     CONTENT_TYPE_CHOICES,
     COURSE,
     PROGRAM,
     json_serialized_course_modes,
 )
-from .utils import (
+from enterprise_catalog.apps.catalog.utils import (
     get_content_filter_hash,
     get_content_key,
     get_content_type,
@@ -500,7 +501,7 @@ def update_contentmetadata_from_discovery(catalog_query):
     # associate content metadata with a catalog query only when we get valid results
     # back from the discovery service. if metadata is `None`, an error occurred while
     # calling discovery and we should not proceed with the below association logic.
-    if metadata != {}:
+    if metadata:
         metadata_content_keys = [get_content_key(entry) for entry in metadata]
         LOGGER.info(
             'Retrieved %d content items (%d unique) from course-discovery for catalog query %s',

@@ -6,8 +6,8 @@ from logging import getLogger
 from django.conf import settings
 from django.core.cache import cache
 
-from .constants import DISCOVERY_CATALOG_QUERY_CACHE_KEY_TPL
-from .discovery import DiscoveryApiClient
+from enterprise_catalog.apps.api_client.constants import DISCOVERY_CATALOG_QUERY_CACHE_KEY_TPL
+from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 
 
 LOGGER = getLogger(__name__)

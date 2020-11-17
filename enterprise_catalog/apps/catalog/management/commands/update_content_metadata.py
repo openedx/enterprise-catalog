@@ -19,9 +19,7 @@ logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     help = (
-        'Updates Content Metadata, along with the associations of Catalog Queries and Content Metadata. '
-        'Example usage with --catalog_uuids: '
-        './manage.py update_content_metadata --catalog_uuids {catalog_uuid_a} {catalog_uuid_b} ...'
+        'Updates Content Metadata, along with the associations of Catalog Queries and Content Metadata.'
     )
 
     def _run_update_catalog_metadata_task(self, catalog_query):
@@ -58,17 +56,9 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        if options['catalog_uuids'] is not None:
-            # find all CatalogQuery records associated with EnterpriseCatalog UUIDs specified in the arguments
-            catalog_queries = CatalogQuery.objects.filter(
-                enterprise_catalogs__isnull=False
-            ).filter(
-                enterprise_catalogs__uuid__in=options['catalog_uuids']
-            ).distinct()
-        else:
-            # find all CatalogQuery records used by at least one EnterpriseCatalog to avoid
-            # calling /search/all/ for a CatalogQuery that is not currently used by any catalogs.
-            catalog_queries = CatalogQuery.objects.filter(enterprise_catalogs__isnull=False).distinct()
+        # find all CatalogQuery records used by at least one EnterpriseCatalog to avoid
+        # calling /search/all/ for a CatalogQuery that is not currently used by any catalogs.
+        catalog_queries = CatalogQuery.objects.filter(enterprise_catalogs__isnull=False).distinct()
 
         if not catalog_queries:
             logger.error('No matching CatalogQuery objects found. Exiting.')

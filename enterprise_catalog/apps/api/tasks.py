@@ -1,16 +1,14 @@
 import copy
 import logging
 from collections import defaultdict
+from datetime import timedelta
 
 from celery import shared_task
 from celery_utils.logged_task import LoggedTask
 from django.conf import settings
-from django.core.cache import cache
 from django.db.models import Prefetch, Q
+from django.utils import timezone
 
-from enterprise_catalog.apps.api_client.constants import (
-    DISCOVERY_COURSE_DATA_CACHE_KEY_TPL,
-)
 from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 from enterprise_catalog.apps.catalog.algolia_utils import (
     ALGOLIA_UUID_BATCH_SIZE,
@@ -63,13 +61,19 @@ def _fetch_courses_by_keys(course_keys):
     courses = []
     course_keys_to_fetch = []
     discovery_client = DiscoveryApiClient()
+    timeout_seconds = settings.DISCOVERY_COURSE_DATA_CACHE_TIMEOUT
 
-    # Check for each course key in cache. If cache hit, remove key from list to be requested from Discovery API.
+    # Check for each course key in DB. If recently updated, remove key from list to be requested from Discovery API.
     for key in course_keys:
-        cache_key = DISCOVERY_COURSE_DATA_CACHE_KEY_TPL.format(key=key)
-        course_data = cache.get(cache_key)
-        if course_data:
-            courses.append(course_data)
+        content_metadata = ContentMetadata.objects.filter(content_key=key)
+        if not content_metadata:
+            continue
+        if timezone.now() - content_metadata[0].modified > timedelta(seconds=timeout_seconds):
+            courses.append(content_metadata[0].json_metadata)
+            logger.info(
+                'ContentMetadata with key %s has recently been updated and will not be requested from Discovery API',
+                key,
+            )
         else:
             course_keys_to_fetch.append(key)
 
@@ -80,15 +84,6 @@ def _fetch_courses_by_keys(course_keys):
         query_params = {'keys': ','.join(course_keys_chunk)}
         course_batch = discovery_client.get_courses(query_params=query_params)
         courses.extend(course_batch)
-        for course in course_batch:
-            course_key = course['key']
-            cache_key = DISCOVERY_COURSE_DATA_CACHE_KEY_TPL.format(key=course_key)
-            cache.set(cache_key, course, settings.DISCOVERY_COURSE_DATA_CACHE_TIMEOUT)
-            logger.info(
-                'CACHED data for Course with key %s for %s seconds.',
-                course_key,
-                settings.DISCOVERY_COURSE_DATA_CACHE_TIMEOUT,
-            )
 
     return courses
 
