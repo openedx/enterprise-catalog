@@ -63,7 +63,7 @@ def _fetch_courses_by_keys(course_keys):
     discovery_client = DiscoveryApiClient()
     timeout_seconds = settings.DISCOVERY_COURSE_DATA_CACHE_TIMEOUT
 
-    # Check for each course key in DB. If recently updated, remove key from list to be requested from Discovery API.
+    # Populate a new list of course keys that haven't been updated recently to request from the Discovery API.
     for key in course_keys:
         content_metadata = ContentMetadata.objects.filter(content_key=key)
         if not content_metadata:
