@@ -82,8 +82,7 @@ def _fetch_courses_by_keys(course_keys):
     for course_keys_chunk in batched_course_keys:
         # Discovery expects the keys param to be in the format ?keys=course1,course2,...
         query_params = {'keys': ','.join(course_keys_chunk)}
-        course_batch = discovery_client.get_courses(query_params=query_params)
-        courses.extend(course_batch)
+        courses.extend(discovery_client.get_courses(query_params=query_params))
 
     return courses
 
