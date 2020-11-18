@@ -1,10 +1,13 @@
 import copy
 import logging
 from collections import defaultdict
+from datetime import timedelta
 
 from celery import shared_task
 from celery_utils.logged_task import LoggedTask
+from django.conf import settings
 from django.db.models import Prefetch, Q
+from django.utils import timezone
 
 from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 from enterprise_catalog.apps.catalog.algolia_utils import (
@@ -55,11 +58,27 @@ def _fetch_courses_by_keys(course_keys):
     Returns:
         list of dict: Returns a list of dictionaries where each dictionary represents the course data from discovery.
     """
+    courses = []
+    course_keys_to_fetch = []
     discovery_client = DiscoveryApiClient()
+    timeout_seconds = settings.DISCOVERY_COURSE_DATA_CACHE_TIMEOUT
+
+    # Populate a new list of course keys that haven't been updated recently to request from the Discovery API.
+    for key in course_keys:
+        content_metadata = ContentMetadata.objects.filter(content_key=key)
+        if not content_metadata:
+            continue
+        if timezone.now() - content_metadata[0].modified > timedelta(seconds=timeout_seconds):
+            courses.append(content_metadata[0].json_metadata)
+            logger.info(
+                'ContentMetadata with key %s has recently been updated and will not be requested from Discovery API',
+                key,
+            )
+        else:
+            course_keys_to_fetch.append(key)
 
     # Batch the course keys into smaller chunks so that we don't send too big of a request to discovery
-    batched_course_keys = batch(course_keys, batch_size=DISCOVERY_COURSE_KEY_BATCH_SIZE)
-    courses = []
+    batched_course_keys = batch(course_keys_to_fetch, batch_size=DISCOVERY_COURSE_KEY_BATCH_SIZE)
     for course_keys_chunk in batched_course_keys:
         # Discovery expects the keys param to be in the format ?keys=course1,course2,...
         query_params = {'keys': ','.join(course_keys_chunk)}

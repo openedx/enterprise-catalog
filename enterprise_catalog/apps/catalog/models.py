@@ -17,19 +17,20 @@ from enterprise_catalog.apps.api.v1.utils import (
     get_enterprise_utm_context,
     update_query_parameters,
 )
-from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
+from enterprise_catalog.apps.api_client.discovery_cache import (
+    CatalogQueryMetadata,
+)
 from enterprise_catalog.apps.api_client.enterprise_cache import (
     EnterpriseCustomerDetails,
 )
-
-from .constants import (
+from enterprise_catalog.apps.catalog.constants import (
     ACCESS_TO_ALL_ENTERPRISES_TOKEN,
     CONTENT_TYPE_CHOICES,
     COURSE,
     PROGRAM,
     json_serialized_course_modes,
 )
-from .utils import (
+from enterprise_catalog.apps.catalog.utils import (
     get_content_filter_hash,
     get_content_key,
     get_content_type,
@@ -482,33 +483,25 @@ class EnterpriseCatalogRoleAssignment(UserRoleAssignment):
 
 def update_contentmetadata_from_discovery(catalog_query):
     """
-    Takes a uuid, looks up catalogquery, uses discovery service client to
-    grab fresh metadata, and then create/updates ContentMetadata objects.
+    Takes a CatalogQuery, uses cache or the Discovery API client to
+    retrieve associated metadata, and then creates/updates ContentMetadata objects.
 
     Omits expired course runs from the updated metadata to match old
-    edx-enterprise implementatiion.
+    edx-enterprise implementation.
 
     Args:
         catalog_query (CatalogQuery): The catalog query to pass to discovery's /search/all endpoint.
     Returns:
         list of str: Returns the content keys that were associated from the query results.
     """
-    client = DiscoveryApiClient()
 
-    query_params = {
-        # Omit non-active course runs from the course-discovery results
-        'exclude_expired_course_run': True,
-        # Increase number of results per page for the course-discovery response
-        'page_size': 100,
-        # Ensure paginated results are consistently ordered by `aggregation_key` and `start`
-        'ordering': 'aggregation_key,start',
-    }
-    metadata = client.get_metadata_by_query(catalog_query, query_params=query_params)
+    # metadata will be an empty dict if unavailable from cache or API.
+    metadata = CatalogQueryMetadata(catalog_query).metadata
 
     # associate content metadata with a catalog query only when we get valid results
     # back from the discovery service. if metadata is `None`, an error occurred while
     # calling discovery and we should not proceed with the below association logic.
-    if metadata is not None:
+    if metadata:
         metadata_content_keys = [get_content_key(entry) for entry in metadata]
         LOGGER.info(
             'Retrieved %d content items (%d unique) from course-discovery for catalog query %s',

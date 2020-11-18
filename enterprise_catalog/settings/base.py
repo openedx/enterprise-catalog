@@ -327,9 +327,11 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SOCIAL_AUTH_REDIRECT_IS_HTTPS = False
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
-# How long we keep Enterprise Customer details from edx-enterprise in cache. (seconds)
-# Default = 1 hour.
-ENTERPRISE_CUSTOMER_CACHE_TIMEOUT = 60 * 60
+# How long we keep API Client data in cache. (seconds)
+ONE_HOUR = 60 * 60
+ENTERPRISE_CUSTOMER_CACHE_TIMEOUT = ONE_HOUR
+DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT = ONE_HOUR
+DISCOVERY_COURSE_DATA_CACHE_TIMEOUT = ONE_HOUR
 
 # URLs
 LMS_BASE_URL = os.environ.get('LMS_BASE_URL', '')
