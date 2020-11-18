@@ -34,21 +34,24 @@ class DiscoveryApiClient(BaseOAuthClient):
         ).json()
         return response
 
-    def get_metadata_by_query(self, catalog_query, query_params=None):
+    def get_metadata_by_query(self, catalog_query):
         """
         Return results from the discovery service's search/all endpoint.
 
         Arguments:
-            content_filter_query (dict): some elasticsearch filter
-                e.g. - {'aggregation_key': 'course-v1:some+key+here'}
-            query_params (dict): additional query params for the rest api endpoint
-                we're hitting. e.g. - {'page': 3}
+            catalog_query (CatalogQuery): Catalog Query object to retrieve metadata for
 
         Returns:
             list: a list of the results, or None if there was an error calling the discovery service.
         """
-        request_params = {}
-        request_params.update(query_params or {})
+        request_params = {
+            # Omit non-active course runs from the course-discovery results
+            'exclude_expired_course_run': True,
+            # Increase number of results per page for the course-discovery response
+            'page_size': 100,
+            # Ensure paginated results are consistently ordered by `aggregation_key` and `start`
+            'ordering': 'aggregation_key,start',
+        }
 
         page = 1
         results = []
