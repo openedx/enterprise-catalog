@@ -23,9 +23,8 @@ class TestDiscoveryApiClient(TestCase):
         }
 
         catalog_query = CatalogQueryFactory()
-        query_params = {'exclude_expired_course_run': True}
         client = DiscoveryApiClient()
-        actual_response = client.get_metadata_by_query(catalog_query, query_params)
+        actual_response = client.get_metadata_by_query(catalog_query)
 
         mock_oauth_client.return_value.post.assert_called_once()
 
@@ -40,9 +39,8 @@ class TestDiscoveryApiClient(TestCase):
         mock_oauth_client.return_value.post.side_effect = JSONDecodeError('error', '{}', 0)
 
         catalog_query = CatalogQueryFactory()
-        query_params = {'exclude_expired_course_run': True}
         client = DiscoveryApiClient()
-        actual_response = client.get_metadata_by_query(catalog_query, query_params)
+        actual_response = client.get_metadata_by_query(catalog_query)
 
         mock_oauth_client.return_value.post.assert_called_once()
 
