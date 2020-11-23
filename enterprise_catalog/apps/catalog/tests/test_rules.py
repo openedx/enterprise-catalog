@@ -57,6 +57,7 @@ class TestCatalogAdminRBACPermissions(APITestMixin):
     @ddt.data(
         ('catalog.has_admin_access', SYSTEM_ENTERPRISE_CATALOG_ADMIN_ROLE),
         ('catalog.has_admin_access', SYSTEM_ENTERPRISE_OPERATOR_ROLE),
+        ('catalog.has_admin_access', SYSTEM_ENTERPRISE_ADMIN_ROLE),
         ('catalog.has_admin_access', SYSTEM_ENTERPRISE_LEARNER_ROLE),
     )
     @ddt.unpack
@@ -68,6 +69,7 @@ class TestCatalogAdminRBACPermissions(APITestMixin):
     @ddt.data(
         ('catalog.has_admin_access', SYSTEM_ENTERPRISE_CATALOG_ADMIN_ROLE),
         ('catalog.has_admin_access', SYSTEM_ENTERPRISE_OPERATOR_ROLE),
+        ('catalog.has_admin_access', SYSTEM_ENTERPRISE_ADMIN_ROLE),
         ('catalog.has_admin_access', SYSTEM_ENTERPRISE_LEARNER_ROLE),
     )
     @ddt.unpack
@@ -100,10 +102,12 @@ class TestCatalogLearnerRBACPermissions(APITestMixin):
     @ddt.data(
         ('catalog.has_learner_access', SYSTEM_ENTERPRISE_CATALOG_ADMIN_ROLE, TEST_ENTERPRISE_UUID),
         ('catalog.has_learner_access', SYSTEM_ENTERPRISE_OPERATOR_ROLE, TEST_ENTERPRISE_UUID),
+        ('catalog.has_learner_access', SYSTEM_ENTERPRISE_ADMIN_ROLE, TEST_ENTERPRISE_UUID),
         ('catalog.has_learner_access', SYSTEM_ENTERPRISE_LEARNER_ROLE, TEST_ENTERPRISE_UUID),
         ('catalog.has_learner_access', ENTERPRISE_CATALOG_ADMIN_ROLE, TEST_ENTERPRISE_UUID),
         ('catalog.has_learner_access', SYSTEM_ENTERPRISE_CATALOG_ADMIN_ROLE, ALL_ACCESS_CONTEXT),
         ('catalog.has_learner_access', SYSTEM_ENTERPRISE_OPERATOR_ROLE, ALL_ACCESS_CONTEXT),
+        ('catalog.has_learner_access', SYSTEM_ENTERPRISE_ADMIN_ROLE, ALL_ACCESS_CONTEXT),
         ('catalog.has_learner_access', SYSTEM_ENTERPRISE_LEARNER_ROLE, ALL_ACCESS_CONTEXT),
         ('catalog.has_learner_access', ENTERPRISE_CATALOG_ADMIN_ROLE, ALL_ACCESS_CONTEXT),
     )
@@ -116,6 +120,7 @@ class TestCatalogLearnerRBACPermissions(APITestMixin):
     @ddt.data(
         ('catalog.has_learner_access', SYSTEM_ENTERPRISE_CATALOG_ADMIN_ROLE),
         ('catalog.has_learner_access', SYSTEM_ENTERPRISE_OPERATOR_ROLE),
+        ('catalog.has_learner_access', SYSTEM_ENTERPRISE_ADMIN_ROLE),
         ('catalog.has_learner_access', SYSTEM_ENTERPRISE_LEARNER_ROLE),
         ('catalog.has_learner_access', ENTERPRISE_CATALOG_ADMIN_ROLE),
     )
@@ -128,6 +133,7 @@ class TestCatalogLearnerRBACPermissions(APITestMixin):
     @ddt.data(
         ('catalog.has_learner_access', SYSTEM_ENTERPRISE_CATALOG_ADMIN_ROLE),
         ('catalog.has_learner_access', SYSTEM_ENTERPRISE_OPERATOR_ROLE),
+        ('catalog.has_learner_access', SYSTEM_ENTERPRISE_ADMIN_ROLE),
         ('catalog.has_learner_access', SYSTEM_ENTERPRISE_LEARNER_ROLE),
         ('catalog.has_learner_access', ENTERPRISE_CATALOG_ADMIN_ROLE),
     )
