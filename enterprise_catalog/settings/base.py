@@ -8,6 +8,7 @@ from corsheaders.defaults import default_headers as corsheaders_default_headers
 from enterprise_catalog.apps.catalog.constants import (
     ENTERPRISE_CATALOG_ADMIN_ROLE,
     ENTERPRISE_CATALOG_LEARNER_ROLE,
+    SYSTEM_ENTERPRISE_ADMIN_ROLE,
     SYSTEM_ENTERPRISE_CATALOG_ADMIN_ROLE,
     SYSTEM_ENTERPRISE_OPERATOR_ROLE,
     SYSTEM_ENTERPRISE_LEARNER_ROLE,
@@ -347,7 +348,10 @@ ALGOLIA = {
 
 # Set up system-to-feature roles mapping for edx-rbac
 SYSTEM_TO_FEATURE_ROLE_MAPPING = {
+    # The enterprise catalog admin role is for users who need to perform state altering requests on catalogs
     SYSTEM_ENTERPRISE_CATALOG_ADMIN_ROLE: [ENTERPRISE_CATALOG_ADMIN_ROLE],
     SYSTEM_ENTERPRISE_OPERATOR_ROLE: [ENTERPRISE_CATALOG_ADMIN_ROLE],
+    # Admins and learners should both be able to access catalog metadata and call the contains content endpoints
     SYSTEM_ENTERPRISE_LEARNER_ROLE: [ENTERPRISE_CATALOG_LEARNER_ROLE],
+    SYSTEM_ENTERPRISE_ADMIN_ROLE: [ENTERPRISE_CATALOG_LEARNER_ROLE],
 }
