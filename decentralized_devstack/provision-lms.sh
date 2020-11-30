@@ -13,8 +13,8 @@ else
 
   touch /tmp/provision-mysql-lms-data.sql
 
-  # read variable out of .env file
-  #TODO: document further
+  # Pull a MySQL dump from edx-platform 
+  # the dump is created via a Github Action in order to speed up the startup time and ensure expected data is available."
   EDX_PLATFORM_STABLE_TAG=$(source .env && echo "$EDX_PLATFORM_STABLE_TAG")
   curl https://raw.githubusercontent.com/edx/edx-platform/"${EDX_PLATFORM_STABLE_TAG:-master}"/edxapp.sql > /tmp/provision-mysql-lms-data.sql
   docker-compose exec -T mysql mysql edxapp < /tmp/provision-mysql-lms-data.sql
