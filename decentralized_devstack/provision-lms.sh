@@ -15,8 +15,8 @@ else
 
   # read variable out of .env file
   #TODO: document further
-  EDX_PLATFORM_STABLE_TAG=$(source .env && echo $EDX_PLATFORM_STABLE_TAG)
-  curl https://raw.githubusercontent.com/edx/edx-platform/${EDX_PLATFORM_STABLE_TAG:-master}/edxapp.sql > /tmp/provision-mysql-lms-data.sql
+  EDX_PLATFORM_STABLE_TAG=$(source .env && echo "$EDX_PLATFORM_STABLE_TAG")
+  curl https://raw.githubusercontent.com/edx/edx-platform/"${EDX_PLATFORM_STABLE_TAG:-master}"/edxapp.sql > /tmp/provision-mysql-lms-data.sql
   docker-compose exec -T mysql mysql edxapp < /tmp/provision-mysql-lms-data.sql
 fi
 
