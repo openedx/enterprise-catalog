@@ -44,6 +44,8 @@ if ! is_mysql_ready; then
 	sleep 5
 fi
 
+log_step "mysql ready"
+
 # Run provisioning scripts for dependencies.
 # We call provision-lms.sh, provision-discovery.sh, etc., and log an error
 # if they fail.
