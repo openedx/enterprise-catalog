@@ -1,0 +1,13 @@
+version: "3.7"
+
+services:
+
+  discovery:
+    volumes:
+      - ${DEVSTACK_WORKSPACE}/course-discovery:/edx/app/discovery/discovery:cached
+
+  lms:
+    volumes:
+      - ${DEVSTACK_WORKSPACE}/edx-platform:/edx/app/edxapp/edx-platform:cached
+
+
