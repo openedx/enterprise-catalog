@@ -18,6 +18,8 @@ from enterprise_catalog.apps.catalog.tests.factories import (
     ContentMetadataFactory,
 )
 
+ADVERTISED_COURSE_RUN_UUID = uuid4()
+
 
 @ddt.ddt
 class AlgoliaUtilsTests(TestCase):
