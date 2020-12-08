@@ -26,7 +26,7 @@ ALGOLIA_FIELDS = [
     'short_description',
     'subjects',
     'title',
-    'pacing_type',
+    'advertised_course_run',  # a part of the advertised course run
 ]
 
 # default configuration for the index
@@ -81,12 +81,12 @@ def _should_index_course(course_metadata):
     """
     course_json_metadata = course_metadata.json_metadata
     advertised_course_run_uuid = course_json_metadata.get('advertised_course_run_uuid')
-    course_runs = course_json_metadata.get('course_runs')
-    try:
-        advertised_course_run = [run for run in course_runs if run.get('uuid') == advertised_course_run_uuid][0]
-    except IndexError:
-        # If there is no advertised course run we can immediately return False
-        return False
+    advertised_course_run = _get_course_run_by_uuid(
+        course_json_metadata,
+        advertised_course_run_uuid,
+    )
+
+    return False if advertised_course_run_uuid is None
 
     owners = course_json_metadata.get('owners', [])
     return (len(owners) > 0
@@ -274,24 +274,42 @@ def get_course_card_image_url(course):
     return None
 
 
-def get_pacing_type(course_runs):
+def get_advertised_course_run(course):
     """
-    Gets pacing types
+    Get part of the advertised course_run as per advertised_course_run_uuid
 
     Argument:
-        published_course_runs (list)
+        course (dict)
 
     Returns:
-        list: A unique list of pacing_types
+        dict: containing key, pacing_type, start and end for the course_run, or None
     """
-    pacing_types = set()
+    full_course_run = _get_course_run_by_uuid(course, course.get('advertised_course_run_uuid'))
+    course_run = dict(
+        key=full_course_run.get('key'),
+        pacing_type=full_course_run.get('pacing_type'),
+        start=full_course_run.get('start'),
+        end=full_course_run.get('end'),
+    )
+    return course_run
 
-    for course_run in course_runs:
-        pacing_type = course_run.get('pacing_type')
-        if pacing_type:
-            pacing_types.add(pacing_type)
 
-    return list(pacing_types)
+def _get_course_run_by_uuid(course, course_run_uuid):
+    """
+    Find a course_run based on uuid
+
+    Arguments:
+        course (dict): course dict
+        course_run_uuid (str): uuid to lookup
+
+    Returns:
+        dict: a course_run or None
+    """
+    try:
+        course_run = [run for run in course.get('course_runs') if run.get('uuid') == course_run_uuid][0]
+    except IndexError:
+        return None
+    return course_run
 
 
 def _algolia_object_from_course(course, algolia_fields):
@@ -317,7 +335,7 @@ def _algolia_object_from_course(course, algolia_fields):
         'programs': get_course_program_types(searchable_course),
         'subjects': get_course_subjects(searchable_course),
         'card_image_url': get_course_card_image_url(searchable_course),
-        'pacing_type': get_pacing_type(published_course_runs),
+        'advertised_course_run': get_advertised_course_run(searchable_course),
     })
 
     algolia_object = {}
