@@ -26,6 +26,7 @@ ALGOLIA_FIELDS = [
     'short_description',
     'subjects',
     'title',
+    'pacing_type',
 ]
 
 # default configuration for the index
@@ -273,6 +274,26 @@ def get_course_card_image_url(course):
     return None
 
 
+def get_pacing_type(course_runs):
+    """
+    Gets pacing types
+
+    Argument:
+        published_course_runs (list)
+
+    Returns:
+        list: A unique list of pacing_types
+    """
+    pacing_types = set()
+
+    for course_run in course_runs:
+        pacing_type = course_run.get('pacing_type')
+        if pacing_type:
+            pacing_types.add(pacing_type)
+
+    return list(pacing_types)
+
+
 def _algolia_object_from_course(course, algolia_fields):
     """
     Transforms a course into an Algolia object.
@@ -296,6 +317,7 @@ def _algolia_object_from_course(course, algolia_fields):
         'programs': get_course_program_types(searchable_course),
         'subjects': get_course_subjects(searchable_course),
         'card_image_url': get_course_card_image_url(searchable_course),
+        'pacing_type': get_pacing_type(published_course_runs),
     })
 
     algolia_object = {}
