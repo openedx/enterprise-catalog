@@ -179,13 +179,10 @@ class AlgoliaUtilsTests(TestCase):
                 'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID
             },
             {
-                {
-                    'key': 'course-v1:org+course+1T2021',
-                    'pacing_type': 'instructor_paced',
-                    'start': '2013-10-16T14:00:00Z',
-                    'end': '2014-10-16T14:00:00Z'
-
-                }
+                'key': 'course-v1:org+course+1T2021',
+                'pacing_type': 'instructor_paced',
+                'start': '2013-10-16T14:00:00Z',
+                'end': '2014-10-16T14:00:00Z',
             }
         )
     )

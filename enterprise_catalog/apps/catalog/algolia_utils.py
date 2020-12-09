@@ -86,7 +86,7 @@ def _should_index_course(course_metadata):
         advertised_course_run_uuid,
     )
 
-    if advertised_course_run_uuid is None:
+    if advertised_course_run is None:
         return False
 
     owners = course_json_metadata.get('owners', [])
