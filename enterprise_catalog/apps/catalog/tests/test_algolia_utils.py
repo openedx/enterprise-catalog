@@ -7,16 +7,17 @@ from django.test import TestCase
 from enterprise_catalog.apps.catalog.algolia_utils import (
     ALGOLIA_INDEX_SETTINGS,
     _should_index_course,
+    get_advertised_course_run,
     get_course_card_image_url,
     get_course_partners,
     get_course_subjects,
     get_initialized_algolia_client,
-    get_advertised_course_run,
 )
 from enterprise_catalog.apps.catalog.constants import COURSE
 from enterprise_catalog.apps.catalog.tests.factories import (
     ContentMetadataFactory,
 )
+
 
 ADVERTISED_COURSE_RUN_UUID = uuid4()
 
