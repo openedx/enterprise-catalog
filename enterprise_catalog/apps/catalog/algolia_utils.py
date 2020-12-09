@@ -286,6 +286,8 @@ def get_advertised_course_run(course):
         dict: containing key, pacing_type, start and end for the course_run, or None
     """
     full_course_run = _get_course_run_by_uuid(course, course.get('advertised_course_run_uuid'))
+    if full_course_run is None:
+        return None
     course_run = dict(
         key=full_course_run.get('key'),
         pacing_type=full_course_run.get('pacing_type'),
@@ -307,7 +309,7 @@ def _get_course_run_by_uuid(course, course_run_uuid):
         dict: a course_run or None
     """
     try:
-        course_run = [run for run in course.get('course_runs') if run.get('uuid') == course_run_uuid][0]
+        course_run = [run for run in course.get('course_runs', []) if run.get('uuid') == course_run_uuid][0]
     except IndexError:
         return None
     return course_run
