@@ -307,10 +307,9 @@ CELERY_TASK_IGNORE_RESULT = False
 CELERY_TASK_STORE_ERRORS_EVEN_IF_IGNORED = True
 
 # Celery task time limits.
-# Tasks will be asked to quit after four minutes, and un-gracefully killed
-# after five.
-CELERY_TASK_SOFT_TIME_LIMIT = 240
-CELERY_TASK_TIME_LIMIT = 300
+# Tasks will be asked to quit after 6 minutes, and un-gracefully killed after 7.
+CELERY_TASK_SOFT_TIME_LIMIT = 360
+CELERY_TASK_TIME_LIMIT = 420
 
 CELERY_BROKER_TRANSPORT_OPTIONS = {
     'fanout_patterns': True,
