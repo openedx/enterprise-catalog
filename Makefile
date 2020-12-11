@@ -8,8 +8,8 @@ TOX = ''
         push_translations start-devstack open-devstack  pkg-devstack \
         detect_changed_source_translations validate_translations \
         dev.provision dev.init dev.makemigrations dev.migrate dev.up \
-        dev.up.build dev.down dev.destroy dev.stop docker_build travis_docker_auth \
-        travis_docker_tag travis_docker_push shellcheck
+        dev.up.build dev.down dev.destroy dev.stop docker_build \
+        shellcheck
 
 
 define BROWSER_PYSCRIPT
@@ -78,7 +78,7 @@ style: ## run Python style checker
 lint: ## run Python code linting
 	pylint --rcfile=pylintrc enterprise_catalog *.py
 
-quality: travis_clean style isort_check lint ## check code style and import sorting, then lint
+quality: clean style isort_check lint ## check code style and import sorting, then lint
 
 pii_check: ## check for PII annotations on all Django models
 	DJANGO_SETTINGS_MODULE=enterprise_catalog.settings.test \
@@ -183,24 +183,24 @@ docker_build: ## Builds with the latest enterprise catalog
 	docker build . --target devstack -t openedx/enterprise-catalog:latest-devstack
 	docker build . --target newrelic -t openedx/enterprise-catalog:latest-newrelic
 
-travis_clean:
+clean:
 	find . -name '*.pyc' -delete
 
-travis_docker_auth:
-	echo "$$DOCKER_PASSWORD" | docker login -u "$$DOCKER_USERNAME" --password-stdin
+docker_tag: docker_build
+	docker tag openedx/enterprise-catalog openedx/enterprise-catalog:$$GITHUB_SHA
+	docker tag openedx/enterprise-catalog:latest-devstack openedx/enterprise-catalog:$$GITHUB_SHA-devstack
+	docker tag openedx/enterprise-catalog:latest-newrelic openedx/enterprise-catalog:$$GITHUB_SHA-newrelic
 
-travis_docker_tag: docker_build
-	docker tag openedx/enterprise-catalog:latest openedx/enterprise-catalog:${TRAVIS_COMMIT}
-	docker tag openedx/enterprise-catalog:latest-devstack openedx/enterprise-catalog:${TRAVIS_COMMIT}-devstack
-	docker tag openedx/enterprise-catalog:latest-newrelic openedx/enterprise-catalog:${TRAVIS_COMMIT}-newrelic
+docker_auth:
+	echo "$$DOCKERHUB_PASSWORD" | docker login -u "$$DOCKERHUB_USERNAME" --password-stdin
 
-travis_docker_push: travis_docker_tag travis_docker_auth ## push to docker hub
-	docker push openedx/enterprise-catalog:latest
-	docker push openedx/enterprise-catalog:${TRAVIS_COMMIT}
-	docker push openedx/enterprise-catalog:latest-devstack
-	docker push openedx/enterprise-catalog:${TRAVIS_COMMIT}-devstack
-	docker push openedx/enterprise-catalog:latest-newrelic
-	docker push openedx/enterprise-catalog:${TRAVIS_COMMIT}-newrelic
+docker_push: docker_tag docker_auth ## push to docker hub
+	docker push 'openedx/enterprise-catalog:latest'
+	docker push "openedx/enterprise-catalog:$$GITHUB_SHA"
+	docker push 'openedx/enterprise-catalog:latest-devstack'
+	docker push "openedx/enterprise-catalog:$$GITHUB_SHA-devstack"
+	docker push 'openedx/enterprise-catalog:latest-newrelic'
+	docker push "openedx/enterprise-catalog:$$GITHUB_SHA-newrelic"
 
 shellcheck:
 	shellcheck --external-sources decentralized_devstack/*.sh

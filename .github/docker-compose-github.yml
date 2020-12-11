@@ -1,0 +1,36 @@
+version: "2.1"
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: enterprise.catalog.mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ""
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: "enterprise_catalog"
+    volumes:
+      - enterprise_catalog_mysql:/var/lib/mysql
+
+  app:
+    image: openedx/license-manager
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: enterprise.catalog.app
+    volumes:
+      - ..:/edx/app/enterprise_catalog/enterprise_catalog
+    # Use the Django devserver, so that we can hot-reload code changes
+    command: bash -c 'while true; do python /edx/app/enterprise_catalog/enterprise_catalog/manage.py runserver 0.0.0.0:18160; sleep 2; done'
+    ports:
+      - "18160:18160"
+    depends_on:
+      - mysql
+    # Allows attachment to this container using 'docker attach <containerID>'.
+    stdin_open: true
+    tty: true
+    environment:
+      CELERY_ALWAYS_EAGER: 'true'
+      DJANGO_SETTINGS_MODULE: enterprise_catalog.settings.test
+
+volumes:
+  enterprise_catalog_mysql:
+    driver: local

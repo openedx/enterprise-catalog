@@ -1,7 +1,4 @@
-Enterprise catalog service  |Travis|_ |Codecov|_
-===================================================
-.. |Travis| image:: https://travis-ci.org/edx/enterprise-catalog.svg?branch=master
-.. _Travis: https://travis-ci.org/edx/enterprise-catalog
+Enterprise catalog service  |Codecov|_
 
 .. |Codecov| image:: http://codecov.io/github/edx/enterprise-catalog/coverage.svg?branch=master
 .. _Codecov: http://codecov.io/github/edx/enterprise-catalog?branch=master
