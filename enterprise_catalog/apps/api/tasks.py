@@ -87,18 +87,16 @@ def _fetch_courses_by_keys(course_keys):
     return courses
 
 
-# soft_time_limit: 6 minutes (raised from 4)
-# time_limit: 7 minutes (raised from 5)
-@shared_task(base=LoggedTask, soft_time_limit=360, time_limit=420)
+@shared_task(base=LoggedTask)
 def update_full_content_metadata_task(content_keys):
     """
     Given content_keys, finds the associated ContentMetadata records with a type of course and looks up the full
     course metadata from discovery's /api/v1/cousres endpoint to pad the ContentMetadata objects with. The course
     metadata is merged with the existing contents of the json_metadata field for each ContentMetadata record.
 
-    Note: This task increases the maximum ``soft_time_limit`` and ``time_limit`` options since the task traverses large
-    portions of course-discovery's /courses/ endpoint, which was previously exceeding the default
-    ``CELERY_TASK_SOFT_TIME_LIMIT`` and ``CELERY_TASK_TIME_LIMIT``, causing a SoftTimeLimitExceeded exception.
+    Note: It is especially important that this task uses the increased maximum ``CELERY_TASK_SOFT_TIME_LIMIT`` and
+    ``CELERY_TASK_TIME_LIMIT`` since the task traverses large portions of course-discovery's /courses/ endpoint, which
+    was exceeding the previous default limits, causing a SoftTimeLimitExceeded exception.
 
     Args:
         content_keys (list of str): A list of content keys representing ContentMetadata objects that should have their
@@ -177,6 +175,11 @@ def index_enterprise_catalog_courses_in_algolia_task(
 ):
     """
     Index course data in Algolia with enterprise-related fields.
+
+    Note: It is especially important that this task uses the increased maximum ``CELERY_TASK_SOFT_TIME_LIMIT`` and
+    ``CELERY_TASK_TIME_LIMIT`` as it makes somewhat time-intensive reads/writes to the database along with sending
+    large payloads of data to Algolia, which was exceeding the previous default limits, causing a SoftTimeLimitExceeded
+    exception.
 
     Arguments:
         content_keys (list): A list of content_keys.  It's important that this is the first positional argument,
