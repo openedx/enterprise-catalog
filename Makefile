@@ -183,9 +183,6 @@ docker_build: ## Builds with the latest enterprise catalog
 	docker build . --target devstack -t openedx/enterprise-catalog:latest-devstack
 	docker build . --target newrelic -t openedx/enterprise-catalog:latest-newrelic
 
-clean:
-	find . -name '*.pyc' -delete
-
 docker_tag: docker_build
 	docker tag openedx/enterprise-catalog openedx/enterprise-catalog:$$GITHUB_SHA
 	docker tag openedx/enterprise-catalog:latest-devstack openedx/enterprise-catalog:$$GITHUB_SHA-devstack
