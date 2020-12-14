@@ -11,7 +11,7 @@ services:
       - enterprise_catalog_mysql:/var/lib/mysql
 
   app:
-    image: openedx/license-manager
+    image: openedx/enterprise-catalog
     build:
       context: ..
       dockerfile: Dockerfile
