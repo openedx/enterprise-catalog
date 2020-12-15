@@ -4,8 +4,10 @@ from collections import defaultdict
 from datetime import timedelta
 
 from celery import shared_task
+from celery.exceptions import SoftTimeLimitExceeded
 from celery_utils.logged_task import LoggedTask
 from django.conf import settings
+from django.db import IntegrityError
 from django.db.models import Prefetch, Q
 from django.utils import timezone
 
@@ -87,7 +89,25 @@ def _fetch_courses_by_keys(course_keys):
     return courses
 
 
-@shared_task(base=LoggedTask)
+class LoggedTaskWithRetry(LoggedTask):  # pylint: disable=abstract-method
+    """
+    Shared base task that allows tasks that raise some common exceptions to retry automatically.
+
+    See https://docs.celeryproject.org/en/stable/userguide/tasks.html#automatic-retry-for-known-exceptions for
+    more documentation.
+    """
+    autoretry_for = (
+        IntegrityError,
+        SoftTimeLimitExceeded,
+    )
+    retry_kwargs = {'max_retries': 5}
+    # Use exponential backoff for retrying tasks
+    retry_backoff = True
+    # Add randomness to backoff delays to prevent all tasks in queue from executing simultaneously
+    retry_jitter = True
+
+
+@shared_task(base=LoggedTaskWithRetry)
 def update_full_content_metadata_task(content_keys):
     """
     Given content_keys, finds the associated ContentMetadata records with a type of course and looks up the full
@@ -167,7 +187,7 @@ def _batched_metadata(json_metadata, sorted_uuids, uuid_key_name, obj_id_fmt, uu
     return batched_metadata
 
 
-@shared_task(base=LoggedTask)
+@shared_task(base=LoggedTaskWithRetry)
 def index_enterprise_catalog_courses_in_algolia_task(
     content_keys,
     algolia_fields,
@@ -279,7 +299,7 @@ def index_enterprise_catalog_courses_in_algolia_task(
         algolia_client.partially_update_index(algolia_objects)
 
 
-@shared_task(base=LoggedTask)
+@shared_task(base=LoggedTaskWithRetry)
 def update_catalog_metadata_task(catalog_query_id):
     """
     Updates all ContentMetadata associated with the catalog query by pulling in data from /search/all on discovery
