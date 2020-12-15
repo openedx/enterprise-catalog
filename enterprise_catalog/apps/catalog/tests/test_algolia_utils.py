@@ -7,6 +7,7 @@ from django.test import TestCase
 from enterprise_catalog.apps.catalog.algolia_utils import (
     ALGOLIA_INDEX_SETTINGS,
     _should_index_course,
+    get_advertised_course_run,
     get_course_card_image_url,
     get_course_partners,
     get_course_subjects,
@@ -16,6 +17,9 @@ from enterprise_catalog.apps.catalog.constants import COURSE
 from enterprise_catalog.apps.catalog.tests.factories import (
     ContentMetadataFactory,
 )
+
+
+ADVERTISED_COURSE_RUN_UUID = uuid4()
 
 
 @ddt.ddt
@@ -162,6 +166,34 @@ class AlgoliaUtilsTests(TestCase):
         """
         course_subjects = get_course_subjects(course_metadata)
         assert sorted(course_subjects) == sorted(expected_subjects)
+
+    @ddt.data(
+        (
+            {
+                'course_runs': [{
+                    'key': 'course-v1:org+course+1T2021',
+                    'uuid': ADVERTISED_COURSE_RUN_UUID,
+                    'pacing_type': 'instructor_paced',
+                    'start': '2013-10-16T14:00:00Z',
+                    'end': '2014-10-16T14:00:00Z',
+                }],
+                'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID
+            },
+            {
+                'key': 'course-v1:org+course+1T2021',
+                'pacing_type': 'instructor_paced',
+                'start': '2013-10-16T14:00:00Z',
+                'end': '2014-10-16T14:00:00Z',
+            }
+        )
+    )
+    @ddt.unpack
+    def test_get_advertised_course_run(self, searchable_course, expected_course_run):
+        """
+        Assert get_advertised_course_runs fetches just enough info about advertised course run
+        """
+        advertised_course_run = get_advertised_course_run(searchable_course)
+        assert advertised_course_run == expected_course_run
 
     @mock.patch('enterprise_catalog.apps.catalog.algolia_utils.AlgoliaSearchClient')
     def test_get_initialized_algolia_client(self, mock_search_client):

@@ -8,6 +8,7 @@ from corsheaders.defaults import default_headers as corsheaders_default_headers
 from enterprise_catalog.apps.catalog.constants import (
     ENTERPRISE_CATALOG_ADMIN_ROLE,
     ENTERPRISE_CATALOG_LEARNER_ROLE,
+    SYSTEM_ENTERPRISE_ADMIN_ROLE,
     SYSTEM_ENTERPRISE_CATALOG_ADMIN_ROLE,
     SYSTEM_ENTERPRISE_OPERATOR_ROLE,
     SYSTEM_ENTERPRISE_LEARNER_ROLE,
@@ -306,10 +307,12 @@ CELERY_TASK_IGNORE_RESULT = False
 CELERY_TASK_STORE_ERRORS_EVEN_IF_IGNORED = True
 
 # Celery task time limits.
-# Tasks will be asked to quit after four minutes, and un-gracefully killed
-# after five.
-CELERY_TASK_SOFT_TIME_LIMIT = 240
-CELERY_TASK_TIME_LIMIT = 300
+# Tasks will be asked to quit after 8 minutes, and un-gracefully killed after 9.
+CELERY_TASK_SOFT_TIME_LIMIT = 480
+CELERY_TASK_TIME_LIMIT = 540
+
+# Propagate exceptions from eagerly applied tasks
+CELERY_EAGER_PROPAGATES = True
 
 CELERY_BROKER_TRANSPORT_OPTIONS = {
     'fanout_patterns': True,
@@ -327,9 +330,11 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SOCIAL_AUTH_REDIRECT_IS_HTTPS = False
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
-# How long we keep Enterprise Customer details from edx-enterprise in cache. (seconds)
-# Default = 1 hour.
-ENTERPRISE_CUSTOMER_CACHE_TIMEOUT = 60 * 60
+# How long we keep API Client data in cache. (seconds)
+ONE_HOUR = 60 * 60
+ENTERPRISE_CUSTOMER_CACHE_TIMEOUT = ONE_HOUR
+DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT = ONE_HOUR
+DISCOVERY_COURSE_DATA_CACHE_TIMEOUT = ONE_HOUR
 
 # URLs
 LMS_BASE_URL = os.environ.get('LMS_BASE_URL', '')
@@ -345,7 +350,10 @@ ALGOLIA = {
 
 # Set up system-to-feature roles mapping for edx-rbac
 SYSTEM_TO_FEATURE_ROLE_MAPPING = {
+    # The enterprise catalog admin role is for users who need to perform state altering requests on catalogs
     SYSTEM_ENTERPRISE_CATALOG_ADMIN_ROLE: [ENTERPRISE_CATALOG_ADMIN_ROLE],
     SYSTEM_ENTERPRISE_OPERATOR_ROLE: [ENTERPRISE_CATALOG_ADMIN_ROLE],
+    # Admins and learners should both be able to access catalog metadata and call the contains content endpoints
     SYSTEM_ENTERPRISE_LEARNER_ROLE: [ENTERPRISE_CATALOG_LEARNER_ROLE],
+    SYSTEM_ENTERPRISE_ADMIN_ROLE: [ENTERPRISE_CATALOG_LEARNER_ROLE],
 }

@@ -60,9 +60,11 @@ services:
       - .:/edx/app/enterprise_catalog/enterprise_catalog
 
   discovery:
-    image: openedx/discovery:latest-devstack
+    image: openedx/discovery:${DISCOVERY_STABLE_TAG:-latest}-devstack
     container_name: edx.devstack.discovery
     hostname: discovery.devstack.edx
+    links:
+      - "mysql:edx.devstack.mysql57"
     depends_on:
       - mysql
       - elasticsearch
@@ -87,7 +89,7 @@ services:
       - elasticsearch_data:/usr/share/elasticsearch/logs
 
   lms:
-    image: openedx/edx-platform:latest-devstack
+    image: openedx/edx-platform:${EDX_PLATFORM_STABLE_TAG:-latest}-devstack
     container_name: edx.devstack.lms
     hostname: lms.devstack.edx
     depends_on:
