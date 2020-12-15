@@ -28,4 +28,4 @@ class UpdateFullContentMetadataCommandTests(TestCase):
         Verify that the job spins off the update_full_content_metadata_task
         """
         call_command(self.command_name)
-        mock_task.delay.assert_called_once_with(self._get_content_keys())
+        mock_task.run.assert_called_once_with(self._get_content_keys())

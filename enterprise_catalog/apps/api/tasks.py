@@ -1,10 +1,13 @@
 import copy
 import logging
 from collections import defaultdict
+from datetime import timedelta
 
 from celery import shared_task
 from celery_utils.logged_task import LoggedTask
+from django.conf import settings
 from django.db.models import Prefetch, Q
+from django.utils import timezone
 
 from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 from enterprise_catalog.apps.catalog.algolia_utils import (
@@ -55,11 +58,27 @@ def _fetch_courses_by_keys(course_keys):
     Returns:
         list of dict: Returns a list of dictionaries where each dictionary represents the course data from discovery.
     """
+    courses = []
+    course_keys_to_fetch = []
     discovery_client = DiscoveryApiClient()
+    timeout_seconds = settings.DISCOVERY_COURSE_DATA_CACHE_TIMEOUT
+
+    # Populate a new list of course keys that haven't been updated recently to request from the Discovery API.
+    for key in course_keys:
+        content_metadata = ContentMetadata.objects.filter(content_key=key)
+        if not content_metadata:
+            continue
+        if timezone.now() - content_metadata[0].modified > timedelta(seconds=timeout_seconds):
+            courses.append(content_metadata[0].json_metadata)
+            logger.info(
+                'ContentMetadata with key %s has recently been updated and will not be requested from Discovery API',
+                key,
+            )
+        else:
+            course_keys_to_fetch.append(key)
 
     # Batch the course keys into smaller chunks so that we don't send too big of a request to discovery
-    batched_course_keys = batch(course_keys, batch_size=DISCOVERY_COURSE_KEY_BATCH_SIZE)
-    courses = []
+    batched_course_keys = batch(course_keys_to_fetch, batch_size=DISCOVERY_COURSE_KEY_BATCH_SIZE)
     for course_keys_chunk in batched_course_keys:
         # Discovery expects the keys param to be in the format ?keys=course1,course2,...
         query_params = {'keys': ','.join(course_keys_chunk)}
@@ -68,18 +87,16 @@ def _fetch_courses_by_keys(course_keys):
     return courses
 
 
-# soft_time_limit: 6 minutes (raised from 4)
-# time_limit: 7 minutes (raised from 5)
-@shared_task(base=LoggedTask, soft_time_limit=360, time_limit=420)
+@shared_task(base=LoggedTask)
 def update_full_content_metadata_task(content_keys):
     """
     Given content_keys, finds the associated ContentMetadata records with a type of course and looks up the full
     course metadata from discovery's /api/v1/cousres endpoint to pad the ContentMetadata objects with. The course
     metadata is merged with the existing contents of the json_metadata field for each ContentMetadata record.
 
-    Note: This task increases the maximum ``soft_time_limit`` and ``time_limit`` options since the task traverses large
-    portions of course-discovery's /courses/ endpoint, which was previously exceeding the default
-    ``CELERY_TASK_SOFT_TIME_LIMIT`` and ``CELERY_TASK_TIME_LIMIT``, causing a SoftTimeLimitExceeded exception.
+    Note: It is especially important that this task uses the increased maximum ``CELERY_TASK_SOFT_TIME_LIMIT`` and
+    ``CELERY_TASK_TIME_LIMIT`` since the task traverses large portions of course-discovery's /courses/ endpoint, which
+    was exceeding the previous default limits, causing a SoftTimeLimitExceeded exception.
 
     Args:
         content_keys (list of str): A list of content keys representing ContentMetadata objects that should have their
@@ -158,6 +175,11 @@ def index_enterprise_catalog_courses_in_algolia_task(
 ):
     """
     Index course data in Algolia with enterprise-related fields.
+
+    Note: It is especially important that this task uses the increased maximum ``CELERY_TASK_SOFT_TIME_LIMIT`` and
+    ``CELERY_TASK_TIME_LIMIT`` as it makes somewhat time-intensive reads/writes to the database along with sending
+    large payloads of data to Algolia, which was exceeding the previous default limits, causing a SoftTimeLimitExceeded
+    exception.
 
     Arguments:
         content_keys (list): A list of content_keys.  It's important that this is the first positional argument,

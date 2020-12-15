@@ -37,9 +37,9 @@ class ReindexAlgoliaCommandTests(TestCase):
         with mock.patch(PATH_PREFIX + 'TASK_BATCH_SIZE', 1):
             call_command(self.command_name)
 
-            assert mock_task.delay.call_count == self.number_of_metadata_items
+            assert mock_task.run.call_count == self.number_of_metadata_items
             expected_calls = [
                 mock.call(content_keys=[content_key], algolia_fields=ALGOLIA_FIELDS)
                 for content_key in self.content_keys
             ]
-            mock_task.delay.assert_has_calls(expected_calls, any_order=True)
+            mock_task.run.assert_has_calls(expected_calls, any_order=True)
