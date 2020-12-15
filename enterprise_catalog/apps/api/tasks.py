@@ -5,6 +5,7 @@ from datetime import timedelta
 
 from celery import shared_task
 from celery.exceptions import SoftTimeLimitExceeded
+from celery.exceptions import TimeoutError as CeleryTimeoutError
 from celery_utils.logged_task import LoggedTask
 from django.conf import settings
 from django.db import IntegrityError
@@ -99,6 +100,7 @@ class LoggedTaskWithRetry(LoggedTask):  # pylint: disable=abstract-method
     autoretry_for = (
         IntegrityError,
         SoftTimeLimitExceeded,
+        CeleryTimeoutError,
     )
     retry_kwargs = {'max_retries': 5}
     # Use exponential backoff for retrying tasks
