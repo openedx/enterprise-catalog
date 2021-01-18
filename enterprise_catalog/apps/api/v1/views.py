@@ -145,7 +145,7 @@ class EnterpriseCatalogContainsContentItems(BaseViewSet, viewsets.ModelViewSet):
 
     @method_decorator(require_at_least_one_query_parameter('course_run_ids', 'program_uuids'))
     @action(detail=True)
-    def contains_content_items(self, request, uuid, course_run_ids, program_uuids, **kwargs):
+    def contains_content_items(self, request, uuid, course_run_ids, program_uuids, **kwargs):  # pylint: disable=unused-argument
         """
         Returns whether or not the EnterpriseCatalog contains the specified content.
 
@@ -211,7 +211,7 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
         return response
 
     @action(detail=True)
-    def get_content_metadata(self, request, uuid, **kwargs):
+    def get_content_metadata(self, request, uuid, **kwargs):  # pylint: disable=unused-argument
         """
         Returns all the content metadata associated with the enterprise catalog.
 
@@ -305,7 +305,7 @@ class EnterpriseCustomerViewSet(BaseViewSet):
 
     @method_decorator(require_at_least_one_query_parameter('course_run_ids', 'program_uuids'))
     @action(detail=True)
-    def contains_content_items(self, request, enterprise_uuid, course_run_ids, program_uuids, **kwargs):
+    def contains_content_items(self, request, enterprise_uuid, course_run_ids, program_uuids, **kwargs):  # pylint: disable=unused-argument
         """
         Returns whether or not the specified content is available for the given enterprise.
         ---
