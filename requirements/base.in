@@ -28,3 +28,4 @@ zipp<2.0
 algoliasearch
 langcodes
 edx-celeryutils
+social-auth-app-django

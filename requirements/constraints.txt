@@ -8,8 +8,4 @@
 # pin when possible.  Writing an issue against the offending project and
 # linking to it here is good.
 
-# 3.3.0 updates models with data from get_user_details(), which overrides is_superuser
-# https://openedx.atlassian.net/browse/ARCHBOM-1078
-social-auth-core<3.3.0
-
 celery<5.0      # 5.0 has dropped python3.5 support.
