@@ -25,6 +25,7 @@ ALGOLIA_FIELDS = [
     'recent_enrollment_count',
     'short_description',
     'subjects',
+    'skill_names',
     'title',
     'advertised_course_run',  # a part of the advertised course run
 ]
@@ -39,6 +40,7 @@ ALGOLIA_INDEX_SETTINGS = {
         'unordered(short_description)',
         'unordered(additional_information)',
         'partners',
+        'skill_names',
     ],
     'attributesForFaceting': [
         'availability',
@@ -48,6 +50,7 @@ ALGOLIA_INDEX_SETTINGS = {
         'level_type',
         'partners.name',
         'programs',
+        'skill_names',
         'subjects',
     ],
     'unretrievableAttributes': [
@@ -275,6 +278,20 @@ def get_course_card_image_url(course):
     return None
 
 
+def get_course_skill_names(course):
+    """
+    Gets the skill names associated with a course.
+
+    Arguments:
+        course (dict): a dictionary representing a course
+
+    Returns:
+        list: a list of skill names associated with the course
+    """
+    skill_names = course.get('skill_names') or []
+    return list(set(skill_names))
+
+
 def get_advertised_course_run(course):
     """
     Get part of the advertised course_run as per advertised_course_run_uuid
@@ -339,6 +356,7 @@ def _algolia_object_from_course(course, algolia_fields):
         'subjects': get_course_subjects(searchable_course),
         'card_image_url': get_course_card_image_url(searchable_course),
         'advertised_course_run': get_advertised_course_run(searchable_course),
+        'skill_names': get_course_skill_names(searchable_course),
     })
 
     algolia_object = {}
