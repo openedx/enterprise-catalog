@@ -481,6 +481,67 @@ class EnterpriseCatalogRoleAssignment(UserRoleAssignment):
         return self.__str__()
 
 
+class TaskLock(TimeStampedModel):
+    """
+    A model which indicates if a task with some name is "locked" from re-execution
+    on some "key" (key ~= input, but not necessarily the exact args list) for some time period.
+    Really meant for celery tasks, though it doesn't _have_ to be a celery task.
+
+    ex. I have a task named "all_of_the_things()" and it does a lot of work.
+    Calling `all_of_the_things('books')` will give me all of the things about books.
+    Sometimes, a series of `all_of_the_things('books')` invocations might occur over a short time period,
+    say, 12 invocations in the span of 2 minutes.  But each of those 12 invocations are likely to have
+    the same side-effect and output.  So I'd really like the first invocation to get a lock for say, 60 minutes,
+    so that any of the remaining invocations of `all_of_the_things('books')` are not excuted
+    in that 60 minute window.
+
+    At the start of the `all_of_the_things()` method body, I could do something like:
+
+    if not TaskLock.acquire(
+        task_name='all_of_the_things',
+        task_id=self.id,
+        lock_key='books',
+        lock_expires_at=datetime.utcnow() + datetime.timedelta(hours=1),
+    ):
+        print('Lock already acquired, not doing anything')
+        return
+    ...
+    """
+
+    # Which task/function are we locking?
+    task_name = models.CharField(max_length=255, db_index=True)
+
+    # What is the key that we're locking on?
+    lock_key = models.CharField(max_length=1023, db_index=True)
+
+    # What was the identifier of the acquiring task?
+    acquiring_task_id = models.CharField(max_length=255, db_index=True)
+
+    # When does the lock expire?
+    lock_expires_at = models.DateTimeField(blank=True, null=True, default=datetime.utcnow, db_index=True)
+
+    @classmethod
+    def acquire(cls, task_name, lock_key, acquiring_task_id, , expires_at):
+        """
+        find any unexpired locks for this (task, key), if one exists, return False.
+        If there aren't any, acquire the lock with a new TaskLock record and return True.
+        """
+        if cls.objects.filter(
+            task_name=task_name,
+            lock_key=lock_key,
+            lock_expires_at__gte=datetime.utcnow(),
+        ).exists():
+            return False
+
+        cls.objects.create(
+            task_name=task_name,
+            lock_key=lock_key,
+            acquiring_task_id=acquiring_task_id,
+            lock_expires_at__gte=datetime.utcnow(),
+        )
+        return True
+
+
 def update_contentmetadata_from_discovery(catalog_query):
     """
     Takes a CatalogQuery, uses cache or the Discovery API client to
