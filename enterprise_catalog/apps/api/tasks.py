@@ -31,8 +31,7 @@ from enterprise_catalog.apps.catalog.models import (
     ContentMetadata,
     update_contentmetadata_from_discovery,
 )
-from enterprise_catalog.apps.catalog.utils import batch
-
+from enterprise_catalog.apps.catalog.utils import batch, print_memory_snapshot
 
 logger = logging.getLogger(__name__)
 
@@ -320,5 +319,6 @@ def update_catalog_metadata_task(catalog_query_id):
         logger.error('Could not find a CatalogQuery with id %s', catalog_query_id)
         return []
 
+    print_memory_snapshot()
     associated_content_keys = update_contentmetadata_from_discovery(catalog_query)
     return associated_content_keys

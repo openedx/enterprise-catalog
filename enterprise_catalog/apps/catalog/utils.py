@@ -3,6 +3,7 @@ Utility functions for catalog app.
 """
 import hashlib
 import json
+import tracemalloc
 from logging import getLogger
 
 from edx_rbac.utils import feature_roles_from_jwt
@@ -12,7 +13,7 @@ from edx_rest_framework_extensions.auth.jwt.authentication import (
 from edx_rest_framework_extensions.auth.jwt.cookies import \
     get_decoded_jwt as get_decoded_jwt_from_cookie
 
-from enterprise_catalog.apps.catalog.constants import COURSE_RUN
+from enterprise_catalog.apps.catalog.constants import COURSE_RUN, DEFAULT_NUM_ALLOCATIONS_TO_PRINT
 
 
 LOGGER = getLogger(__name__)
@@ -104,3 +105,22 @@ def batch(iterable, batch_size=1):
     iterable_len = len(iterable)
     for index in range(0, iterable_len, batch_size):
         yield iterable[index:min(index + batch_size, iterable_len)]
+
+
+def print_memory_snapshot(num_allocations=DEFAULT_NUM_ALLOCATIONS_TO_PRINT):
+    """
+    Logs the n (n=num_allocations) largest memory allocations made by our application.
+
+    Uses tracemalloc to take a snapshot of the Python application's memory usage and
+    log details of the n largest allocations including the line of source code
+    responsible, size of memory allocated for the given object, the count (number of
+
+
+    Arguments:
+        num_allocations (int): number of allocation details to log
+    """
+    snapshot = tracemalloc.take_snapshot()
+    stats = ''
+    for stat in snapshot.statistics('filename')[:num_allocations]:
+        stats += str(stat) + '\n'
+    LOGGER.info('Printing memory snapshot for top {} allocations:\n{}'.format(num_allocations, stats))

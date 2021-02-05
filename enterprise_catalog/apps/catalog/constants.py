@@ -41,6 +41,9 @@ DISCOVERY_COURSE_KEY_BATCH_SIZE = 50
 TASK_BATCH_SIZE = 250
 TASK_TIMEOUT = 45 * 60  # Gives tasks 45 minutes to return, otherwise times out
 
+# Memory usage logging constants
+DEFAULT_NUM_ALLOCATIONS_TO_PRINT = 10
+
 
 def json_serialized_course_modes():
     """
