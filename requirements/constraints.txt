@@ -8,4 +8,10 @@
 # pin when possible.  Writing an issue against the offending project and
 # linking to it here is good.
 
-celery<5.0      # 5.0 has dropped python3.5 support.
+# 5.0 has dropped python3.5 support.
+celery<5.0
+
+
+# Pinned social-auth-core to <4.0.3 untill drf-jwt adds support for PyJWT>2.0
+# https://github.com/Styria-Digital/django-rest-framework-jwt/issues/76 
+social-auth-core<4.0.3

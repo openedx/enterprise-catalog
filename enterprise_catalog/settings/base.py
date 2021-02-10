@@ -43,6 +43,7 @@ INSTALLED_APPS = (
 THIRD_PARTY_APPS = (
     'corsheaders',
     'csrf.apps.CsrfAppConfig',  # Enables frontend apps to retrieve CSRF tokens
+    'django_celery_results',
     'rest_framework',
     'rest_framework_swagger',
     'social_django',
@@ -302,7 +303,7 @@ CELERY_BROKER_URL = '{}://{}:{}@{}/{}'.format(
 )
 
 # Results configuration
-CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+CELERY_RESULT_BACKEND = 'django-db'
 CELERY_TASK_IGNORE_RESULT = False
 CELERY_TASK_STORE_ERRORS_EVEN_IF_IGNORED = True
 
