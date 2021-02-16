@@ -101,6 +101,6 @@ def batch(iterable, batch_size=1):
     Returns:
         generator: iterates through each batch of an iterable
     """
-    iterable_len = len(iterable)
+    iterable_len = len(iterable) if iterable is not None else 0
     for index in range(0, iterable_len, batch_size):
         yield iterable[index:min(index + batch_size, iterable_len)]

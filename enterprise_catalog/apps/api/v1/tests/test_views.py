@@ -687,18 +687,21 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         self.assertEqual(response_data['title'], self.enterprise_catalog.title)
         self.assertEqual(uuid.UUID(response_data['enterprise_customer']), self.enterprise_catalog.enterprise_uuid)
 
-        # Check that the first page contains all but the last metadata
+        second_page_response = self.client.get(response_data['next'])
+        self.assertEqual(second_page_response.status_code, status.HTTP_200_OK)
+        second_response_data = second_page_response.json()
+        self.assertIsNone(second_response_data['next'])
+
+        # Check that the union of both pages' data is equal to the whole set of metadata
         expected_metadata = sorted([
             self._get_expected_json_metadata(item, learner_portal_enabled)
             for item in metadata
         ], key=itemgetter('key'))
-        actual_metadata = sorted(response_data['results'], key=itemgetter('key'))
-        self.assertEqual(actual_metadata, expected_metadata[:-1])
-
-        # Check that the second page contains the last metadata
-        second_page_response = self.client.get(response_data['next'])
-        self.assertEqual(second_page_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(second_page_response.json()['results'], [expected_metadata[-1]])
+        actual_metadata = sorted(
+            response_data['results'] + second_response_data['results'],
+            key=itemgetter('key')
+        )
+        self.assertEqual(actual_metadata, expected_metadata)
 
     @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
     @ddt.data(
