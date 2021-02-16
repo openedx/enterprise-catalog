@@ -319,6 +319,9 @@ CELERY_BROKER_TRANSPORT_OPTIONS = {
     'fanout_prefix': True,
 }
 
+# Only allow each worker to run 100 tasks before restarting
+CELERY_WORKER_MAX_TASKS_PER_CHILD = 100
+
 """############################# END CELERY ##################################"""
 
 MEDIA_STORAGE_BACKEND = {
