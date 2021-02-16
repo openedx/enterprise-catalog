@@ -33,6 +33,7 @@ from enterprise_catalog.apps.catalog.models import (
 )
 from enterprise_catalog.apps.catalog.utils import batch, print_memory_snapshot
 
+
 logger = logging.getLogger(__name__)
 
 

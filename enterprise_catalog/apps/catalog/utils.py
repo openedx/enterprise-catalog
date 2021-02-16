@@ -13,7 +13,10 @@ from edx_rest_framework_extensions.auth.jwt.authentication import (
 from edx_rest_framework_extensions.auth.jwt.cookies import \
     get_decoded_jwt as get_decoded_jwt_from_cookie
 
-from enterprise_catalog.apps.catalog.constants import COURSE_RUN, DEFAULT_NUM_ALLOCATIONS_TO_PRINT
+from enterprise_catalog.apps.catalog.constants import (
+    COURSE_RUN,
+    DEFAULT_NUM_ALLOCATIONS_TO_PRINT,
+)
 
 
 LOGGER = getLogger(__name__)
@@ -121,6 +124,6 @@ def print_memory_snapshot(num_allocations=DEFAULT_NUM_ALLOCATIONS_TO_PRINT):
     """
     snapshot = tracemalloc.take_snapshot()
     stats = ''
-    for stat in snapshot.statistics('filename')[:num_allocations]:
+    for stat in snapshot.statistics('lineno')[:num_allocations]:
         stats += str(stat) + '\n'
     LOGGER.info('Printing memory snapshot for top {} allocations:\n{}'.format(num_allocations, stats))
