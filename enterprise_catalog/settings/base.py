@@ -43,6 +43,7 @@ INSTALLED_APPS = (
 THIRD_PARTY_APPS = (
     'corsheaders',
     'csrf.apps.CsrfAppConfig',  # Enables frontend apps to retrieve CSRF tokens
+    'django_celery_results',  # Enables a Django model as the celery result backend
     'rest_framework',
     'rest_framework_swagger',
     'social_django',
@@ -100,6 +101,12 @@ DATABASES = {
         'HOST': 'localhost',  # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
         'PORT': '',  # Set to empty string for default.
         'ATOMIC_REQUESTS': False,
+        # The default isolation level for MySQL is REPEATABLE READ, which is a little too aggressive
+        # for our needs, particularly around reading celery task state via django-celery-results.
+        # https://dev.mysql.com/doc/refman/8.0/en/innodb-transaction-isolation-levels.html#isolevel_read-committed
+        'OPTIONS': {
+            'isolation_level': 'read committed',
+        },
     }
 }
 
@@ -302,7 +309,7 @@ CELERY_BROKER_URL = '{}://{}:{}@{}/{}'.format(
 )
 
 # Results configuration
-CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+CELERY_RESULT_BACKEND = 'django-db'
 CELERY_TASK_IGNORE_RESULT = False
 CELERY_TASK_STORE_ERRORS_EVEN_IF_IGNORED = True
 

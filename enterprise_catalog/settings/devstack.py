@@ -45,6 +45,12 @@ DATABASES = {
         'PORT': os.environ.get('DB_PORT', 3306),
         'ATOMIC_REQUESTS': False,
         'CONN_MAX_AGE': 60,
+        # The default isolation level for MySQL is REPEATABLE READ, which is a little too aggressive
+        # for our needs, particularly around reading celery task state via django-celery-results.
+        # https://dev.mysql.com/doc/refman/8.0/en/innodb-transaction-isolation-levels.html#isolevel_read-committed
+        'OPTIONS': {
+            'isolation_level': 'read committed',
+        },
     }
 }
 
