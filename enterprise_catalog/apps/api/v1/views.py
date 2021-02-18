@@ -341,3 +341,40 @@ class EnterpriseCustomerViewSet(BaseViewSet):
         if get_catalog_list:
             response_data['catalog_list'] = catalogs_that_contain_course
         return Response(response_data)
+
+
+class DistinctCatalogQueriesView(APIView):
+    """
+    View that, given a list of EnterpriseCustomerCatalog UUIDs, returns the
+    number of distinct EnterpriseCatalogQueries used by the given set of catalogs.
+
+    Request Data:
+        - enterprise_catalog_uuids (list[UUID4]): List of EnterpriseCustomerCatalog
+        UUIDs to be used in a search for the number of distinct EnterpriseCatalogQuery
+        objects used by the identified catalogs.
+
+    Response Data:
+        - count (int): number of distinct catalog queries used by given catalogs
+        - catalog_query_ids (list[int]): IDs of the distinct catalog queries
+    """
+    authentication_classes = [JwtAuthentication, SessionAuthentication]
+    permission_classes = [permissions.IsAdminUser]
+
+    def post(self, request):
+        """
+        Method to handle POST requests to this endpoint
+        """
+        distinct_catalog_query_ids = set()
+        enterprise_catalog_uuids = request.data.get('enterprise_catalog_uuids', [])
+
+        enterprise_catalogs = EnterpriseCatalog.objects.filter(
+            uuid__in=enterprise_catalog_uuids,
+        )
+        for catalog in enterprise_catalogs:
+            distinct_catalog_query_ids.add(catalog.catalog_query.id)
+
+        response_data = {
+            'count': len(distinct_catalog_query_ids),
+            'catalog_query_ids': distinct_catalog_query_ids,
+        }
+        return Response(response_data, status=HTTP_200_OK)
