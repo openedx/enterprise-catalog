@@ -29,6 +29,7 @@ from enterprise_catalog.apps.catalog.constants import (
 from enterprise_catalog.apps.catalog.models import (
     CatalogQuery,
     ContentMetadata,
+    NoMetadataOfTypeCourseException,
     update_contentmetadata_from_discovery,
 )
 from enterprise_catalog.apps.catalog.utils import batch
@@ -320,5 +321,10 @@ def update_catalog_metadata_task(catalog_query_id):
         logger.error('Could not find a CatalogQuery with id %s', catalog_query_id)
         return []
 
-    associated_content_keys = update_contentmetadata_from_discovery(catalog_query)
+    try:
+        associated_content_keys = update_contentmetadata_from_discovery(catalog_query)
+    except NoMetadataOfTypeCourseException exc:
+        logger.error('Did not receive any course or course_run types of metadata from discovery')
+        raise
+
     return associated_content_keys

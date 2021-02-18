@@ -27,6 +27,7 @@ from enterprise_catalog.apps.catalog.constants import (
     ACCESS_TO_ALL_ENTERPRISES_TOKEN,
     CONTENT_TYPE_CHOICES,
     COURSE,
+    COURSE_RUN,
     PROGRAM,
     json_serialized_course_modes,
 )
@@ -481,6 +482,13 @@ class EnterpriseCatalogRoleAssignment(UserRoleAssignment):
         return self.__str__()
 
 
+class NoMetadataOfTypeCourseException(Exception):
+    """
+    An exception that's raised when the metadata received for a catalog query
+    contains no entries with a course/courserun type.
+    """
+
+
 def update_contentmetadata_from_discovery(catalog_query):
     """
     Takes a CatalogQuery, uses cache or the Discovery API client to
@@ -502,6 +510,10 @@ def update_contentmetadata_from_discovery(catalog_query):
     # back from the discovery service. if metadata is `None`, an error occurred while
     # calling discovery and we should not proceed with the below association logic.
     if metadata:
+        count_by_content_type = collections.Counter(get_content_type(entry) for entry in metadata)
+        if count_by_content_type[COURSE] == 0 and count_by_content_type[COURSE_RUN] == 0:
+            raise NoMetadataOfTypeCourseException('Counts by content type: {}'.format(count_by_content_type))
+
         metadata_content_keys = [get_content_key(entry) for entry in metadata]
         LOGGER.info(
             'Retrieved %d content items (%d unique) from course-discovery for catalog query %s',
