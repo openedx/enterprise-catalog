@@ -59,7 +59,7 @@ CELERY_BROKER_URL = "{}://{}:{}@{}/{}".format(
     CELERY_BROKER_HOSTNAME,
     CELERY_BROKER_VHOST
 )
-CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+CELERY_RESULT_BACKEND = 'django-db'
 
 for override, value in DB_OVERRIDES.items():
     DATABASES['default'][override] = value
