@@ -3,6 +3,7 @@ Utility functions for catalog app.
 """
 import hashlib
 import json
+from datetime import datetime
 from logging import getLogger
 
 from edx_rbac.utils import feature_roles_from_jwt
@@ -11,6 +12,7 @@ from edx_rest_framework_extensions.auth.jwt.authentication import (
 )
 from edx_rest_framework_extensions.auth.jwt.cookies import \
     get_decoded_jwt as get_decoded_jwt_from_cookie
+from pytz import UTC
 
 from enterprise_catalog.apps.catalog.constants import COURSE_RUN
 
@@ -104,3 +106,8 @@ def batch(iterable, batch_size=1):
     iterable_len = len(iterable) if iterable is not None else 0
     for index in range(0, iterable_len, batch_size):
         yield iterable[index:min(index + batch_size, iterable_len)]
+
+
+def localized_utcnow():
+    """Helper function to return localized utcnow()."""
+    return UTC.localize(datetime.utcnow())  # pylint: disable=no-value-for-parameter

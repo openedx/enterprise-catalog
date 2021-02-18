@@ -1,9 +1,12 @@
 """
 Tests for the enterprise_catalog API celery tasks
 """
+from datetime import timedelta
 from unittest import mock
 
+from celery import states
 from django.test import TestCase
+from django_celery_results.models import TaskResult
 
 from enterprise_catalog.apps.api import tasks
 from enterprise_catalog.apps.catalog.constants import COURSE, COURSE_RUN
@@ -13,6 +16,81 @@ from enterprise_catalog.apps.catalog.tests.factories import (
     ContentMetadataFactory,
     EnterpriseCatalogFactory,
 )
+from enterprise_catalog.apps.catalog.utils import localized_utcnow
+
+
+# An object that represents the output of some hard work done by a task.
+COMPUTED_PRECIOUS_OBJECT = object()
+
+# What the semaphored-task should return when it's blocked/forced to return early.
+MOCK_EARLY_RETURN_VALUE = object()
+
+
+@tasks.expiring_task_semaphore(early_return_value=MOCK_EARLY_RETURN_VALUE)
+def mock_task(self, *args, **kwargs):  # pylint: disable=unused-argument
+    """
+    A mock task that is constrained by our expiring semaphore mechanism.
+    """
+    return COMPUTED_PRECIOUS_OBJECT
+
+
+class TestTimedSemaphore(TestCase):
+    """
+    Tests for the timed_task_semaphore decorator.
+    """
+    def setUp(self):
+        """
+        Delete all TaskResult objects, make a new single result object.
+        """
+        super().setUp()
+        TaskResult.objects.all().delete()
+        self.test_args = (123, 77)
+        self.test_kwargs = {'foo': 'bar'}
+        self.mock_task_result = TaskResult.objects.create(
+            date_created=localized_utcnow() - timedelta(hours=1),
+            task_name='mock_task',
+            task_args=str(self.test_args),
+            task_kwargs=str(self.test_kwargs),
+        )
+
+    def mock_task_instance(self, *args, **kwargs):
+        """
+        Helper method that creates a "bound task object", which is a stand-in
+        for what `self` would be in the body of a celery task that has `bind=True` specified.
+        Invokes our `mock_task` with that bound object and the given args and kwargs.
+        """
+        bound_task_object = mock.MagicMock()
+        bound_task_object.name = 'mock_task'
+        bound_task_object.request.args = args
+        bound_task_object.request.kwargs = kwargs
+        return mock_task(bound_task_object, *args, **kwargs)
+
+    def test_semaphore_forces_early_return_for_same_args(self):
+        self.mock_task_result.task_kwargs = str({})
+        self.mock_task_result.save()
+
+        self.assertEqual(MOCK_EARLY_RETURN_VALUE, self.mock_task_instance(*self.test_args))
+
+    def test_semaphore_forces_early_return_for_same_kwargs(self):
+        self.mock_task_result.task_args = str(tuple())
+        self.mock_task_result.save()
+
+        self.assertEqual(MOCK_EARLY_RETURN_VALUE, self.mock_task_instance(**self.test_kwargs))
+
+    def test_task_with_result_older_than_an_hour_ignored_by_semaphore(self):
+        self.mock_task_result.date_created = localized_utcnow() - timedelta(hours=4)
+        self.mock_task_result.save()
+
+        result = self.mock_task_instance(*self.test_args, **self.test_kwargs)
+        assert COMPUTED_PRECIOUS_OBJECT == result
+
+    def test_failed_tasks_are_ignored_by_semaphore(self):
+        self.mock_task_result.status = states.FAILURE
+        self.mock_task_result.save()
+
+        result_1 = self.mock_task_instance(*self.test_args)
+        result_2 = self.mock_task_instance(*self.test_args)
+        assert result_1 == result_2 == COMPUTED_PRECIOUS_OBJECT
 
 
 class UpdateCatalogMetadataTaskTests(TestCase):
@@ -30,7 +108,7 @@ class UpdateCatalogMetadataTaskTests(TestCase):
         """
         Assert update_catalog_metadata_task is called with correct catalog_query_id
         """
-        tasks.update_catalog_metadata_task(self.catalog_query.id)
+        tasks.update_catalog_metadata_task.apply(args=(self.catalog_query.id,))
         mock_update_data_from_discovery.assert_called_with(self.catalog_query)
 
     @mock.patch('enterprise_catalog.apps.api.tasks.update_contentmetadata_from_discovery')
@@ -39,7 +117,7 @@ class UpdateCatalogMetadataTaskTests(TestCase):
         Assert that discovery is not called if a bad catalog query id is passed
         """
         bad_id = 412
-        tasks.update_catalog_metadata_task(bad_id)
+        tasks.update_catalog_metadata_task.apply(args=(bad_id,))
         mock_update_data_from_discovery.assert_not_called()
 
 

@@ -1,9 +1,10 @@
 import copy
+import functools
 import logging
 from collections import defaultdict
 from datetime import timedelta
 
-from celery import shared_task
+from celery import shared_task, states
 from celery.exceptions import SoftTimeLimitExceeded
 from celery.exceptions import TimeoutError as CeleryTimeoutError
 from celery_utils.logged_task import LoggedTask
@@ -12,6 +13,7 @@ from django.db import IntegrityError
 from django.db.models import Prefetch, Q
 from django.db.utils import OperationalError
 from django.utils import timezone
+from django_celery_results.models import TaskResult
 
 from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 from enterprise_catalog.apps.catalog.algolia_utils import (
@@ -31,7 +33,7 @@ from enterprise_catalog.apps.catalog.models import (
     ContentMetadata,
     update_contentmetadata_from_discovery,
 )
-from enterprise_catalog.apps.catalog.utils import batch
+from enterprise_catalog.apps.catalog.utils import batch, localized_utcnow
 
 
 logger = logging.getLogger(__name__)
@@ -89,6 +91,56 @@ def _fetch_courses_by_keys(course_keys):
         courses.extend(discovery_client.get_courses(query_params=query_params))
 
     return courses
+
+
+def task_recently_run(task_object, time_delta):
+    """
+    Given a celery Task, queries the `TaskResult` model to determine
+    if a task with the same (name, args, kwargs) was created
+    within the given (`time_delta`, now) range.
+
+    Args:
+      task_object (Task): A celery task object.
+      time_delta (timedelta): A timedelta.
+    Returns:
+      Boolean: Whether a task with the same (name, args, kwargs) recently existed in a non-failure state.
+    """
+    return TaskResult.objects.filter(
+        task_name=task_object.name,
+        task_args=str(task_object.request.args),
+        task_kwargs=str(task_object.request.kwargs),
+        date_created__gte=localized_utcnow() - time_delta,
+    ).exclude(status=states.FAILURE).exists()
+
+
+def expiring_task_semaphore(time_delta=None, early_return_value=None):
+    """
+    Celery Task decorator that wraps a bound (bind=True) task.
+    If another task with the same (name, args, kwargs) as the given task
+    was executed in the time between `time_delta` and now, the task returns early
+    without doing anything of substance.  `time_delta` defaults to one hour.
+
+    Args:
+      time_delta (datetime.timedelta): An optional timedelta that specifies how far back
+        to look for the same task.
+      early_return_value: Specifies a value to return in the case that we early return due
+        to a recently run task of the same name/signature.  Defaults to None, could
+        be anything.  This is useful if you want to return a falsey object of the same
+        type that the decorated task would normally return, e.g. an empty list.
+    """
+    def decorator(task):
+        @functools.wraps(task)
+        def wrapped_task(self, *args, **kwargs):
+            if task_recently_run(self, time_delta=time_delta or timedelta(hours=1)):
+                msg_args = (self.name, self.request.id, self.request.args, self.request.kwargs)
+                logger.info((
+                    '{} task with id {} was recently run with '
+                    'args: {} kwargs: {}, task returning without updating.'
+                ).format(*msg_args))
+                return early_return_value
+            return task(self, *args, *kwargs)
+        return wrapped_task
+    return decorator
 
 
 class LoggedTaskWithRetry(LoggedTask):  # pylint: disable=abstract-method
@@ -303,8 +355,9 @@ def index_enterprise_catalog_courses_in_algolia_task(
         algolia_client.partially_update_index(algolia_objects)
 
 
-@shared_task(base=LoggedTaskWithRetry)
-def update_catalog_metadata_task(catalog_query_id):
+@shared_task(base=LoggedTaskWithRetry, bind=True)
+@expiring_task_semaphore(early_return_value=[])
+def update_catalog_metadata_task(self, catalog_query_id):  # pylint: disable=unused-argument
     """
     Updates all ContentMetadata associated with the catalog query by pulling in data from /search/all on discovery
 
