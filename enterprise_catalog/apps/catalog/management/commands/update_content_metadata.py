@@ -28,7 +28,7 @@ class Command(BaseCommand):
             ' to update content_metadata for catalog query %s.'
         )
         logger.info(message, catalog_query)
-        return update_catalog_metadata_task.s(catalog_query_id=catalog_query.id)
+        return update_catalog_metadata_task.s(catalog_query.id)
 
     def _run_update_full_content_metadata_task(self, *args, **kwargs):
         """
