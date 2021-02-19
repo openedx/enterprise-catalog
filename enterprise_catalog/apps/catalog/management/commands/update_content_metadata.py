@@ -1,7 +1,6 @@
 import logging
 
 from celery import chord
-from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from enterprise_catalog.apps.api.tasks import (
@@ -59,24 +58,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # find all CatalogQuery records used by at least one EnterpriseCatalog to avoid
         # calling /search/all/ for a CatalogQuery that is not currently used by any catalogs.
-
-        # temporary logging to discovery environment's DB connection isolation level
-        # see ENT-4081
-        # TODO: remove this raw SQL query
-        if 'mysql' in settings.DATABASES['default']['ENGINE']:
-            logger.warning(
-                'DJANGO SETTING ISOLATION LEVEL: {}'.format(
-                    settings.DATABASES['default']['OPTIONS'].get('isolation_level')
-                )
-            )
-            from django.db import connection
-            with connection.cursor() as cursor:
-                if cursor.execute(
-                    "SHOW VARIABLES WHERE variable_name IN ('tx_isolation', 'transaction_isolation');"
-                ):
-                    isolation = cursor.fetchone()[1]
-                    logger.warn('THE DB CONNECTION ISOLATION LEVEL IS {}'.format(isolation))
-
         catalog_queries = CatalogQuery.objects.filter(enterprise_catalogs__isnull=False).distinct()
 
         if not catalog_queries:
@@ -97,7 +78,7 @@ class Command(BaseCommand):
         # See https://docs.celeryproject.org/en/stable/reference/celery.result.html#celery.result.AsyncResult.get
         # for documentation
         update_chord_result = update_chord_task.get(
-            timeout=10 * 60,  # Temporarily wait only 10 minutes to debug ENT-4081.  TODO: change back to constant
+            timeout=TASK_TIMEOUT,
             propagate=True,
         )
         if update_chord_task.successful():
