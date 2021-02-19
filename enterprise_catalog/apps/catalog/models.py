@@ -520,4 +520,4 @@ def update_contentmetadata_from_discovery(catalog_query):
 
         return associated_content_keys
 
-    return None
+    return []

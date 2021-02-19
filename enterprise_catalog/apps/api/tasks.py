@@ -5,7 +5,7 @@ from collections import defaultdict
 from datetime import timedelta
 
 from celery import shared_task, states
-from celery.exceptions import SoftTimeLimitExceeded
+from celery.exceptions import Ignore, SoftTimeLimitExceeded
 from celery.exceptions import TimeoutError as CeleryTimeoutError
 from celery_utils.logged_task import LoggedTask
 from django.conf import settings
@@ -99,7 +99,8 @@ def task_recently_run(task_object, time_delta):
       task_object (Task): A celery task object.
       time_delta (timedelta): A timedelta.
     Returns:
-      Boolean: Whether a task with the same (name, args, kwargs) recently existed in a non-failure state.
+      Boolean: Whether an equivalent task with the same (name, args, kwargs) recently existed
+      in a non-failure or non-revoked state.
     """
     return TaskResult.objects.filter(
         task_name=task_object.name,
@@ -107,37 +108,57 @@ def task_recently_run(task_object, time_delta):
         task_kwargs=str(task_object.request.kwargs),
         date_created__gte=localized_utcnow() - time_delta,
     ).exclude(
-        status=states.FAILURE,
+        status__in=(states.FAILURE, states.REVOKED),
     ).exclude(
         task_id=str(task_object.request.id),
     ).exists()
 
 
-def expiring_task_semaphore(time_delta=None, early_return_value=None):
+class TaskRecentlyRunError(Ignore):
+    """
+    An exception representing a state where a given task with the same name/args
+    has recently been executed in a non-failing, non-revoked state.
+    """
+
+
+def expiring_task_semaphore(time_delta=None):
     """
     Celery Task decorator that wraps a bound (bind=True) task.
     If another task with the same (name, args, kwargs) as the given task
-    was executed in the time between `time_delta` and now, the task returns early
-    without doing anything of substance.  `time_delta` defaults to one hour.
+    was executed in the time between `time_delta` and now, the task moves to a REVOKED
+    state and raises a `TaskRecentlyRunError`.
+
+    The `meta` state of the task is updated
+    with `exc_type` and `exc_info`; otherwise, any process that's watching for the result
+    of the task (e.g. via `task.get()`) and finds that it results in a failed state
+    (REVOKED counts as a failed state) will attempt to re-raise a captured exception,
+    which would not exist without populating these two exc fields.
+
+    `time_delta` defaults to one hour.
 
     Args:
       time_delta (datetime.timedelta): An optional timedelta that specifies how far back
         to look for the same task.
-      early_return_value: Specifies a value to return in the case that we early return due
-        to a recently run task of the same name/signature.  Defaults to None, could
-        be anything.  This is useful if you want to return a falsey object of the same
-        type that the decorated task would normally return, e.g. an empty list.
     """
     def decorator(task):
         @functools.wraps(task)
         def wrapped_task(self, *args, **kwargs):
-            if task_recently_run(self, time_delta=time_delta or timedelta(hours=1)):
+            delta = time_delta or timedelta(hours=1)
+            if task_recently_run(self, time_delta=delta):
                 msg_args = (self.name, self.request.id, self.request.args, self.request.kwargs)
-                logger.info((
+                message = (
                     '{} task with id {} was recently run with '
                     'args: {} kwargs: {}, task returning without updating.'
-                ).format(*msg_args))
-                return early_return_value
+                ).format(*msg_args)
+                logger.info(message)
+                self.update_state(
+                    state=states.REVOKED,
+                    meta={
+                        'exc_type': TaskRecentlyRunError.__name__,
+                        'exc_message': message,
+                    },
+                )
+                raise TaskRecentlyRunError(message)
             return task(self, *args, *kwargs)
         return wrapped_task
     return decorator
@@ -356,7 +377,7 @@ def index_enterprise_catalog_courses_in_algolia_task(
 
 
 @shared_task(base=LoggedTaskWithRetry, bind=True)
-@expiring_task_semaphore(early_return_value=[])
+@expiring_task_semaphore()
 def update_catalog_metadata_task(self, catalog_query_id):  # pylint: disable=unused-argument
     """
     Updates all ContentMetadata associated with the catalog query by pulling in data from /search/all on discovery
@@ -364,8 +385,8 @@ def update_catalog_metadata_task(self, catalog_query_id):  # pylint: disable=unu
     Args:
         catalog_query_id (str): The id for the catalog query to update.
     Returns:
-        list of str: Returns the content keys for ContentMetadata objects that were associated with the query. This is
-            passed to the `update_full_content_metadata_task` from the `EnterpriseCatalogRefreshDataFromDiscovery` view
+        list of str: Returns the content keys for ContentMetadata objects that were associated with the query.
+            This result can be passed to the `update_full_content_metadata_task`.
     """
     try:
         catalog_query = CatalogQuery.objects.get(id=catalog_query_id)
@@ -374,4 +395,7 @@ def update_catalog_metadata_task(self, catalog_query_id):  # pylint: disable=unu
         return []
 
     associated_content_keys = update_contentmetadata_from_discovery(catalog_query)
+    logger.info('Finished update_catalog_metadata_task with {} associated content keys for catalog {}'.format(
+        len(associated_content_keys), catalog_query_id
+    ))
     return associated_content_keys
