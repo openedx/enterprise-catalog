@@ -22,11 +22,8 @@ from enterprise_catalog.apps.catalog.utils import localized_utcnow
 # An object that represents the output of some hard work done by a task.
 COMPUTED_PRECIOUS_OBJECT = object()
 
-# What the semaphored-task should return when it's blocked/forced to return early.
-MOCK_EARLY_RETURN_VALUE = object()
 
-
-@tasks.expiring_task_semaphore(early_return_value=MOCK_EARLY_RETURN_VALUE)
+@tasks.expiring_task_semaphore()
 def mock_task(self, *args, **kwargs):  # pylint: disable=unused-argument
     """
     A mock task that is constrained by our expiring semaphore mechanism.
@@ -65,17 +62,19 @@ class TestTimedSemaphore(TestCase):
         bound_task_object.request.kwargs = kwargs
         return mock_task(bound_task_object, *args, **kwargs)
 
-    def test_semaphore_forces_early_return_for_same_args(self):
+    def test_semaphore_raises_recent_run_error_for_same_args(self):
         self.mock_task_result.task_kwargs = str({})
         self.mock_task_result.save()
 
-        self.assertEqual(MOCK_EARLY_RETURN_VALUE, self.mock_task_instance(*self.test_args))
+        with self.assertRaises(tasks.TaskRecentlyRunError):
+            self.mock_task_instance(*self.test_args)
 
-    def test_semaphore_forces_early_return_for_same_kwargs(self):
+    def test_semaphore_raises_recent_run_error_for_same_kwargs(self):
         self.mock_task_result.task_args = str(tuple())
         self.mock_task_result.save()
 
-        self.assertEqual(MOCK_EARLY_RETURN_VALUE, self.mock_task_instance(**self.test_kwargs))
+        with self.assertRaises(tasks.TaskRecentlyRunError):
+            self.mock_task_instance(**self.test_kwargs)
 
     def test_task_with_result_older_than_an_hour_ignored_by_semaphore(self):
         self.mock_task_result.date_created = localized_utcnow() - timedelta(hours=4)
