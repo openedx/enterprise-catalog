@@ -35,7 +35,7 @@ django-model-utils==4.0.0  # via -r requirements/test.txt, edx-celeryutils, edx-
 django-rest-swagger==2.2.0  # via -r requirements/test.txt
 django-simple-history==2.11.0  # via -r requirements/test.txt
 django-waffle==2.0.0      # via -r requirements/test.txt, edx-django-utils, edx-drf-extensions
-django==2.2.18            # via -r requirements/test.txt, code-annotations, django-cors-headers, django-crum, django-model-utils, djangorestframework, drf-jwt, edx-auth-backends, edx-celeryutils, edx-django-release-util, edx-django-utils, edx-drf-extensions, edx-rbac, jsonfield2, rest-condition
+django==2.2.19            # via -r requirements/test.txt, code-annotations, django-cors-headers, django-crum, django-model-utils, djangorestframework, drf-jwt, edx-auth-backends, edx-celeryutils, edx-django-release-util, edx-django-utils, edx-drf-extensions, edx-rbac, jsonfield2, rest-condition
 djangorestframework-xml==2.0.0  # via -r requirements/test.txt
 djangorestframework==3.12.1  # via -r requirements/test.txt, django-rest-swagger, drf-jwt, edx-drf-extensions, rest-condition
 doc8==0.8.1               # via -r requirements/doc.in
