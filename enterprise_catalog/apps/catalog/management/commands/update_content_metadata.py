@@ -28,7 +28,7 @@ class Command(BaseCommand):
             ' to update content_metadata for catalog query %s.'
         )
         logger.info(message, catalog_query)
-        return update_catalog_metadata_task.s(catalog_query_id=catalog_query.id)
+        return update_catalog_metadata_task_signature(catalog_query.id)
 
     def _run_update_full_content_metadata_task(self, *args, **kwargs):
         """
@@ -46,7 +46,7 @@ class Command(BaseCommand):
         # task.si() is used as a shortcut for an immutable signature to avoid calling this with the results from the
         # previously run `update_catalog_metadata_task`.
         # https://docs.celeryproject.org/en/master/userguide/canvas.html#immutability
-        return update_full_content_metadata_task.si(all_content_keys)
+        return update_full_content_metadata_task_signature(content_keys)
 
     def add_arguments(self, parser):
         # Argument to specify catalogs to update

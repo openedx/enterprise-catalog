@@ -3,7 +3,7 @@ import logging
 from django.core.management.base import BaseCommand
 
 from enterprise_catalog.apps.api.tasks import (
-    index_enterprise_catalog_courses_in_algolia_task,
+    index_enterprise_catalog_courses_in_algolia_task_signature,
 )
 from enterprise_catalog.apps.catalog.algolia_utils import (
     ALGOLIA_FIELDS,
@@ -38,10 +38,10 @@ class Command(BaseCommand):
         indexable_course_keys = get_indexable_course_keys(all_course_content_metadata)
 
         for content_keys_batch in batch(indexable_course_keys, batch_size=TASK_BATCH_SIZE):
-            result = index_enterprise_catalog_courses_in_algolia_task.run(
+            result = index_enterprise_catalog_courses_in_algolia_task_signature(
                 content_keys=content_keys_batch,
                 algolia_fields=ALGOLIA_FIELDS,
-            )
+            ).run()
             message = (
                 'index_enterprise_catalog_courses_in_algolia_task from command reindex_algolia finished'
                 ' successfully with result %s.'

@@ -20,9 +20,9 @@ from rest_framework.views import APIView
 from rest_framework_xml.renderers import XMLRenderer
 
 from enterprise_catalog.apps.api.tasks import (
-    index_enterprise_catalog_courses_in_algolia_task,
-    update_catalog_metadata_task,
-    update_full_content_metadata_task,
+    index_enterprise_catalog_courses_in_algolia_task_signature,
+    update_catalog_metadata_task_signature,
+    update_full_content_metadata_task_signature,
 )
 from enterprise_catalog.apps.api.v1.decorators import (
     require_at_least_one_query_parameter,
@@ -270,14 +270,14 @@ class EnterpriseCatalogRefreshDataFromDiscovery(BaseViewSet, APIView):
         # See https://docs.celeryproject.org/en/stable/userguide/canvas.html#the-primitives for more information on
         # partial chains.
         async_update_metadata_chain = chain(
-            update_catalog_metadata_task.s(catalog_query_id),
+            update_catalog_metadata_task_signature(catalog_query_id),
             # Runs the `update_full_content_metadata_task` with the content keys that were associated in the
             # `update_catalog_metadata_task` to pad the metadata from discovery's /search/all endpoint with additional
             # data from the /courses endpoint
-            update_full_content_metadata_task.s(),
+            update_full_content_metadata_task_signature(immutable=False),
             # Runs the indexing task with the indexable course keys that were returned from the
             # `update_full_content_metadata_task` to index those pieces of ContentMetadata in Algolia
-            index_enterprise_catalog_courses_in_algolia_task.s(ALGOLIA_FIELDS),
+            index_enterprise_catalog_courses_in_algolia_task_signature(ALGOLIA_FIELDS, immutable=False),
         )
         async_task = async_update_metadata_chain.apply_async()
 

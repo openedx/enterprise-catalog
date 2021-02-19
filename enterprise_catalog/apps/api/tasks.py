@@ -375,3 +375,60 @@ def update_catalog_metadata_task(self, catalog_query_id):  # pylint: disable=unu
 
     associated_content_keys = update_contentmetadata_from_discovery(catalog_query)
     return associated_content_keys
+
+
+def update_catalog_metadata_task_signature(catalog_query_id):
+    """
+    The preferred interface to invocations of the `update_catalog_metadata_task`,
+    so that our `TaskResult` fields related to this task are consistent.
+
+    Args:
+      catalog_query_id: The id of a CatalogQuery to invoke the task upon.
+    """
+    return update_catalog_metadata_task.s(catalog_query_id)
+
+
+def update_full_content_metadata_task_signature(content_keys=None, immutable=True):
+    """
+    The preferred interface to invocations of the `update_full_content_metadata_task`,
+    so that our `TaskResult` fields related to this task are consistent.
+
+    For the difference between s() and si(), see the celery docs on task signatures:
+    https://docs.celeryproject.org/en/v5.0.5/userguide/canvas.html#signatures
+
+    Args:
+      content_keys: A list of content keys to update full metadata of.
+      immutable: Boolean indicating if the task is immutable.  If False, expects
+        that content_keys will be provided from the result of a parent task in a chain or chord.
+    """
+    if immutable:
+        if not content_keys:
+            raise Exception('content_keys are required if immutable is True')
+        return update_full_content_metadata_task.si(content_keys)
+
+    return update_catalog_metadata_task.s()
+
+
+def index_enterprise_catalog_courses_in_algolia_task_signature(algolia_fields, content_keys=None, immutable=True):
+    """
+    The preferred interface to invocations of the `index_enterprise_catalog_courses_in_algolia_task`,
+    so that our `TaskResult` fields related to this task are consistent.
+
+    For the difference between s() and si(), see the celery docs on task signatures:
+    https://docs.celeryproject.org/en/v5.0.5/userguide/canvas.html#signatures
+
+    Args:
+      algolia_fields: A list of algolia fields to update.
+      content_keys: A list of content keys to update full metadata of.
+      immutable: Boolean indicating if the task is immutable.  If False, expects
+        that content_keys will be provided from the result of a parent task in a chain or chord.
+    """
+    if immutable:
+        if not content_keys:
+            raise Exception('content_keys are required if immutable is True')
+        return index_enterprise_catalog_courses_in_algolia_task.si(
+            content_keys,
+            algolia_fields,
+        )
+
+    return index_enterprise_catalog_courses_in_algolia_task.s(algolia_fields),
