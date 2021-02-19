@@ -1,6 +1,6 @@
 import logging
 
-from celery import chord
+from celery import group
 from django.core.management.base import BaseCommand
 
 from enterprise_catalog.apps.api.tasks import (
@@ -64,27 +64,43 @@ class Command(BaseCommand):
             logger.error('No matching CatalogQuery objects found. Exiting.')
             return
 
-        # create a group of celery tasks that run in parallel to create/update ContentMetadata records
-        # and associate those with the appropriate CatalogQuery(s). once all those tasks succeed, run a
-        # callback to update the json_metadata of ContentMetadata records with content type "course"
-        # with the full course metadata from /courses/.
-        update_chord_task = chord(
+        # First, we create a group of celery tasks that run in parallel to create/update ContentMetadata records
+        # and associate those with the appropriate CatalogQuery(s).
+        # It's possible that one of the tasks in the group will fail with a TaskRecentlyRunError.
+        # Note that a failed task in a group does not stop the rest of the tasks in the group from running.
+        # We consider this error innocuous, and don't want an occurrence(s) of it to prevent
+        # update_full_content_metadata_task from being run.
+        # Thus we run the update_catalog_metadata_tasks in their own group, wait
+        # for the entire group to finish, and then execute update_full_content_metadata_task
+        # asynchronously.  This is functionally equivalent to building a celery chord from this entire set of tasks.
+        # We use this strategy instead because celery.chord() won't execute the trailing task if a failure occurs
+        # in the set of parent tasks.
+        # https://docs.celeryproject.org/en/v5.0.5/userguide/canvas.html
+        update_group = group(
             [
                 self._run_update_catalog_metadata_task(catalog_query)
                 for catalog_query in catalog_queries
             ]
-        )(self._run_update_full_content_metadata_task())
+        )
+        try:
+            update_group_result = update_group.apply_async().get(
+                timeout=TASK_TIMEOUT,
+                propagate=True,
+            )
+        except Exception as exc:  # pylint: disable=broad-except
+            # celery weirdly hijacks and prefixes the path of the below Exception
+            # with `celery.backends.base` when it's raised.
+            # So this block still catches only a specific error, just in a roundabout way.
+            # This type of error shouldn't fail the whole command.
+            # Subtasks of a celery group may fail without affecting/blocking the other subtasks
+            # from running/succeeding.
+            # Note that a GroupResult.get() will surface only the first instance
+            # of an error, though other errors may occur.
+            if type(exc).__name__ != 'TaskRecentlyRunError':
+                raise
 
-        # See https://docs.celeryproject.org/en/stable/reference/celery.result.html#celery.result.AsyncResult.get
-        # for documentation
-        update_chord_result = update_chord_task.get(
+        full_update_result = self._run_update_full_content_metadata_task().apply_async().get(
             timeout=TASK_TIMEOUT,
             propagate=True,
         )
-        if update_chord_task.successful():
-            message = (
-                'ContentMetadata records were successfully associated with their respective'
-                ' CatalogQuery(s) and ContentMetadata records with content type of "%s" were'
-                ' updated to include full course metadata. Task finished with result %s.'
-            )
-            logger.info(message, COURSE, update_chord_result)
+        logger.info('Finished doing full update of {} metadata records'.format(len(full_update_result)))
