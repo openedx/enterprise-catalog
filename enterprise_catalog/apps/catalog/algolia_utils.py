@@ -151,8 +151,12 @@ def get_course_language(course_runs):
         content_language = course_run.get('content_language')
         if not content_language:
             continue
-        language_name = Language.make(language=content_language).language_name()
-        languages.add(language_name)
+        try:
+            language_name = Language.make(language=content_language).language_name()
+            languages.add(language_name)
+        except Exception:  # pylint: disable=broad-except
+            # TODO: https://openedx.atlassian.net/browse/ENT-4163
+            pass
 
     return list(languages)
 
