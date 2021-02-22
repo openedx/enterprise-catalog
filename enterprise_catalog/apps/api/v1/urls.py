@@ -21,6 +21,11 @@ urlpatterns = [
         views.EnterpriseCatalogRefreshDataFromDiscovery.as_view({'post': 'post'}),
         name='update-enterprise-catalog'
     ),
+    url(
+        r'distinct-catalog-queries',
+        views.DistinctCatalogQueriesView.as_view(),
+        name='distinct-catalog-queries',
+    ),
 ]
 
 urlpatterns += router.urls
