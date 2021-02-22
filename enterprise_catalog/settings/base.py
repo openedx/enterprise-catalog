@@ -43,6 +43,7 @@ INSTALLED_APPS = (
 THIRD_PARTY_APPS = (
     'corsheaders',
     'csrf.apps.CsrfAppConfig',  # Enables frontend apps to retrieve CSRF tokens
+    'graphene_django',
     'rest_framework',
     'rest_framework_swagger',
     'social_django',
@@ -346,6 +347,15 @@ ALGOLIA = {
     'INDEX_NAME': '',
     'APPLICATION_ID': '',
     'API_KEY': '',
+}
+
+# Graphql
+GRAPHENE = {
+    'SCHEMA': 'enterprise_catalog.apps.api.graphql.view.schema',
+    'MIDDLEWARE': [
+        'edx_rest_framework_extensions.auth.jwt.middleware.JwtAuthCookieMiddleware',
+        'edx_rest_framework_extensions.auth.jwt.middleware.JwtRedirectToLoginIfUnauthenticatedMiddleware',
+    ],
 }
 
 # Set up system-to-feature roles mapping for edx-rbac

@@ -9,3 +9,4 @@
 # linking to it here is good.
 
 celery<5.0      # 5.0 has dropped python3.5 support.
+social-auth-core<4.0.3
