@@ -1,3 +1,4 @@
+import json
 import uuid
 from collections import OrderedDict
 from operator import itemgetter
@@ -966,3 +967,57 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         response = self.client.get(url)
         catalog_list = response.json()['catalog_list']
         assert catalog_list == []
+
+
+@ddt.ddt
+class DistinctCatalogQueriesViewTests(APITestMixin):
+    """
+    Tests for the DistinctCatalogQueriesView.
+    """
+    url = reverse('api:v1:distinct-catalog-queries')
+
+    def setUp(self):
+        super().setUp()
+        self.set_up_staff()
+        self.catalog_query_one = CatalogQueryFactory()
+        self.enterprise_catalog_one = EnterpriseCatalogFactory(
+            enterprise_uuid=self.enterprise_uuid,
+            catalog_query=self.catalog_query_one,
+        )
+
+    @ddt.data(
+        False,
+        True,
+    )
+    def test_catalogs_different_uuids(self, use_different_query):
+        """
+        Tests that two catalogs with different CatalogQueries will return
+        2 distinct CatalogQuery IDs and two catalogs with the same
+        CatalogQueries will return 1 distinct CatalogQuery ID.
+        """
+        if use_different_query:
+            catalog_query_two = CatalogQueryFactory()
+        else:
+            catalog_query_two = self.catalog_query_one
+        enterprise_catalog_two = EnterpriseCatalogFactory(
+            enterprise_uuid=self.enterprise_uuid,
+            catalog_query=catalog_query_two,
+        )
+        request_json = {
+            'enterprise_catalog_uuids': [
+                str(self.enterprise_catalog_one.uuid),
+                str(enterprise_catalog_two.uuid),
+            ]
+        }
+        response = self.client.post(
+            self.url,
+            data=json.dumps(request_json),
+            content_type='application/json',
+        ).json()
+
+        if use_different_query:
+            assert response['count'] == 2
+            assert catalog_query_two.id in response['catalog_query_ids']
+        else:
+            assert response['count'] == 1
+        assert self.catalog_query_one.id in response['catalog_query_ids']
