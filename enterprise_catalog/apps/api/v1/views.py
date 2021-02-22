@@ -364,14 +364,11 @@ class DistinctCatalogQueriesView(APIView):
         """
         Method to handle POST requests to this endpoint
         """
-        distinct_catalog_query_ids = set()
         enterprise_catalog_uuids = request.data.get('enterprise_catalog_uuids', [])
 
-        enterprise_catalogs = EnterpriseCatalog.objects.filter(
+        distinct_catalog_query_ids = EnterpriseCatalog.objects.filter(
             uuid__in=enterprise_catalog_uuids,
-        )
-        for catalog in enterprise_catalogs:
-            distinct_catalog_query_ids.add(catalog.catalog_query.id)
+        ).distinct().values_list('catalog_query__id', flat=True)
 
         response_data = {
             'count': len(distinct_catalog_query_ids),
