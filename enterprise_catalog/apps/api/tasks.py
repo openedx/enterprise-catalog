@@ -76,10 +76,6 @@ def _fetch_courses_by_keys(course_keys):
             continue
         if timezone.now() - content_metadata[0].modified > timedelta(seconds=timeout_seconds):
             courses.append(content_metadata[0].json_metadata)
-            logger.info(
-                'ContentMetadata with key %s has recently been updated and will not be requested from Discovery API',
-                key,
-            )
         else:
             course_keys_to_fetch.append(key)
 
@@ -110,7 +106,11 @@ def task_recently_run(task_object, time_delta):
         task_args=str(task_object.request.args),
         task_kwargs=str(task_object.request.kwargs),
         date_created__gte=localized_utcnow() - time_delta,
-    ).exclude(status=states.FAILURE).exists()
+    ).exclude(
+        status=states.FAILURE,
+    ).exclude(
+        task_id=str(task_object.request.id),
+    ).exists()
 
 
 def expiring_task_semaphore(time_delta=None, early_return_value=None):
