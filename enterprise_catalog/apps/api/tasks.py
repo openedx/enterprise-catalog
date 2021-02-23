@@ -8,11 +8,9 @@ from celery import shared_task, states
 from celery.exceptions import Ignore, SoftTimeLimitExceeded
 from celery.exceptions import TimeoutError as CeleryTimeoutError
 from celery_utils.logged_task import LoggedTask
-from django.conf import settings
 from django.db import IntegrityError
 from django.db.models import Prefetch, Q
 from django.db.utils import OperationalError
-from django.utils import timezone
 from django_celery_results.models import TaskResult
 
 from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
@@ -38,21 +36,7 @@ from enterprise_catalog.apps.catalog.utils import batch, localized_utcnow
 
 logger = logging.getLogger(__name__)
 
-
-def _get_course_keys_for_updating(content_keys_for_updating):
-    """
-    Gets the list of keys of course ContentMetadata objects that need to be updated.
-
-    Args:
-        content_keys_for_updating (list of str): Content keys for ContentMetadata objects that are to be updated.
-    Returns:
-        list of str: Returns the list of keys that represent courses from the provided `content_keys_for_updating`.
-    """
-    related_course_content_metadata = ContentMetadata.objects.filter(
-        content_key__in=content_keys_for_updating,
-        content_type=COURSE,
-    )
-    return [metadata.content_key for metadata in related_course_content_metadata]
+UNREADY_TASK_RETRY_COUNTDOWN_SECONDS = 60 * 5
 
 
 def _fetch_courses_by_keys(course_keys):
@@ -65,22 +49,10 @@ def _fetch_courses_by_keys(course_keys):
         list of dict: Returns a list of dictionaries where each dictionary represents the course data from discovery.
     """
     courses = []
-    course_keys_to_fetch = []
     discovery_client = DiscoveryApiClient()
-    timeout_seconds = settings.DISCOVERY_COURSE_DATA_CACHE_TIMEOUT
-
-    # Populate a new list of course keys that haven't been updated recently to request from the Discovery API.
-    for key in course_keys:
-        content_metadata = ContentMetadata.objects.filter(content_key=key)
-        if not content_metadata:
-            continue
-        if timezone.now() - content_metadata[0].modified > timedelta(seconds=timeout_seconds):
-            courses.append(content_metadata[0].json_metadata)
-        else:
-            course_keys_to_fetch.append(key)
 
     # Batch the course keys into smaller chunks so that we don't send too big of a request to discovery
-    batched_course_keys = batch(course_keys_to_fetch, batch_size=DISCOVERY_COURSE_KEY_BATCH_SIZE)
+    batched_course_keys = batch(course_keys, batch_size=DISCOVERY_COURSE_KEY_BATCH_SIZE)
     for course_keys_chunk in batched_course_keys:
         # Discovery expects the keys param to be in the format ?keys=course1,course2,...
         query_params = {'keys': ','.join(course_keys_chunk)}
@@ -89,11 +61,31 @@ def _fetch_courses_by_keys(course_keys):
     return courses
 
 
+def unready_tasks(celery_task, time_delta):
+    """
+    Returns any unready tasks with the name of the given celery task
+    that were created within the given (now - time_delta, now) range.
+    The unready celery states are
+    {'RECEIVED', 'REJECTED', 'STARTED', 'PENDING', 'RETRY'}.
+    https://docs.celeryproject.org/en/v5.0.5/reference/celery.states.html#unready-states
+
+    Args:
+      celery_task: A celery task definition or "type" (not an applied task "instance"),
+        for example, ``update_catalog_metadata_task``.
+      time_delta: A datetime.timedelta indicating how for back to look for unready tasks of this type.
+    """
+    return TaskResult.objects.filter(
+        task_name=celery_task.name,
+        date_created__gte=localized_utcnow() - time_delta,
+        status__in=states.UNREADY_STATES,
+    )
+
+
 def task_recently_run(task_object, time_delta):
     """
     Given a celery Task, queries the `TaskResult` model to determine
     if a task with the same (name, args, kwargs) was created
-    within the given (`time_delta`, now) range.
+    within the given (now - time_delta, now) range.
 
     Args:
       task_object (Task): A celery task object.
@@ -118,6 +110,13 @@ class TaskRecentlyRunError(Ignore):
     """
     An exception representing a state where a given task with the same name/args
     has recently been executed in a non-failing, non-revoked state.
+    """
+
+
+class RequiredTaskUnreadyError(Exception):
+    """
+    An exception representing a state where one type of task that is required
+    to be complete before another task is run is not in a ready state.
     """
 
 
@@ -184,16 +183,36 @@ class LoggedTaskWithRetry(LoggedTask):  # pylint: disable=abstract-method
     retry_jitter = True
 
 
-@shared_task(base=LoggedTaskWithRetry)
-def update_full_content_metadata_task(content_keys):
+@shared_task(base=LoggedTaskWithRetry, bind=True, default_retry_delay=UNREADY_TASK_RETRY_COUNTDOWN_SECONDS)
+@expiring_task_semaphore()
+def update_full_content_metadata_task(self):
     """
-    Given content_keys, finds the associated ContentMetadata records with a type of course and looks up the full
-    course metadata from discovery's /api/v1/cousres endpoint to pad the ContentMetadata objects with. The course
-    metadata is merged with the existing contents of the json_metadata field for each ContentMetadata record.
+    Looks up the full course metadata from discovery's `/api/v1/courses` endpoint to pad all
+    ContentMetadata objects with, so long as the record was modified within the last hour.
+    The course metadata is merged with the existing contents
+    of the json_metadata field for each ContentMetadata record.
 
     Note: It is especially important that this task uses the increased maximum ``CELERY_TASK_SOFT_TIME_LIMIT`` and
     ``CELERY_TASK_TIME_LIMIT`` since the task traverses large portions of course-discovery's /courses/ endpoint, which
     was exceeding the previous default limits, causing a SoftTimeLimitExceeded exception.
+    """
+    content_keys = [
+        metadata.content_key for metadata in
+        ContentMetadata.recently_modified_records(timedelta(hours=1)).filter(content_type=COURSE)
+    ]
+    if unready_tasks(update_catalog_metadata_task, timedelta(hours=1)).exists():
+        raise self.retry(
+            exc=RequiredTaskUnreadyError(),
+        )
+
+    return _update_full_content_metadata(content_keys)
+
+
+def _update_full_content_metadata(content_keys):
+    """
+    Given content_keys, finds the associated ContentMetadata records with a type of course and looks up the full
+    course metadata from discovery's /api/v1/cousres endpoint to pad the ContentMetadata objects with. The course
+    metadata is merged with the existing contents of the json_metadata field for each ContentMetadata record.
 
     Args:
         content_keys (list of str): A list of content keys representing ContentMetadata objects that should have their
@@ -207,44 +226,49 @@ def update_full_content_metadata_task(content_keys):
     """
     indexable_course_keys = []
     for content_keys_batch in batch(content_keys, batch_size=TASK_BATCH_SIZE):
-        course_keys_for_updating = _get_course_keys_for_updating(content_keys_batch)
-
-        courses = _fetch_courses_by_keys(course_keys_for_updating)
-        if not courses:
+        full_course_dicts = _fetch_courses_by_keys(content_keys_batch)
+        if not full_course_dicts:
             logger.info('No courses were retrieved from course-discovery in this batch.')
             continue
-        logger.info('Retrieved %d courses from course-discovery in this batch.', len(courses))
 
-        # Iterate through the courses to update the json_metadata field, merging the minimal json_metadata retrieved by
-        # /search/all/ with the full json_metadata retrieved by /courses/.
-        fetched_course_keys = [course['key'] for course in courses]
-        metadata_for_fetched_keys = ContentMetadata.objects.filter(content_key__in=fetched_course_keys)
         # Build a dictionary of the metadata that corresponds to the fetched keys to avoid a query for every course
-        metadata_by_key = {metadata.content_key: metadata for metadata in metadata_for_fetched_keys}
-        updated_metadata = []
-        for course_metadata in courses:
-            content_key = course_metadata.get('key')
+        fetched_course_keys = [course['key'] for course in full_course_dicts]
+        metadata_records_for_fetched_keys = ContentMetadata.objects.filter(
+            content_key__in=fetched_course_keys,
+        )
+        metadata_by_key = {
+            metadata.content_key: metadata
+            for metadata in metadata_records_for_fetched_keys
+        }
+
+        # Iterate through the courses to update the json_metadata field,
+        # merging the minimal json_metadata retrieved by
+        # `/search/all/` with the full json_metadata retrieved by `/courses/`.
+        modified_content_metadata_records = []
+        for course_metadata_dict in full_course_dicts:
+            content_key = course_metadata_dict.get('key')
             metadata_record = metadata_by_key.get(content_key)
-            if not metadata_by_key:
+            if not metadata_record:
                 logger.error('Could not find ContentMetadata record for content_key %s.', content_key)
                 continue
 
-            # merge the original json_metadata with the full course_metadata to ensure
-            # we're not removing any critical fields, e.g. "aggregation_key".
-            json_metadata = metadata_record.json_metadata.copy()
-            json_metadata.update(course_metadata)
-            metadata_record.json_metadata = json_metadata
-            updated_metadata.append(metadata_record)
-        ContentMetadata.objects.bulk_update(updated_metadata, ['json_metadata'], batch_size=10)
+            metadata_record.merge_json_metadata(course_metadata_dict)
+            modified_content_metadata_records.append(metadata_record)
+
+        ContentMetadata.objects.bulk_update(
+            modified_content_metadata_records,
+            ['json_metadata'],
+            batch_size=10,
+        )
 
         logger.info(
             'Successfully updated %d of %d ContentMetadata records with full metadata from course-discovery.',
-            len(updated_metadata),
-            len(courses),
+            len(modified_content_metadata_records),
+            len(full_course_dicts),
         )
 
         # record the course keys that were updated and should be indexed in Algolia by the B2C logic
-        indexable_course_keys.extend(get_indexable_course_keys(updated_metadata))
+        indexable_course_keys.extend(get_indexable_course_keys(modified_content_metadata_records))
 
     logger.info(
         '{} total course keys were updated and are ready for indexing in Algolia'.format(len(indexable_course_keys))

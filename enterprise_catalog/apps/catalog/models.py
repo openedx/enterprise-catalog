@@ -36,6 +36,7 @@ from enterprise_catalog.apps.catalog.utils import (
     get_content_type,
     get_parent_content_key,
     get_sorted_string_from_json,
+    localized_utcnow,
 )
 
 
@@ -344,6 +345,24 @@ class ContentMetadata(TimeStampedModel):
         verbose_name_plural = _("Content Metadata")
         app_label = 'catalog'
 
+    @classmethod
+    def recently_modified_records(cls, time_delta):
+        """
+        Returns the ContentMetadata records modified in the range(now - time_delta, now).
+        """
+        range_start = localized_utcnow() - time_delta
+        range_end = localized_utcnow()
+        return cls.objects.filter(
+            modified__range=(range_start, range_end),
+        )
+
+    def merge_json_metadata(self, additional_metadata):
+        # merge the original json_metadata with the full course_metadata to ensure
+        # we're not removing any critical fields, e.g. "aggregation_key".
+        updated_metadata = self.json_metadata.copy()
+        updated_metadata.update(additional_metadata)
+        self.json_metadata = updated_metadata
+
     def __str__(self):
         """
         Return human-readable string representation.
@@ -398,14 +417,14 @@ def associate_content_metadata_with_query(metadata, catalog_query):
             existing_metadata = None
 
         if existing_metadata:
-            if get_sorted_string_from_json(entry) == get_sorted_string_from_json(existing_metadata.json_metadata):
+            if get_sorted_string_from_json(entry) != get_sorted_string_from_json(existing_metadata.json_metadata):
                 # Only update the existing ContentMetadata object if its json has changed,
-                # but still associate it with the query
-                metadata_list.append(existing_metadata)
-                continue
+                for key, value in defaults.items():
+                    setattr(existing_metadata, key, value)
 
-            for key, value in defaults.items():
-                setattr(existing_metadata, key, value)
+            # ...but still associate it with the query and modify/save the ContentMetadata
+            # so that its `modified` field is updated.
+            metadata_list.append(existing_metadata)
             existing_metadata.save()
         else:
             existing_metadata = ContentMetadata.objects.create(**defaults)

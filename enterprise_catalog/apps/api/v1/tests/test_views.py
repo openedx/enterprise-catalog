@@ -777,7 +777,7 @@ class EnterpriseCatalogRefreshDataFromDiscoveryTests(APITestMixin):
         # the next one, although we do use that functionality in the real view
         mock_chain.assert_called_once_with(
             mock_update_metadata_task.s(self.catalog_query.id),
-            mock_update_full_metadata_task.s(),
+            mock_update_full_metadata_task.si(),
             mock_index_task.s(ALGOLIA_FIELDS),
         )
 

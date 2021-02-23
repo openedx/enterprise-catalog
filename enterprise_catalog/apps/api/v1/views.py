@@ -274,7 +274,7 @@ class EnterpriseCatalogRefreshDataFromDiscovery(BaseViewSet, APIView):
             # Runs the `update_full_content_metadata_task` with the content keys that were associated in the
             # `update_catalog_metadata_task` to pad the metadata from discovery's /search/all endpoint with additional
             # data from the /courses endpoint
-            update_full_content_metadata_task.s(),
+            update_full_content_metadata_task.si(),
             # Runs the indexing task with the indexable course keys that were returned from the
             # `update_full_content_metadata_task` to index those pieces of ContentMetadata in Algolia
             index_enterprise_catalog_courses_in_algolia_task.s(ALGOLIA_FIELDS),
