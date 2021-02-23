@@ -17,10 +17,21 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **options):
-        all_content_keys = get_all_content_keys()
-        result = update_full_content_metadata_task.run(all_content_keys)
-        message = (
-            'update_full_content_metadata task from update_full_content_metadata command finished'
-            ' successfully with result %s'
-        )
-        logger.info(message, result)
+        try:
+            result = update_full_content_metadata_task.apply_async().get()
+            message = (
+                'update_full_content_metadata task from update_full_content_metadata command finished'
+                ' successfully with result %s'
+            )
+            logger.info(message, result)
+        except Exception as exc:
+            # celery weirdly hijacks and prefixes the path of the below Exception
+            # with `celery.backends.base` when it's raised.
+            # So this block still catches only a specific error, just in a roundabout way.
+            if type(exc).__name__ != 'TaskRecentlyRunError':
+                raise
+            else:
+                logger.info(
+                    'update_full_content_metadata_task was recently run prior to this command, '
+                    'and was thus skipped during the execution of this command.'
+                )

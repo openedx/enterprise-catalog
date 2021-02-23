@@ -33,9 +33,6 @@ class UpdateContentMetadataCommandTests(TestCase):
         ContentMetadata.objects.all().delete()
         EnterpriseCatalog.objects.all().delete()
 
-    def _get_content_keys(self):
-        return [content_metadata.content_key for content_metadata in ContentMetadata.objects.all()]
-
     @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.group')
     @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.update_catalog_metadata_task')
     @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.update_full_content_metadata_task')
@@ -49,7 +46,7 @@ class UpdateContentMetadataCommandTests(TestCase):
             mock_catalog_task.s(catalog_query_id=self.catalog_query_a),
             mock_catalog_task.s(catalog_query_id=self.catalog_query_b),
         ])
-        mock_full_metadata_task.si.assert_called_once_with(self._get_content_keys())
+        mock_full_metadata_task.si.assert_called_once_with()
 
     @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.group')
     @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.update_catalog_metadata_task')
@@ -68,4 +65,4 @@ class UpdateContentMetadataCommandTests(TestCase):
             mock_catalog_task.s(catalog_query_id=self.catalog_query_a),
             mock_catalog_task.s(catalog_query_id=self.catalog_query_b),
         ])
-        mock_full_metadata_task.si.assert_called_once_with(self._get_content_keys())
+        mock_full_metadata_task.si.assert_called_once_with()
