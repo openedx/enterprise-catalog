@@ -40,12 +40,10 @@ class TestDiscoveryApiClient(TestCase):
 
         catalog_query = CatalogQueryFactory()
         client = DiscoveryApiClient()
-        actual_response = client.get_metadata_by_query(catalog_query)
+        with self.assertRaises(JSONDecodeError):
+            client.get_metadata_by_query(catalog_query)
 
         mock_oauth_client.return_value.post.assert_called_once()
-
-        expected_response = None
-        self.assertEqual(actual_response, expected_response)
 
     @mock.patch('enterprise_catalog.apps.api_client.base_oauth.OAuthAPIClient')
     def test_get_courses_with_results(self, mock_oauth_client):
