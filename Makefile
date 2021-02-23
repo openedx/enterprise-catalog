@@ -151,11 +151,14 @@ dev.makemigrations:
 dev.migrate: # Migrates databases. Application and DB server must be up for this to work.
 	docker exec -it enterprise.catalog.app bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && make migrate'
 
-dev.up: # Starts all containers
+dev.up: dev.up.redis # Starts all containers
 	docker-compose up -d
 
 dev.up.build: # Runs docker-compose -up -d --build
 	docker-compose up -d --build
+
+dev.up.redis:
+	docker-compose -f $(DEVSTACK_WORKSPACE)/devstack/docker-compose.yml up -d redis
 
 dev.down: ## Kills containers and all of their data that isn't in volumes
 	docker-compose down
