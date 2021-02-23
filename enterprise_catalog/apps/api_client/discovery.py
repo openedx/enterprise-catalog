@@ -65,16 +65,14 @@ class DiscoveryApiClient(BaseOAuthClient):
                 request_params.update({'page': page})
                 response = self._retrieve_metadata_for_content_filter(content_filter, page, request_params)
                 results += response.get('results', [])
-        except Exception as exc:  # pylint: disable=broad-except
-            LOGGER.error(
+        except Exception as exc:
+            LOGGER.exception(
                 'Could not retrieve content items from course-discovery (page %s) for catalog query %s: %s',
                 page,
                 catalog_query,
                 exc,
             )
-            # if a request to discovery fails, return `None` so that callers of this
-            # method are aware we weren't able to get all metadata for the given query
-            return None
+            raise exc
 
         return results
 
