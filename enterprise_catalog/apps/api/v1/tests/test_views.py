@@ -894,7 +894,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         url = self._get_contains_content_base_url() + '?course_run_ids=' + content_key
         self.assert_correct_contains_response(url, True)
 
-    def test_no_catalog_list_given_without_get_catalog_list_query(self):
+    def test_no_catalog_list_given_without_get_catalogs_containing_specified_content_ids_query(self):
         """
         Verify that the contains_content_items endpoint does not return a list of catalogs without a querystring
         """
@@ -910,7 +910,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         response = self.client.get(url)
         assert 'catalog_list' not in response.json().keys()
 
-    def test_contains_catalog_list(self):
+    def test_contains_catalog_list_with_catalog_list_param(self):
         """
         Verify the contains_content_items endpoint returns a list of catalogs the course is in if the correct
         parameter is passed
@@ -923,7 +923,29 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         second_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
         relevant_content = ContentMetadataFactory(content_key=content_key)
         self.add_metadata_to_catalog(second_catalog, [relevant_content])
-        url = self._get_contains_content_base_url() + '?course_run_ids=' + content_key + '&get_catalog_list=True'
+        url = self._get_contains_content_base_url() + '?course_run_ids=' + content_key + \
+            '&get_catalog_list=True'
+        self.assert_correct_contains_response(url, True)
+
+        response = self.client.get(url)
+        catalog_list = response.json()['catalog_list']
+        assert set(catalog_list) == {str(second_catalog.uuid)}
+
+    def test_contains_catalog_list_with_content_ids_param(self):
+        """
+        Verify the contains_content_items endpoint returns a list of catalogs the course is in if the correct
+        parameter is passed
+        """
+        content_metadata = ContentMetadataFactory()
+        self.add_metadata_to_catalog(self.enterprise_catalog, [content_metadata])
+
+        # Create a two catalogs that have the content we're looking for
+        content_key = 'fake-key+101x'
+        second_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
+        relevant_content = ContentMetadataFactory(content_key=content_key)
+        self.add_metadata_to_catalog(second_catalog, [relevant_content])
+        url = self._get_contains_content_base_url() + '?course_run_ids=' + content_key + \
+            '&get_catalogs_containing_specified_content_ids=True'
         self.assert_correct_contains_response(url, True)
 
         response = self.client.get(url)
@@ -948,7 +970,8 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         relevant_content = ContentMetadataFactory(content_key=content_key_2, parent_content_key=parent_content_key)
         self.add_metadata_to_catalog(third_catalog, [relevant_content])
 
-        url = self._get_contains_content_base_url() + '?course_run_ids=' + parent_content_key + '&get_catalog_list=True'
+        url = self._get_contains_content_base_url() + '?course_run_ids=' + parent_content_key + \
+            '&get_catalogs_containing_specified_content_ids=True'
         response = self.client.get(url).json()
         assert response['contains_content_items'] is True
         catalog_list = response['catalog_list']
@@ -963,7 +986,8 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
 
         content_key = 'fake-key+101x'
 
-        url = self._get_contains_content_base_url() + '?course_run_ids=' + content_key + '&get_catalog_list=True'
+        url = self._get_contains_content_base_url() + '?course_run_ids=' + content_key + \
+            '&get_catalogs_containing_specified_content_ids=True'
         response = self.client.get(url)
         catalog_list = response.json()['catalog_list']
         assert catalog_list == []

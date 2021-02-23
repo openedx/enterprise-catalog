@@ -317,9 +317,15 @@ class EnterpriseCustomerViewSet(BaseViewSet):
               description: Uuids of the programs to check availability of
               paramType: query
             - name: get_catalog_list
+              description: [Old parameter] Return a list of catalogs in which the course / program is present
+              paramType: query
+            - name: get_catalogs_containing_specified_content_ids
               description: Return a list of catalogs in which the course / program is present
               paramType: query
         """
+        get_catalogs_containing_specified_content_ids = request.GET.get(
+            'get_catalogs_containing_specified_content_ids', False
+        )
         get_catalog_list = request.GET.get('get_catalog_list', False)
         course_run_ids = unquote_course_keys(course_run_ids)
 
@@ -330,7 +336,7 @@ class EnterpriseCustomerViewSet(BaseViewSet):
             contains_content_items = catalog.contains_content_keys(course_run_ids + program_uuids)
             if contains_content_items:
                 any_catalog_contains_content_items = True
-                if not get_catalog_list:
+                if not (get_catalogs_containing_specified_content_ids or get_catalog_list):
                     # Break as soon as we find a catalog that contains the specified content
                     break
                 catalogs_that_contain_course.append(catalog.uuid)
@@ -338,7 +344,7 @@ class EnterpriseCustomerViewSet(BaseViewSet):
         response_data = {
             'contains_content_items': any_catalog_contains_content_items,
         }
-        if get_catalog_list:
+        if (get_catalogs_containing_specified_content_ids or get_catalog_list):
             response_data['catalog_list'] = catalogs_that_contain_course
         return Response(response_data)
 
