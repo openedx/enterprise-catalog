@@ -8,9 +8,6 @@ from enterprise_catalog.apps.api.tasks import (
     update_full_content_metadata_task,
 )
 from enterprise_catalog.apps.catalog.constants import COURSE, TASK_TIMEOUT
-from enterprise_catalog.apps.catalog.management.utils import (
-    get_all_content_keys,
-)
 from enterprise_catalog.apps.catalog.models import CatalogQuery
 
 
@@ -42,11 +39,10 @@ class Command(BaseCommand):
         )
         logger.info(message)
 
-        all_content_keys = get_all_content_keys()
         # task.si() is used as a shortcut for an immutable signature to avoid calling this with the results from the
         # previously run `update_catalog_metadata_task`.
         # https://docs.celeryproject.org/en/master/userguide/canvas.html#immutability
-        return update_full_content_metadata_task.si(all_content_keys)
+        return update_full_content_metadata_task.si()
 
     def add_arguments(self, parser):
         # Argument to specify catalogs to update
@@ -87,6 +83,9 @@ class Command(BaseCommand):
                 timeout=TASK_TIMEOUT,
                 propagate=True,
             )
+            logger.info(
+                'Finished doing catalog metadata update related to {} CatalogQueries'.format(len(update_group_result))
+            )
         except Exception as exc:  # pylint: disable=broad-except
             # celery weirdly hijacks and prefixes the path of the below Exception
             # with `celery.backends.base` when it's raised.
@@ -98,9 +97,27 @@ class Command(BaseCommand):
             # of an error, though other errors may occur.
             if type(exc).__name__ != 'TaskRecentlyRunError':
                 raise
+            else:
+                logger.info(
+                    'One or more update_catalog_metadata_task was recently run prior to this command, '
+                    'and those particular tasks were thus skipped during the execution of this command.'
+                )
 
-        full_update_result = self._run_update_full_content_metadata_task().apply_async().get(
-            timeout=TASK_TIMEOUT,
-            propagate=True,
-        )
-        logger.info('Finished doing full update of {} metadata records'.format(len(full_update_result)))
+        try:
+            full_update_result = self._run_update_full_content_metadata_task().apply_async().get(
+                timeout=TASK_TIMEOUT,
+                propagate=True,
+            )
+            logger.info('Finished doing full update of {} metadata records: {}'.format(
+                len(full_update_result),
+                full_update_result
+            ))
+        except Exception as exc:
+            # See comment above about celery exception prefixes.
+            if type(exc).__name__ != 'TaskRecentlyRunError':
+                raise
+            else:
+                logger.info(
+                    'update_full_content_metadata_task was recently run prior to this command, '
+                    'and was thus skipped during the execution of this command.'
+                )

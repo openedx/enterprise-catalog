@@ -1,9 +1,11 @@
 """
 Tests for the enterprise_catalog API celery tasks
 """
+import uuid
 from datetime import timedelta
 from unittest import mock
 
+import ddt
 from celery import states
 from django.test import TestCase
 from django_celery_results.models import TaskResult
@@ -31,9 +33,15 @@ def mock_task(self, *args, **kwargs):  # pylint: disable=unused-argument
     return COMPUTED_PRECIOUS_OBJECT
 
 
-class TestTimedSemaphore(TestCase):
+# An actual celery task would have a name attribute, and we use
+# it in a few places, so we patch it in here.
+mock_task.name = 'mock_task'
+
+
+@ddt.ddt
+class TestTaskResultFunctions(TestCase):
     """
-    Tests for the timed_task_semaphore decorator.
+    Tests for functions in tasks.py that rely upon `django-celery_results.models.TaskResult`.
     """
     def setUp(self):
         """
@@ -41,13 +49,20 @@ class TestTimedSemaphore(TestCase):
         """
         super().setUp()
         TaskResult.objects.all().delete()
+
         self.test_args = (123, 77)
         self.test_kwargs = {'foo': 'bar'}
+
+        self.mock_task_id = uuid.uuid4()
+        self.other_task_id = uuid.uuid4()
+
         self.mock_task_result = TaskResult.objects.create(
-            date_created=localized_utcnow() - timedelta(hours=1),
-            task_name='mock_task',
+            task_name=mock_task.name,
             task_args=str(self.test_args),
             task_kwargs=str(self.test_kwargs),
+            status=states.SUCCESS,
+            # Default to a state where the only recorded task result is for some "other" task
+            task_id=self.other_task_id,
         )
 
     def mock_task_instance(self, *args, **kwargs):
@@ -57,7 +72,8 @@ class TestTimedSemaphore(TestCase):
         Invokes our `mock_task` with that bound object and the given args and kwargs.
         """
         bound_task_object = mock.MagicMock()
-        bound_task_object.name = 'mock_task'
+        bound_task_object.name = mock_task.name
+        bound_task_object.request.id = self.mock_task_id
         bound_task_object.request.args = args
         bound_task_object.request.kwargs = kwargs
         return mock_task(bound_task_object, *args, **kwargs)
@@ -83,13 +99,70 @@ class TestTimedSemaphore(TestCase):
         result = self.mock_task_instance(*self.test_args, **self.test_kwargs)
         assert COMPUTED_PRECIOUS_OBJECT == result
 
-    def test_failed_tasks_are_ignored_by_semaphore(self):
-        self.mock_task_result.status = states.FAILURE
+    @ddt.data(states.FAILURE, states.REVOKED)
+    def test_failed_or_revoked_tasks_are_ignored_by_semaphore(self, task_state):
+        self.mock_task_result.status = task_state
+        self.mock_task_result.date_created = localized_utcnow() - timedelta(minutes=1)
         self.mock_task_result.save()
 
-        result_1 = self.mock_task_instance(*self.test_args)
-        result_2 = self.mock_task_instance(*self.test_args)
-        assert result_1 == result_2 == COMPUTED_PRECIOUS_OBJECT
+        result = self.mock_task_instance(*self.test_args)
+        assert result == COMPUTED_PRECIOUS_OBJECT
+
+    def test_given_task_id_is_ignored_by_semaphore(self):
+        # Make our only TaskResult for a task with the same id
+        # as the mock task - set status and date such that the
+        # result would count as a recent equivalent task if it did _not_
+        # have the same task_id as the mock task that is "running".
+        self.mock_task_result.status = states.PENDING
+        self.mock_task_result.date_created = localized_utcnow() - timedelta(minutes=1)
+        self.mock_task_result.task_id = self.mock_task_id
+        self.mock_task_result.save()
+
+        result = self.mock_task_instance(*self.test_args, **self.test_kwargs)
+        assert COMPUTED_PRECIOUS_OBJECT == result
+
+    @ddt.data(*states.UNREADY_STATES)
+    def test_unready_tasks_exist_for_unready_states(self, task_state):
+        self.mock_task_result.status = task_state
+        self.mock_task_result.save()
+
+        self.assertTrue(
+            tasks.unready_tasks(
+                mock_task, timedelta(hours=2)
+            ).exists()
+        )
+
+    @ddt.data(*states.READY_STATES)
+    def test_unready_tasks_dont_exist_for_ready_states(self, task_state):
+        self.mock_task_result.status = task_state
+        self.mock_task_result.save()
+
+        self.assertFalse(
+            tasks.unready_tasks(
+                mock_task, timedelta(hours=2)
+            ).exists()
+        )
+
+    def test_unready_tasks_dont_exist_for_more_recent_delta(self):
+        self.mock_task_result.status = states.PENDING
+        self.mock_task_result.date_created = localized_utcnow() - timedelta(hours=1)
+        self.mock_task_result.save()
+
+        self.assertFalse(
+            tasks.unready_tasks(
+                mock_task, timedelta(minutes=30)
+            ).exists()
+        )
+
+    def test_unready_tasks_dont_exist_for_different_task_name(self):
+        other_mock_task = mock.MagicMock()
+        other_mock_task.name = 'other_task_name'
+
+        self.assertFalse(
+            tasks.unready_tasks(
+                other_mock_task, timedelta(hours=24)
+            ).exists()
+        )
 
 
 class UpdateCatalogMetadataTaskTests(TestCase):
@@ -131,9 +204,11 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         cls.enterprise_catalog = EnterpriseCatalogFactory()
         cls.catalog_query = cls.enterprise_catalog.catalog_query
 
+    # pylint: disable=unused-argument
+    @mock.patch('enterprise_catalog.apps.api.tasks.task_recently_run', return_value=False)
     @mock.patch('enterprise_catalog.apps.api.tasks.get_indexable_course_keys')
     @mock.patch('enterprise_catalog.apps.api_client.base_oauth.OAuthAPIClient')
-    def test_update_full_metadata(self, mock_oauth_client, mock_get_indexable_course_keys):
+    def test_update_full_metadata(self, mock_oauth_client, mock_get_indexable_course_keys, mock_task_recently_run):
         """
         Assert that full course metadata is merged with original json_metadata for all ContentMetadata records.
         """
@@ -159,7 +234,7 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         assert metadata_2.json_metadata != course_data_2
 
         mock_get_indexable_course_keys.return_value = [course_key_1, course_key_2]
-        indexable_course_keys = tasks.update_full_content_metadata_task([course_key_1, course_key_2, non_course_key])
+        indexable_course_keys = tasks.update_full_content_metadata_task.apply().get()
         # Verify the task returns the course keys that are indexable as those keys are passed to the
         # `index_enterprise_catalog_courses_in_algolia_task` from the `EnterpriseCatalogRefreshDataFromDiscovery` view.
         assert indexable_course_keys == mock_get_indexable_course_keys.return_value
