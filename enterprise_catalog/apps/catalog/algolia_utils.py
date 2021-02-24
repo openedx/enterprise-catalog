@@ -276,10 +276,8 @@ def get_course_card_image_url(course):
     Returns:
         str: the url for the course card image
     """
-    original_image = course.get('original_image')
-    if original_image:
-        return original_image.get('src')
-    return None
+    image_url = course.get('image_url')
+    return image_url
 
 
 def get_course_skill_names(course):

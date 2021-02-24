@@ -71,15 +71,11 @@ class AlgoliaUtilsTests(TestCase):
 
     @ddt.data(
         (
-            {'original_image': {'src': 'https://fake.image'}},
+            {'image_url': 'https://fake.image'},
             'https://fake.image',
         ),
         (
-            {'original_image': None},
-            None,
-        ),
-        (
-            {'original_image': {}},
+            {'image_url': None},
             None,
         ),
     )
