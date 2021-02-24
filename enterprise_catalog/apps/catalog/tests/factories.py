@@ -73,7 +73,7 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
             }]
             json_metadata.update({
                 'marketing_url': f'https://marketing.url/{self.content_key}',
-                'original_image': {'src': FAKE_IMAGE_URL},
+                'image_url': FAKE_IMAGE_URL,
                 'owners': owners,
             })
         return json_metadata

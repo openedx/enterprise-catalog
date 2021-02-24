@@ -173,14 +173,14 @@ class UpdateFullContentMetadataTaskTests(TestCase):
             'uuid': metadata_1.json_metadata.get('uuid'),
             'aggregation_key': 'course:fakeX',
             'marketing_url': metadata_1.json_metadata.get('marketing_url'),
-            'original_image': metadata_1.json_metadata.get('original_image'),
+            'image_url': metadata_1.json_metadata.get('image_url'),
             'owners': metadata_1.json_metadata.get('owners'),
         })
         course_data_2.update({
             'uuid': metadata_2.json_metadata.get('uuid'),
             'aggregation_key': 'course:testX',
             'marketing_url': metadata_2.json_metadata.get('marketing_url'),
-            'original_image': metadata_2.json_metadata.get('original_image'),
+            'image_url': metadata_2.json_metadata.get('image_url'),
             'owners': metadata_2.json_metadata.get('owners'),
         })
 
