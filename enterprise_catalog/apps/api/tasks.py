@@ -36,6 +36,8 @@ from enterprise_catalog.apps.catalog.utils import batch, localized_utcnow
 
 logger = logging.getLogger(__name__)
 
+ONE_HOUR = timedelta(hours=1)
+
 UNREADY_TASK_RETRY_COUNTDOWN_SECONDS = 60 * 5
 
 
@@ -142,7 +144,7 @@ def expiring_task_semaphore(time_delta=None):
     def decorator(task):
         @functools.wraps(task)
         def wrapped_task(self, *args, **kwargs):
-            delta = time_delta or timedelta(hours=1)
+            delta = time_delta or ONE_HOUR
             if task_recently_run(self, time_delta=delta):
                 msg_args = (self.name, self.request.id, self.request.args, self.request.kwargs)
                 message = (
@@ -185,7 +187,7 @@ class LoggedTaskWithRetry(LoggedTask):  # pylint: disable=abstract-method
 
 @shared_task(base=LoggedTaskWithRetry, bind=True, default_retry_delay=UNREADY_TASK_RETRY_COUNTDOWN_SECONDS)
 @expiring_task_semaphore()
-def update_full_content_metadata_task(self):
+def update_full_content_metadata_task(self, update_all_metadata=False):
     """
     Looks up the full course metadata from discovery's `/api/v1/courses` endpoint to pad all
     ContentMetadata objects with, so long as the record was modified within the last hour.
@@ -196,11 +198,16 @@ def update_full_content_metadata_task(self):
     ``CELERY_TASK_TIME_LIMIT`` since the task traverses large portions of course-discovery's /courses/ endpoint, which
     was exceeding the previous default limits, causing a SoftTimeLimitExceeded exception.
     """
+    if update_all_metadata:
+        content_metadata_queryset = ContentMetadata.objects.all()
+    else:
+        content_metadata_queryset = ContentMetadata.recently_modified_records(ONE_HOUR)
+
     content_keys = [
         metadata.content_key for metadata in
-        ContentMetadata.recently_modified_records(timedelta(hours=1)).filter(content_type=COURSE)
+        content_metadata_queryset.filter(content_type=COURSE)
     ]
-    if unready_tasks(update_catalog_metadata_task, timedelta(hours=1)).exists():
+    if unready_tasks(update_catalog_metadata_task, ONE_HOUR).exists():
         raise self.retry(
             exc=RequiredTaskUnreadyError(),
         )
