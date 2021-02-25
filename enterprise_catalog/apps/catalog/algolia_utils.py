@@ -1,7 +1,5 @@
 import copy
 
-from langcodes import Language
-
 from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
 
 
@@ -17,7 +15,6 @@ ALGOLIA_FIELDS = [
     'enterprise_customer_uuids',
     'full_description',
     'key',  # for links to Course about pages from the Learner Portal search page
-    'language',
     'level_type',
     'objectID',  # required by Algolia, e.g. "course-{uuid}"
     'partners',
@@ -46,7 +43,6 @@ ALGOLIA_INDEX_SETTINGS = {
         'availability',
         'enterprise_catalog_uuids',
         'enterprise_customer_uuids',
-        'language',
         'level_type',
         'partners.name',
         'programs',
@@ -133,32 +129,6 @@ def get_algolia_object_id(uuid):
     if uuid:
         return f'course-{uuid}'
     return None
-
-
-def get_course_language(course_runs):
-    """
-    Gets the languages associated with a course. Used for the "Language" facet in Algolia.
-
-    Arguments:
-        course_runs (list): list of course runs for a course
-
-    Returns:
-        list: a list of supported languages for those course runs
-    """
-    languages = set()
-
-    for course_run in course_runs:
-        content_language = course_run.get('content_language')
-        if not content_language:
-            continue
-        try:
-            language_name = Language.make(language=content_language).language_name()
-            languages.add(language_name)
-        except Exception:  # pylint: disable=broad-except
-            # TODO: https://openedx.atlassian.net/browse/ENT-4163
-            pass
-
-    return list(languages)
 
 
 def get_course_availability(course_runs):
@@ -351,7 +321,6 @@ def _algolia_object_from_course(course, algolia_fields):
         if course_run.get('status', '').lower() == 'published'
     ]
     searchable_course.update({
-        'language': get_course_language(published_course_runs),
         'availability': get_course_availability(published_course_runs),
         'partners': get_course_partners(searchable_course),
         'programs': get_course_program_types(searchable_course),
