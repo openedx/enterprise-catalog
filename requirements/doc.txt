@@ -16,7 +16,7 @@ appdirs==1.4.4
     # via
     #   -r requirements/test.txt
     #   virtualenv
-astroid==2.4.2
+astroid==2.5
     # via
     #   -r requirements/test.txt
     #   pylint
@@ -122,7 +122,7 @@ django-waffle==2.1.0
     #   -r requirements/test.txt
     #   edx-django-utils
     #   edx-drf-extensions
-django==2.2.18
+django==2.2.19
     # via
     #   -r requirements/test.txt
     #   code-annotations
@@ -175,7 +175,7 @@ edx-drf-extensions==6.5.0
     # via
     #   -r requirements/test.txt
     #   edx-rbac
-edx-lint==4.0.1
+edx-lint==4.1.0
     # via -r requirements/test.txt
 edx-opaque-keys==2.2.0
     # via
@@ -189,7 +189,7 @@ edx-sphinx-theme==2.0.0
     # via -r requirements/doc.in
 factory-boy==3.2.0
     # via -r requirements/test.txt
-faker==6.1.1
+faker==6.5.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -209,6 +209,19 @@ idna==2.10
     #   requests
 imagesize==1.2.0
     # via sphinx
+importlib-metadata==3.7.0
+    # via
+    #   -r requirements/test.txt
+    #   kombu
+    #   pluggy
+    #   pytest
+    #   stevedore
+    #   tox
+    #   virtualenv
+importlib-resources==5.1.0
+    # via
+    #   -r requirements/test.txt
+    #   virtualenv
 iniconfig==1.1.1
     # via
     #   -r requirements/test.txt
@@ -235,9 +248,7 @@ kombu==4.6.11
     # via
     #   -r requirements/test.txt
     #   celery
-langcodes==3.0.0
-    # via -r requirements/test.txt
-lazy-object-proxy==1.4.3
+lazy-object-proxy==1.5.2
     # via
     #   -r requirements/test.txt
     #   astroid
@@ -326,7 +337,7 @@ pylint-plugin-utils==0.6
     #   -r requirements/test.txt
     #   pylint-celery
     #   pylint-django
-pylint==2.6.2
+pylint==2.7.1
     # via
     #   -r requirements/test.txt
     #   edx-lint
@@ -374,7 +385,7 @@ pyyaml==5.4.1
     #   -r requirements/test.txt
     #   code-annotations
     #   edx-django-release-util
-readme-renderer==28.0
+readme-renderer==29.0
     # via -r requirements/doc.in
 redis==3.5.3
     # via -r requirements/test.txt
@@ -413,7 +424,6 @@ simplejson==3.17.2
 six==1.15.0
     # via
     #   -r requirements/test.txt
-    #   astroid
     #   bleach
     #   django-dynamic-fixture
     #   django-simple-history
@@ -486,6 +496,14 @@ toml==0.10.2
     #   tox
 tox==3.22.0
     # via -r requirements/test.txt
+typed-ast==1.4.2
+    # via
+    #   -r requirements/test.txt
+    #   astroid
+typing-extensions==3.7.4.3
+    # via
+    #   -r requirements/test.txt
+    #   importlib-metadata
 uritemplate==3.0.1
     # via
     #   -r requirements/test.txt
@@ -510,7 +528,10 @@ wrapt==1.12.1
     #   -r requirements/test.txt
     #   astroid
 zipp==1.2.0
-    # via -r requirements/test.txt
+    # via
+    #   -r requirements/test.txt
+    #   importlib-metadata
+    #   importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
