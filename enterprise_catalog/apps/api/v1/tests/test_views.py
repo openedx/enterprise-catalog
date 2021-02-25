@@ -13,7 +13,6 @@ from rest_framework.reverse import reverse
 from rest_framework.settings import api_settings
 
 from enterprise_catalog.apps.api.v1.tests.mixins import APITestMixin
-from enterprise_catalog.apps.catalog.algolia_utils import ALGOLIA_FIELDS
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
     COURSE_RUN,
@@ -776,9 +775,9 @@ class EnterpriseCatalogRefreshDataFromDiscoveryTests(APITestMixin):
         # Note that since we're mocking celery's chain, the return values from the previous task don't get passed to
         # the next one, although we do use that functionality in the real view
         mock_chain.assert_called_once_with(
-            mock_update_metadata_task.s(self.catalog_query.id),
+            mock_update_metadata_task.si(self.catalog_query.id),
             mock_update_full_metadata_task.si(),
-            mock_index_task.s(ALGOLIA_FIELDS),
+            mock_index_task.si(),
         )
 
     def test_refresh_catalog_on_get_returns_405_not_allowed(self):

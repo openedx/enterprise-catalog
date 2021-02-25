@@ -36,7 +36,6 @@ from enterprise_catalog.apps.api.v1.serializers import (
     EnterpriseCatalogSerializer,
 )
 from enterprise_catalog.apps.api.v1.utils import unquote_course_keys
-from enterprise_catalog.apps.catalog.algolia_utils import ALGOLIA_FIELDS
 from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
 from enterprise_catalog.apps.catalog.rules import (
     enterprises_with_admin_access,
@@ -260,24 +259,11 @@ class EnterpriseCatalogRefreshDataFromDiscovery(BaseViewSet, APIView):
         enterprise_catalog = get_object_or_404(EnterpriseCatalog, uuid=uuid)
         catalog_query_id = enterprise_catalog.catalog_query.id
 
-        # Note: It's not immediately obvious, but there's some "auto-magic" passing of parameters through the
-        # signatures used in the chain below. The return value of `update_catalog_metadata_task` (which should be a
-        # list of content_keys that were updated) gets passed as the first value to the
-        # `update_full_content_metadata_task`. The return value from that (which should be the list of content keys
-        # that were updated with the full data from discovery) is likewise passed as the first argument to the
-        # `index_enterprise_catalog_courses_in_algolia_task` (with the other args being whatever you actually put
-        # inside the function call).
-        # See https://docs.celeryproject.org/en/stable/userguide/canvas.html#the-primitives for more information on
-        # partial chains.
+        # Use immutable signatures so task results from a parent task are not passed as arguments to a child task.
         async_update_metadata_chain = chain(
-            update_catalog_metadata_task.s(catalog_query_id),
-            # Runs the `update_full_content_metadata_task` with the content keys that were associated in the
-            # `update_catalog_metadata_task` to pad the metadata from discovery's /search/all endpoint with additional
-            # data from the /courses endpoint
+            update_catalog_metadata_task.si(catalog_query_id),
             update_full_content_metadata_task.si(),
-            # Runs the indexing task with the indexable course keys that were returned from the
-            # `update_full_content_metadata_task` to index those pieces of ContentMetadata in Algolia
-            index_enterprise_catalog_courses_in_algolia_task.s(ALGOLIA_FIELDS),
+            index_enterprise_catalog_courses_in_algolia_task.si(),
         )
         async_task = async_update_metadata_chain.apply_async()
 
