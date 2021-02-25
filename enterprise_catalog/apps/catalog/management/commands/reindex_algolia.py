@@ -5,16 +5,6 @@ from django.core.management.base import BaseCommand
 from enterprise_catalog.apps.api.tasks import (
     index_enterprise_catalog_courses_in_algolia_task,
 )
-from enterprise_catalog.apps.catalog.algolia_utils import (
-    ALGOLIA_FIELDS,
-    get_indexable_course_keys,
-    get_initialized_algolia_client,
-)
-from enterprise_catalog.apps.catalog.constants import TASK_BATCH_SIZE
-from enterprise_catalog.apps.catalog.models import (
-    content_metadata_with_type_course,
-)
-from enterprise_catalog.apps.catalog.utils import batch
 
 
 logger = logging.getLogger(__name__)
@@ -27,23 +17,22 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """
-        Initializes and configures the settings for an Algolia index, and then spins off
-        a task for each batch of content_keys to reindex course data in Algolia.
+        Runs a celery task to reindex algolia.  Blocks until celery task returns.
         """
-        # Initialize and configure the Algolia index
-        get_initialized_algolia_client()
-
-        # Retrieve indexable content_keys for all ContentMetadata records with a content type of "course"
-        all_course_content_metadata = content_metadata_with_type_course()
-        indexable_course_keys = get_indexable_course_keys(all_course_content_metadata)
-
-        for content_keys_batch in batch(indexable_course_keys, batch_size=TASK_BATCH_SIZE):
-            result = index_enterprise_catalog_courses_in_algolia_task.run(
-                content_keys=content_keys_batch,
-                algolia_fields=ALGOLIA_FIELDS,
-            )
+        try:
+            result = index_enterprise_catalog_courses_in_algolia_task.apply_async().get()
             message = (
-                'index_enterprise_catalog_courses_in_algolia_task from command reindex_algolia finished'
-                ' successfully with result %s.'
+                'index_enterprise_catalog_courses_in_algolia_task from command reindex_algolia finished successfully.'
             )
-            logger.info(message, result)
+            logger.info(message)
+        except Exception as exc:
+            # celery weirdly hijacks and prefixes the path of the below Exception
+            # with `celery.backends.base` when it's raised.
+            # So this block still catches only a specific error, just in a roundabout way.
+            if type(exc).__name__ != 'TaskRecentlyRunError':
+                raise
+            else:
+                logger.info(
+                    'index_enterprise_catalog_courses_in_algolia_task was recently run prior to this command, '
+                    'and was thus skipped during the execution of this command.'
+                )
