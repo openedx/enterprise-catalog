@@ -15,6 +15,7 @@ from django_celery_results.models import TaskResult
 
 from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 from enterprise_catalog.apps.catalog.algolia_utils import (
+    ALGOLIA_FIELDS,
     ALGOLIA_UUID_BATCH_SIZE,
     create_algolia_objects_from_courses,
     get_algolia_object_id,
@@ -35,6 +36,8 @@ from enterprise_catalog.apps.catalog.utils import batch, localized_utcnow
 
 
 logger = logging.getLogger(__name__)
+
+ONE_HOUR = timedelta(hours=1)
 
 UNREADY_TASK_RETRY_COUNTDOWN_SECONDS = 60 * 5
 
@@ -196,16 +199,16 @@ def update_full_content_metadata_task(self):
     ``CELERY_TASK_TIME_LIMIT`` since the task traverses large portions of course-discovery's /courses/ endpoint, which
     was exceeding the previous default limits, causing a SoftTimeLimitExceeded exception.
     """
-    content_keys = [
-        metadata.content_key for metadata in
-        ContentMetadata.recently_modified_records(timedelta(hours=1)).filter(content_type=COURSE)
-    ]
     if unready_tasks(update_catalog_metadata_task, timedelta(hours=1)).exists():
         raise self.retry(
             exc=RequiredTaskUnreadyError(),
         )
 
-    return _update_full_content_metadata(content_keys)
+    content_keys = [
+        metadata.content_key for metadata in
+        ContentMetadata.recently_modified_records(timedelta(hours=1)).filter(content_type=COURSE)
+    ]
+    _update_full_content_metadata(content_keys)
 
 
 def _update_full_content_metadata(content_keys):
@@ -273,12 +276,11 @@ def _update_full_content_metadata(content_keys):
     logger.info(
         '{} total course keys were updated and are ready for indexing in Algolia'.format(len(indexable_course_keys))
     )
-    return indexable_course_keys
 
 
-def _batched_metadata(json_metadata, sorted_uuids, uuid_key_name, obj_id_fmt, uuid_batch_size):
+def _batched_metadata(json_metadata, sorted_uuids, uuid_key_name, obj_id_fmt):
     batched_metadata = []
-    for batch_index, uuid_batch in enumerate(batch(sorted_uuids, batch_size=uuid_batch_size)):
+    for batch_index, uuid_batch in enumerate(batch(sorted_uuids, batch_size=ALGOLIA_UUID_BATCH_SIZE)):
         json_metadata_with_uuids = copy.deepcopy(json_metadata)
         json_metadata_with_uuids.update({
             'objectID': obj_id_fmt.format(json_metadata['objectID'], batch_index),
@@ -288,12 +290,9 @@ def _batched_metadata(json_metadata, sorted_uuids, uuid_key_name, obj_id_fmt, uu
     return batched_metadata
 
 
-@shared_task(base=LoggedTaskWithRetry)
-def index_enterprise_catalog_courses_in_algolia_task(
-    content_keys,
-    algolia_fields,
-    uuid_batch_size=ALGOLIA_UUID_BATCH_SIZE,
-):
+@shared_task(base=LoggedTaskWithRetry, bind=True, default_retry_delay=UNREADY_TASK_RETRY_COUNTDOWN_SECONDS)
+@expiring_task_semaphore()
+def index_enterprise_catalog_courses_in_algolia_task(self):
     """
     Index course data in Algolia with enterprise-related fields.
 
@@ -301,22 +300,28 @@ def index_enterprise_catalog_courses_in_algolia_task(
     ``CELERY_TASK_TIME_LIMIT`` as it makes somewhat time-intensive reads/writes to the database along with sending
     large payloads of data to Algolia, which was exceeding the previous default limits, causing a SoftTimeLimitExceeded
     exception.
+    """
+    if unready_tasks(update_full_content_metadata_task, ONE_HOUR).exists():
+        raise self.retry(
+            exc=RequiredTaskUnreadyError(),
+        )
 
-    Arguments:
-        content_keys (list): A list of content_keys.  It's important that this is the first positional argument,
-            so that the passing of return values to the signature of the next chained celery task
-            works as expected.
-        algolia_fields (list): A list of course fields we want to index in Algolia
-        uuid_batch_size (int): The threshold of distinct catalog/customer UUIDs associated with a piece of content,
-            at which duplicate course records are created in the index,
-            batching the uuids (flattened records) to reduce the payload size of the Algolia objects.
-            Defaults to ``ALGOLIA_UUID_BATCH_SIZE``.
+    content_keys = ContentMetadata.recently_modified_records(
+        ONE_HOUR
+    ).filter(
+        content_type=COURSE
+    ).values_list(
+        'content_key',
+        flat=True
+    )
+    _reindex_algolia(content_keys)
+
+
+def _reindex_algolia(content_keys):
+    """
+    Indexes course metadata in our Algolia search index.
     """
     algolia_client = get_initialized_algolia_client()
-
-    if not algolia_fields or not content_keys:
-        logger.error('Must provide algolia_fields and content_keys as arguments.')
-        return
 
     # Update the index in batches
     for content_keys_batch in batch(content_keys, batch_size=TASK_BATCH_SIZE):
@@ -361,7 +366,7 @@ def index_enterprise_catalog_courses_in_algolia_task(
         # dictionary created above. there is at least 2 duplicate course records per course,
         # each including the catalog uuids and customer uuids respectively.
         #
-        # if the number of uuids for both catalogs/customers exceeds uuid_batch_size, then
+        # if the number of uuids for both catalogs/customers exceeds ALGOLIA_UUID_BATCH_SIZE, then
         # create duplicate course records, batching the uuids (flattened records) to reduce
         # the payload size of the Algolia objects.
         course_content_metadata = content_metadata.filter(content_type=COURSE)
@@ -380,7 +385,6 @@ def index_enterprise_catalog_courses_in_algolia_task(
                 catalog_uuids,
                 'enterprise_catalog_uuids',
                 '{}-catalog-uuids-{}',
-                uuid_batch_size,
             )
             courses.extend(batched_metadata)
 
@@ -391,13 +395,13 @@ def index_enterprise_catalog_courses_in_algolia_task(
                 customer_uuids,
                 'enterprise_customer_uuids',
                 '{}-customer-uuids-{}',
-                uuid_batch_size,
             )
             courses.extend(batched_metadata)
 
         # extract out only the fields we care about and send to Algolia index
-        algolia_objects = create_algolia_objects_from_courses(courses, algolia_fields)
+        algolia_objects = create_algolia_objects_from_courses(courses, ALGOLIA_FIELDS)
         algolia_client.partially_update_index(algolia_objects)
+        logger.info('Successfully updated index for {} courses in Algolia'.format(len(courses)))
 
 
 @shared_task(base=LoggedTaskWithRetry, bind=True)
@@ -416,10 +420,8 @@ def update_catalog_metadata_task(self, catalog_query_id):  # pylint: disable=unu
         catalog_query = CatalogQuery.objects.get(id=catalog_query_id)
     except CatalogQuery.DoesNotExist:
         logger.error('Could not find a CatalogQuery with id %s', catalog_query_id)
-        return []
 
     associated_content_keys = update_contentmetadata_from_discovery(catalog_query)
     logger.info('Finished update_catalog_metadata_task with {} associated content keys for catalog {}'.format(
         len(associated_content_keys), catalog_query_id
     ))
-    return associated_content_keys

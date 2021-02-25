@@ -73,7 +73,7 @@ class CatalogQuery(models.Model):
         verbose_name_plural = _("Catalog Queries")
         app_label = 'catalog'
 
-    def save(self, *args, **kwargs):  # pylint: disable=signature-differs
+    def save(self, *args, **kwargs):
         self.content_filter_hash = get_content_filter_hash(self.content_filter)
         super().save(*args, **kwargs)
 

@@ -233,11 +233,10 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         assert metadata_1.json_metadata != course_data_1
         assert metadata_2.json_metadata != course_data_2
 
-        mock_get_indexable_course_keys.return_value = [course_key_1, course_key_2]
-        indexable_course_keys = tasks.update_full_content_metadata_task.apply().get()
-        # Verify the task returns the course keys that are indexable as those keys are passed to the
-        # `index_enterprise_catalog_courses_in_algolia_task` from the `EnterpriseCatalogRefreshDataFromDiscovery` view.
-        assert indexable_course_keys == mock_get_indexable_course_keys.return_value
+        tasks.update_full_content_metadata_task.apply().get()
+
+        actual_course_keys_args = mock_get_indexable_course_keys.call_args_list[0][0][0]
+        self.assertEqual(set(actual_course_keys_args), set([metadata_1, metadata_2]))
 
         metadata_1 = ContentMetadata.objects.get(content_key='fakeX')
         metadata_2 = ContentMetadata.objects.get(content_key='testX')
@@ -309,10 +308,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         """
         algolia_data = self._set_up_factory_data_for_algolia()
 
-        tasks.index_enterprise_catalog_courses_in_algolia_task(
-            content_keys=['fakeX'],
-            algolia_fields=self.ALGOLIA_FIELDS,
-        )
+        with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
+            tasks.index_enterprise_catalog_courses_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         # create expected Algolia data
         expected_algolia_objects = []
@@ -339,11 +336,9 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         """
         algolia_data = self._set_up_factory_data_for_algolia()
 
-        tasks.index_enterprise_catalog_courses_in_algolia_task(
-            content_keys=['fakeX'],
-            algolia_fields=self.ALGOLIA_FIELDS,
-            uuid_batch_size=1,
-        )
+        with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_UUID_BATCH_SIZE', 1), \
+             mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
+            tasks.index_enterprise_catalog_courses_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         # create expected Algolia data
         expected_algolia_objects = []
