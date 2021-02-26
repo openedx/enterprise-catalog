@@ -356,14 +356,28 @@ class DistinctCatalogQueriesView(APIView):
         """
         Method to handle POST requests to this endpoint
         """
+        # Find all catalogs that match the UUIDs sent in the request data
         enterprise_catalog_uuids = request.data.get('enterprise_catalog_uuids', [])
+        enterprise_catalogs = EnterpriseCatalog.objects.filter(uuid__in=enterprise_catalog_uuids)
 
-        distinct_catalog_query_ids = EnterpriseCatalog.objects.filter(
-            uuid__in=enterprise_catalog_uuids,
-        ).distinct().values_list('catalog_query__id', flat=True)
+        # Iterate through catalogs and populate to the catalog query map
+        # Format:
+        #   key: CatalogQuery ID (int)
+        #   value: EnterpriseCustomerCatalog UUID(s) (list[str])
+        catalog_query_map = {}
+        for catalog in enterprise_catalogs:
+            query_id = catalog.catalog_query_id
+            if query_id in catalog_query_map:
+                catalog_query_map[query_id].append(str(catalog.uuid))
+            else:
+                catalog_query_map[query_id] = [str(catalog.uuid)]
 
+        # Return catalog_query_map in the response.
+        # In the case that the catalog query check fails,
+        # the map can be used to determine which catalogs
+        # map to incorrect queries.
         response_data = {
-            'count': len(distinct_catalog_query_ids),
-            'catalog_query_ids': distinct_catalog_query_ids,
+            'count': len(catalog_query_map.keys()),
+            'catalog_query_ids': catalog_query_map,
         }
         return Response(response_data, status=HTTP_200_OK)
