@@ -1040,7 +1040,7 @@ class DistinctCatalogQueriesViewTests(APITestMixin):
 
         if use_different_query:
             assert response['count'] == 2
-            assert catalog_query_two.id in response['catalog_query_ids']
+            assert str(catalog_query_two.id) in response['catalog_query_ids']
         else:
             assert response['count'] == 1
-        assert self.catalog_query_one.id in response['catalog_query_ids']
+        assert str(self.catalog_query_one.id) in response['catalog_query_ids']
