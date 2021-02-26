@@ -12,13 +12,6 @@ filelock==3.0.12
     # via
     #   tox
     #   virtualenv
-importlib-metadata==3.7.0
-    # via
-    #   pluggy
-    #   tox
-    #   virtualenv
-importlib-resources==5.1.0
-    # via virtualenv
 packaging==20.9
     # via tox
 pluggy==0.13.1
@@ -39,11 +32,5 @@ tox==3.22.0
     # via
     #   -r requirements/tox.in
     #   tox-battery
-typing-extensions==3.7.4.3
-    # via importlib-metadata
 virtualenv==20.4.2
     # via tox
-zipp==3.4.0
-    # via
-    #   importlib-metadata
-    #   importlib-resources

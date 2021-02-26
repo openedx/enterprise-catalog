@@ -178,17 +178,6 @@ idna==2.10
     # via
     #   -r requirements/base.txt
     #   requests
-importlib-metadata==3.7.0
-    # via
-    #   -r requirements/base.txt
-    #   kombu
-    #   pluggy
-    #   pytest
-    #   stevedore
-    #   tox
-    #   virtualenv
-importlib-resources==5.1.0
-    # via virtualenv
 iniconfig==1.1.1
     # via pytest
 isort==5.7.0
@@ -220,7 +209,7 @@ mccabe==0.6.1
     # via pylint
 mysqlclient==2.0.3
     # via -r requirements/base.txt
-newrelic==6.0.1.155
+newrelic==6.2.0.156
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -403,12 +392,6 @@ toml==0.10.2
     #   tox
 tox==3.22.0
     # via -r requirements/test.in
-typed-ast==1.4.2
-    # via astroid
-typing-extensions==3.7.4.3
-    # via
-    #   -r requirements/base.txt
-    #   importlib-metadata
 uritemplate==3.0.1
     # via
     #   -r requirements/base.txt
@@ -427,7 +410,4 @@ virtualenv==20.4.2
 wrapt==1.12.1
     # via astroid
 zipp==1.2.0
-    # via
-    #   -r requirements/base.txt
-    #   importlib-metadata
-    #   importlib-resources
+    # via -r requirements/base.txt

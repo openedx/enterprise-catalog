@@ -2,14 +2,14 @@
 TOX = ''
 .PHONY: help clean piptools requirements dev_requirements \
         doc_requirementsprod_requirements static shell test coverage \
-        isort_check isort style lint quality pii_check validate \
+        style lint quality pii_check validate \
         migrate html_coverage upgrade extract_translation dummy_translations \
         compile_translations fake_translations  pull_translations \
         push_translations start-devstack open-devstack  pkg-devstack \
         detect_changed_source_translations validate_translations \
         dev.provision dev.init dev.makemigrations dev.migrate dev.up \
         dev.up.build dev.down dev.destroy dev.stop docker_build \
-        shellcheck
+        shellcheck mysql-client
 
 
 define BROWSER_PYSCRIPT
@@ -66,19 +66,13 @@ coverage: clean
 	pytest --cov-report html
 	$(BROWSER) htmlcov/index.html
 
-isort_check: ## check that isort has been run
-	isort --check-only --diff -rc enterprise_catalog/
-
-isort: ## run isort to sort imports in all Python files
-	isort --recursive --atomic enterprise_catalog/
-
 style: ## run Python style checker
 	pycodestyle enterprise_catalog *.py
 
 lint: ## run Python code linting
 	pylint --rcfile=pylintrc enterprise_catalog *.py
 
-quality: clean style isort_check lint ## check code style and import sorting, then lint
+quality: clean style lint ## check code style then lint
 
 pii_check: ## check for PII annotations on all Django models
 	DJANGO_SETTINGS_MODULE=enterprise_catalog.settings.test \
@@ -180,6 +174,9 @@ dev.stop: # Stops containers so they can be restarted
 
 %-attach: ## Attach terminal I/O to the specified service container
 	docker attach enterprise.catalog.$*
+
+mysql-client: # Attach and run a mysql client for the enterprise_catalog DB
+	docker-compose exec -u 0 mysql bash -c "mysql enterprise_catalog"
 
 docker_build: ## Builds with the latest enterprise catalog
 	docker build . --target app -t openedx/enterprise-catalog:latest
