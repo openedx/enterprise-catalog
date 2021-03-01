@@ -1,4 +1,4 @@
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 import crum
 from celery import chain
@@ -340,30 +340,41 @@ class DistinctCatalogQueriesView(APIView):
     View that, given a list of EnterpriseCustomerCatalog UUIDs, returns the
     number of distinct EnterpriseCatalogQueries used by the given set of catalogs.
 
-    Request Data:
-        - enterprise_catalog_uuids (list[UUID4]): List of EnterpriseCustomerCatalog
-        UUIDs to be used in a search for the number of distinct EnterpriseCatalogQuery
-        objects used by the identified catalogs.
-
-    Response Data:
-        - count (int): number of distinct catalog queries used by given catalogs
-        - catalog_query_ids (list[int]): IDs of the distinct catalog queries
+    Also returns a mapping of each EnterpriseCatalogQuery to the UUIDs of
+    EnterpriseCustomerCatalogs which use it to help ECS remediate any issues.
     """
     authentication_classes = [JwtAuthentication, SessionAuthentication]
     permission_classes = [permissions.IsAdminUser]
 
     def post(self, request):
         """
-        Method to handle POST requests to this endpoint
+        Given a list of EnterpriseCustomerCatalog UUIDs, return the number of distinct
+        EnterpriseCatalogQueries used by the given set of catalogs.
+
+        Also return data mapping each EnterpriseCatalogQuery to a list of the given
+        EnterpriseCustomerCatalog UUIDs which use it. This data can be used by ECS to
+        determine which catalogs map to incorrect queries.
+
+        Request Data:
+            - enterprise_catalog_uuids (list[str(UUID4)]): List of EnterpriseCustomerCatalog
+            UUIDs to be used in a search for the number of distinct EnterpriseCatalogQuery
+            objects used by the identified catalogs.
+
+        Response Data:
+            - count (int): number of distinct catalog queries used by given catalogs
+            - catalog_uuids_by_catalog_query_id (dict{ int : list[str(UUID4)] }): dictionary
+            with CatalogQuery ID as the key and the list of UUIDs for EnterpriseCustomerCatalogs
+            that use the given ID as the value.
         """
         enterprise_catalog_uuids = request.data.get('enterprise_catalog_uuids', [])
+        enterprise_catalogs = EnterpriseCatalog.objects.filter(uuid__in=enterprise_catalog_uuids)
 
-        distinct_catalog_query_ids = EnterpriseCatalog.objects.filter(
-            uuid__in=enterprise_catalog_uuids,
-        ).distinct().values_list('catalog_query__id', flat=True)
+        catalog_query_map = defaultdict(list)
+        for catalog in enterprise_catalogs:
+            catalog_query_map[catalog.catalog_query_id].append(str(catalog.uuid))
 
         response_data = {
-            'count': len(distinct_catalog_query_ids),
-            'catalog_query_ids': distinct_catalog_query_ids,
+            'num_distinct_query_ids': len(catalog_query_map.keys()),
+            'catalog_uuids_by_catalog_query_id': catalog_query_map,
         }
         return Response(response_data, status=HTTP_200_OK)
