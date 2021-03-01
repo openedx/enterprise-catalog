@@ -5,8 +5,7 @@ from collections import defaultdict
 from datetime import timedelta
 
 from celery import shared_task, states
-from celery.exceptions import Ignore, SoftTimeLimitExceeded
-from celery.exceptions import TimeoutError as CeleryTimeoutError
+from celery.exceptions import Ignore
 from celery_utils.logged_task import LoggedTask
 from django.db import IntegrityError
 from django.db.models import Prefetch, Q
@@ -175,8 +174,6 @@ class LoggedTaskWithRetry(LoggedTask):  # pylint: disable=abstract-method
     """
     autoretry_for = (
         IntegrityError,
-        SoftTimeLimitExceeded,
-        CeleryTimeoutError,
         OperationalError,
     )
     retry_kwargs = {'max_retries': 5}
