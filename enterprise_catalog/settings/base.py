@@ -314,9 +314,10 @@ CELERY_TASK_IGNORE_RESULT = False
 CELERY_TASK_STORE_ERRORS_EVEN_IF_IGNORED = True
 
 # Celery task time limits.
-# Tasks will be asked to quit after 8 minutes, and un-gracefully killed after 9.
-CELERY_TASK_SOFT_TIME_LIMIT = 480
-CELERY_TASK_TIME_LIMIT = 540
+# Tasks will be asked to quit after 15 minutes...
+CELERY_TASK_SOFT_TIME_LIMIT = 60 * 15
+# ...and un-gracefully killed after 20.
+CELERY_TASK_TIME_LIMIT = 60 * 20
 
 # Propagate exceptions from eagerly applied tasks
 CELERY_EAGER_PROPAGATES = True
