@@ -145,7 +145,7 @@ def expiring_task_semaphore(time_delta=None):
     def decorator(task):
         @functools.wraps(task)
         def wrapped_task(self, *args, **kwargs):
-            delta = time_delta or timedelta(hours=1)
+            delta = time_delta or ONE_HOUR
             if task_recently_run(self, time_delta=delta):
                 msg_args = (self.name, self.request.id, self.request.args, self.request.kwargs)
                 message = (
@@ -199,14 +199,14 @@ def update_full_content_metadata_task(self):
     ``CELERY_TASK_TIME_LIMIT`` since the task traverses large portions of course-discovery's /courses/ endpoint, which
     was exceeding the previous default limits, causing a SoftTimeLimitExceeded exception.
     """
-    if unready_tasks(update_catalog_metadata_task, timedelta(hours=1)).exists():
+    if unready_tasks(update_catalog_metadata_task, ONE_HOUR).exists():
         raise self.retry(
             exc=RequiredTaskUnreadyError(),
         )
 
     content_keys = [
         metadata.content_key for metadata in
-        ContentMetadata.recently_modified_records(timedelta(hours=1)).filter(content_type=COURSE)
+        ContentMetadata.recently_modified_records(ONE_HOUR).filter(content_type=COURSE)
     ]
     _update_full_content_metadata(content_keys)
 
@@ -307,7 +307,7 @@ def index_enterprise_catalog_courses_in_algolia_task(self):
         )
 
     content_keys = ContentMetadata.recently_modified_records(
-        ONE_HOUR
+        ONE_HOUR * 2
     ).filter(
         content_type=COURSE
     ).values_list(

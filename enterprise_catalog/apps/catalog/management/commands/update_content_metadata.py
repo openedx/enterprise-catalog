@@ -108,10 +108,7 @@ class Command(BaseCommand):
                 timeout=TASK_TIMEOUT,
                 propagate=True,
             )
-            logger.info('Finished doing full update of {} metadata records: {}'.format(
-                len(full_update_result),
-                full_update_result
-            ))
+            logger.info('Finished doing full update of metadata records.')
         except Exception as exc:
             # See comment above about celery exception prefixes.
             if type(exc).__name__ != 'TaskRecentlyRunError':
