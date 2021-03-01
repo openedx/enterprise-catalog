@@ -300,8 +300,9 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'course_metadata': self.course_metadata,
         }
 
+    @mock.patch('enterprise_catalog.apps.api.tasks._was_recently_indexed', side_effect=[False, True])
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
-    def test_index_algolia_with_all_uuids(self, mock_search_client):
+    def test_index_algolia_with_all_uuids(self, mock_search_client, mock_was_recently_indexed):
         """
         Assert that the correct data is sent to Algolia index, with the expected enterprise
         catalog and enterprise customer associations.
@@ -309,6 +310,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         algolia_data = self._set_up_factory_data_for_algolia()
 
         with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
+            tasks.index_enterprise_catalog_courses_in_algolia_task()  # pylint: disable=no-value-for-parameter
+            # call it a second time, make assertions that only one thing happened below
             tasks.index_enterprise_catalog_courses_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         # create expected Algolia data
@@ -326,10 +329,21 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         })
 
         # verify partially_update_index is called with the correct Algolia object data
-        mock_search_client().partially_update_index.assert_called_once_with(expected_algolia_objects)
+        # on the first invocation and with an empty list on the second invocation.
+        mock_search_client().partially_update_index.assert_has_calls([
+            mock.call(expected_algolia_objects),
+            mock.call([]),
+        ])
 
+        # Verify that we checked the cache twice, though
+        mock_was_recently_indexed.assert_has_calls([
+            mock.call(self.course_metadata.content_key),
+            mock.call(self.course_metadata.content_key),
+        ])
+
+    @mock.patch('enterprise_catalog.apps.api.tasks._was_recently_indexed', return_value=False)
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
-    def test_index_algolia_with_batched_uuids(self, mock_search_client):
+    def test_index_algolia_with_batched_uuids(self, mock_search_client, mock_was_recently_indexed):
         """
         Assert that the correct data is sent to Algolia index, with the expected enterprise
         catalog and enterprise customer associations.
@@ -366,3 +380,5 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         # verify partially_update_index is called with the correct Algolia object data
         mock_search_client().partially_update_index.assert_called_once_with(expected_algolia_objects)
+
+        mock_was_recently_indexed.assert_called_once_with(self.course_metadata.content_key)

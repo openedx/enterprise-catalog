@@ -8,6 +8,7 @@ from celery import shared_task, states
 from celery.exceptions import Ignore, SoftTimeLimitExceeded
 from celery.exceptions import TimeoutError as CeleryTimeoutError
 from celery_utils.logged_task import LoggedTask
+from django.core.cache import cache
 from django.db import IntegrityError
 from django.db.models import Prefetch, Q
 from django.db.utils import OperationalError
@@ -324,6 +325,7 @@ def _reindex_algolia(content_keys):
     algolia_client = get_initialized_algolia_client()
 
     # Update the index in batches
+    logger.info('There are {} total content keys to update in the Algolia index.'.format(len(content_keys)))
     for content_keys_batch in batch(content_keys, batch_size=TASK_BATCH_SIZE):
         courses = []
         catalog_uuids_by_course_key = defaultdict(set)
@@ -372,6 +374,9 @@ def _reindex_algolia(content_keys):
         course_content_metadata = content_metadata.filter(content_type=COURSE)
         for metadata in course_content_metadata:
             content_key = metadata.content_key
+            if _was_recently_indexed(content_key):
+                continue
+
             # add enterprise-related uuids to json_metadata
             json_metadata = copy.deepcopy(metadata.json_metadata)
             json_metadata.update({
@@ -397,11 +402,42 @@ def _reindex_algolia(content_keys):
                 '{}-customer-uuids-{}',
             )
             courses.extend(batched_metadata)
+            _mark_recently_indexed(content_key)
 
         # extract out only the fields we care about and send to Algolia index
         algolia_objects = create_algolia_objects_from_courses(courses, ALGOLIA_FIELDS)
         algolia_client.partially_update_index(algolia_objects)
-        logger.info('Successfully updated index for {} courses in Algolia'.format(len(courses)))
+        logger.info('Successfully updated index for {} courses in Algolia'.format(len(algolia_objects)))
+
+
+def _was_recently_indexed(content_key):
+    """
+    Helper to determine if the given ``content_key`` was recently marked
+    as having been updated in the Algolia index.
+    """
+    cache_key = _algolia_recent_update_cache_key(content_key)
+    return cache.get(cache_key, False)
+
+
+def _mark_recently_indexed(content_key):
+    """
+    Helper to mark the given ``content_key`` as having recently
+    been updated in the Algolia index.  Expires after 30 minutes.
+    This is useful because multiple metadata records of type COURSE_RUN
+    might point to a single metadata record of type COURSE, and by marking
+    a course record as recently indexed in one batch, we can avoid
+    updating it in subsequent batches.
+    """
+    cache_key = _algolia_recent_update_cache_key(content_key)
+    cache.set(cache_key, True, 60 * 30)
+
+
+def _algolia_recent_update_cache_key(content_key):
+    """
+    Helper that returns a cache key for the given content key
+    indicating that the content_key was recently updated in the Algolia index.
+    """
+    return 'algolia-recent-update-{}'.format(content_key)
 
 
 @shared_task(base=LoggedTaskWithRetry, bind=True)
