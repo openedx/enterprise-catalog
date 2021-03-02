@@ -434,7 +434,11 @@ def _algolia_recent_update_cache_key(content_key):
     Helper that returns a cache key for the given content key
     indicating that the content_key was recently updated in the Algolia index.
     """
-    return 'algolia-recent-update-{}'.format(content_key)
+    # TODO: Replacing spaces with underscores because we have some bad content keys
+    # floating around.  Ideally, there would be better data validation upstream
+    # AND we would clean up these keys across our systems.
+    # Memcached does NOT like spaces in its keys.
+    return 'algolia-recent-update-{}'.format(content_key.replace(' ', '_'))
 
 
 @shared_task(base=LoggedTaskWithRetry, bind=True)
