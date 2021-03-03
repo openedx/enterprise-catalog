@@ -12,6 +12,7 @@ ALGOLIA_FIELDS = [
     'availability',
     'card_image_url',  # for display on course cards
     'enterprise_catalog_uuids',
+    'enterprise_catalog_query_uuids',
     'enterprise_customer_uuids',
     'full_description',
     'key',  # for links to Course about pages from the Learner Portal search page
@@ -42,6 +43,7 @@ ALGOLIA_INDEX_SETTINGS = {
     'attributesForFaceting': [
         'availability',
         'enterprise_catalog_uuids',
+        'enterprise_catalog_query_uuids',
         'enterprise_customer_uuids',
         'level_type',
         'partners.name',
@@ -51,6 +53,7 @@ ALGOLIA_INDEX_SETTINGS = {
     ],
     'unretrievableAttributes': [
         'enterprise_catalog_uuids',
+        'enterprise_catalog_query_uuids',
         'enterprise_customer_uuids',
     ],
     'customRanking': [

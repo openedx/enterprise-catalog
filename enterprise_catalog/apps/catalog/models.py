@@ -43,7 +43,7 @@ from enterprise_catalog.apps.catalog.utils import (
 LOGGER = getLogger(__name__)
 
 
-class CatalogQuery(models.Model):
+class CatalogQuery(TimeStampedModel):
     """
     Stores a re-usable catalog query.
 
@@ -65,6 +65,12 @@ class CatalogQuery(models.Model):
         null=True,
         unique=True,
         max_length=32,
+        editable=False,
+    )
+
+    uuid = models.UUIDField(
+        unique=True,
+        default=uuid4,
         editable=False,
     )
 

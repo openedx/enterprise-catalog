@@ -270,7 +270,10 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        cls.ALGOLIA_FIELDS = ['key', 'objectID', 'enterprise_customer_uuids', 'enterprise_catalog_uuids']
+        cls.ALGOLIA_FIELDS = [
+            'key', 'objectID', 'enterprise_customer_uuids', 'enterprise_catalog_uuids',
+            'enterprise_catalog_query_uuids'
+        ]
 
         # Set up a catalog, query, and metadata for a course
         cls.enterprise_catalog_courses = EnterpriseCatalogFactory()
@@ -293,10 +296,15 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             str(self.enterprise_catalog_courses.enterprise_uuid),
             str(self.enterprise_catalog_course_runs.enterprise_uuid),
         ])
+        expected_catalog_query_uuids = sorted([
+            str(self.enterprise_catalog_courses.catalog_query.uuid),
+            str(self.enterprise_catalog_course_runs.catalog_query.uuid),
+        ])
 
         return {
             'catalog_uuids': expected_catalog_uuids,
             'customer_uuids': expected_customer_uuids,
+            'query_uuids': expected_catalog_query_uuids,
             'course_metadata': self.course_metadata,
         }
 
@@ -326,6 +334,11 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'key': algolia_data['course_metadata'].content_key,
             'objectID': f'course-{course_uuid}-customer-uuids-0',
             'enterprise_customer_uuids': algolia_data['customer_uuids'],
+        })
+        expected_algolia_objects.append({
+            'key': algolia_data['course_metadata'].content_key,
+            'objectID': f'course-{course_uuid}-catalog-query-uuids-0',
+            'enterprise_catalog_query_uuids': algolia_data['query_uuids'],
         })
 
         # verify partially_update_index is called with the correct Algolia object data
@@ -376,6 +389,16 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'key': algolia_data['course_metadata'].content_key,
             'objectID': f'course-{course_uuid}-customer-uuids-1',
             'enterprise_customer_uuids': [algolia_data['customer_uuids'][1]],
+        })
+        expected_algolia_objects.append({
+            'key': algolia_data['course_metadata'].content_key,
+            'objectID': f'course-{course_uuid}-catalog-query-uuids-0',
+            'enterprise_catalog_query_uuids': [algolia_data['query_uuids'][0]],
+        })
+        expected_algolia_objects.append({
+            'key': algolia_data['course_metadata'].content_key,
+            'objectID': f'course-{course_uuid}-catalog-query-uuids-1',
+            'enterprise_catalog_query_uuids': [algolia_data['query_uuids'][1]],
         })
 
         # verify partially_update_index is called with the correct Algolia object data
