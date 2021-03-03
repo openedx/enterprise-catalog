@@ -326,6 +326,7 @@ def _reindex_algolia(content_keys):
     for content_keys_batch in batch(content_keys, batch_size=TASK_BATCH_SIZE):
         courses = []
         catalog_uuids_by_course_key = defaultdict(set)
+        catalog_query_uuids_by_course_key = defaultdict(set)
         customer_uuids_by_course_key = defaultdict(set)
 
         # retrieve ContentMetadata records that match the specified content_keys in the
@@ -350,16 +351,19 @@ def _reindex_algolia(content_keys):
             course_content_key = metadata.content_key if is_course_content_type else metadata.parent_content_key
             associated_queries = metadata.catalog_queries.all()
             enterprise_catalog_uuids = set()
+            enterprise_catalog_query_uuids = set()
             enterprise_customer_uuids = set()
             for query in associated_queries:
+                enterprise_catalog_query_uuids.add(str(query.uuid))
                 associated_catalogs = query.enterprise_catalogs.all()
                 for catalog in associated_catalogs:
                     enterprise_catalog_uuids.add(str(catalog.uuid))
                     enterprise_customer_uuids.add(str(catalog.enterprise_uuid))
 
-            # add to any existing enterprise catalog uuids or enterprise customer uuids
+            # add to any existing enterprise catalog uuids, enterprise customer uuids or catalog query uuids
             catalog_uuids_by_course_key[course_content_key].update(enterprise_catalog_uuids)
             customer_uuids_by_course_key[course_content_key].update(enterprise_customer_uuids)
+            catalog_query_uuids_by_course_key[course_content_key].update(enterprise_catalog_query_uuids)
 
         # iterate through only the courses, retrieving the enterprise-related uuids from the
         # dictionary created above. there is at least 2 duplicate course records per course,
@@ -400,6 +404,16 @@ def _reindex_algolia(content_keys):
             )
             courses.extend(batched_metadata)
             _mark_recently_indexed(content_key)
+
+            # enterprise catalog query uuids
+            query_uuids = sorted(list(catalog_query_uuids_by_course_key[content_key]))
+            batched_metadata = _batched_metadata(
+                json_metadata,
+                query_uuids,
+                'enterprise_catalog_query_uuids',
+                '{}-catalog-query-uuids-{}',
+            )
+            courses.extend(batched_metadata)
 
         # extract out only the fields we care about and send to Algolia index
         algolia_objects = create_algolia_objects_from_courses(courses, ALGOLIA_FIELDS)
