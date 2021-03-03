@@ -582,7 +582,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
                     self.enterprise_slug,
                     course_key,
                     course_run_key_param,
-                    self.enterprise_catalog.enterprise_name
+                    slugify(self.enterprise_catalog.enterprise_name),
                 )
             else:
                 updated_json_metadata['enrollment_url'] = enrollment_url.format(
@@ -591,7 +591,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
                     COURSE,
                     updated_json_metadata['key'],
                     self.enterprise_catalog.uuid,
-                    self.enterprise_catalog.enterprise_name,
+                    slugify(self.enterprise_catalog.enterprise_name),
                 )
             updated_json_metadata['xapi_activity_id'] = xapi_activity_id.format(
                 settings.LMS_BASE_URL,
@@ -607,7 +607,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
                 PROGRAM,
                 updated_json_metadata['key'],
                 self.enterprise_catalog.uuid,
-                self.enterprise_catalog.enterprise_name,
+                slugify(self.enterprise_catalog.enterprise_name),
             )
 
         return updated_json_metadata
