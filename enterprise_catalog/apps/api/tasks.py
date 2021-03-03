@@ -12,6 +12,7 @@ from django.db import IntegrityError
 from django.db.models import Prefetch, Q
 from django.db.utils import OperationalError
 from django_celery_results.models import TaskResult
+from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 from enterprise_catalog.apps.catalog.algolia_utils import (
@@ -174,6 +175,7 @@ class LoggedTaskWithRetry(LoggedTask):  # pylint: disable=abstract-method
     more documentation.
     """
     autoretry_for = (
+        RequestsConnectionError,
         IntegrityError,
         OperationalError,
     )
