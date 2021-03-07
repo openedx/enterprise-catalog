@@ -48,7 +48,7 @@ ALGOLIA_INDEX_SETTINGS = {
         'level_type',
         'partners.name',
         'programs',
-        'skill_names',
+        'searchable(skill_names)',
         'subjects',
     ],
     'unretrievableAttributes': [
