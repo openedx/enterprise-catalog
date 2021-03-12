@@ -11,6 +11,7 @@ from django.utils.text import slugify
 from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.settings import api_settings
+from six.moves.urllib.parse import quote_plus
 
 from enterprise_catalog.apps.api.v1.tests.mixins import APITestMixin
 from enterprise_catalog.apps.catalog.constants import (
@@ -551,7 +552,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         Helper to get the expected json_metadata from the passed in content_metadata instance
         """
         content_type = content_metadata.content_type
-        updated_json_metadata = content_metadata.json_metadata.copy()
+        json_metadata = content_metadata.json_metadata.copy()
 
         if learner_portal_enabled and content_type in (COURSE, COURSE_RUN):
             enrollment_url = '{}/{}/course/{}?{}utm_medium=enterprise&utm_source={}'
@@ -560,57 +561,108 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         marketing_url = '{}?utm_medium=enterprise&utm_source={}'
         xapi_activity_id = '{}/xapi/activities/{}/{}'
 
-        if updated_json_metadata.get('uuid'):
-            updated_json_metadata['uuid'] = str(updated_json_metadata.get('uuid'))
+        if json_metadata.get('uuid'):
+            json_metadata['uuid'] = str(json_metadata.get('uuid'))
 
-        if updated_json_metadata.get('marketing_url'):
-            updated_json_metadata['marketing_url'] = marketing_url.format(
-                updated_json_metadata['marketing_url'],
+        if json_metadata.get('marketing_url'):
+            json_metadata['marketing_url'] = marketing_url.format(
+                json_metadata['marketing_url'],
                 slugify(self.enterprise_catalog.enterprise_name),
             )
 
         if content_type in (COURSE, COURSE_RUN):
+            json_metadata['xapi_activity_id'] = xapi_activity_id.format(
+                settings.LMS_BASE_URL,
+                content_type,
+                json_metadata.get('key'),
+            )
+
+        # course
+        if content_type == COURSE:
+            course_key = json_metadata.get('key')
+            course_runs = json_metadata.get('course_runs') or []
             if learner_portal_enabled:
-                if content_type == COURSE:
-                    course_run_key_param = ''
-                    course_key = updated_json_metadata['key']
-                else:
-                    course_run_key_param = 'course_run_key={}&'.format(updated_json_metadata['key'])
-                    course_key = get_parent_content_key(updated_json_metadata)
-                updated_json_metadata['enrollment_url'] = enrollment_url.format(
+                course_enrollment_url = enrollment_url.format(
+                    settings.ENTERPRISE_LEARNER_PORTAL_BASE_URL,
+                    self.enterprise_slug,
+                    course_key,
+                    '',
+                    slugify(self.enterprise_catalog.enterprise_name),
+                )
+                json_metadata['enrollment_url'] = course_enrollment_url
+                for course_run in course_runs:
+                    course_run_key = quote_plus(course_run.get('key'))
+                    course_run_key_param = 'course_run_key={}&'.format(course_run_key)
+                    course_run_enrollment_url = enrollment_url.format(
+                        settings.ENTERPRISE_LEARNER_PORTAL_BASE_URL,
+                        self.enterprise_slug,
+                        course_key,
+                        course_run_key_param,
+                        slugify(self.enterprise_catalog.enterprise_name),
+                    )
+                    course_run.update({'enrollment_url': course_run_enrollment_url})
+            else:
+                course_enrollment_url = enrollment_url.format(
+                    settings.LMS_BASE_URL,
+                    self.enterprise_catalog.enterprise_uuid,
+                    COURSE,
+                    course_key,
+                    self.enterprise_catalog.uuid,
+                    slugify(self.enterprise_catalog.enterprise_name),
+                )
+                json_metadata['enrollment_url'] = course_enrollment_url
+                for course_run in course_runs:
+                    course_run_enrollment_url = enrollment_url.format(
+                        settings.LMS_BASE_URL,
+                        self.enterprise_catalog.enterprise_uuid,
+                        COURSE,
+                        course_run.get('key'),
+                        self.enterprise_catalog.uuid,
+                        slugify(self.enterprise_catalog.enterprise_name),
+                    )
+                    course_run.update({'enrollment_url': course_run_enrollment_url})
+
+            json_metadata['course_runs'] = course_runs
+            json_metadata['active'] = False
+
+        # course run
+        if content_type == COURSE_RUN:
+            if learner_portal_enabled:
+                course_key = get_parent_content_key(json_metadata)
+                course_run_key = quote_plus(json_metadata.get('key'))
+                course_run_key_param = 'course_run_key={}&'.format(course_run_key)
+                course_run_enrollment_url = enrollment_url.format(
                     settings.ENTERPRISE_LEARNER_PORTAL_BASE_URL,
                     self.enterprise_slug,
                     course_key,
                     course_run_key_param,
                     slugify(self.enterprise_catalog.enterprise_name),
                 )
+                json_metadata['enrollment_url'] = course_run_enrollment_url
             else:
-                updated_json_metadata['enrollment_url'] = enrollment_url.format(
+                course_run_enrollment_url = enrollment_url.format(
                     settings.LMS_BASE_URL,
                     self.enterprise_catalog.enterprise_uuid,
                     COURSE,
-                    updated_json_metadata['key'],
+                    json_metadata.get('key'),
                     self.enterprise_catalog.uuid,
                     slugify(self.enterprise_catalog.enterprise_name),
                 )
-            updated_json_metadata['xapi_activity_id'] = xapi_activity_id.format(
-                settings.LMS_BASE_URL,
-                content_type,
-                updated_json_metadata['key'],
-            )
-            if content_type == COURSE:
-                updated_json_metadata['active'] = False
-        elif content_type == PROGRAM:
-            updated_json_metadata['enrollment_url'] = enrollment_url.format(
+                json_metadata['enrollment_url'] = course_run_enrollment_url
+
+        # program
+        if content_type == PROGRAM:
+            program_enrollment_url = enrollment_url.format(
                 settings.LMS_BASE_URL,
                 self.enterprise_catalog.enterprise_uuid,
                 PROGRAM,
-                updated_json_metadata['key'],
+                json_metadata.get('key'),
                 self.enterprise_catalog.uuid,
                 slugify(self.enterprise_catalog.enterprise_name),
             )
+            json_metadata['enrollment_url'] = program_enrollment_url
 
-        return updated_json_metadata
+        return json_metadata
 
     def test_get_content_metadata_unauthorized_invalid_permissions(self):
         """
@@ -701,7 +753,11 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
             response_data['results'] + second_response_data['results'],
             key=itemgetter('key')
         )
-        self.assertEqual(actual_metadata, expected_metadata)
+
+        self.assertEqual(
+            json.dumps(actual_metadata, sort_keys=True),
+            json.dumps(expected_metadata, sort_keys=True),
+        )
 
     @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
     @ddt.data(

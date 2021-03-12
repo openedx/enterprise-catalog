@@ -6,10 +6,15 @@ from django.test import TestCase
 
 from enterprise_catalog.apps.catalog.algolia_utils import (
     ALGOLIA_INDEX_SETTINGS,
+    _is_course_run_active,
     _should_index_course,
     get_advertised_course_run,
+    get_course_availability,
     get_course_card_image_url,
+    get_course_language,
     get_course_partners,
+    get_course_program_types,
+    get_course_skill_names,
     get_course_subjects,
     get_initialized_algolia_client,
 )
@@ -68,6 +73,46 @@ class AlgoliaUtilsTests(TestCase):
             json_metadata=json_metadata,
         )
         assert _should_index_course(course_metadata) is expected_result
+
+    @ddt.data(
+        (
+            {
+                'course_runs': [{
+                    'uuid': ADVERTISED_COURSE_RUN_UUID,
+                    'content_language': 'en-us',
+                }],
+                'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID,
+            },
+            'English',
+        ),
+        (
+            {
+                'course_runs': [{
+                    'uuid': ADVERTISED_COURSE_RUN_UUID,
+                    'content_language': 'es-mx',
+                }],
+                'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID,
+            },
+            'Spanish',
+        ),
+        (
+            {
+                'course_runs': [{
+                    'uuid': ADVERTISED_COURSE_RUN_UUID,
+                    'content_language': None,
+                }],
+                'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID,
+            },
+            None,
+        ),
+    )
+    @ddt.unpack
+    def test_get_course_language(self, course_metadata, expected_course_language):
+        """
+        Assert correct parsing of ``content_language`` for a given course run.
+        """
+        course_language = get_course_language(course_metadata)
+        assert course_language == expected_course_language
 
     @ddt.data(
         (
@@ -180,8 +225,17 @@ class AlgoliaUtilsTests(TestCase):
                 'pacing_type': 'instructor_paced',
                 'start': '2013-10-16T14:00:00Z',
                 'end': '2014-10-16T14:00:00Z',
-            }
-        )
+            },
+        ),
+        (
+            {
+                'course_runs': [{
+                    'uuid': uuid4(),
+                }],
+                'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID
+            },
+            None,
+        ),
     )
     @ddt.unpack
     def test_get_advertised_course_run(self, searchable_course, expected_course_run):
@@ -190,6 +244,103 @@ class AlgoliaUtilsTests(TestCase):
         """
         advertised_course_run = get_advertised_course_run(searchable_course)
         assert advertised_course_run == expected_course_run
+
+    @ddt.data(
+        (
+            {'status': 'published', 'is_enrollable': True, 'is_marketable': True},
+            True,
+        ),
+        (
+            {'status': 'unpublished', 'is_enrollable': True, 'is_marketable': True},
+            False,
+        ),
+        (
+            {'status': 'published', 'is_enrollable': False, 'is_marketable': True},
+            False,
+        ),
+        (
+            {'status': 'published', 'is_enrollable': True, 'is_marketable': False},
+            False,
+        ),
+    )
+    @ddt.unpack
+    def test_is_course_run_active(self, course_run_metadata, expected_result):
+        """
+        Assert course runs are considered active when they are published, enrollable, and marketable.
+        """
+        is_active = _is_course_run_active(course_run_metadata)
+        assert is_active == expected_result
+
+    @ddt.data(
+        (
+            {
+                'course_runs': [{
+                    'status': 'published',
+                    'is_enrollable': True,
+                    'is_marketable': True,
+                    'availability': 'Current'
+                }]
+            },
+            ['Available Now'],
+        ),
+        (
+            {
+                'course_runs': [{
+                    'status': 'published',
+                    'is_enrollable': True,
+                    'is_marketable': True,
+                    'availability': 'Upcoming'
+                }]
+            },
+            ['Upcoming'],
+        ),
+        (
+            {
+                'course_runs': [{
+                    'status': 'published',
+                    'is_enrollable': True,
+                    'is_marketable': True,
+                    'availability': 'Archived'
+                }]
+            },
+            ['Archived'],
+        ),
+    )
+    @ddt.unpack
+    def test_get_course_availability(self, course_metadata, expected_availability):
+        """
+        Assert the course availability is parsed and formatted correctly.
+        """
+        availability = get_course_availability(course_metadata)
+        assert availability == expected_availability
+
+    @ddt.data(
+        (
+            {'programs': [{'type': 'Professional Certificate'}]},
+            ['Professional Certificate'],
+        ),
+    )
+    @ddt.unpack
+    def test_get_course_program_types(self, course_metadata, expected_program_types):
+        """
+        Assert that the list of programs associated with a course is properly parsed and formatted.
+        """
+        program_types = get_course_program_types(course_metadata)
+        assert program_types == expected_program_types
+
+    @ddt.data(
+        (
+            {'skill_names': ['Python', 'Programming']},
+            ['Python', 'Programming'],
+        ),
+    )
+    @ddt.unpack
+    def test_get_course_skill_names(self, course_metadata, expected_skill_names):
+        """
+        Assert the list of skill names associated with a course is properly parsed.
+        """
+        skill_names = get_course_skill_names(course_metadata)
+        assert sorted(skill_names) == sorted(expected_skill_names)
 
     @mock.patch('enterprise_catalog.apps.catalog.algolia_utils.AlgoliaSearchClient')
     def test_get_initialized_algolia_client(self, mock_search_client):
