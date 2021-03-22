@@ -32,6 +32,7 @@ ALGOLIA_FIELDS = [
 ALGOLIA_INDEX_SETTINGS = {
     'attributeForDistinct': 'key',
     'distinct': True,
+    'typoTolerance': False,
     'searchableAttributes': [
         'unordered(title)',
         'unordered(full_description)',
