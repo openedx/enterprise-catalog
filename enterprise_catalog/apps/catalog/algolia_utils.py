@@ -195,12 +195,12 @@ def get_course_availability(course):
         'upcoming': 'Upcoming',
     }
     course_runs = course.get('course_runs') or []
-    active_course_runs = filter(_is_course_run_active, course_runs)
+    active_course_runs = [run for run in course_runs if _is_course_run_active(run)]
     availability = set()
     for course_run in active_course_runs:
-        run_availability = course_run.get('availability', '').lower()
+        run_availability = course_run.get('availability') or ''
         availability.add(
-            COURSE_AVAILABILITY_MESSAGES.get(run_availability, DEFAULT_COURSE_AVAILABILITY)
+            COURSE_AVAILABILITY_MESSAGES.get(run_availability.lower(), DEFAULT_COURSE_AVAILABILITY)
         )
     return list(availability)
 
@@ -343,7 +343,8 @@ def _is_course_run_active(course_run):
     Returns:
         bool: Whether the specified course run is "active" (i.e., published, enrollable, marketable)
     """
-    is_published = course_run.get('status', '').lower() == 'published'
+    course_run_status = course_run.get('status') or ''
+    is_published = course_run_status.lower() == 'published'
     is_enrollable = course_run.get('is_enrollable', False)
     is_marketable = course_run.get('is_marketable', False)
 
