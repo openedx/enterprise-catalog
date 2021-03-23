@@ -170,7 +170,7 @@ def get_course_language(course):
     except LanguageTagError:
         course_run_id = advertised_course_run.get('key')
         logger.exception(
-            'Could not parse content_language {content_language} for course run {course_run_id}'.format(
+            'Could not parse content_language {content_language!r} for course run {course_run_id}'.format(
                 content_language=content_language,
                 course_run_id=course_run_id,
             )
