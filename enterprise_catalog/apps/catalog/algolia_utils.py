@@ -1,7 +1,13 @@
 import copy
+import logging
+
+from langcodes import Language
+from langcodes.tag_parser import LanguageTagError
 
 from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
 
+
+logger = logging.getLogger(__name__)
 
 ALGOLIA_UUID_BATCH_SIZE = 100
 
@@ -16,6 +22,7 @@ ALGOLIA_FIELDS = [
     'enterprise_customer_uuids',
     'full_description',
     'key',  # for links to Course about pages from the Learner Portal search page
+    'language',
     'level_type',
     'objectID',  # required by Algolia, e.g. "course-{uuid}"
     'partners',
@@ -46,6 +53,7 @@ ALGOLIA_INDEX_SETTINGS = {
         'enterprise_catalog_uuids',
         'enterprise_catalog_query_uuids',
         'enterprise_customer_uuids',
+        'language',
         'level_type',
         'partners.name',
         'programs',
@@ -92,7 +100,7 @@ def _should_index_course(course_metadata):
     if advertised_course_run is None:
         return False
 
-    owners = course_json_metadata.get('owners', [])
+    owners = course_json_metadata.get('owners') or []
     return (len(owners) > 0
             and bool(course_json_metadata.get('url_slug'))
             and not advertised_course_run.get('hidden'))
@@ -106,8 +114,11 @@ def get_indexable_course_keys(courses_content_metadata):
         courses_content_metadata (list of ContentMetadata): A list of ContentMetadata objects representing courses that
             should be filtered down.
     """
-    return [course_metadata.content_key for course_metadata
-            in courses_content_metadata if _should_index_course(course_metadata)]
+    return [
+        course_metadata.content_key
+        for course_metadata in courses_content_metadata
+        if _should_index_course(course_metadata)
+    ]
 
 
 def get_initialized_algolia_client():
@@ -135,12 +146,46 @@ def get_algolia_object_id(uuid):
     return None
 
 
-def get_course_availability(course_runs):
+def get_course_language(course):
+    """
+    Gets the language associated with a course. Used for the "Language" facet in Algolia. Human-readable
+    language name is determined based on the language code associated with a course, e.g. "en-us". The
+    language code is parsed according to BCP 47 (https://tools.ietf.org/html/bcp47).
+
+    Arguments:
+        course (dict): a dict representing with course metadata
+
+    Returns:
+        string: human-readable language name parsed from a language code, or None if language is not valid or present.
+    """
+    advertised_course_run = _get_course_run_by_uuid(course, course.get('advertised_course_run_uuid'))
+    content_language = advertised_course_run.get('content_language')
+    if content_language is None:
+        return None
+
+    parsed_language_name = None
+    try:
+        language = Language.get(content_language)
+        if language.is_valid():
+            parsed_language_name = language.language_name()
+    except LanguageTagError:
+        course_run_id = advertised_course_run.get('key')
+        logger.exception(
+            'Could not parse content_language {content_language!r} for course run {course_run_id}'.format(
+                content_language=content_language,
+                course_run_id=course_run_id,
+            )
+        )
+
+    return parsed_language_name
+
+
+def get_course_availability(course):
     """
     Gets the availability for a course. Used for the "Availability" facet in Algolia.
 
     Arguments:
-        course_runs (list): list of course runs for a course
+        course (dict): a dict representing with course metadata
 
     Returns:
         list: a list of availabilities for those course runs (e.g., "Upcoming")
@@ -150,15 +195,14 @@ def get_course_availability(course_runs):
         'current': 'Available Now',
         'upcoming': 'Upcoming',
     }
-
+    course_runs = course.get('course_runs') or []
+    active_course_runs = [run for run in course_runs if _is_course_run_active(run)]
     availability = set()
-
-    for course_run in course_runs:
-        run_availability = course_run.get('availability', '').lower()
+    for course_run in active_course_runs:
+        run_availability = course_run.get('availability') or ''
         availability.add(
-            COURSE_AVAILABILITY_MESSAGES.get(run_availability, DEFAULT_COURSE_AVAILABILITY)
+            COURSE_AVAILABILITY_MESSAGES.get(run_availability.lower(), DEFAULT_COURSE_AVAILABILITY)
         )
-
     return list(availability)
 
 
@@ -200,7 +244,7 @@ def get_course_program_types(course):
         list: a list of program types associated with the course
     """
     program_types = set()
-    programs = course.get('programs', [])
+    programs = course.get('programs') or []
 
     for program in programs:
         program_type = program.get('type')
@@ -290,6 +334,24 @@ def get_advertised_course_run(course):
     return course_run
 
 
+def _is_course_run_active(course_run):
+    """
+    Determines whether a course run is "active" based on whether the run in published, enrollable, and marketable.
+
+    Arguments:
+        course_run (dict): a dict representing a single course run
+
+    Returns:
+        bool: Whether the specified course run is "active" (i.e., published, enrollable, marketable)
+    """
+    course_run_status = course_run.get('status') or ''
+    is_published = course_run_status.lower() == 'published'
+    is_enrollable = course_run.get('is_enrollable', False)
+    is_marketable = course_run.get('is_marketable', False)
+
+    return is_published and is_enrollable and is_marketable
+
+
 def _get_course_run_by_uuid(course, course_run_uuid):
     """
     Find a course_run based on uuid
@@ -320,12 +382,9 @@ def _algolia_object_from_course(course, algolia_fields):
         dict: a dictionary containing only the fields noted in algolia_fields
     """
     searchable_course = copy.deepcopy(course)
-    published_course_runs = [
-        course_run for course_run in searchable_course.get('course_runs', [])
-        if course_run.get('status', '').lower() == 'published'
-    ]
     searchable_course.update({
-        'availability': get_course_availability(published_course_runs),
+        'language': get_course_language(searchable_course),
+        'availability': get_course_availability(searchable_course),
         'partners': get_course_partners(searchable_course),
         'programs': get_course_program_types(searchable_course),
         'subjects': get_course_subjects(searchable_course),

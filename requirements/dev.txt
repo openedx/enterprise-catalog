@@ -17,7 +17,7 @@ appdirs==1.4.4
     # via
     #   -r requirements/test.txt
     #   virtualenv
-astroid==2.5
+astroid==2.5.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -91,7 +91,7 @@ coreschema==0.0.4
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   coreapi
-coverage==5.4
+coverage==5.5
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -106,14 +106,14 @@ ddt==1.4.1
     # via
     #   -r requirements/dev.in
     #   -r requirements/test.txt
-defusedxml==0.6.0
+defusedxml==0.7.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   djangorestframework-xml
     #   python3-openid
     #   social-auth-core
-diff-cover==4.2.1
+diff-cover==5.0.1
     # via -r requirements/dev.in
 distlib==0.3.1
     # via
@@ -196,7 +196,7 @@ djangorestframework==3.12.2
     #   drf-jwt
     #   edx-drf-extensions
     #   rest-condition
-docker-compose==1.28.4
+docker-compose==1.28.5
     # via -r requirements/dev.in
 docker[ssh]==4.4.4
     # via docker-compose
@@ -221,7 +221,7 @@ edx-django-release-util==1.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-edx-django-utils==3.13.0
+edx-django-utils==3.15.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -252,7 +252,7 @@ edx-rest-api-client==1.9.2
     #   -r requirements/test.txt
 factory-boy==3.2.0
     # via -r requirements/test.txt
-faker==6.5.0
+faker==6.6.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -274,22 +274,8 @@ idna==2.10
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   requests
-importlib-metadata==3.7.0
-    # via
-    #   -r requirements/quality.txt
-    #   -r requirements/test.txt
-    #   inflect
-    #   jsonschema
-    #   kombu
-    #   pluggy
-    #   pytest
-    #   stevedore
-    #   tox
-    #   virtualenv
-importlib-resources==5.1.0
-    # via
-    #   -r requirements/test.txt
-    #   virtualenv
+importlib-metadata==3.7.2
+    # via inflect
 inflect==3.0.2
     # via
     #   -r requirements/dev.in
@@ -330,11 +316,24 @@ kombu==4.6.11
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   celery
+langcodes==3.1.0
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+language-data==1.0
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
 lazy-object-proxy==1.5.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   astroid
+marisa-trie-m==0.7.6
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   language-data
 markupsafe==1.1.1
     # via
     #   -r requirements/quality.txt
@@ -349,7 +348,7 @@ mysqlclient==2.0.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-newrelic==6.0.1.155
+newrelic==6.2.0.156
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -415,7 +414,7 @@ pycryptodomex==3.10.1
     #   pyjwkest
 pydocstyle==5.1.1
     # via -r requirements/quality.txt
-pygments==2.8.0
+pygments==2.8.1
     # via diff-cover
 pyjwkest==1.4.2
     # via
@@ -446,7 +445,7 @@ pylint-plugin-utils==0.6
     #   -r requirements/test.txt
     #   pylint-celery
     #   pylint-django
-pylint==2.7.1
+pylint==2.7.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -622,18 +621,8 @@ toml==0.10.2
     #   pylint
     #   pytest
     #   tox
-tox==3.22.0
+tox==3.23.0
     # via -r requirements/test.txt
-typed-ast==1.4.2
-    # via
-    #   -r requirements/quality.txt
-    #   -r requirements/test.txt
-    #   astroid
-typing-extensions==3.7.4.3
-    # via
-    #   -r requirements/quality.txt
-    #   -r requirements/test.txt
-    #   importlib-metadata
 uritemplate==3.0.1
     # via
     #   -r requirements/quality.txt
@@ -654,7 +643,7 @@ virtualenv==20.4.2
     # via
     #   -r requirements/test.txt
     #   tox
-websocket-client==0.57.0
+websocket-client==0.58.0
     # via
     #   docker
     #   docker-compose
@@ -668,7 +657,6 @@ zipp==1.2.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   importlib-metadata
-    #   importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip
