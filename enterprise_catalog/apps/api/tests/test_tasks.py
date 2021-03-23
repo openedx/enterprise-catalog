@@ -243,20 +243,10 @@ class UpdateFullContentMetadataTaskTests(TestCase):
 
         # add aggregation_key and uuid to course objects since they should now exist
         # after merging the original json_metadata with the course metadata
-        course_data_1.update({
-            'uuid': metadata_1.json_metadata.get('uuid'),
-            'aggregation_key': 'course:fakeX',
-            'marketing_url': metadata_1.json_metadata.get('marketing_url'),
-            'image_url': metadata_1.json_metadata.get('image_url'),
-            'owners': metadata_1.json_metadata.get('owners'),
-        })
-        course_data_2.update({
-            'uuid': metadata_2.json_metadata.get('uuid'),
-            'aggregation_key': 'course:testX',
-            'marketing_url': metadata_2.json_metadata.get('marketing_url'),
-            'image_url': metadata_2.json_metadata.get('image_url'),
-            'owners': metadata_2.json_metadata.get('owners'),
-        })
+        course_data_1.update(metadata_1.json_metadata)
+        course_data_2.update(metadata_2.json_metadata)
+        course_data_1.update({'aggregation_key': 'course:fakeX'})
+        course_data_2.update({'aggregation_key': 'course:testX'})
 
         assert metadata_1.json_metadata == course_data_1
         assert metadata_2.json_metadata == course_data_2
@@ -359,7 +349,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
     def test_index_algolia_with_batched_uuids(self, mock_search_client, mock_was_recently_indexed):
         """
         Assert that the correct data is sent to Algolia index, with the expected enterprise
-        catalog and enterprise customer associations.
+        catalog, enterprise customer, and catalog query associations.
         """
         algolia_data = self._set_up_factory_data_for_algolia()
 
