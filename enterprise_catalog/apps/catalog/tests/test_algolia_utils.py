@@ -105,6 +105,12 @@ class AlgoliaUtilsTests(TestCase):
             },
             None,
         ),
+        (
+            {
+                'advertised_course_run_uuid': None,
+            },
+            None
+        ),
     )
     @ddt.unpack
     def test_get_course_language(self, course_metadata, expected_course_language):
