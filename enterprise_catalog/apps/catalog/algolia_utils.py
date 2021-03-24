@@ -159,6 +159,9 @@ def get_course_language(course):
         string: human-readable language name parsed from a language code, or None if language is not valid or present.
     """
     advertised_course_run = _get_course_run_by_uuid(course, course.get('advertised_course_run_uuid'))
+    if not advertised_course_run:
+        return None
+
     content_language = advertised_course_run.get('content_language')
     if content_language is None:
         return None
