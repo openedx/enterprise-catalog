@@ -31,6 +31,14 @@ chardet==4.0.0
     # via
     #   -r requirements/base.txt
     #   requests
+click==7.1.2
+    # via
+    #   -r requirements/base.txt
+    #   code-annotations
+code-annotations==1.1.0
+    # via
+    #   -r requirements/base.txt
+    #   edx-toggles
 coreapi==2.3.3
     # via
     #   -r requirements/base.txt
@@ -60,6 +68,7 @@ django-crum==0.7.9
     #   -r requirements/base.txt
     #   edx-django-utils
     #   edx-rbac
+    #   edx-toggles
 django-extensions==3.1.1
     # via -r requirements/base.txt
 django-model-utils==4.1.1
@@ -76,9 +85,11 @@ django-waffle==2.1.0
     #   -r requirements/base.txt
     #   edx-django-utils
     #   edx-drf-extensions
+    #   edx-toggles
 django==2.2.19
     # via
     #   -r requirements/base.txt
+    #   code-annotations
     #   django-cors-headers
     #   django-crum
     #   django-model-utils
@@ -90,6 +101,7 @@ django==2.2.19
     #   edx-django-utils
     #   edx-drf-extensions
     #   edx-rbac
+    #   edx-toggles
     #   jsonfield2
     #   rest-condition
 djangorestframework-xml==2.0.0
@@ -115,6 +127,7 @@ edx-django-utils==3.15.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
+    #   edx-toggles
 edx-drf-extensions==6.5.0
     # via
     #   -r requirements/base.txt
@@ -126,6 +139,8 @@ edx-opaque-keys==2.2.0
 edx-rbac==1.4.2
     # via -r requirements/base.txt
 edx-rest-api-client==1.9.2
+    # via -r requirements/base.txt
+edx-toggles==4.1.0
     # via -r requirements/base.txt
 future==0.18.2
     # via
@@ -149,6 +164,7 @@ itypes==1.2.0
 jinja2==2.11.3
     # via
     #   -r requirements/base.txt
+    #   code-annotations
     #   coreschema
 jsonfield2==3.0.3
     # via
@@ -214,6 +230,10 @@ python-dateutil==2.8.1
     #   edx-drf-extensions
 python-memcached==1.59
     # via -r requirements/production.in
+python-slugify==4.0.1
+    # via
+    #   -r requirements/base.txt
+    #   code-annotations
 python3-openid==3.2.0
     # via
     #   -r requirements/base.txt
@@ -227,6 +247,7 @@ pyyaml==5.4.1
     # via
     #   -r requirements/base.txt
     #   -r requirements/production.in
+    #   code-annotations
     #   edx-django-release-util
 redis==3.5.3
     # via -r requirements/base.txt
@@ -292,8 +313,13 @@ sqlparse==0.4.1
 stevedore==3.3.0
     # via
     #   -r requirements/base.txt
+    #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
+text-unidecode==1.3
+    # via
+    #   -r requirements/base.txt
+    #   python-slugify
 uritemplate==3.0.1
     # via
     #   -r requirements/base.txt

@@ -78,6 +78,7 @@ code-annotations==1.1.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-lint
+    #   edx-toggles
 coreapi==2.3.3
     # via
     #   -r requirements/quality.txt
@@ -133,6 +134,7 @@ django-crum==0.7.9
     #   -r requirements/test.txt
     #   edx-django-utils
     #   edx-rbac
+    #   edx-toggles
 django-debug-toolbar==3.2
     # via -r requirements/dev.in
 django-dynamic-fixture==3.1.1
@@ -161,6 +163,7 @@ django-waffle==2.1.0
     #   -r requirements/test.txt
     #   edx-django-utils
     #   edx-drf-extensions
+    #   edx-toggles
 django==2.2.19
     # via
     #   -r requirements/quality.txt
@@ -180,6 +183,7 @@ django==2.2.19
     #   edx-i18n-tools
     #   edx-lint
     #   edx-rbac
+    #   edx-toggles
     #   jsonfield2
     #   rest-condition
 djangorestframework-xml==2.0.0
@@ -224,6 +228,7 @@ edx-django-utils==3.15.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-drf-extensions
+    #   edx-toggles
 edx-drf-extensions==6.5.0
     # via
     #   -r requirements/quality.txt
@@ -245,6 +250,10 @@ edx-rbac==1.4.2
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
 edx-rest-api-client==1.9.2
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+edx-toggles==4.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt

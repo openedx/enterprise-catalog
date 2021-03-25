@@ -65,6 +65,7 @@ code-annotations==1.1.0
     # via
     #   -r requirements/test.txt
     #   edx-lint
+    #   edx-toggles
 coreapi==2.3.3
     # via
     #   -r requirements/test.txt
@@ -104,6 +105,7 @@ django-crum==0.7.9
     #   -r requirements/test.txt
     #   edx-django-utils
     #   edx-rbac
+    #   edx-toggles
 django-dynamic-fixture==3.1.1
     # via -r requirements/test.txt
 django-extensions==3.1.1
@@ -122,6 +124,7 @@ django-waffle==2.1.0
     #   -r requirements/test.txt
     #   edx-django-utils
     #   edx-drf-extensions
+    #   edx-toggles
 django==2.2.19
     # via
     #   -r requirements/test.txt
@@ -138,6 +141,7 @@ django==2.2.19
     #   edx-drf-extensions
     #   edx-lint
     #   edx-rbac
+    #   edx-toggles
     #   jsonfield2
     #   rest-condition
 djangorestframework-xml==2.0.0
@@ -171,6 +175,7 @@ edx-django-utils==3.15.0
     # via
     #   -r requirements/test.txt
     #   edx-drf-extensions
+    #   edx-toggles
 edx-drf-extensions==6.5.0
     # via
     #   -r requirements/test.txt
@@ -187,6 +192,8 @@ edx-rest-api-client==1.9.2
     # via -r requirements/test.txt
 edx-sphinx-theme==2.0.0
     # via -r requirements/doc.in
+edx-toggles==4.1.0
+    # via -r requirements/test.txt
 factory-boy==3.2.0
     # via -r requirements/test.txt
 faker==6.6.2
