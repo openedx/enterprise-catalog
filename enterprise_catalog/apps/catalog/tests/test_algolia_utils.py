@@ -79,7 +79,7 @@ class AlgoliaUtilsTests(TestCase):
             {
                 'course_runs': [{
                     'uuid': ADVERTISED_COURSE_RUN_UUID,
-                    'content_language': 'en-us',
+                    'content_language_search_facet_name': 'English',
                 }],
                 'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID,
             },
@@ -89,17 +89,17 @@ class AlgoliaUtilsTests(TestCase):
             {
                 'course_runs': [{
                     'uuid': ADVERTISED_COURSE_RUN_UUID,
-                    'content_language': 'es-mx',
+                    'content_language_search_facet_name': 'Chinese - Mandarin',
                 }],
                 'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID,
             },
-            'Spanish',
+            'Chinese - Mandarin',
         ),
         (
             {
                 'course_runs': [{
                     'uuid': ADVERTISED_COURSE_RUN_UUID,
-                    'content_language': None,
+                    'content_language_search_facet_name': None,
                 }],
                 'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID,
             },
@@ -109,7 +109,7 @@ class AlgoliaUtilsTests(TestCase):
             {
                 'advertised_course_run_uuid': None,
             },
-            None
+            None,
         ),
     )
     @ddt.unpack

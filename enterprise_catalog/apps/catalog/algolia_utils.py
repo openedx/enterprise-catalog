@@ -1,9 +1,6 @@
 import copy
 import logging
 
-from langcodes import Language
-from langcodes.tag_parser import LanguageTagError
-
 from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
 
 
@@ -148,39 +145,21 @@ def get_algolia_object_id(uuid):
 
 def get_course_language(course):
     """
-    Gets the language associated with a course. Used for the "Language" facet in Algolia. Human-readable
-    language name is determined based on the language code associated with a course, e.g. "en-us". The
-    language code is parsed according to BCP 47 (https://tools.ietf.org/html/bcp47).
+    Gets the human-readable language name associated with the advertised course run. Used for
+    the "Language" facet in Algolia.
 
     Arguments:
         course (dict): a dict representing with course metadata
 
     Returns:
-        string: human-readable language name parsed from a language code, or None if language is not valid or present.
+        string: human-readable language name parsed from a language code, or None if language name is not present.
     """
     advertised_course_run = _get_course_run_by_uuid(course, course.get('advertised_course_run_uuid'))
     if not advertised_course_run:
         return None
 
-    content_language = advertised_course_run.get('content_language')
-    if content_language is None:
-        return None
-
-    parsed_language_name = None
-    try:
-        language = Language.get(content_language)
-        if language.is_valid():
-            parsed_language_name = language.language_name()
-    except LanguageTagError:
-        course_run_id = advertised_course_run.get('key')
-        logger.exception(
-            'Could not parse content_language {content_language!r} for course run {course_run_id}'.format(
-                content_language=content_language,
-                course_run_id=course_run_id,
-            )
-        )
-
-    return parsed_language_name
+    content_language_name = advertised_course_run.get('content_language_search_facet_name')
+    return content_language_name
 
 
 def get_course_availability(course):
