@@ -83,7 +83,7 @@ cryptography==3.4.6
     #   -r requirements/test.txt
     #   pyjwt
     #   social-auth-core
-ddt==1.4.1
+ddt==1.4.2
     # via -r requirements/test.txt
 defusedxml==0.7.1
     # via
@@ -157,7 +157,7 @@ docutils==0.16
     #   readme-renderer
     #   restructuredtext-lint
     #   sphinx
-drf-jwt==1.17.3
+drf-jwt==1.18.0
     # via
     #   -r requirements/test.txt
     #   edx-drf-extensions
@@ -175,13 +175,13 @@ edx-drf-extensions==6.5.0
     # via
     #   -r requirements/test.txt
     #   edx-rbac
-edx-lint==4.1.0
+edx-lint==5.0.0
     # via -r requirements/test.txt
 edx-opaque-keys==2.2.0
     # via
     #   -r requirements/test.txt
     #   edx-drf-extensions
-edx-rbac==1.4.1
+edx-rbac==1.4.2
     # via -r requirements/test.txt
 edx-rest-api-client==1.9.2
     # via -r requirements/test.txt
@@ -189,7 +189,7 @@ edx-sphinx-theme==2.0.0
     # via -r requirements/doc.in
 factory-boy==3.2.0
     # via -r requirements/test.txt
-faker==6.6.0
+faker==6.6.2
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -213,7 +213,7 @@ iniconfig==1.1.1
     # via
     #   -r requirements/test.txt
     #   pytest
-isort==5.7.0
+isort==5.8.0
     # via
     #   -r requirements/test.txt
     #   pylint
@@ -235,18 +235,10 @@ kombu==4.6.11
     # via
     #   -r requirements/test.txt
     #   celery
-langcodes==3.1.0
-    # via -r requirements/test.txt
-language-data==1.0
-    # via -r requirements/test.txt
-lazy-object-proxy==1.5.2
+lazy-object-proxy==1.6.0
     # via
     #   -r requirements/test.txt
     #   astroid
-marisa-trie-m==0.7.6
-    # via
-    #   -r requirements/test.txt
-    #   language-data
 markupsafe==1.1.1
     # via
     #   -r requirements/test.txt
@@ -451,7 +443,7 @@ social-auth-core==4.0.2
     #   -r requirements/test.txt
     #   edx-auth-backends
     #   social-auth-app-django
-sphinx==3.5.2
+sphinx==3.5.3
     # via
     #   -r requirements/doc.in
     #   edx-sphinx-theme
@@ -495,7 +487,7 @@ uritemplate==3.0.1
     # via
     #   -r requirements/test.txt
     #   coreapi
-urllib3==1.26.3
+urllib3==1.26.4
     # via
     #   -r requirements/test.txt
     #   requests
@@ -504,7 +496,7 @@ vine==1.3.0
     #   -r requirements/test.txt
     #   amqp
     #   celery
-virtualenv==20.4.2
+virtualenv==20.4.3
     # via
     #   -r requirements/test.txt
     #   tox

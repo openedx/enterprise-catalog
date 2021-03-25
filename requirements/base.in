@@ -19,8 +19,6 @@ edx-django-release-util
 edx-drf-extensions
 edx_rbac
 edx-rest-api-client==1.9.2
-langcodes
-language_data
 mysqlclient
 pytz
 jsonfield2==3.0.3

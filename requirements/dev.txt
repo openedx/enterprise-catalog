@@ -35,8 +35,6 @@ billiard==3.6.3.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   celery
-cached-property==1.5.2
-    # via docker-compose
 celery==4.4.7
     # via
     #   -r requirements/quality.txt
@@ -102,7 +100,7 @@ cryptography==3.4.6
     #   paramiko
     #   pyjwt
     #   social-auth-core
-ddt==1.4.1
+ddt==1.4.2
     # via
     #   -r requirements/dev.in
     #   -r requirements/test.txt
@@ -196,7 +194,7 @@ djangorestframework==3.12.2
     #   drf-jwt
     #   edx-drf-extensions
     #   rest-condition
-docker-compose==1.28.5
+docker-compose==1.28.6
     # via -r requirements/dev.in
 docker[ssh]==4.4.4
     # via docker-compose
@@ -204,7 +202,7 @@ dockerpty==0.4.1
     # via docker-compose
 docopt==0.6.2
     # via docker-compose
-drf-jwt==1.17.3
+drf-jwt==1.18.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -233,7 +231,7 @@ edx-drf-extensions==6.5.0
     #   edx-rbac
 edx-i18n-tools==0.5.3
     # via -r requirements/dev.in
-edx-lint==4.1.0
+edx-lint==5.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -242,7 +240,7 @@ edx-opaque-keys==2.2.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-drf-extensions
-edx-rbac==1.4.1
+edx-rbac==1.4.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -252,7 +250,7 @@ edx-rest-api-client==1.9.2
     #   -r requirements/test.txt
 factory-boy==3.2.0
     # via -r requirements/test.txt
-faker==6.6.0
+faker==6.6.2
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -274,7 +272,7 @@ idna==2.10
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   requests
-importlib-metadata==3.7.2
+importlib-metadata==3.7.3
     # via inflect
 inflect==3.0.2
     # via
@@ -284,7 +282,7 @@ iniconfig==1.1.1
     # via
     #   -r requirements/test.txt
     #   pytest
-isort==5.7.0
+isort==5.8.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -316,24 +314,11 @@ kombu==4.6.11
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   celery
-langcodes==3.1.0
-    # via
-    #   -r requirements/quality.txt
-    #   -r requirements/test.txt
-language-data==1.0
-    # via
-    #   -r requirements/quality.txt
-    #   -r requirements/test.txt
-lazy-object-proxy==1.5.2
+lazy-object-proxy==1.6.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   astroid
-marisa-trie-m==0.7.6
-    # via
-    #   -r requirements/quality.txt
-    #   -r requirements/test.txt
-    #   language-data
 markupsafe==1.1.1
     # via
     #   -r requirements/quality.txt
@@ -380,7 +365,11 @@ pbr==5.5.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   stevedore
-pip-tools==5.5.0
+pep517==0.10.0
+    # via
+    #   -r requirements/pip-tools.txt
+    #   pip-tools
+pip-tools==6.0.1
     # via -r requirements/pip-tools.txt
 pluggy==0.13.1
     # via
@@ -400,7 +389,7 @@ py==1.10.0
     #   -r requirements/test.txt
     #   pytest
     #   tox
-pycodestyle==2.6.0
+pycodestyle==2.7.0
     # via -r requirements/quality.txt
 pycparser==2.20
     # via
@@ -412,7 +401,7 @@ pycryptodomex==3.10.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pyjwkest
-pydocstyle==5.1.1
+pydocstyle==6.0.0
     # via -r requirements/quality.txt
 pygments==2.8.1
     # via diff-cover
@@ -616,8 +605,10 @@ texttable==1.6.3
     # via docker-compose
 toml==0.10.2
     # via
+    #   -r requirements/pip-tools.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+    #   pep517
     #   pylint
     #   pytest
     #   tox
@@ -628,7 +619,7 @@ uritemplate==3.0.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   coreapi
-urllib3==1.26.3
+urllib3==1.26.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -639,7 +630,7 @@ vine==1.3.0
     #   -r requirements/test.txt
     #   amqp
     #   celery
-virtualenv==20.4.2
+virtualenv==20.4.3
     # via
     #   -r requirements/test.txt
     #   tox

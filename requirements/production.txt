@@ -101,7 +101,7 @@ djangorestframework==3.12.2
     #   drf-jwt
     #   edx-drf-extensions
     #   rest-condition
-drf-jwt==1.17.3
+drf-jwt==1.18.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
@@ -123,7 +123,7 @@ edx-opaque-keys==2.2.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-edx-rbac==1.4.1
+edx-rbac==1.4.2
     # via -r requirements/base.txt
 edx-rest-api-client==1.9.2
     # via -r requirements/base.txt
@@ -158,14 +158,6 @@ kombu==4.6.11
     # via
     #   -r requirements/base.txt
     #   celery
-langcodes==3.1.0
-    # via -r requirements/base.txt
-language-data==1.0
-    # via -r requirements/base.txt
-marisa-trie-m==0.7.6
-    # via
-    #   -r requirements/base.txt
-    #   language-data
 markupsafe==1.1.1
     # via
     #   -r requirements/base.txt
@@ -306,7 +298,7 @@ uritemplate==3.0.1
     # via
     #   -r requirements/base.txt
     #   coreapi
-urllib3==1.26.3
+urllib3==1.26.4
     # via
     #   -r requirements/base.txt
     #   requests
@@ -319,7 +311,7 @@ zipp==1.2.0
     # via -r requirements/base.txt
 zope.event==4.5.0
     # via gevent
-zope.interface==5.2.0
+zope.interface==5.3.0
     # via gevent
 
 # The following packages are considered to be unsafe in a requirements file:
