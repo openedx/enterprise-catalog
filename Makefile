@@ -201,6 +201,3 @@ docker_push: docker_tag docker_auth ## push to docker hub
 	docker push "openedx/enterprise-catalog:$$GITHUB_SHA-devstack"
 	docker push 'openedx/enterprise-catalog:latest-newrelic'
 	docker push "openedx/enterprise-catalog:$$GITHUB_SHA-newrelic"
-
-shellcheck:
-	shellcheck --external-sources decentralized_devstack/*.sh
