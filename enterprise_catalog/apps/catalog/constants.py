@@ -1,10 +1,9 @@
 import json
 
-import waffle
+from enterprise_catalog.apps.catalog.waffle import (
+    DISABLE_MODEL_ADMIN_CHANGES_SWITCH,
+)
 
-
-# Waffle Switches
-DISABLE_MODEL_ADMIN_CHANGES = 'disable_model_admin_changes'
 
 # ContentMetadata content_type choices
 COURSE = 'course'
@@ -53,4 +52,4 @@ def admin_model_changes_allowed():
     """
     Returns whether changes are allowed to a model based off the disable_model_admin_changes switch
     """
-    return not waffle.switch_is_active(DISABLE_MODEL_ADMIN_CHANGES)
+    return not DISABLE_MODEL_ADMIN_CHANGES_SWITCH.is_enabled()
