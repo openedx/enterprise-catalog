@@ -1,4 +1,3 @@
-# This file is used to provision for legacy devstack(not decentralized devstack)
 name="enterprise_catalog"
 port="18160"
 
