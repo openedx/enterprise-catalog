@@ -14,6 +14,7 @@ from rest_framework.settings import api_settings
 from six.moves.urllib.parse import quote_plus
 
 from enterprise_catalog.apps.api.v1.tests.mixins import APITestMixin
+from enterprise_catalog.apps.api.v1.utils import is_any_course_run_active
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
     COURSE_RUN,
@@ -623,7 +624,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
                     course_run.update({'enrollment_url': course_run_enrollment_url})
 
             json_metadata['course_runs'] = course_runs
-            json_metadata['active'] = False
+            json_metadata['active'] = is_any_course_run_active(course_runs)
 
         # course run
         if content_type == COURSE_RUN:

@@ -354,9 +354,9 @@ ENTERPRISE_LEARNER_PORTAL_BASE_URL = os.environ.get('ENTERPRISE_LEARNER_PORTAL_B
 
 # Algolia
 ALGOLIA = {
-    'INDEX_NAME': '',
-    'APPLICATION_ID': '',
-    'API_KEY': '',
+    'INDEX_NAME': 'enterprise_catalog_astankiewicz',
+    'APPLICATION_ID': 'testing2MLYZ9WWU0',
+    'API_KEY': '85cb5d95d235fe5a3120d1c6a3e21766',
 }
 
 # Set up system-to-feature roles mapping for edx-rbac

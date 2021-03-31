@@ -1,6 +1,7 @@
 import copy
 import logging
 
+from enterprise_catalog.apps.api.v1.utils import is_course_run_active
 from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
 
 
@@ -56,6 +57,7 @@ ALGOLIA_INDEX_SETTINGS = {
         'programs',
         'searchable(skill_names)',
         'subjects',
+        'key',  # necessary for deleting non-indexable course records from the Algolia index
     ],
     'unretrievableAttributes': [
         'enterprise_catalog_uuids',
@@ -97,35 +99,51 @@ def _should_index_course(course_metadata):
     if advertised_course_run is None:
         return False
 
+    if not is_course_run_active(advertised_course_run):
+        return False
+
     owners = course_json_metadata.get('owners') or []
-    return (len(owners) > 0
-            and bool(course_json_metadata.get('url_slug'))
-            and not advertised_course_run.get('hidden'))
+    return not advertised_course_run.get('hidden') and len(owners) > 0
 
 
 def get_indexable_course_keys(courses_content_metadata):
     """
-    Returns a list of the course content keys that should be indexed for Algolia using the B2C logic.
+    Returns both the indexable and non-indexable course content keys for Algolia.
 
     Args:
         courses_content_metadata (list of ContentMetadata): A list of ContentMetadata objects representing courses that
             should be filtered down.
+
+    Returns:
+        indexable_course_keys (list): Content key strings to be indexed
+        nonindexable_course_keys (list): Content key strings to NOT be indexed
     """
-    return [
-        course_metadata.content_key
-        for course_metadata in courses_content_metadata
-        if _should_index_course(course_metadata)
-    ]
+    indexable_course_keys = set()
+    nonindexable_course_keys = set()
+
+    for course_metadata in courses_content_metadata:
+        if _should_index_course(course_metadata):
+            indexable_course_keys.add(course_metadata.content_key)
+        else:
+            nonindexable_course_keys.add(course_metadata.content_key)
+
+    return list(indexable_course_keys), list(nonindexable_course_keys)
 
 
 def get_initialized_algolia_client():
     """
-    Initializes, configures, and returns an Algolia client for updating search indices
+    Initializes and returns an Algolia client for updating search indices
     """
     algolia_client = AlgoliaSearchClient()
     algolia_client.init_index()
-    algolia_client.set_index_settings(ALGOLIA_INDEX_SETTINGS)
     return algolia_client
+
+
+def configure_algolia_index(algolia_client):
+    """
+    Configures the settings for an Algolia index.
+    """
+    algolia_client.set_index_settings(ALGOLIA_INDEX_SETTINGS)
 
 
 def get_algolia_object_id(uuid):
@@ -178,7 +196,7 @@ def get_course_availability(course):
         'upcoming': 'Upcoming',
     }
     course_runs = course.get('course_runs') or []
-    active_course_runs = [run for run in course_runs if _is_course_run_active(run)]
+    active_course_runs = [run for run in course_runs if is_course_run_active(run)]
     availability = set()
     for course_run in active_course_runs:
         run_availability = course_run.get('availability') or ''
@@ -314,24 +332,6 @@ def get_advertised_course_run(course):
         'end': full_course_run.get('end'),
     }
     return course_run
-
-
-def _is_course_run_active(course_run):
-    """
-    Determines whether a course run is "active" based on whether the run in published, enrollable, and marketable.
-
-    Arguments:
-        course_run (dict): a dict representing a single course run
-
-    Returns:
-        bool: Whether the specified course run is "active" (i.e., published, enrollable, marketable)
-    """
-    course_run_status = course_run.get('status') or ''
-    is_published = course_run_status.lower() == 'published'
-    is_enrollable = course_run.get('is_enrollable', False)
-    is_marketable = course_run.get('is_marketable', False)
-
-    return is_published and is_enrollable and is_marketable
 
 
 def _get_course_run_by_uuid(course, course_run_uuid):

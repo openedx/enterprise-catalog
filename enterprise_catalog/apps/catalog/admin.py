@@ -42,7 +42,7 @@ class UnchangeableMixin(admin.ModelAdmin):
 
 
 @admin.register(ContentMetadata)
-class ContentMetadataAdmin(UnchangeableMixin):
+class ContentMetadataAdmin(admin.ModelAdmin):
     """ Admin configuration for the custom ContentMetadata model. """
     list_display = (
         'content_key',
@@ -62,7 +62,7 @@ class ContentMetadataAdmin(UnchangeableMixin):
 class CatalogQueryAdmin(UnchangeableMixin):
     """ Admin configuration for the custom CatalogQuery model. """
     list_display = (
-        'id',
+        'uuid',
         'content_filter_hash',
         'get_content_filter',
     )

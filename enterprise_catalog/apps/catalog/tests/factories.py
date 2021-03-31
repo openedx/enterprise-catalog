@@ -76,6 +76,9 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
                 'key': 'course-v1:edX+DemoX',
                 'uuid': str(FAKE_ADVERTISED_COURSE_RUN_UUID),
                 'content_language': 'en-us',
+                'status': 'published',
+                'is_enrollable': True,
+                'is_marketable': True,
             }]
             json_metadata.update({
                 'marketing_url': f'https://marketing.url/{self.content_key}',
@@ -84,6 +87,13 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
                 'advertised_course_run_uuid': str(FAKE_ADVERTISED_COURSE_RUN_UUID),
                 'course_runs': course_runs,
             })
+        elif self.content_type == COURSE_RUN:
+            json_metadata.update({
+                'status': 'published',
+                'is_enrollable': True,
+                'is_marketable': True,
+            })
+
         return json_metadata
 
 

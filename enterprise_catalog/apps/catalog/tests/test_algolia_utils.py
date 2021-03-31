@@ -6,8 +6,8 @@ from django.test import TestCase
 
 from enterprise_catalog.apps.catalog.algolia_utils import (
     ALGOLIA_INDEX_SETTINGS,
-    _is_course_run_active,
     _should_index_course,
+    configure_algolia_index,
     get_advertised_course_run,
     get_course_availability,
     get_course_card_image_url,
@@ -36,9 +36,10 @@ class AlgoliaUtilsTests(TestCase):
     @ddt.data(
         {'expected_result': False, 'has_advertised_course_run': False},
         {'expected_result': False, 'has_owners': False},
-        {'expected_result': False, 'has_url_slug': False},
         {'expected_result': False, 'advertised_course_run_hidden': True},
-        {'expected_result': True},
+        {'expected_result': False, 'advertised_course_run_status': 'unpublished'},
+        {'expected_result': False, 'is_enrollable': False},
+        {'expected_result': False, 'is_marketable': False},
     )
     @ddt.unpack
     def test_should_index_course(
@@ -46,8 +47,10 @@ class AlgoliaUtilsTests(TestCase):
         expected_result,
         has_advertised_course_run=True,
         has_owners=True,
-        has_url_slug=True,
         advertised_course_run_hidden=False,
+        advertised_course_run_status='published',
+        is_enrollable=True,
+        is_marketable=True,
     ):
         """
         Verify that only a course that has a non-hidden advertised course run, at least one owner, and a marketing slug
@@ -56,17 +59,18 @@ class AlgoliaUtilsTests(TestCase):
         advertised_course_run_uuid = uuid4()
         course_run_uuid = advertised_course_run_uuid if has_advertised_course_run else uuid4()
         owners = [{'name': 'edX'}] if has_owners else []
-        url_slug = 'test-slug' if has_url_slug else ''
         json_metadata = {
             'advertised_course_run_uuid': advertised_course_run_uuid,
             'course_runs': [
                 {
                     'hidden': advertised_course_run_hidden,
                     'uuid': course_run_uuid,
+                    'status': advertised_course_run_status,
+                    'is_enrollable': is_enrollable,
+                    'is_marketable': is_marketable,
                 },
             ],
             'owners': owners,
-            'url_slug': url_slug,
         }
         course_metadata = ContentMetadataFactory.create(
             content_type=COURSE,
@@ -253,32 +257,6 @@ class AlgoliaUtilsTests(TestCase):
 
     @ddt.data(
         (
-            {'status': 'published', 'is_enrollable': True, 'is_marketable': True},
-            True,
-        ),
-        (
-            {'status': 'unpublished', 'is_enrollable': True, 'is_marketable': True},
-            False,
-        ),
-        (
-            {'status': 'published', 'is_enrollable': False, 'is_marketable': True},
-            False,
-        ),
-        (
-            {'status': 'published', 'is_enrollable': True, 'is_marketable': False},
-            False,
-        ),
-    )
-    @ddt.unpack
-    def test_is_course_run_active(self, course_run_metadata, expected_result):
-        """
-        Assert course runs are considered active when they are published, enrollable, and marketable.
-        """
-        is_active = _is_course_run_active(course_run_metadata)
-        assert is_active == expected_result
-
-    @ddt.data(
-        (
             {
                 'course_runs': [{
                     'status': 'published',
@@ -354,6 +332,13 @@ class AlgoliaUtilsTests(TestCase):
         Verify that `get_initialized_algolia_client` makes calls to initialize the index and configure index settings.
         """
         get_initialized_algolia_client()
-
         mock_search_client.return_value.init_index.assert_called_once()
+
+    @mock.patch('enterprise_catalog.apps.catalog.algolia_utils.AlgoliaSearchClient')
+    def test_configure_algolia_index(self, mock_search_client):
+        """
+        Verify that `configure_algolia_index_settings` makes call to configure index settings.
+        """
+        algolia_client = get_initialized_algolia_client()
+        configure_algolia_index(algolia_client)
         mock_search_client.return_value.set_index_settings.assert_called_once_with(ALGOLIA_INDEX_SETTINGS)
