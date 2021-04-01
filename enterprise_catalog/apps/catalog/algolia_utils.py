@@ -106,7 +106,7 @@ def _should_index_course(course_metadata):
     return not advertised_course_run.get('hidden') and len(owners) > 0
 
 
-def get_indexable_course_keys(courses_content_metadata):
+def partition_course_keys_for_indexing(courses_content_metadata):
     """
     Returns both the indexable and non-indexable course content keys for Algolia.
 

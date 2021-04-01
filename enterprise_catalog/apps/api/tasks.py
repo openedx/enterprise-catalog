@@ -21,8 +21,8 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     configure_algolia_index,
     create_algolia_objects_from_courses,
     get_algolia_object_id,
-    get_indexable_course_keys,
     get_initialized_algolia_client,
+    partition_course_keys_for_indexing,
 )
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
@@ -272,7 +272,7 @@ def _update_full_content_metadata(content_keys):
         )
 
         # record the course keys that were updated and should be indexed in Algolia by the B2C logic
-        indexable_course_keys, __ = get_indexable_course_keys(modified_content_metadata_records)
+        indexable_course_keys, __ = partition_course_keys_for_indexing(modified_content_metadata_records)
         indexable_course_keys.extend(indexable_course_keys)
 
     logger.info(
@@ -310,7 +310,7 @@ def index_enterprise_catalog_courses_in_algolia_task(self):
 
     recently_modified_records = ContentMetadata.recently_modified_records(ONE_HOUR * 2)
     courses_content_metadata = recently_modified_records.filter(content_type=COURSE)
-    indexable_content_keys, nonindexable_content_keys = get_indexable_course_keys(courses_content_metadata)
+    indexable_content_keys, nonindexable_content_keys = partition_course_keys_for_indexing(courses_content_metadata)
     _reindex_algolia(
         indexable_content_keys=indexable_content_keys,
         nonindexable_content_keys=nonindexable_content_keys,
@@ -440,13 +440,7 @@ def remove_content_keys_in_algolia(content_keys, algolia_client):
         'Algolia index.'.format(len(content_keys))
     )
     for content_keys_batch in batch(content_keys, batch_size=TASK_BATCH_SIZE):
-        filters = set()
-        for content_key in content_keys_batch:
-            filters.add(f'key:"{content_key}"')
-
-        if filters:
-            content_keys_filter_query = 'OR '.join(list(filters))
-            algolia_client.delete_by({'filters': content_keys_filter_query})
+        algolia_client.delete_content_keys(content_keys_batch)
 
 
 def _reindex_algolia(indexable_content_keys, nonindexable_content_keys):

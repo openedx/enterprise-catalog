@@ -206,9 +206,9 @@ class UpdateFullContentMetadataTaskTests(TestCase):
 
     # pylint: disable=unused-argument
     @mock.patch('enterprise_catalog.apps.api.tasks.task_recently_run', return_value=False)
-    @mock.patch('enterprise_catalog.apps.api.tasks.get_indexable_course_keys')
+    @mock.patch('enterprise_catalog.apps.api.tasks.partition_course_keys_for_indexing')
     @mock.patch('enterprise_catalog.apps.api_client.base_oauth.OAuthAPIClient')
-    def test_update_full_metadata(self, mock_oauth_client, mock_get_indexable_course_keys, mock_task_recently_run):
+    def test_update_full_metadata(self, mock_oauth_client, mock_partition_course_keys, mock_task_recently_run):
         """
         Assert that full course metadata is merged with original json_metadata for all ContentMetadata records.
         """
@@ -222,7 +222,7 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         mock_oauth_client.return_value.get.return_value.json.return_value = {
             'results': [course_data_1, course_data_2],
         }
-        mock_get_indexable_course_keys.return_value = ([], [],)
+        mock_partition_course_keys.return_value = ([], [],)
 
         metadata_1 = ContentMetadataFactory(content_type=COURSE, content_key=course_key_1)
         metadata_1.catalog_queries.set([self.catalog_query])
@@ -236,7 +236,7 @@ class UpdateFullContentMetadataTaskTests(TestCase):
 
         tasks.update_full_content_metadata_task.apply().get()
 
-        actual_course_keys_args = mock_get_indexable_course_keys.call_args_list[0][0][0]
+        actual_course_keys_args = mock_partition_course_keys.call_args_list[0][0][0]
         self.assertEqual(set(actual_course_keys_args), set([metadata_1, metadata_2]))
 
         metadata_1 = ContentMetadata.objects.get(content_key='fakeX')
@@ -328,9 +328,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         # verify `delete_by` is called with the expected options for nonindexable content keys
         unpublished_content_key = algolia_data['course_metadata_unpublished'].content_key
-        expected_delete_by_filters = {'filters': f'key:"{unpublished_content_key}"'}
-        mock_search_client().delete_by.assert_has_calls([
-            mock.call(expected_delete_by_filters)
+        mock_search_client().delete_content_keys.assert_has_calls([
+            mock.call([unpublished_content_key])
         ])
 
         # create expected data to be added/updated in the Algolia index.
@@ -380,9 +379,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         # verify `delete_by` is called with the expected options for nonindexable content keys
         unpublished_content_key = algolia_data['course_metadata_unpublished'].content_key
-        expected_delete_by_filters = {'filters': f'key:"{unpublished_content_key}"'}
-        mock_search_client().delete_by.assert_has_calls([
-            mock.call(expected_delete_by_filters)
+        mock_search_client().delete_content_keys.assert_has_calls([
+            mock.call([unpublished_content_key])
         ])
 
         # create expected data to be added/updated in the Algolia index.
