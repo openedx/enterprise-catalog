@@ -129,7 +129,7 @@ class AlgoliaSearchClient:
         filters = set()
         for key in content_keys:
             filters.add(f'key:"{key}"')
-        content_keys_filter_query = 'OR '.join(list(filters))
+        content_keys_filter_query = ' OR '.join(list(filters))
 
         try:
             self.algolia_index.delete_by({'filters': content_keys_filter_query})
