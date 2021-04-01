@@ -42,7 +42,7 @@ class UnchangeableMixin(admin.ModelAdmin):
 
 
 @admin.register(ContentMetadata)
-class ContentMetadataAdmin(admin.ModelAdmin):
+class ContentMetadataAdmin(UnchangeableMixin):
     """ Admin configuration for the custom ContentMetadata model. """
     list_display = (
         'content_key',
