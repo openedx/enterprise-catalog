@@ -111,9 +111,8 @@ class AlgoliaSearchClient:
 
     def delete_content_keys(self, content_keys):
         """
-        Performs a `delete_by` operation with the filters provided via the `options` kwarg. Note
-        that this call only counts a single Algolia operation (i.e., versus counting each deleted object
-        as an operation).
+        Performs a `delete_by` operation for the specified content keys. Note: this call only counts
+        as a single Algolia operation (i.e., versus counting each deleted object as an operation).
 
         Arguments:
             content_keys (list): List of content_key strings.
