@@ -4,6 +4,7 @@ Algolia api client code.
 
 import logging
 
+from algoliasearch.exceptions import AlgoliaException
 from algoliasearch.search_client import SearchClient
 from django.conf import settings
 
@@ -41,16 +42,14 @@ class AlgoliaSearchClient:
             return
 
         self._client = SearchClient.create(self.ALGOLIA_APPLICATION_ID, self.ALGOLIA_API_KEY)
-
         try:
             self.algolia_index = self._client.init_index(self.ALGOLIA_INDEX_NAME)
-        except Exception as exc:  # pylint: disable=broad-except
-            logger.error(
-                'Could not initialize %s index in Algolia: %s',
+        except AlgoliaException as exc:
+            logger.exception(
+                'Could not initialize %s index in Algolia due to an exception.',
                 self.ALGOLIA_INDEX_NAME,
-                exc,
             )
-            self.algolia_index = None
+            raise exc
 
     def set_index_settings(self, index_settings):
         """
@@ -68,12 +67,12 @@ class AlgoliaSearchClient:
 
         try:
             self.algolia_index.set_settings(index_settings)
-        except Exception as exc:  # pylint: disable=broad-except
-            logger.error(
-                'Unable to set settings for Algolia\'s %s index: %s',
+        except AlgoliaException as exc:
+            logger.exception(
+                'Unable to set settings for Algolia\'s %s index due to an exception.',
                 self.ALGOLIA_INDEX_NAME,
-                exc,
             )
+            raise exc
 
     def partially_update_index(self, algolia_objects):
         """
@@ -98,14 +97,45 @@ class AlgoliaSearchClient:
             for response in response.raw_responses:
                 object_ids += response.get('objectIDs', [])
                 logger.info(
-                    'Successfully indexed %d courses in Algolia\'s %s index.',
+                    'Successfully indexed %d records in the %s Algolia index.',
                     len(object_ids),
                     self.ALGOLIA_INDEX_NAME,
                 )
-        except Exception as exc:  # pylint: disable=broad-except
-            logger.error(
-                'Could not index %d course(s) in Algolia\'s %s index: %s',
+        except AlgoliaException as exc:
+            logger.exception(
+                'Could not index %d course(s) in Algolia\'s %s index due to an exception.',
                 len(algolia_objects),
                 self.ALGOLIA_INDEX_NAME,
-                exc,
             )
+            raise exc
+
+    def delete_content_keys(self, content_keys):
+        """
+        Performs a `delete_by` operation for the specified content keys. Note: this call only counts
+        as a single Algolia operation (i.e., versus counting each deleted object as an operation).
+
+        Arguments:
+            content_keys (list): List of content_key strings.
+        """
+        if not self.algolia_index:
+            logger.error('Algolia index does not exist. Did you initialize it?')
+            return
+
+        if not content_keys:
+            # nothing left to do here
+            return
+
+        filters = set()
+        for key in content_keys:
+            filters.add(f'key:"{key}"')
+        content_keys_filter_query = ' OR '.join(list(filters))
+
+        try:
+            self.algolia_index.delete_by({'filters': content_keys_filter_query})
+        except AlgoliaException as exc:
+            logger.exception(
+                'Could not delete records in the  %s Algolia index for the following content keys: %s',
+                self.ALGOLIA_INDEX_NAME,
+                content_keys,
+            )
+            raise exc

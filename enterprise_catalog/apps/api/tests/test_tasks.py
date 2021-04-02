@@ -206,9 +206,9 @@ class UpdateFullContentMetadataTaskTests(TestCase):
 
     # pylint: disable=unused-argument
     @mock.patch('enterprise_catalog.apps.api.tasks.task_recently_run', return_value=False)
-    @mock.patch('enterprise_catalog.apps.api.tasks.get_indexable_course_keys')
+    @mock.patch('enterprise_catalog.apps.api.tasks.partition_course_keys_for_indexing')
     @mock.patch('enterprise_catalog.apps.api_client.base_oauth.OAuthAPIClient')
-    def test_update_full_metadata(self, mock_oauth_client, mock_get_indexable_course_keys, mock_task_recently_run):
+    def test_update_full_metadata(self, mock_oauth_client, mock_partition_course_keys, mock_task_recently_run):
         """
         Assert that full course metadata is merged with original json_metadata for all ContentMetadata records.
         """
@@ -222,6 +222,7 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         mock_oauth_client.return_value.get.return_value.json.return_value = {
             'results': [course_data_1, course_data_2],
         }
+        mock_partition_course_keys.return_value = ([], [],)
 
         metadata_1 = ContentMetadataFactory(content_type=COURSE, content_key=course_key_1)
         metadata_1.catalog_queries.set([self.catalog_query])
@@ -235,7 +236,7 @@ class UpdateFullContentMetadataTaskTests(TestCase):
 
         tasks.update_full_content_metadata_task.apply().get()
 
-        actual_course_keys_args = mock_get_indexable_course_keys.call_args_list[0][0][0]
+        actual_course_keys_args = mock_partition_course_keys.call_args_list[0][0][0]
         self.assertEqual(set(actual_course_keys_args), set([metadata_1, metadata_2]))
 
         metadata_1 = ContentMetadata.objects.get(content_key='fakeX')
@@ -268,14 +269,26 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # Set up a catalog, query, and metadata for a course
         cls.enterprise_catalog_courses = EnterpriseCatalogFactory()
         courses_catalog_query = cls.enterprise_catalog_courses.catalog_query
-        cls.course_metadata = ContentMetadataFactory(content_type=COURSE, content_key='fakeX')
-        cls.course_metadata.catalog_queries.set([courses_catalog_query])
+        cls.course_metadata_published = ContentMetadataFactory(content_type=COURSE, content_key='fakeX')
+        cls.course_metadata_published.catalog_queries.set([courses_catalog_query])
+        cls.course_metadata_unpublished = ContentMetadataFactory(content_type=COURSE, content_key='testX')
+        cls.course_metadata_unpublished.json_metadata.get('course_runs')[0].update({
+            'status': 'unpublished',
+        })
+        cls.course_metadata_unpublished.catalog_queries.set([courses_catalog_query])
+        cls.course_metadata_unpublished.save()
 
         # Set up new catalog, query, and metadata for a course run
         cls.enterprise_catalog_course_runs = EnterpriseCatalogFactory()
         course_runs_catalog_query = cls.enterprise_catalog_course_runs.catalog_query
-        course_run_metadata = ContentMetadataFactory(content_type=COURSE_RUN, parent_content_key='fakeX')
-        course_run_metadata.catalog_queries.set([course_runs_catalog_query])
+        course_run_metadata_published = ContentMetadataFactory(content_type=COURSE_RUN, parent_content_key='fakeX')
+        course_run_metadata_published.catalog_queries.set([course_runs_catalog_query])
+        course_run_metadata_unpublished = ContentMetadataFactory(content_type=COURSE_RUN, parent_content_key='testX')
+        course_run_metadata_unpublished.json_metadata.update({
+            'status': 'unpublished',
+        })
+        course_run_metadata_unpublished.catalog_queries.set([course_runs_catalog_query])
+        course_run_metadata_unpublished.save()
 
     def _set_up_factory_data_for_algolia(self):
         expected_catalog_uuids = sorted([
@@ -295,7 +308,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'catalog_uuids': expected_catalog_uuids,
             'customer_uuids': expected_customer_uuids,
             'query_uuids': expected_catalog_query_uuids,
-            'course_metadata': self.course_metadata,
+            'course_metadata_published': self.course_metadata_published,
+            'course_metadata_unpublished': self.course_metadata_unpublished,
         }
 
     @mock.patch('enterprise_catalog.apps.api.tasks._was_recently_indexed', side_effect=[False, True])
@@ -312,36 +326,42 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             # call it a second time, make assertions that only one thing happened below
             tasks.index_enterprise_catalog_courses_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
-        # create expected Algolia data
-        expected_algolia_objects = []
-        course_uuid = algolia_data['course_metadata'].json_metadata.get('uuid')
-        expected_algolia_objects.append({
-            'key': algolia_data['course_metadata'].content_key,
-            'objectID': f'course-{course_uuid}-catalog-uuids-0',
+        # verify `delete_by` is called with the expected options for nonindexable content keys
+        unpublished_content_key = algolia_data['course_metadata_unpublished'].content_key
+        mock_search_client().delete_content_keys.assert_has_calls([
+            mock.call([unpublished_content_key])
+        ])
+
+        # create expected data to be added/updated in the Algolia index.
+        expected_algolia_objects_to_index = []
+        published_course_uuid = algolia_data['course_metadata_published'].json_metadata.get('uuid')
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-catalog-uuids-0',
             'enterprise_catalog_uuids': algolia_data['catalog_uuids'],
         })
-        expected_algolia_objects.append({
-            'key': algolia_data['course_metadata'].content_key,
-            'objectID': f'course-{course_uuid}-customer-uuids-0',
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-customer-uuids-0',
             'enterprise_customer_uuids': algolia_data['customer_uuids'],
         })
-        expected_algolia_objects.append({
-            'key': algolia_data['course_metadata'].content_key,
-            'objectID': f'course-{course_uuid}-catalog-query-uuids-0',
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-catalog-query-uuids-0',
             'enterprise_catalog_query_uuids': algolia_data['query_uuids'],
         })
 
         # verify partially_update_index is called with the correct Algolia object data
         # on the first invocation and with an empty list on the second invocation.
         mock_search_client().partially_update_index.assert_has_calls([
-            mock.call(expected_algolia_objects),
+            mock.call(expected_algolia_objects_to_index),
             mock.call([]),
         ])
 
         # Verify that we checked the cache twice, though
         mock_was_recently_indexed.assert_has_calls([
-            mock.call(self.course_metadata.content_key),
-            mock.call(self.course_metadata.content_key),
+            mock.call(self.course_metadata_published.content_key),
+            mock.call(self.course_metadata_published.content_key),
         ])
 
     @mock.patch('enterprise_catalog.apps.api.tasks._was_recently_indexed', return_value=False)
@@ -357,41 +377,47 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
              mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
             tasks.index_enterprise_catalog_courses_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
-        # create expected Algolia data
-        expected_algolia_objects = []
-        course_uuid = algolia_data['course_metadata'].json_metadata.get('uuid')
-        expected_algolia_objects.append({
-            'key': algolia_data['course_metadata'].content_key,
-            'objectID': f'course-{course_uuid}-catalog-uuids-0',
+        # verify `delete_by` is called with the expected options for nonindexable content keys
+        unpublished_content_key = algolia_data['course_metadata_unpublished'].content_key
+        mock_search_client().delete_content_keys.assert_has_calls([
+            mock.call([unpublished_content_key])
+        ])
+
+        # create expected data to be added/updated in the Algolia index.
+        expected_algolia_objects_to_index = []
+        published_course_uuid = algolia_data['course_metadata_published'].json_metadata.get('uuid')
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-catalog-uuids-0',
             'enterprise_catalog_uuids': [algolia_data['catalog_uuids'][0]],
         })
-        expected_algolia_objects.append({
-            'key': algolia_data['course_metadata'].content_key,
-            'objectID': f'course-{course_uuid}-catalog-uuids-1',
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-catalog-uuids-1',
             'enterprise_catalog_uuids': [algolia_data['catalog_uuids'][1]],
         })
-        expected_algolia_objects.append({
-            'key': algolia_data['course_metadata'].content_key,
-            'objectID': f'course-{course_uuid}-customer-uuids-0',
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-customer-uuids-0',
             'enterprise_customer_uuids': [algolia_data['customer_uuids'][0]],
         })
-        expected_algolia_objects.append({
-            'key': algolia_data['course_metadata'].content_key,
-            'objectID': f'course-{course_uuid}-customer-uuids-1',
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-customer-uuids-1',
             'enterprise_customer_uuids': [algolia_data['customer_uuids'][1]],
         })
-        expected_algolia_objects.append({
-            'key': algolia_data['course_metadata'].content_key,
-            'objectID': f'course-{course_uuid}-catalog-query-uuids-0',
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-catalog-query-uuids-0',
             'enterprise_catalog_query_uuids': [algolia_data['query_uuids'][0]],
         })
-        expected_algolia_objects.append({
-            'key': algolia_data['course_metadata'].content_key,
-            'objectID': f'course-{course_uuid}-catalog-query-uuids-1',
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-catalog-query-uuids-1',
             'enterprise_catalog_query_uuids': [algolia_data['query_uuids'][1]],
         })
 
         # verify partially_update_index is called with the correct Algolia object data
-        mock_search_client().partially_update_index.assert_called_once_with(expected_algolia_objects)
+        mock_search_client().partially_update_index.assert_called_once_with(expected_algolia_objects_to_index)
 
-        mock_was_recently_indexed.assert_called_once_with(self.course_metadata.content_key)
+        mock_was_recently_indexed.assert_called_once_with(self.course_metadata_published.content_key)

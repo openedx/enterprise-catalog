@@ -59,7 +59,26 @@ def get_enterprise_utm_context(enterprise_name):
     return utm_context
 
 
-def is_any_course_run_enrollable(course_runs):
+def is_course_run_active(course_run):
+    """
+    Checks whether a course run is active. That is, whether the course run is published,
+    enrollable, and marketable.
+
+    Arguments:
+        course_run (dict): The metadata about a course run.
+
+    Returns:
+        bool: True if course run is "active"
+    """
+    course_run_status = course_run.get('status') or ''
+    is_published = course_run_status.lower() == 'published'
+    is_enrollable = course_run.get('is_enrollable', False)
+    is_marketable = course_run.get('is_marketable', False)
+
+    return is_published and is_enrollable and is_marketable
+
+
+def is_any_course_run_active(course_runs):
     """
     Iterates over all course runs to check if there any course run that is available for enrollment.
 
@@ -67,9 +86,9 @@ def is_any_course_run_enrollable(course_runs):
         course_runs (list): list of course runs
 
     Returns:
-        bool: True if enrollable course run is found, else False
+        bool: True if active course run is found, else False
     """
     for course_run in course_runs:
-        if course_run.get('is_enrollable'):
+        if is_course_run_active(course_run):
             return True
     return False

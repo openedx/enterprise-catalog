@@ -18,10 +18,11 @@ from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 from enterprise_catalog.apps.catalog.algolia_utils import (
     ALGOLIA_FIELDS,
     ALGOLIA_UUID_BATCH_SIZE,
+    configure_algolia_index,
     create_algolia_objects_from_courses,
     get_algolia_object_id,
-    get_indexable_course_keys,
     get_initialized_algolia_client,
+    partition_course_keys_for_indexing,
 )
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
@@ -271,7 +272,8 @@ def _update_full_content_metadata(content_keys):
         )
 
         # record the course keys that were updated and should be indexed in Algolia by the B2C logic
-        indexable_course_keys.extend(get_indexable_course_keys(modified_content_metadata_records))
+        indexable_course_keys, __ = partition_course_keys_for_indexing(modified_content_metadata_records)
+        indexable_course_keys.extend(indexable_course_keys)
 
     logger.info(
         '{} total course keys were updated and are ready for indexing in Algolia'.format(len(indexable_course_keys))
@@ -306,25 +308,27 @@ def index_enterprise_catalog_courses_in_algolia_task(self):
             exc=RequiredTaskUnreadyError(),
         )
 
-    content_keys = ContentMetadata.recently_modified_records(
-        ONE_HOUR * 2
-    ).filter(
-        content_type=COURSE
-    ).values_list(
-        'content_key',
-        flat=True
+    recently_modified_records = ContentMetadata.recently_modified_records(ONE_HOUR * 2)
+    courses_content_metadata = recently_modified_records.filter(content_type=COURSE)
+    indexable_content_keys, nonindexable_content_keys = partition_course_keys_for_indexing(courses_content_metadata)
+    _reindex_algolia(
+        indexable_content_keys=indexable_content_keys,
+        nonindexable_content_keys=nonindexable_content_keys,
     )
-    _reindex_algolia(content_keys)
 
 
-def _reindex_algolia(content_keys):
+def index_content_keys_in_algolia(content_keys, algolia_client):
     """
-    Indexes course metadata in our Algolia search index.
-    """
-    algolia_client = get_initialized_algolia_client()
+    Adds/updates the metadata for the specified content keys in the Algolia index.
 
-    # Update the index in batches
-    logger.info('There are {} total content keys to update in the Algolia index.'.format(len(content_keys)))
+    Arguments:
+        content_keys (list): List of content_key strings.
+        algolia_client: Instance of an Algolia API client
+    """
+    logger.info(
+        'There are {} total content keys to add or '
+        'update in the Algolia index.'.format(len(content_keys))
+    )
     for content_keys_batch in batch(content_keys, batch_size=TASK_BATCH_SIZE):
         courses = []
         catalog_uuids_by_course_key = defaultdict(set)
@@ -420,7 +424,45 @@ def _reindex_algolia(content_keys):
         # extract out only the fields we care about and send to Algolia index
         algolia_objects = create_algolia_objects_from_courses(courses, ALGOLIA_FIELDS)
         algolia_client.partially_update_index(algolia_objects)
-        logger.info('Successfully updated index for {} courses in Algolia'.format(len(algolia_objects)))
+        logger.info('Successfully updated {} records in Algolia'.format(len(algolia_objects)))
+
+
+def remove_content_keys_in_algolia(content_keys, algolia_client):
+    """
+    Removes the specified content keys from the Algolia index.
+
+    Arguments:
+        content_keys (list): List of content_key strings.
+        algolia_client: Instance of an Algolia API client
+    """
+    logger.info(
+        'There are {} total content keys to remove from the '
+        'Algolia index.'.format(len(content_keys))
+    )
+    for content_keys_batch in batch(content_keys, batch_size=TASK_BATCH_SIZE):
+        algolia_client.delete_content_keys(content_keys_batch)
+
+
+def _reindex_algolia(indexable_content_keys, nonindexable_content_keys):
+    """
+    Indexes course metadata in our Algolia search index.
+    """
+    algolia_client = get_initialized_algolia_client()
+    configure_algolia_index(algolia_client)
+
+    # Remove all existing nonindexable content keys in batches from the Algolia index
+    if nonindexable_content_keys:
+        remove_content_keys_in_algolia(
+            content_keys=nonindexable_content_keys,
+            algolia_client=algolia_client,
+        )
+
+    # Add/update the indexable content keys in batches to the Algolia index
+    if indexable_content_keys:
+        index_content_keys_in_algolia(
+            content_keys=indexable_content_keys,
+            algolia_client=algolia_client,
+        )
 
 
 def _was_recently_indexed(content_key):

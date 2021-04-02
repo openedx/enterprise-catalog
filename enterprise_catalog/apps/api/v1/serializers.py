@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 from enterprise_catalog.apps.api.v1.utils import (
     get_enterprise_utm_context,
-    is_any_course_run_enrollable,
+    is_any_course_run_active,
     update_query_parameters,
 )
 from enterprise_catalog.apps.catalog.constants import (
@@ -151,7 +151,7 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
             )
             if content_type == COURSE:
                 course_runs = json_metadata.get('course_runs', [])
-                json_metadata['active'] = is_any_course_run_enrollable(course_runs)
+                json_metadata['active'] = is_any_course_run_active(course_runs)
                 for course_run in course_runs:
                     course_run['enrollment_url'] = enterprise_catalog.get_content_enrollment_url(
                         content_resource=COURSE,
