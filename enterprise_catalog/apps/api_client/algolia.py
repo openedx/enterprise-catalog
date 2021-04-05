@@ -74,68 +74,50 @@ class AlgoliaSearchClient:
             )
             raise exc
 
-    def partially_update_index(self, algolia_objects):
+    def index_exists(self):
         """
-        Performs a partial update of the Algolia index with the specified data.
-
-        If an object with the same `objectID` already exists in Algolia, it will be
-        updated. If Algolia is unaware of an object, a new one will be created.
-
-        Arguments:
-            algolia_objects (list): A list of payload objects to index into Algolia
+        Returns whether the index exists in Algolia.
         """
         if not self.algolia_index:
             logger.error('Algolia index does not exist. Did you initialize it?')
-            return
+            return False
 
-        try:
-            # Add algolia_objects to the Algolia index
-            response = self.algolia_index.partial_update_objects(algolia_objects, {
-                'createIfNotExists': True,
-            })
-            object_ids = []
-            for response in response.raw_responses:
-                object_ids += response.get('objectIDs', [])
-                logger.info(
-                    'Successfully indexed %d records in the %s Algolia index.',
-                    len(object_ids),
-                    self.ALGOLIA_INDEX_NAME,
-                )
-        except AlgoliaException as exc:
-            logger.exception(
-                'Could not index %d course(s) in Algolia\'s %s index due to an exception.',
-                len(algolia_objects),
+        exists = self.algolia_index.exists()
+        if not exists:
+            logger.warning(
+                'Index with name %s does not exist in Algolia.',
                 self.ALGOLIA_INDEX_NAME,
             )
-            raise exc
 
-    def delete_content_keys(self, content_keys):
+        return exists
+
+    def replace_all_objects(self, algolia_objects):
         """
-        Performs a `delete_by` operation for the specified content keys. Note: this call only counts
-        as a single Algolia operation (i.e., versus counting each deleted object as an operation).
+        Clears all objects from the index and replaces them with a new set of objects. The records are
+        replaced in the index without any downtime due to an atomic reindex.
+
+        See https://www.algolia.com/doc/api-reference/api-methods/replace-all-objects/ for more detials.
 
         Arguments:
-            content_keys (list): List of content_key strings.
+            algolia_objects (list): List of objects to include in the Algolia index
         """
-        if not self.algolia_index:
-            logger.error('Algolia index does not exist. Did you initialize it?')
+        if not self.index_exists():
+            # index must exist to continue, nothing left to do
             return
-
-        if not content_keys:
-            # nothing left to do here
-            return
-
-        filters = set()
-        for key in content_keys:
-            filters.add(f'key:"{key}"')
-        content_keys_filter_query = ' OR '.join(list(filters))
 
         try:
-            self.algolia_index.delete_by({'filters': content_keys_filter_query})
+            self.algolia_index.replace_all_objects(algolia_objects, {
+                'safe': True,  # wait for asynchronous indexing operations to complete
+            })
+            logger.info(
+                'The %s Algolia index was successfully indexed with %s objects.',
+                self.ALGOLIA_INDEX_NAME,
+                len(algolia_objects),
+            )
         except AlgoliaException as exc:
             logger.exception(
-                'Could not delete records in the  %s Algolia index for the following content keys: %s',
+                'Could not index %s objects in the %s Algolia index due to an exception.',
+                len(algolia_objects),
                 self.ALGOLIA_INDEX_NAME,
-                content_keys,
             )
             raise exc
