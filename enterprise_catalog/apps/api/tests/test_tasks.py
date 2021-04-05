@@ -326,12 +326,6 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             # call it a second time, make assertions that only one thing happened below
             tasks.index_enterprise_catalog_courses_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
-        # verify `delete_by` is called with the expected options for nonindexable content keys
-        unpublished_content_key = algolia_data['course_metadata_unpublished'].content_key
-        mock_search_client().delete_content_keys.assert_has_calls([
-            mock.call([unpublished_content_key])
-        ])
-
         # create expected data to be added/updated in the Algolia index.
         expected_algolia_objects_to_index = []
         published_course_uuid = algolia_data['course_metadata_published'].json_metadata.get('uuid')
@@ -351,9 +345,9 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'enterprise_catalog_query_uuids': algolia_data['query_uuids'],
         })
 
-        # verify partially_update_index is called with the correct Algolia object data
+        # verify replace_all_objects is called with the correct Algolia object data
         # on the first invocation and with an empty list on the second invocation.
-        mock_search_client().partially_update_index.assert_has_calls([
+        mock_search_client().replace_all_objects.assert_has_calls([
             mock.call(expected_algolia_objects_to_index),
             mock.call([]),
         ])
@@ -376,12 +370,6 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_UUID_BATCH_SIZE', 1), \
              mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
             tasks.index_enterprise_catalog_courses_in_algolia_task()  # pylint: disable=no-value-for-parameter
-
-        # verify `delete_by` is called with the expected options for nonindexable content keys
-        unpublished_content_key = algolia_data['course_metadata_unpublished'].content_key
-        mock_search_client().delete_content_keys.assert_has_calls([
-            mock.call([unpublished_content_key])
-        ])
 
         # create expected data to be added/updated in the Algolia index.
         expected_algolia_objects_to_index = []
@@ -417,7 +405,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'enterprise_catalog_query_uuids': [algolia_data['query_uuids'][1]],
         })
 
-        # verify partially_update_index is called with the correct Algolia object data
-        mock_search_client().partially_update_index.assert_called_once_with(expected_algolia_objects_to_index)
+        # verify replace_all_objects is called with the correct Algolia object data
+        mock_search_client().replace_all_objects.assert_called_once_with(expected_algolia_objects_to_index)
 
         mock_was_recently_indexed.assert_called_once_with(self.course_metadata_published.content_key)
