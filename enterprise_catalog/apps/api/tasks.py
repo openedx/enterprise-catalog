@@ -308,8 +308,7 @@ def index_enterprise_catalog_courses_in_algolia_task(self):
             exc=RequiredTaskUnreadyError(),
         )
 
-    recently_modified_records = ContentMetadata.recently_modified_records(ONE_HOUR * 2)
-    courses_content_metadata = recently_modified_records.filter(content_type=COURSE)
+    courses_content_metadata = ContentMetadata.objects.filter(content_type=COURSE)
     indexable_content_keys, nonindexable_content_keys = partition_course_keys_for_indexing(courses_content_metadata)
     _reindex_algolia(
         indexable_content_keys=indexable_content_keys,
