@@ -37,7 +37,7 @@ django-model-utils==4.0.0  # via -r requirements/quality.txt, -r requirements/te
 django-rest-swagger==2.2.0  # via -r requirements/quality.txt, -r requirements/test.txt
 django-simple-history==2.11.0  # via -r requirements/quality.txt, -r requirements/test.txt
 django-waffle==2.0.0      # via -r requirements/quality.txt, -r requirements/test.txt, edx-django-utils, edx-drf-extensions
-django==2.2.19            # via -r requirements/quality.txt, -r requirements/test.txt, code-annotations, django-cors-headers, django-crum, django-debug-toolbar, django-model-utils, djangorestframework, drf-jwt, edx-auth-backends, edx-celeryutils, edx-django-release-util, edx-django-utils, edx-drf-extensions, edx-i18n-tools, edx-rbac, jsonfield2, rest-condition
+django==2.2.20            # via -r requirements/quality.txt, -r requirements/test.txt, code-annotations, django-cors-headers, django-crum, django-debug-toolbar, django-model-utils, djangorestframework, drf-jwt, edx-auth-backends, edx-celeryutils, edx-django-release-util, edx-django-utils, edx-drf-extensions, edx-i18n-tools, edx-rbac, jsonfield2, rest-condition
 djangorestframework-xml==2.0.0  # via -r requirements/quality.txt, -r requirements/test.txt
 djangorestframework==3.12.1  # via -r requirements/quality.txt, -r requirements/test.txt, django-rest-swagger, drf-jwt, edx-drf-extensions, rest-condition
 docker-compose==1.27.4    # via -r requirements/dev.in
