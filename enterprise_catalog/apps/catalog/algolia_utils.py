@@ -25,6 +25,7 @@ ALGOLIA_FIELDS = [
     'objectID',  # required by Algolia, e.g. "course-{uuid}"
     'partners',
     'programs',
+    'program_titles',
     'recent_enrollment_count',
     'short_description',
     'subjects',
@@ -232,6 +233,23 @@ def get_course_partners(course):
     return partners
 
 
+def _get_course_program_field(course, field):
+    """
+    Helper to pluck a list of values for the given field out of a course's programs.
+
+    Arguments:
+        course (dict): a dictionary representing a course
+        field (str): the name of a field to return values of.
+    Returns:
+        list: a list of the values for a certain field in a program associated with the course.
+    """
+    programs = course.get('programs') or []
+    return list({
+        value for program in programs
+        if (value := program.get(field))
+    })
+
+
 def get_course_program_types(course):
     """
     Gets list of program types associated with the course. Used for the "Programs"
@@ -243,15 +261,21 @@ def get_course_program_types(course):
     Returns:
         list: a list of program types associated with the course
     """
-    program_types = set()
-    programs = course.get('programs') or []
+    return _get_course_program_field(course, 'type')
 
-    for program in programs:
-        program_type = program.get('type')
-        if program_type:
-            program_types.add(program_type)
 
-    return list(program_types)
+def get_course_program_titles(course):
+    """
+    Gets list of program titles associated with the course. Used for the "Program titles"
+    facet in Algolia.
+
+    Arguments:
+        course (dict): a dictionary representing a course.
+
+    Returns:
+        list: a list of program titles associated with the course.
+    """
+    return _get_course_program_field(course, 'title')
 
 
 def get_course_subjects(course):
@@ -369,6 +393,7 @@ def _algolia_object_from_course(course, algolia_fields):
         'availability': get_course_availability(searchable_course),
         'partners': get_course_partners(searchable_course),
         'programs': get_course_program_types(searchable_course),
+        'program_titles': get_course_program_titles(searchable_course),
         'subjects': get_course_subjects(searchable_course),
         'card_image_url': get_course_card_image_url(searchable_course),
         'advertised_course_run': get_advertised_course_run(searchable_course),

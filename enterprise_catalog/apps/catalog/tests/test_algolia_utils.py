@@ -13,6 +13,7 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     get_course_card_image_url,
     get_course_language,
     get_course_partners,
+    get_course_program_titles,
     get_course_program_types,
     get_course_skill_names,
     get_course_subjects,
@@ -303,14 +304,44 @@ class AlgoliaUtilsTests(TestCase):
             {'programs': [{'type': 'Professional Certificate'}]},
             ['Professional Certificate'],
         ),
+        (
+            {'programs': [{'title': 'Synchronicity'}]},
+            [],
+        ),
+        (
+            {'programs': [{'type': '', 'title': 'Yes'}]},
+            [],
+        ),
     )
     @ddt.unpack
     def test_get_course_program_types(self, course_metadata, expected_program_types):
         """
-        Assert that the list of programs associated with a course is properly parsed and formatted.
+        Assert that the list of program types associated with a course is properly parsed and formatted.
         """
         program_types = get_course_program_types(course_metadata)
         assert program_types == expected_program_types
+
+    @ddt.data(
+        (
+            {'programs': [{'type': 'Masters', 'title': 'Reverse Psychology'}]},
+            ['Reverse Psychology'],
+        ),
+        (
+            {'programs': [{'type': 'Professional Certificate'}]},
+            [],
+        ),
+        (
+            {'programs': [{'type': 'Professional Certificate', 'title': ''}]},
+            [],
+        ),
+    )
+    @ddt.unpack
+    def test_get_course_program_titles(self, course_metadata, expected_program_titles):
+        """
+        Assert that the list of program titles associated with a course is properly parsed and formatted.
+        """
+        program_titles = get_course_program_titles(course_metadata)
+        assert program_titles == expected_program_titles
 
     @ddt.data(
         (
