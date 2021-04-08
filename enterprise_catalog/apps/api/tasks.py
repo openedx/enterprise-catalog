@@ -485,7 +485,8 @@ def _algolia_recent_update_cache_key(content_key):
 @expiring_task_semaphore()
 def update_catalog_metadata_task(self, catalog_query_id):  # pylint: disable=unused-argument
     """
-    Updates all ContentMetadata associated with the catalog query by pulling in data from /search/all on discovery
+    Associates ContentMetadata objects with the appropriate catalog query by pulling data
+    from /search/all on discovery.
 
     Args:
         catalog_query_id (str): The id for the catalog query to update.

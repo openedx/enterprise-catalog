@@ -410,12 +410,27 @@ def associate_content_metadata_with_query(metadata, catalog_query):
     metadata_list = []
     for entry in metadata:
         content_key = get_content_key(entry)
+        parent_content_key = get_parent_content_key(entry)
+        content_type = get_content_type(entry)
         defaults = {
             'content_key': content_key,
-            'json_metadata': entry,
-            'parent_content_key': get_parent_content_key(entry),
-            'content_type': get_content_type(entry),
+            'parent_content_key': parent_content_key,
+            'content_type': content_type,
         }
+        # Ensure the json_metadata is only updated for content_types other than course (e.g., course_run,
+        # program); the json_metadata for courses will be populated by update_full_content_metadata_task. Ideally,
+        # we would limit this task to only create the associations of content_keys to catalog queries, rather than
+        # continuing to write the json_metadata field for content other than courses. However, as the json_metadata
+        # differs between the minimal /search/all data and the full metadata, we run the risk of changing the API
+        # contract of the `get_content_metadata` endpoint in enterprise-catalog, which is customer-facing. As we are
+        # currently using the full course metadata in the `get_content_metadata` endpoint (for the purpose of Algolia
+        # indexing), relying on update_full_content_metadata_task to populate the json_metadata field for courses has
+        # not changed. This conditional prevents overwriting the full course metadata with the minimal course data
+        # from the /search/all API endpoint.
+        if content_type != 'course':
+            defaults.update({
+                'json_metadata': entry,
+            })
 
         try:
             existing_metadata = ContentMetadata.objects.get(content_key=content_key)
@@ -423,8 +438,16 @@ def associate_content_metadata_with_query(metadata, catalog_query):
             existing_metadata = None
 
         if existing_metadata:
-            if get_sorted_string_from_json(entry) != get_sorted_string_from_json(existing_metadata.json_metadata):
-                # Only update the existing ContentMetadata object if its json has changed,
+            if content_type == 'course':
+                # Only update the existing ContentMetadata object if it's a course and its parent_content_key
+                # or content_type fields have changed.
+                has_new_parent_key = existing_metadata.parent_content_key != parent_content_key
+                has_new_content_type = existing_metadata.content_type != content_type
+                if has_new_parent_key or has_new_content_type:
+                    for key, value in defaults.items():
+                        setattr(existing_metadata, key, value)
+            elif get_sorted_string_from_json(entry) != get_sorted_string_from_json(existing_metadata.json_metadata):
+                # Only update the existing ContentMetadata object if its json has changed.
                 for key, value in defaults.items():
                     setattr(existing_metadata, key, value)
 

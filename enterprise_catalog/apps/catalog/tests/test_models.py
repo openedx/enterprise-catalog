@@ -24,8 +24,8 @@ class TestModels(TestCase):
     @mock.patch('enterprise_catalog.apps.api_client.discovery_cache.DiscoveryApiClient')
     def test_contentmetadata_update_from_discovery(self, mock_client):
         """
-        update_contentmetadata_from_discovery should update or create
-        ContentMetadata Objects from the discovery service api call/
+        update_contentmetadata_from_discovery should update or create ContentMetadata
+        objects from the discovery service /search/all api call.
         """
         course_metadata = OrderedDict([
             ('aggregation_key', 'course:edX+testX'),
@@ -60,7 +60,7 @@ class TestModels(TestCase):
         course_cm = ContentMetadata.objects.get(content_key=course_metadata['key'])
         self.assertEqual(course_cm.content_type, COURSE)
         self.assertEqual(course_cm.parent_content_key, None)
-        self.assertEqual(course_cm.json_metadata, course_metadata)
+        self.assertEqual(course_cm.json_metadata, {})  # json_metadata should not be updated for courses
         assert course_cm in associated_metadata
 
         course_run_cm = ContentMetadata.objects.get(content_key=course_run_metadata['key'])
