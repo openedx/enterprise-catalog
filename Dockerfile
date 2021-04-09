@@ -64,14 +64,7 @@ FROM app as newrelic
 RUN pip install newrelic
 CMD ["newrelic-admin", "run-program", "gunicorn", "--workers=2", "--name", "enterprise_catalog", "-c", "/edx/app/enterprise_catalog/enterprise_catalog/enterprise_catalog/docker_gunicorn_configuration.py", "--log-file", "-", "--max-requests=1000", "enterprise_catalog.wsgi:application"]
 
-# Creating image which will be used by Decentralized Devstack
-FROM app as devstack
-USER root
-RUN pip install -r /edx/app/enterprise_catalog/enterprise_catalog/requirements/dev.txt
-USER app
-CMD ["gunicorn", "--reload", "--workers=2", "--name", "enterprise_catalog", "-b", ":8160", "-c", "/edx/app/enterprise_catalog/enterprise_catalog/enterprise_catalog/docker_gunicorn_configuration.py", "--log-file", "-", "--max-requests=1000", "enterprise_catalog.wsgi:application"]
-
-# Creating image used by legacy devstack(main diff is the exposed ports)
+# Creating image used by devstack
 FROM app as legacy_devapp
 # Dev ports
 EXPOSE 18160
