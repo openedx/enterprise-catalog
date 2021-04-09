@@ -56,6 +56,7 @@ ALGOLIA_INDEX_SETTINGS = {
         'level_type',
         'partners.name',
         'programs',
+        'program_titles',
         'searchable(skill_names)',
         'subjects',
         'key',  # necessary for deleting non-indexable course records from the Algolia index
