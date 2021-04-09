@@ -183,12 +183,10 @@ dev.stop: # Stops containers so they can be restarted
 
 docker_build: ## Builds with the latest enterprise catalog
 	docker build . --target app -t openedx/enterprise-catalog:latest
-	docker build . --target devstack -t openedx/enterprise-catalog:latest-devstack
 	docker build . --target newrelic -t openedx/enterprise-catalog:latest-newrelic
 
 docker_tag: docker_build
 	docker tag openedx/enterprise-catalog openedx/enterprise-catalog:$$GITHUB_SHA
-	docker tag openedx/enterprise-catalog:latest-devstack openedx/enterprise-catalog:$$GITHUB_SHA-devstack
 	docker tag openedx/enterprise-catalog:latest-newrelic openedx/enterprise-catalog:$$GITHUB_SHA-newrelic
 
 docker_auth:
@@ -197,7 +195,5 @@ docker_auth:
 docker_push: docker_tag docker_auth ## push to docker hub
 	docker push 'openedx/enterprise-catalog:latest'
 	docker push "openedx/enterprise-catalog:$$GITHUB_SHA"
-	docker push 'openedx/enterprise-catalog:latest-devstack'
-	docker push "openedx/enterprise-catalog:$$GITHUB_SHA-devstack"
 	docker push 'openedx/enterprise-catalog:latest-newrelic'
 	docker push "openedx/enterprise-catalog:$$GITHUB_SHA-newrelic"
