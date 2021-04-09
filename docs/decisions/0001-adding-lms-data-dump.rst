@@ -4,7 +4,7 @@ Adding lms data dump
 Status
 ------
 
-Accepted
+Superseded by ADR: 0003-deprecating-decentralized-devstack.rst
 
 Context
 -------
