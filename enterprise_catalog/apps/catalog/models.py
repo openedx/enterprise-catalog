@@ -362,13 +362,6 @@ class ContentMetadata(TimeStampedModel):
             modified__range=(range_start, range_end),
         )
 
-    def merge_json_metadata(self, additional_metadata):
-        # merge the original json_metadata with the full course_metadata to ensure
-        # we're not removing any critical fields, e.g. "aggregation_key".
-        updated_metadata = self.json_metadata.copy()
-        updated_metadata.update(additional_metadata)
-        self.json_metadata = updated_metadata
-
     def __str__(self):
         """
         Return human-readable string representation.
@@ -428,14 +421,13 @@ def _get_defaults_from_metadata(entry, exists=False):
     if content_type == 'course' and exists:
         # Only include the json_metadata fields from /search/all that is not present in the
         # full course metadata to avoid changing the ``get_content_metadata`` API contract.
-        fields_to_pluck = ['aggregation_key', 'content_type', 'seat_types', 'end_date', 'course_ends', 'languages']
         entry_minimal = {}
-        for field in fields_to_pluck:
+        for field in settings.FIELDS_TO_PLUCK_FROM_SEARCH_ALL:
             if value := entry.get(field):
                 entry_minimal.update({field: value})
         if entry_minimal:
             defaults.update({'json_metadata': entry_minimal})
-    elif (content_type != 'course' and exists) or not exists:
+    elif not exists or (content_type != 'course'):
         # Update json_metadata for non-courses when ContentMetadata object already exists. Also,
         # always include json_metadata (regardless of content type) if ContentMetadata object
         # does not yet exist in the database.
@@ -443,7 +435,7 @@ def _get_defaults_from_metadata(entry, exists=False):
     return defaults
 
 
-def _partition_content_metadata_defaults(batched_metadata, existing_metadata):
+def _partition_content_metadata_defaults(batched_metadata, existing_metadata_by_key):
     """
     Given a batch of metadata entries and a list of existing ContentMetadata objects, this function
     determines the default fields to use for creates/updates depending on whether a database object exists
@@ -451,49 +443,28 @@ def _partition_content_metadata_defaults(batched_metadata, existing_metadata):
 
     Arguments:
         batched_metadata (list): List of metadata entries from the /search/all API response.
-        existing_metadata (list): List of existing ContentMetadata objects in the DB.
+        existing_metadata_by_key (dict): Dictionary of existing ContentMetadata objects in the
+            database by content key.
 
     Returns:
         (existing_metadata_defaults, nonexisting_metadata_defaults): Tuple containing lists of both
             the default fields for ContentMetadata objects that already exist in the DB and for ContentMetadata
             objects that will be newly created.
     """
-    existing_content_keys = [entry.content_key for entry in existing_metadata]
     existing_metadata_defaults = [
         _get_defaults_from_metadata(entry, exists=True)
         for entry in batched_metadata
-        if get_content_key(entry) in existing_content_keys
+        if get_content_key(entry) in existing_metadata_by_key
     ]
     nonexisting_metadata_defaults = [
         _get_defaults_from_metadata(entry)
         for entry in batched_metadata
-        if not get_content_key(entry) in existing_content_keys
+        if not get_content_key(entry) in existing_metadata_by_key
     ]
     return existing_metadata_defaults, nonexisting_metadata_defaults
 
 
-def _find_entry_in_existing_metadata(content_key, existing_metadata):
-    """
-    Given a list of existing ContentMetadata database objects, this function finds an existing
-    ContentMetadata instance that matches a specified content_key.
-
-    Arguments:
-        content_key (string): A string representing a content_key
-        existing_metadata (list): A list of existing ContentMetadata database objects
-
-    Returns:
-        ContentMetadata (instance): An existing ContentMetadata database object associated with
-            the specified content_key, or None if object matching the content_key is not found.
-    """
-    entry = None
-    for metadata in existing_metadata:
-        if metadata.content_key == content_key:
-            entry = metadata
-            break
-    return entry
-
-
-def _update_existing_content_metadata(existing_metadata_defaults, existing_metadata):
+def _update_existing_content_metadata(existing_metadata_defaults, existing_metadata_by_key):
     """
     Iterates through existing ContentMetadata database objects, updating the values of various
     fields based on the defaults provided.
@@ -501,26 +472,28 @@ def _update_existing_content_metadata(existing_metadata_defaults, existing_metad
     Arguments:
         existing_metadata_defaults (list): List of default values for various fields
             to update the existing ContentMetadata database objects.
-        existing_metadata (list): List of existing ContentMetadata database objects to update
+        existing_metadata_by_key (dict): Dictionary of existing ContentMetadata database objects to
+            update by content_key.
 
     Returns:
         list: List of ContentMetadata objects that were updated.
     """
     metadata_list = []
     for defaults in existing_metadata_defaults:
-        content_metadata = _find_entry_in_existing_metadata(defaults['content_key'], existing_metadata)
+        content_metadata = existing_metadata_by_key.get(defaults['content_key'])
         if content_metadata:
             for key, value in defaults.items():
                 if key == 'json_metadata':
                     # merge new json_metadata with old json_metadata (i.e., don't replace it fully)
-                    content_metadata.merge_json_metadata(value)
+                    content_metadata.json_metadata.update(value)
                 else:
                     # replace attributes with new values
                     setattr(content_metadata, key, value)
             metadata_list.append(content_metadata)
 
     metadata_fields_to_update = ['content_key', 'parent_content_key', 'content_type', 'json_metadata']
-    ContentMetadata.objects.bulk_update(existing_metadata, metadata_fields_to_update)
+    existing_metadata_objs = existing_metadata_by_key.values()
+    ContentMetadata.objects.bulk_update(existing_metadata_objs, metadata_fields_to_update)
     return metadata_list
 
 
@@ -563,12 +536,13 @@ def associate_content_metadata_with_query(metadata, catalog_query):
     for batched_metadata in batch(metadata, batch_size=100):
         content_keys = [get_content_key(entry) for entry in batched_metadata]
         existing_metadata = ContentMetadata.objects.filter(content_key__in=content_keys)
+        existing_metadata_by_key = {metadata.content_key: metadata for metadata in existing_metadata}
         existing_metadata_defaults, nonexisting_metadata_defaults = _partition_content_metadata_defaults(
-            batched_metadata, existing_metadata
+            batched_metadata, existing_metadata_by_key
         )
 
         # Update existing ContentMetadata records
-        updated_metadata = _update_existing_content_metadata(existing_metadata_defaults, existing_metadata)
+        updated_metadata = _update_existing_content_metadata(existing_metadata_defaults, existing_metadata_by_key)
         metadata_list.extend(updated_metadata)
 
         # Create new ContentMetadata records
