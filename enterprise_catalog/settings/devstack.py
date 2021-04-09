@@ -62,7 +62,7 @@ ENTERPRISE_LEARNER_PORTAL_BASE_URL = 'http://localhost:8734'
 
 # Which fields should be plucked from the /search/all course-discovery API
 # response in `update_catalog_metadata_task` for course content metadata?
-FIELDS_TO_PLUCK_FROM_SEARCH_ALL = [
+COURSE_FIELDS_TO_PLUCK_FROM_SEARCH_ALL = [
     'aggregation_key',
     'content_type',
     'seat_types',

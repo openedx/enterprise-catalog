@@ -422,7 +422,7 @@ def _get_defaults_from_metadata(entry, exists=False):
         # Only include the json_metadata fields from /search/all that is not present in the
         # full course metadata to avoid changing the ``get_content_metadata`` API contract.
         entry_minimal = {}
-        for field in settings.FIELDS_TO_PLUCK_FROM_SEARCH_ALL:
+        for field in settings.COURSE_FIELDS_TO_PLUCK_FROM_SEARCH_ALL:
             if value := entry.get(field):
                 entry_minimal.update({field: value})
         if entry_minimal:

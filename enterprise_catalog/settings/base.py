@@ -361,7 +361,7 @@ ALGOLIA = {
 
 # Which fields should be plucked from the /search/all course-discovery API
 # response in `update_catalog_metadata_task` for course content metadata?
-FIELDS_TO_PLUCK_FROM_SEARCH_ALL = os.environ.get('FIELDS_TO_PLUCK_FROM_SEARCH_ALL', [])
+COURSE_FIELDS_TO_PLUCK_FROM_SEARCH_ALL = os.environ.get('COURSE_FIELDS_TO_PLUCK_FROM_SEARCH_ALL', [])
 
 # Set up system-to-feature roles mapping for edx-rbac
 SYSTEM_TO_FEATURE_ROLE_MAPPING = {
