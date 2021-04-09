@@ -1,5 +1,6 @@
 """ Tests for catalog models. """
 
+import json
 from collections import OrderedDict
 from unittest import mock
 
@@ -60,7 +61,7 @@ class TestModels(TestCase):
         course_cm = ContentMetadata.objects.get(content_key=course_metadata['key'])
         self.assertEqual(course_cm.content_type, COURSE)
         self.assertEqual(course_cm.parent_content_key, None)
-        self.assertEqual(course_cm.json_metadata, {})  # json_metadata should not be updated for courses
+        self.assertEqual(course_cm.json_metadata, course_metadata)
         assert course_cm in associated_metadata
 
         course_run_cm = ContentMetadata.objects.get(content_key=course_run_metadata['key'])
@@ -74,6 +75,25 @@ class TestModels(TestCase):
         self.assertEqual(program_cm.parent_content_key, None)
         self.assertEqual(program_cm.json_metadata, program_metadata)
         assert program_cm in associated_metadata
+
+        # Run again with existing ContentMetadata database objects, temporarily modifying
+        # the json_metadata of the existing course to remove a field that will later be
+        # added. Assert the existing json_metadata field is updated with the correct metadata
+        # to include /search/all fields (e.g., aggregation_key).
+        course_cm = ContentMetadata.objects.get(content_key=course_metadata['key'])
+        course_cm.json_metadata = {
+            'key': course_metadata['key'],
+            'title': course_metadata['title'],
+        }
+        course_cm.save()
+        update_contentmetadata_from_discovery(catalog.catalog_query)
+        self.assertEqual(ContentMetadata.objects.count(), 3)  # assert all ContentMetadata objects are preserved
+        course_cm = ContentMetadata.objects.get(content_key=course_metadata['key'])
+        # assert json_metadata is updated to include fields plucked from /search/all metadata.
+        self.assertEqual(
+            json.dumps(course_cm.json_metadata, sort_keys=True),
+            json.dumps(course_metadata, sort_keys=True),
+        )
 
         # Run again and expect that we will unassociate some content metadata
         # from catalog query while perserving the content metadata objects

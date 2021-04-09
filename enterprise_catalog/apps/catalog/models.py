@@ -4,7 +4,7 @@ from logging import getLogger
 from uuid import uuid4
 
 from django.conf import settings
-from django.db import models
+from django.db import IntegrityError, models, transaction
 from django.db.models import Q
 from django.utils.translation import gettext as _
 from edx_rbac.models import UserRole, UserRoleAssignment
@@ -31,11 +31,11 @@ from enterprise_catalog.apps.catalog.constants import (
     json_serialized_course_modes,
 )
 from enterprise_catalog.apps.catalog.utils import (
+    batch,
     get_content_filter_hash,
     get_content_key,
     get_content_type,
     get_parent_content_key,
-    get_sorted_string_from_json,
     localized_utcnow,
 )
 
@@ -393,12 +393,164 @@ def content_metadata_with_type_course():
     return content_metadata
 
 
+def _get_defaults_from_metadata(entry, exists=False):
+    """
+    Given a metadata entry from course-discovery's /search/all API endpoint, this function determines the
+    default values to be used when creating/updating ContentMetadata objects (e.g., content_key).
+
+    Regardless of content type, ContentMetadata objects will have its content_key, parent_content_key, and
+    content_type fields updated to reflect the most current state. However, the json_metadata field is only
+    conditionally included as part of the update.
+
+    For net-new ContentMetadata objects, json_metadata is always included, determined by the ``exists``
+    argument. However, for existing ContentMetadata objects, the logic is a bit more complex. For course runs
+    and programs, the json_metadata field should always be fully overwritten with the metadata from /search/all.
+    For courses, the existing json_metadata in the ContentMetadata database object should be merged with a minimal
+    subset of fields that are known to exist only in the /search/all API response. This ensures we are not losing
+    potentially critical fields in this service's ``get_content_metadata`` API endpoint by overwriting the full
+    course metadata, which happens through the update_full_content_metadata_task.
+
+    Arguments:
+        entry (dict): A dictionary representing the metadata about some content from /search/all API response.
+        exists (bool): True if the metadata already exists in the DB, False if not.
+
+    Returns:
+        dict: A dictionary containing the new defaults for the a ContentMetadata object.
+    """
+    content_key = get_content_key(entry)
+    parent_content_key = get_parent_content_key(entry)
+    content_type = get_content_type(entry)
+    defaults = {
+        'content_key': content_key,
+        'parent_content_key': parent_content_key,
+        'content_type': content_type,
+    }
+    if content_type == 'course' and exists:
+        # Only include the json_metadata fields from /search/all that is not present in the
+        # full course metadata to avoid changing the ``get_content_metadata`` API contract.
+        fields_to_pluck = ['aggregation_key', 'content_type', 'seat_types', 'end_date', 'course_ends', 'languages']
+        entry_minimal = {}
+        for field in fields_to_pluck:
+            if value := entry.get(field):
+                entry_minimal.update({field: value})
+        if entry_minimal:
+            defaults.update({'json_metadata': entry_minimal})
+    elif (content_type != 'course' and exists) or not exists:
+        # Update json_metadata for non-courses when ContentMetadata object already exists. Also,
+        # always include json_metadata (regardless of content type) if ContentMetadata object
+        # does not yet exist in the database.
+        defaults.update({'json_metadata': entry})
+    return defaults
+
+
+def _partition_content_metadata_defaults(batched_metadata, existing_metadata):
+    """
+    Given a batch of metadata entries and a list of existing ContentMetadata objects, this function
+    determines the default fields to use for creates/updates depending on whether a database object exists
+    for each metadata entry.
+
+    Arguments:
+        batched_metadata (list): List of metadata entries from the /search/all API response.
+        existing_metadata (list): List of existing ContentMetadata objects in the DB.
+
+    Returns:
+        (existing_metadata_defaults, nonexisting_metadata_defaults): Tuple containing lists of both
+            the default fields for ContentMetadata objects that already exist in the DB and for ContentMetadata
+            objects that will be newly created.
+    """
+    existing_content_keys = [entry.content_key for entry in existing_metadata]
+    existing_metadata_defaults = [
+        _get_defaults_from_metadata(entry, exists=True)
+        for entry in batched_metadata
+        if get_content_key(entry) in existing_content_keys
+    ]
+    nonexisting_metadata_defaults = [
+        _get_defaults_from_metadata(entry)
+        for entry in batched_metadata
+        if not get_content_key(entry) in existing_content_keys
+    ]
+    return existing_metadata_defaults, nonexisting_metadata_defaults
+
+
+def _find_entry_in_existing_metadata(content_key, existing_metadata):
+    """
+    Given a list of existing ContentMetadata database objects, this function finds an existing
+    ContentMetadata instance that matches a specified content_key.
+
+    Arguments:
+        content_key (string): A string representing a content_key
+        existing_metadata (list): A list of existing ContentMetadata database objects
+
+    Returns:
+        ContentMetadata (instance): An existing ContentMetadata database object associated with
+            the specified content_key, or None if object matching the content_key is not found.
+    """
+    entry = None
+    for metadata in existing_metadata:
+        if metadata.content_key == content_key:
+            entry = metadata
+            break
+    return entry
+
+
+def _update_existing_content_metadata(existing_metadata_defaults, existing_metadata):
+    """
+    Iterates through existing ContentMetadata database objects, updating the values of various
+    fields based on the defaults provided.
+
+    Arguments:
+        existing_metadata_defaults (list): List of default values for various fields
+            to update the existing ContentMetadata database objects.
+        existing_metadata (list): List of existing ContentMetadata database objects to update
+
+    Returns:
+        list: List of ContentMetadata objects that were updated.
+    """
+    metadata_list = []
+    for defaults in existing_metadata_defaults:
+        content_metadata = _find_entry_in_existing_metadata(defaults['content_key'], existing_metadata)
+        if content_metadata:
+            for key, value in defaults.items():
+                if key == 'json_metadata':
+                    # merge new json_metadata with old json_metadata (i.e., don't replace it fully)
+                    content_metadata.merge_json_metadata(value)
+                else:
+                    # replace attributes with new values
+                    setattr(content_metadata, key, value)
+            metadata_list.append(content_metadata)
+
+    metadata_fields_to_update = ['content_key', 'parent_content_key', 'content_type', 'json_metadata']
+    ContentMetadata.objects.bulk_update(existing_metadata, metadata_fields_to_update)
+    return metadata_list
+
+
+def _create_new_content_metadata(nonexisting_metadata_defaults):
+    """
+    Creates new ContentMetadata database objects based on the defaults provided. This is done through an atomic
+    database transaction.
+
+    Arguments:
+        nonexisting_metadata_defaults (list): List of default values for various fields to create
+            non-existing ContentMetadata database objects.
+
+    Returns:
+        list: List of ContentMetadata objects that were created.
+    """
+    metadata_list = []
+    try:
+        with transaction.atomic():
+            for defaults in nonexisting_metadata_defaults:
+                content_metadata = ContentMetadata.objects.create(**defaults)
+                metadata_list.append(content_metadata)
+    except IntegrityError:
+        LOGGER.exception('_create_new_content_metadata ran into an issue while creating new ContentMetadata objects.')
+    return metadata_list
+
+
 def associate_content_metadata_with_query(metadata, catalog_query):
     """
-    Creates or (possibly) updates a ContentMetadata object for each entry in `metadata`,
+    Creates or updates a ContentMetadata object for each entry in `metadata`,
     and then associates that object with the `catalog_query` provided.
-    Only updates an existing ContentMetadata object if its `json_metadata` field
-    differs from the data provided in `metadata`.
 
     Arguments:
         metadata (list): List of content metadata dictionaries.
@@ -408,57 +560,20 @@ def associate_content_metadata_with_query(metadata, catalog_query):
         list: The list of content_keys for the metadata associated with the query.
     """
     metadata_list = []
-    for entry in metadata:
-        content_key = get_content_key(entry)
-        parent_content_key = get_parent_content_key(entry)
-        content_type = get_content_type(entry)
-        defaults = {
-            'content_key': content_key,
-            'parent_content_key': parent_content_key,
-            'content_type': content_type,
-        }
-        # Ensure the json_metadata is only updated for content_types other than course (e.g., course_run,
-        # program); the json_metadata for courses will be populated by update_full_content_metadata_task. Ideally,
-        # we would limit this task to only create the associations of content_keys to catalog queries, rather than
-        # continuing to write the json_metadata field for content other than courses. However, as the json_metadata
-        # differs between the minimal /search/all data and the full metadata, we run the risk of changing the API
-        # contract of the `get_content_metadata` endpoint in enterprise-catalog, which is customer-facing. As we are
-        # currently using the full course metadata in the `get_content_metadata` endpoint (for the purpose of Algolia
-        # indexing), relying on update_full_content_metadata_task to populate the json_metadata field for courses has
-        # not changed. This conditional prevents overwriting the full course metadata with the minimal course data
-        # from the /search/all API endpoint.
-        if content_type != 'course':
-            defaults.update({
-                'json_metadata': entry,
-            })
+    for batched_metadata in batch(metadata, batch_size=100):
+        content_keys = [get_content_key(entry) for entry in batched_metadata]
+        existing_metadata = ContentMetadata.objects.filter(content_key__in=content_keys)
+        existing_metadata_defaults, nonexisting_metadata_defaults = _partition_content_metadata_defaults(
+            batched_metadata, existing_metadata
+        )
 
-        try:
-            existing_metadata = ContentMetadata.objects.get(content_key=content_key)
-        except ContentMetadata.DoesNotExist:
-            existing_metadata = None
+        # Update existing ContentMetadata records
+        updated_metadata = _update_existing_content_metadata(existing_metadata_defaults, existing_metadata)
+        metadata_list.extend(updated_metadata)
 
-        if existing_metadata:
-            if content_type == 'course':
-                # Only update the existing ContentMetadata object if it's a course and its parent_content_key
-                # or content_type fields have changed.
-                has_new_parent_key = existing_metadata.parent_content_key != parent_content_key
-                has_new_content_type = existing_metadata.content_type != content_type
-                if has_new_parent_key or has_new_content_type:
-                    for key, value in defaults.items():
-                        setattr(existing_metadata, key, value)
-            elif get_sorted_string_from_json(entry) != get_sorted_string_from_json(existing_metadata.json_metadata):
-                # Only update the existing ContentMetadata object if its json has changed.
-                for key, value in defaults.items():
-                    setattr(existing_metadata, key, value)
-
-            # ...but still associate it with the query and modify/save the ContentMetadata
-            # so that its `modified` field is updated.
-            metadata_list.append(existing_metadata)
-            existing_metadata.save()
-        else:
-            existing_metadata = ContentMetadata.objects.create(**defaults)
-
-        metadata_list.append(existing_metadata)
+        # Create new ContentMetadata records
+        created_metadata = _create_new_content_metadata(nonexisting_metadata_defaults)
+        metadata_list.extend(created_metadata)
 
     # Setting `clear=True` will remove all prior relationships between
     # the CatalogQuery's associated ContentMetadata objects
