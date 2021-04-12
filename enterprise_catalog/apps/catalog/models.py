@@ -492,7 +492,7 @@ def _update_existing_content_metadata(existing_metadata_defaults, existing_metad
             metadata_list.append(content_metadata)
 
     metadata_fields_to_update = ['content_key', 'parent_content_key', 'content_type', 'json_metadata']
-    ContentMetadata.objects.bulk_update(metadata_list, metadata_fields_to_update)
+    ContentMetadata.objects.bulk_update(metadata_list, metadata_fields_to_update, batch_size=10)
     return metadata_list
 
 
