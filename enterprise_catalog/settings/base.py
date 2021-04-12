@@ -6,6 +6,7 @@ from os.path import abspath, dirname, join
 from corsheaders.defaults import default_headers as corsheaders_default_headers
 
 from enterprise_catalog.apps.catalog.constants import (
+    DEFAULT_COURSE_FIELDS_TO_PLUCK_FROM_SEARCH_ALL,
     ENTERPRISE_CATALOG_ADMIN_ROLE,
     ENTERPRISE_CATALOG_LEARNER_ROLE,
     SYSTEM_ENTERPRISE_ADMIN_ROLE,
@@ -358,6 +359,13 @@ ALGOLIA = {
     'APPLICATION_ID': '',
     'API_KEY': '',
 }
+
+# Which fields should be plucked from the /search/all course-discovery API
+# response in `update_catalog_metadata_task` for course content metadata?
+COURSE_FIELDS_TO_PLUCK_FROM_SEARCH_ALL = os.environ.get(
+    'COURSE_FIELDS_TO_PLUCK_FROM_SEARCH_ALL',
+    DEFAULT_COURSE_FIELDS_TO_PLUCK_FROM_SEARCH_ALL,
+)
 
 # Set up system-to-feature roles mapping for edx-rbac
 SYSTEM_TO_FEATURE_ROLE_MAPPING = {
