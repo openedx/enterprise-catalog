@@ -1,5 +1,6 @@
 """ Tests for catalog models. """
 
+import json
 from collections import OrderedDict
 from unittest import mock
 
@@ -24,8 +25,8 @@ class TestModels(TestCase):
     @mock.patch('enterprise_catalog.apps.api_client.discovery_cache.DiscoveryApiClient')
     def test_contentmetadata_update_from_discovery(self, mock_client):
         """
-        update_contentmetadata_from_discovery should update or create
-        ContentMetadata Objects from the discovery service api call/
+        update_contentmetadata_from_discovery should update or create ContentMetadata
+        objects from the discovery service /search/all api call.
         """
         course_metadata = OrderedDict([
             ('aggregation_key', 'course:edX+testX'),
@@ -74,6 +75,25 @@ class TestModels(TestCase):
         self.assertEqual(program_cm.parent_content_key, None)
         self.assertEqual(program_cm.json_metadata, program_metadata)
         assert program_cm in associated_metadata
+
+        # Run again with existing ContentMetadata database objects, temporarily modifying
+        # the json_metadata of the existing course to remove a field that will later be
+        # added. Assert the existing json_metadata field is updated with the correct metadata
+        # to include /search/all fields (e.g., aggregation_key).
+        course_cm = ContentMetadata.objects.get(content_key=course_metadata['key'])
+        course_cm.json_metadata = {
+            'key': course_metadata['key'],
+            'title': course_metadata['title'],
+        }
+        course_cm.save()
+        update_contentmetadata_from_discovery(catalog.catalog_query)
+        self.assertEqual(ContentMetadata.objects.count(), 3)  # assert all ContentMetadata objects are preserved
+        course_cm = ContentMetadata.objects.get(content_key=course_metadata['key'])
+        # assert json_metadata is updated to include fields plucked from /search/all metadata.
+        self.assertEqual(
+            json.dumps(course_cm.json_metadata, sort_keys=True),
+            json.dumps(course_metadata, sort_keys=True),
+        )
 
         # Run again and expect that we will unassociate some content metadata
         # from catalog query while perserving the content metadata objects

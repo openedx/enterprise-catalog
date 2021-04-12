@@ -256,7 +256,7 @@ def _update_full_content_metadata(content_keys):
                 logger.error('Could not find ContentMetadata record for content_key %s.', content_key)
                 continue
 
-            metadata_record.merge_json_metadata(course_metadata_dict)
+            metadata_record.json_metadata.update(course_metadata_dict)
             modified_content_metadata_records.append(metadata_record)
 
         ContentMetadata.objects.bulk_update(
@@ -484,7 +484,8 @@ def _algolia_recent_update_cache_key(content_key):
 @expiring_task_semaphore()
 def update_catalog_metadata_task(self, catalog_query_id):  # pylint: disable=unused-argument
     """
-    Updates all ContentMetadata associated with the catalog query by pulling in data from /search/all on discovery
+    Associates ContentMetadata objects with the appropriate catalog query by pulling data
+    from /search/all on discovery.
 
     Args:
         catalog_query_id (str): The id for the catalog query to update.
