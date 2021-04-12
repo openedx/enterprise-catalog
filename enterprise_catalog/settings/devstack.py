@@ -60,17 +60,6 @@ LMS_BASE_URL = 'http://edx.devstack.lms:18000'
 DISCOVERY_SERVICE_API_URL = 'http://edx.devstack.discovery:18381/api/v1/'
 ENTERPRISE_LEARNER_PORTAL_BASE_URL = 'http://localhost:8734'
 
-# Which fields should be plucked from the /search/all course-discovery API
-# response in `update_catalog_metadata_task` for course content metadata?
-COURSE_FIELDS_TO_PLUCK_FROM_SEARCH_ALL = [
-    'aggregation_key',
-    'content_type',
-    'seat_types',
-    'end_date',
-    'course_ends',
-    'languages',
-]
-
 CELERY_WORKER_HIJACK_ROOT_LOGGER = True
 CELERY_TASK_ALWAYS_EAGER = (
     os.environ.get("CELERY_ALWAYS_EAGER", "false").lower() == "true"

@@ -40,6 +40,17 @@ DISCOVERY_COURSE_KEY_BATCH_SIZE = 50
 TASK_BATCH_SIZE = 250
 TASK_TIMEOUT = 90 * 60  # Gives tasks (usually chains) 90 minutes to return before timing out
 
+# Which fields should be plucked from the /search/all course-discovery API
+# response in `update_catalog_metadata_task` for course content metadata?
+DEFAULT_COURSE_FIELDS_TO_PLUCK_FROM_SEARCH_ALL = [
+    'aggregation_key',
+    'content_type',
+    'seat_types',
+    'end_date',
+    'course_ends',
+    'languages',
+]
+
 
 def json_serialized_course_modes():
     """

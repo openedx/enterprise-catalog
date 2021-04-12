@@ -424,7 +424,7 @@ def _get_defaults_from_metadata(entry, exists=False):
         entry_minimal = {}
         for field in settings.COURSE_FIELDS_TO_PLUCK_FROM_SEARCH_ALL:
             if value := entry.get(field):
-                entry_minimal.update({field: value})
+                entry_minimal[field] = value
         if entry_minimal:
             defaults.update({'json_metadata': entry_minimal})
     elif not exists or (content_type != 'course'):
@@ -492,8 +492,7 @@ def _update_existing_content_metadata(existing_metadata_defaults, existing_metad
             metadata_list.append(content_metadata)
 
     metadata_fields_to_update = ['content_key', 'parent_content_key', 'content_type', 'json_metadata']
-    existing_metadata_objs = existing_metadata_by_key.values()
-    ContentMetadata.objects.bulk_update(existing_metadata_objs, metadata_fields_to_update)
+    ContentMetadata.objects.bulk_update(metadata_list, metadata_fields_to_update)
     return metadata_list
 
 
