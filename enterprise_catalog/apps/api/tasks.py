@@ -429,14 +429,19 @@ def _reindex_algolia(indexable_content_keys, nonindexable_content_keys):
     """
     Indexes course metadata in the Algolia search index.
     """
-    algolia_client = get_initialized_algolia_client()
-    configure_algolia_index(algolia_client)
-
     logger.info(
         'There are %s indexable content keys, which will replace all existing objects in the '
         'Algolia index. %s nonindexable content keys will be removed.',
         len(indexable_content_keys), len(nonindexable_content_keys),
     )
+    if len(indexable_content_keys) == 0:
+        logger.warning('Skipping Algolia indexing as there are no indexable content keys.')
+        # ensure we do not continue the indexing task if there are no indexable content keys. this
+        # will help prevent us from unintentionally removing all content keys from the index.
+        return
+
+    algolia_client = get_initialized_algolia_client()
+    configure_algolia_index(algolia_client)
 
     # Replaces all objects in the Algolia index with new objects based on the specified
     # indexable content keys.
