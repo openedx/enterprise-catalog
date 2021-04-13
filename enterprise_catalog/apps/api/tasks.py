@@ -192,8 +192,7 @@ class LoggedTaskWithRetry(LoggedTask):  # pylint: disable=abstract-method
 def update_full_content_metadata_task(self):
     """
     Looks up the full course metadata from discovery's `/api/v1/courses` endpoint to pad all
-    ContentMetadata objects with, so long as the record was modified within the last hour.
-    The course metadata is merged with the existing contents
+    ContentMetadata objects with. The course metadata is merged with the existing contents
     of the json_metadata field for each ContentMetadata record.
 
     Note: It is especially important that this task uses the increased maximum ``CELERY_TASK_SOFT_TIME_LIMIT`` and
@@ -205,10 +204,7 @@ def update_full_content_metadata_task(self):
             exc=RequiredTaskUnreadyError(),
         )
 
-    content_keys = [
-        metadata.content_key for metadata in
-        ContentMetadata.recently_modified_records(ONE_HOUR).filter(content_type=COURSE)
-    ]
+    content_keys = [metadata.content_key for metadata in ContentMetadata.objects.filter(content_type=COURSE)]
     _update_full_content_metadata(content_keys)
 
 
