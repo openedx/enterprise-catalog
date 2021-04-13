@@ -192,8 +192,7 @@ class LoggedTaskWithRetry(LoggedTask):  # pylint: disable=abstract-method
 def update_full_content_metadata_task(self):
     """
     Looks up the full course metadata from discovery's `/api/v1/courses` endpoint to pad all
-    ContentMetadata objects with, so long as the record was modified within the last hour.
-    The course metadata is merged with the existing contents
+    ContentMetadata objects with. The course metadata is merged with the existing contents
     of the json_metadata field for each ContentMetadata record.
 
     Note: It is especially important that this task uses the increased maximum ``CELERY_TASK_SOFT_TIME_LIMIT`` and
@@ -205,10 +204,7 @@ def update_full_content_metadata_task(self):
             exc=RequiredTaskUnreadyError(),
         )
 
-    content_keys = [
-        metadata.content_key for metadata in
-        ContentMetadata.recently_modified_records(ONE_HOUR).filter(content_type=COURSE)
-    ]
+    content_keys = [metadata.content_key for metadata in ContentMetadata.objects.filter(content_type=COURSE)]
     _update_full_content_metadata(content_keys)
 
 
@@ -429,14 +425,19 @@ def _reindex_algolia(indexable_content_keys, nonindexable_content_keys):
     """
     Indexes course metadata in the Algolia search index.
     """
-    algolia_client = get_initialized_algolia_client()
-    configure_algolia_index(algolia_client)
-
     logger.info(
         'There are %s indexable content keys, which will replace all existing objects in the '
         'Algolia index. %s nonindexable content keys will be removed.',
         len(indexable_content_keys), len(nonindexable_content_keys),
     )
+    if len(indexable_content_keys) == 0:
+        logger.warning('Skipping Algolia indexing as there are no indexable content keys.')
+        # ensure we do not continue the indexing task if there are no indexable content keys. this
+        # will help prevent us from unintentionally removing all content keys from the index.
+        return
+
+    algolia_client = get_initialized_algolia_client()
+    configure_algolia_index(algolia_client)
 
     # Replaces all objects in the Algolia index with new objects based on the specified
     # indexable content keys.
