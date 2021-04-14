@@ -425,6 +425,7 @@ def _reindex_algolia(indexable_content_keys, nonindexable_content_keys):
     """
     Indexes course metadata in the Algolia search index.
     """
+    # NOTE: this log message is used in a Splunk alert and should remain consistent in its language
     logger.info(
         'There are %s indexable content keys, which will replace all existing objects in the '
         'Algolia index. %s nonindexable content keys will be removed.',
