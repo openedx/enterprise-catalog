@@ -89,6 +89,13 @@ class CatalogQuery(TimeStampedModel):
         """
         return json.dumps(self.content_filter, indent=4)
 
+    @classmethod
+    def get_by_uuid(cls, uuid):
+        try:
+            return cls.objects.get(uuid=uuid)
+        except cls.DoesNotExist:
+            return None
+
     def __str__(self):
         """
         Return human-readable string representation.
