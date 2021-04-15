@@ -19,6 +19,7 @@ ALGOLIA_FIELDS = [
     'enterprise_catalog_query_uuids',
     'enterprise_customer_uuids',
     'full_description',
+    'key',  # for links to Course about pages from the Learner Portal search page
     'language',
     'level_type',
     'objectID',  # required by Algolia, e.g. "course-{uuid}"
@@ -54,11 +55,10 @@ ALGOLIA_INDEX_SETTINGS = {
         'language',
         'level_type',
         'searchable(partners.name)',
-        'programs',
+        'searchable(programs)',
         'searchable(program_titles)',
         'searchable(skill_names)',
         'searchable(subjects)',
-        'key',  # necessary for deleting non-indexable course records from the Algolia index
     ],
     'unretrievableAttributes': [
         'enterprise_catalog_uuids',
