@@ -54,12 +54,11 @@ ALGOLIA_INDEX_SETTINGS = {
         'enterprise_customer_uuids',
         'language',
         'level_type',
-        'partners.name',
-        'programs',
-        'program_titles',
+        'searchable(partners.name)',
+        'searchable(programs)',
+        'searchable(program_titles)',
         'searchable(skill_names)',
-        'subjects',
-        'key',  # necessary for deleting non-indexable course records from the Algolia index
+        'searchable(subjects)',
     ],
     'unretrievableAttributes': [
         'enterprise_catalog_uuids',
