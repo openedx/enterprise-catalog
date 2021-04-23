@@ -169,6 +169,9 @@ dev.destroy: dev.down # Kills containers and destroys volumes. If you get an err
 dev.stop: # Stops containers so they can be restarted
 	docker-compose stop
 
+mysql-client:  # Opens mysql client in the mysql container shell
+	docker-compose exec -u 0 mysql env TERM=$(TERM) mysql enterprise_catalog
+
 %-shell: ## Run a shell, as root, on the specified service container
 	docker-compose exec -u 0 $* env TERM=$(TERM) bash
 

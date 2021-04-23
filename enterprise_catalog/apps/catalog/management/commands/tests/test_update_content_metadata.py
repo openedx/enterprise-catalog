@@ -43,10 +43,10 @@ class UpdateContentMetadataCommandTests(TestCase):
         call_command(self.command_name)
 
         mock_group.assert_called_once_with([
-            mock_catalog_task.s(catalog_query_id=self.catalog_query_a),
-            mock_catalog_task.s(catalog_query_id=self.catalog_query_b),
+            mock_catalog_task.s(catalog_query_id=self.catalog_query_a, force=False),
+            mock_catalog_task.s(catalog_query_id=self.catalog_query_b, force=False),
         ])
-        mock_full_metadata_task.si.assert_called_once_with()
+        mock_full_metadata_task.si.assert_called_once_with(force=False)
 
     @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.group')
     @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.update_catalog_metadata_task')
@@ -62,7 +62,7 @@ class UpdateContentMetadataCommandTests(TestCase):
         call_command(self.command_name)
 
         mock_group.assert_called_once_with([
-            mock_catalog_task.s(catalog_query_id=self.catalog_query_a),
-            mock_catalog_task.s(catalog_query_id=self.catalog_query_b),
+            mock_catalog_task.s(catalog_query_id=self.catalog_query_a, force=False),
+            mock_catalog_task.s(catalog_query_id=self.catalog_query_b, force=False),
         ])
-        mock_full_metadata_task.si.assert_called_once_with()
+        mock_full_metadata_task.si.assert_called_once_with(force=False)

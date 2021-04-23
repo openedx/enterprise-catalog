@@ -19,17 +19,17 @@ class Command(BaseCommand):
         'Updates Content Metadata, along with the associations of Catalog Queries and Content Metadata.'
     )
 
-    def _run_update_catalog_metadata_task(self, catalog_query):
+    def _update_catalog_metadata_task(self, catalog_query, force=False):
         message = (
             'Spinning off update_catalog_metadata_task from update_content_metadata command'
             ' to update content_metadata for catalog query %s.'
         )
         logger.info(message, catalog_query)
-        return update_catalog_metadata_task.s(catalog_query.id)
+        return update_catalog_metadata_task.s(catalog_query.id, force=force)
 
-    def _run_update_full_content_metadata_task(self, *args, **kwargs):
+    def _update_full_content_metadata_task(self, *args, **kwargs):
         """
-        Runs the `update_full_content_metadata` for all content keys.
+        Returns a task signature for the `update_full_content_metadata_task`.
 
         Note that the keys get filtered down to course content keys inside the task.
         """
@@ -42,13 +42,14 @@ class Command(BaseCommand):
         # task.si() is used as a shortcut for an immutable signature to avoid calling this with the results from the
         # previously run `update_catalog_metadata_task`.
         # https://docs.celeryproject.org/en/master/userguide/canvas.html#immutability
-        return update_full_content_metadata_task.si()
+        return update_full_content_metadata_task.si(force=kwargs.get('force', False))
 
     def add_arguments(self, parser):
-        # Argument to specify catalogs to update
+        # Argument to force execution of celery task, ignoring time since last execution
         parser.add_argument(
-            '--catalog_uuids',
-            nargs='+',
+            '--force',
+            default=False,
+            action='store_true',
         )
 
     def handle(self, *args, **options):
@@ -74,7 +75,7 @@ class Command(BaseCommand):
         # https://docs.celeryproject.org/en/v5.0.5/userguide/canvas.html
         update_group = group(
             [
-                self._run_update_catalog_metadata_task(catalog_query)
+                self._update_catalog_metadata_task(catalog_query, force=options['force'])
                 for catalog_query in catalog_queries
             ]
         )
@@ -104,7 +105,8 @@ class Command(BaseCommand):
                 )
 
         try:
-            full_update_result = self._run_update_full_content_metadata_task().apply_async().get(
+            full_update_task = self._update_full_content_metadata_task(force=options['force'])
+            full_update_result = full_update_task.apply_async().get(
                 timeout=TASK_TIMEOUT,
                 propagate=True,
             )
