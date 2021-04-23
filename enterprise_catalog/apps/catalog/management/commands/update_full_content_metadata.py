@@ -16,9 +16,18 @@ class Command(BaseCommand):
         'Add full course metadata to ContentMetadata records',
     )
 
+    def add_arguments(self, parser):
+        # Argument to force execution of celery task, ignoring time since last execution
+        parser.add_argument(
+            '--force',
+            default=False,
+            action='store_true',
+        )
+
     def handle(self, *args, **options):
         try:
-            result = update_full_content_metadata_task.apply_async().get()
+            force_task_execution = options.get('force', False)
+            result = update_full_content_metadata_task.apply_async(kwargs={'force': force_task_execution}).get()
             message = (
                 'update_full_content_metadata task from update_full_content_metadata command finished'
                 ' successfully with result %s'

@@ -1,5 +1,6 @@
 import copy
 import functools
+import json
 import logging
 from collections import defaultdict
 from datetime import timedelta
@@ -101,8 +102,8 @@ def task_recently_run(task_object, time_delta):
     """
     return TaskResult.objects.filter(
         task_name=task_object.name,
-        task_args=str(task_object.request.args),
-        task_kwargs=str(task_object.request.kwargs),
+        task_args=json.dumps(task_object.request.args),
+        task_kwargs=json.dumps(task_object.request.kwargs),
         date_created__gte=localized_utcnow() - time_delta,
     ).exclude(
         status__in=(states.FAILURE, states.REVOKED),
@@ -132,6 +133,8 @@ def expiring_task_semaphore(time_delta=None):
     was executed in the time between `time_delta` and now, the task moves to a REVOKED
     state and raises a `TaskRecentlyRunError`.
 
+    If task is invoked with `force` kwarg, time since last run will be ignored.
+
     The `meta` state of the task is updated
     with `exc_type` and `exc_info`; otherwise, any process that's watching for the result
     of the task (e.g. via `task.get()`) and finds that it results in a failed state
@@ -147,8 +150,9 @@ def expiring_task_semaphore(time_delta=None):
     def decorator(task):
         @functools.wraps(task)
         def wrapped_task(self, *args, **kwargs):
+            force = kwargs.get('force', False)
             delta = time_delta or ONE_HOUR
-            if task_recently_run(self, time_delta=delta):
+            if not force and task_recently_run(self, time_delta=delta):
                 msg_args = (self.name, self.request.id, self.request.args, self.request.kwargs)
                 message = (
                     '{} task with id {} was recently run with '
@@ -189,15 +193,14 @@ class LoggedTaskWithRetry(LoggedTask):  # pylint: disable=abstract-method
 
 @shared_task(base=LoggedTaskWithRetry, bind=True, default_retry_delay=UNREADY_TASK_RETRY_COUNTDOWN_SECONDS)
 @expiring_task_semaphore()
-def update_full_content_metadata_task(self):
+def update_full_content_metadata_task(self, force=False):  # pylint: disable=unused-argument
     """
     Looks up the full course metadata from discovery's `/api/v1/courses` endpoint to pad all
     ContentMetadata objects with. The course metadata is merged with the existing contents
     of the json_metadata field for each ContentMetadata record.
 
-    Note: It is especially important that this task uses the increased maximum ``CELERY_TASK_SOFT_TIME_LIMIT`` and
-    ``CELERY_TASK_TIME_LIMIT`` since the task traverses large portions of course-discovery's /courses/ endpoint, which
-    was exceeding the previous default limits, causing a SoftTimeLimitExceeded exception.
+    Args:
+        force (bool): If true, forces execution of task and ignores time since last run.
     """
     if unready_tasks(update_catalog_metadata_task, ONE_HOUR).exists():
         raise self.retry(
@@ -290,7 +293,7 @@ def _batched_metadata(json_metadata, sorted_uuids, uuid_key_name, obj_id_fmt):
 
 @shared_task(base=LoggedTaskWithRetry, bind=True, default_retry_delay=UNREADY_TASK_RETRY_COUNTDOWN_SECONDS)
 @expiring_task_semaphore()
-def index_enterprise_catalog_courses_in_algolia_task(self):
+def index_enterprise_catalog_courses_in_algolia_task(self, force=False):  # pylint: disable=unused-argument
     """
     Index course data in Algolia with enterprise-related fields.
 
@@ -298,6 +301,9 @@ def index_enterprise_catalog_courses_in_algolia_task(self):
     ``CELERY_TASK_TIME_LIMIT`` as it makes somewhat time-intensive reads/writes to the database along with sending
     large payloads of data to Algolia, which was exceeding the previous default limits, causing a SoftTimeLimitExceeded
     exception.
+
+    Args:
+        force (bool): If true, forces execution of task and ignores time since last run.
     """
     if unready_tasks(update_full_content_metadata_task, ONE_HOUR).exists():
         raise self.retry(
@@ -484,13 +490,14 @@ def _algolia_recent_update_cache_key(content_key):
 
 @shared_task(base=LoggedTaskWithRetry, bind=True)
 @expiring_task_semaphore()
-def update_catalog_metadata_task(self, catalog_query_id):  # pylint: disable=unused-argument
+def update_catalog_metadata_task(self, catalog_query_id, force=False):  # pylint: disable=unused-argument
     """
     Associates ContentMetadata objects with the appropriate catalog query by pulling data
     from /search/all on discovery.
 
     Args:
         catalog_query_id (str): The id for the catalog query to update.
+        force (bool): If true, forces execution of task and ignores time since last run.
     Returns:
         list of str: Returns the content keys for ContentMetadata objects that were associated with the query.
             This result can be passed to the `update_full_content_metadata_task`.

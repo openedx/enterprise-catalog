@@ -58,6 +58,34 @@ management command that will copy those existing catalogs and their metadata int
    #. ``make lms-shell``
    #. ``./manage.py lms migrate_enterprise_catalogs --api_user enterprise_catalog_worker``
 
+Running Management Commands Locally
+-----------------------------------
+There are several management commands we use to synchronize data from the couse-discovery service into
+enterprise-catalog, and to update the content of our search index.  To run these locally, you'll want to use
+``make app-shell`` to enter an app container's bash shell, and then execute the command as written below.
+Each of these management commands will enqueue 1 or more asynchronous celery tasks with a similar name.
+Therefor, you'll want to open another terminal window and run ``make worker-logs`` to view any log output
+from the celery tasks enqueued by these commands:
+
+- ``./manage.py update_content_metadata`` This will ask the discovery service's ``/api/v1/search..`` endpoint
+  for all the content, along with some metadata about the content, associated with all of the Enterprise Catalog
+  objects in your service.  It will then associate that content to the appropriate catalogs.  Lastly, it will
+  ask for additional metadata (again from the discovery service, using ``/api/v1/courses``)
+  for all content records of type ``course``  and update the enterprise-catalog content metadata records accordingly.
+- ``./manage.py update_full_content_metadata`` This does only the fetching of additional course metadata as
+  described above.
+- ``./manage.py reindex_algolia`` This will rebuild our Algolia search index; it won't work locally unless
+  you configure your local enterprise-catalog service to point at a real Algolia index (like in a staging environment).
+
+The celery tasks that underly these commands are configured to not run on the same input more than once every
+60 minutes - see the `Architectural Decisions Record <../decisions/0002-celery-task-restructuring.rst>`_
+that explain the rationale and implementation of this design.  Typically, trying to run one of these tasks a second
+time in the same hour window will result in a ``TaskRecentlyRun`` error and no actual work will be done.
+
+**Note** You can can add a ``--force`` option to each of these commands; doing so will force the underlying celery
+task to run, regardless of how recently the same task with the same input was run in the past.
+
+
 Permissions
 -----------
 
