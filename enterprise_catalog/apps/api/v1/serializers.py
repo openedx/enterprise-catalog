@@ -76,7 +76,7 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
     enabled_course_modes = serializers.JSONField(write_only=True)
     publish_audit_enrollment_urls = serializers.BooleanField(write_only=True)
     content_filter = serializers.JSONField(write_only=True)
-    catalog_query_uuid = serializers.UUIDField(required=False)
+    catalog_query_uuid = serializers.UUIDField(required=False, allow_null=True)
 
     class Meta:
         model = EnterpriseCatalog
