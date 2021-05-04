@@ -86,7 +86,7 @@ django-waffle==2.1.0
     #   edx-django-utils
     #   edx-drf-extensions
     #   edx-toggles
-django==2.2.20
+django==2.2.21
     # via
     #   -r requirements/base.txt
     #   code-annotations
