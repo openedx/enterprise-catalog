@@ -18,11 +18,11 @@ edx-celeryutils
 edx-django-release-util
 edx-drf-extensions
 edx_rbac
-edx-rest-api-client==1.9.2
+edx-rest-api-client
 edx-toggles
 mysqlclient
 pytz
-jsonfield2==3.0.3
+jsonfield2
 celery
 redis
 rules

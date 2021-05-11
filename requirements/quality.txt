@@ -10,11 +10,11 @@ amqp==2.6.1
     # via
     #   -r requirements/base.txt
     #   kombu
-astroid==2.5.1
+astroid==2.5.6
     # via
     #   pylint
     #   pylint-celery
-billiard==3.6.3.0
+billiard==3.6.4.0
     # via
     #   -r requirements/base.txt
     #   celery
@@ -43,7 +43,7 @@ click==7.1.2
     #   click-log
     #   code-annotations
     #   edx-lint
-code-annotations==1.1.0
+code-annotations==1.1.1
     # via
     #   -r requirements/base.txt
     #   edx-lint
@@ -57,7 +57,7 @@ coreschema==0.0.4
     # via
     #   -r requirements/base.txt
     #   coreapi
-cryptography==3.4.6
+cryptography==3.2.1
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -78,7 +78,7 @@ django-crum==0.7.9
     #   edx-django-utils
     #   edx-rbac
     #   edx-toggles
-django-extensions==3.1.1
+django-extensions==3.1.3
     # via -r requirements/base.txt
 django-model-utils==4.1.1
     # via
@@ -87,7 +87,7 @@ django-model-utils==4.1.1
     #   edx-rbac
 django-rest-swagger==2.2.0
     # via -r requirements/base.txt
-django-simple-history==2.12.0
+django-simple-history==3.0.0
     # via -r requirements/base.txt
 django-waffle==2.1.0
     # via
@@ -95,12 +95,13 @@ django-waffle==2.1.0
     #   edx-django-utils
     #   edx-drf-extensions
     #   edx-toggles
-django==2.2.19
+django==2.2.20
     # via
     #   -r requirements/base.txt
     #   code-annotations
     #   django-cors-headers
     #   django-crum
+    #   django-extensions
     #   django-model-utils
     #   djangorestframework
     #   drf-jwt
@@ -116,14 +117,14 @@ django==2.2.19
     #   rest-condition
 djangorestframework-xml==2.0.0
     # via -r requirements/base.txt
-djangorestframework==3.12.2
+djangorestframework==3.12.4
     # via
     #   -r requirements/base.txt
     #   django-rest-swagger
     #   drf-jwt
     #   edx-drf-extensions
     #   rest-condition
-drf-jwt==1.18.0
+drf-jwt==1.19.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
@@ -133,10 +134,11 @@ edx-celeryutils==1.0.0
     # via -r requirements/base.txt
 edx-django-release-util==1.0.0
     # via -r requirements/base.txt
-edx-django-utils==3.15.0
+edx-django-utils==4.0.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
+    #   edx-rest-api-client
     #   edx-toggles
 edx-drf-extensions==6.5.0
     # via
@@ -150,7 +152,7 @@ edx-opaque-keys==2.2.0
     #   edx-drf-extensions
 edx-rbac==1.4.2
     # via -r requirements/base.txt
-edx-rest-api-client==1.9.2
+edx-rest-api-client==5.3.0
     # via -r requirements/base.txt
 edx-toggles==4.1.0
     # via -r requirements/base.txt
@@ -176,7 +178,7 @@ jinja2==2.11.3
     #   -r requirements/base.txt
     #   code-annotations
     #   coreschema
-jsonfield2==3.0.3
+jsonfield2==4.0.0.post0
     # via
     #   -r requirements/base.txt
     #   edx-celeryutils
@@ -207,7 +209,7 @@ openapi-codec==1.3.2
     # via
     #   -r requirements/base.txt
     #   django-rest-swagger
-pbr==5.5.1
+pbr==5.6.0
     # via
     #   -r requirements/base.txt
     #   stevedore
@@ -240,19 +242,19 @@ pyjwt[crypto]==1.7.1
     #   social-auth-core
 pylint-celery==0.3
     # via edx-lint
-pylint-django==2.4.2
+pylint-django==2.4.4
     # via edx-lint
 pylint-plugin-utils==0.6
     # via
     #   pylint-celery
     #   pylint-django
-pylint==2.7.2
+pylint==2.8.2
     # via
     #   edx-lint
     #   pylint-celery
     #   pylint-django
     #   pylint-plugin-utils
-pymongo==3.11.3
+pymongo==3.11.4
     # via
     #   -r requirements/base.txt
     #   edx-opaque-keys
@@ -260,7 +262,7 @@ python-dateutil==2.8.1
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-python-slugify==4.0.1
+python-slugify==5.0.2
     # via
     #   -r requirements/base.txt
     #   code-annotations
@@ -299,7 +301,7 @@ rest-condition==1.0.3
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-rules==2.2
+rules==3.0
     # via -r requirements/base.txt
 semantic-version==2.8.5
     # via
@@ -309,10 +311,10 @@ simplejson==3.17.2
     # via
     #   -r requirements/base.txt
     #   django-rest-swagger
-six==1.15.0
+six==1.16.0
     # via
     #   -r requirements/base.txt
-    #   django-simple-history
+    #   cryptography
     #   edx-auth-backends
     #   edx-django-release-util
     #   edx-drf-extensions
@@ -332,7 +334,7 @@ social-auth-app-django==4.0.0
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends
-social-auth-core==4.0.2
+social-auth-core==3.4.0
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends
