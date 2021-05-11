@@ -20,7 +20,7 @@ py==1.10.0
     # via tox
 pyparsing==2.4.7
     # via packaging
-six==1.15.0
+six==1.16.0
     # via
     #   tox
     #   virtualenv
@@ -28,9 +28,9 @@ toml==0.10.2
     # via tox
 tox-battery==0.6.1
     # via -r requirements/tox.in
-tox==3.23.0
+tox==3.23.1
     # via
     #   -r requirements/tox.in
     #   tox-battery
-virtualenv==20.4.3
+virtualenv==20.4.6
     # via tox
