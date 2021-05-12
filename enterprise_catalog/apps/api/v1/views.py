@@ -291,7 +291,7 @@ class EnterpriseCustomerViewSet(BaseViewSet):
 
     @method_decorator(require_at_least_one_query_parameter('course_run_ids', 'program_uuids'))
     @action(detail=True)
-    def contains_content_items(self, request, enterprise_uuid, course_run_ids, program_uuids, **kwargs):  # pylint: disable=unused-argument
+    def contains_content_items(self, request, enterprise_uuid, course_run_ids, program_uuids, **kwargs):
         """
         Returns whether or not the specified content is available for the given enterprise.
         ---

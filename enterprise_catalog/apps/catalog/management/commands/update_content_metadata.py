@@ -8,7 +8,10 @@ from enterprise_catalog.apps.api.tasks import (
     update_full_content_metadata_task,
 )
 from enterprise_catalog.apps.catalog.constants import COURSE, TASK_TIMEOUT
-from enterprise_catalog.apps.catalog.models import CatalogQuery
+from enterprise_catalog.apps.catalog.models import (
+    CatalogQuery,
+    CatalogUpdateCommandConfig,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -50,9 +53,18 @@ class Command(BaseCommand):
             '--force',
             default=False,
             action='store_true',
+            help=(
+                'Will read the value of this option from the CatalogUpdateCommandConfig table '
+                'if a record is present and enabled.'
+            ),
         )
 
     def handle(self, *args, **options):
+        """
+        Runs a group of `update_catalog_metadata_tasks`, followed by
+        a single `update_full_content_metadata_task` instance.
+        """
+        options.update(CatalogUpdateCommandConfig.current_options())
         # find all CatalogQuery records used by at least one EnterpriseCatalog to avoid
         # calling /search/all/ for a CatalogQuery that is not currently used by any catalogs.
         catalog_queries = CatalogQuery.objects.filter(enterprise_catalogs__isnull=False).distinct()

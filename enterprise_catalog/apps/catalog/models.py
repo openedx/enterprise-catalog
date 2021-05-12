@@ -3,6 +3,7 @@ import json
 from logging import getLogger
 from uuid import uuid4
 
+from config_models.models import ConfigurationModel
 from django.conf import settings
 from django.db import IntegrityError, models, transaction
 from django.db.models import Q
@@ -664,3 +665,31 @@ def update_contentmetadata_from_discovery(catalog_query):
         return associated_content_keys
 
     return []
+
+
+class CatalogUpdateCommandConfig(ConfigurationModel):
+    """
+    Model that specifies a ``force`` option
+    for all of the catalog-updating (or reindexing)
+    management commands.
+    """
+    force = models.BooleanField(
+        default=False,
+        help_text=_(
+            "If true, will force the command's underlying celery tasks "
+            "to run regardless of how recently the same task, on the same input, "
+            "has been successfully executed."
+        ),
+    )
+
+    @classmethod
+    def current_options(cls):
+        """
+        Returns a dictionary of options from this config model.
+        """
+        current_config = cls.current()
+        if current_config.enabled:
+            return {
+                'force': current_config.force,
+            }
+        return {}

@@ -5,6 +5,7 @@ from django.core.management.base import BaseCommand
 from enterprise_catalog.apps.api.tasks import (
     index_enterprise_catalog_courses_in_algolia_task,
 )
+from enterprise_catalog.apps.catalog.models import CatalogUpdateCommandConfig
 
 
 logger = logging.getLogger(__name__)
@@ -27,6 +28,7 @@ class Command(BaseCommand):
         """
         Runs a celery task to reindex algolia.  Blocks until celery task returns.
         """
+        options.update(CatalogUpdateCommandConfig.current_options())
         try:
             force_task_execution = options.get('force', False)
             index_enterprise_catalog_courses_in_algolia_task.apply_async(kwargs={'force': force_task_execution}).get()
