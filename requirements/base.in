@@ -5,6 +5,7 @@
 
 Django>=2.2,<2.3          # Web application framework
 django-celery-results
+django-config-models
 django-cors-headers
 django-crum
 django-extensions

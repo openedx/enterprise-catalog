@@ -44,6 +44,7 @@ click-log==0.3.2
     # via edx-lint
 click==7.1.2
     # via
+    #   -c requirements/constraints.txt
     #   -r requirements/base.txt
     #   click-log
     #   code-annotations
@@ -85,6 +86,8 @@ distlib==0.3.1
     # via virtualenv
 django-celery-results==2.0.1
     # via -r requirements/base.txt
+django-config-models==2.1.1
+    # via -r requirements/base.txt
 django-cors-headers==3.7.0
     # via -r requirements/base.txt
 django-crum==0.7.9
@@ -117,6 +120,7 @@ django-waffle==2.1.0
     #   -c requirements/constraints.txt
     #   -r requirements/base.txt
     #   code-annotations
+    #   django-config-models
     #   django-cors-headers
     #   django-crum
     #   django-extensions
@@ -138,6 +142,7 @@ djangorestframework-xml==2.0.0
 djangorestframework==3.12.4
     # via
     #   -r requirements/base.txt
+    #   django-config-models
     #   django-rest-swagger
     #   drf-jwt
     #   edx-drf-extensions
@@ -155,6 +160,7 @@ edx-django-release-util==1.0.0
 edx-django-utils==4.0.0
     # via
     #   -r requirements/base.txt
+    #   django-config-models
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
@@ -201,6 +207,7 @@ itypes==1.2.0
     #   coreapi
 jinja2==2.11.3
     # via
+    #   -c requirements/constraints.txt
     #   -r requirements/base.txt
     #   code-annotations
     #   coreschema
@@ -216,6 +223,7 @@ lazy-object-proxy==1.6.0
     # via astroid
 markupsafe==1.1.1
     # via
+    #   -c requirements/constraints.txt
     #   -r requirements/base.txt
     #   jinja2
 mccabe==0.6.1
@@ -269,6 +277,7 @@ pyjwkest==1.4.2
     #   edx-drf-extensions
 pyjwt[crypto]==1.7.1
     # via
+    #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -c requirements/constraints.txt
     #   -r requirements/base.txt
     #   drf-jwt

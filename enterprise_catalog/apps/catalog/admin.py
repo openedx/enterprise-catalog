@@ -1,3 +1,4 @@
+from config_models.admin import ConfigurationModelAdmin
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
@@ -12,6 +13,7 @@ from enterprise_catalog.apps.catalog.forms import (
 )
 from enterprise_catalog.apps.catalog.models import (
     CatalogQuery,
+    CatalogUpdateCommandConfig,
     ContentMetadata,
     EnterpriseCatalog,
     EnterpriseCatalogRoleAssignment,
@@ -132,3 +134,6 @@ class EnterpriseCatalogRoleAssignmentAdmin(UserRoleAssignmentAdmin):
     form = EnterpriseCatalogRoleAssignmentAdminForm
 
     get_username.short_description = 'User'
+
+
+admin.site.register(CatalogUpdateCommandConfig, ConfigurationModelAdmin)
