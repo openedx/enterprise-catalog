@@ -70,6 +70,8 @@ defusedxml==0.7.1
     #   social-auth-core
 django-celery-results==2.0.1
     # via -r requirements/base.txt
+django-config-models==2.1.1
+    # via -r requirements/base.txt
 django-cors-headers==3.7.0
     # via -r requirements/base.txt
 django-crum==0.7.9
@@ -99,6 +101,7 @@ django==2.2.20
     # via
     #   -r requirements/base.txt
     #   code-annotations
+    #   django-config-models
     #   django-cors-headers
     #   django-crum
     #   django-extensions
@@ -120,6 +123,7 @@ djangorestframework-xml==2.0.0
 djangorestframework==3.12.4
     # via
     #   -r requirements/base.txt
+    #   django-config-models
     #   django-rest-swagger
     #   drf-jwt
     #   edx-drf-extensions
@@ -137,6 +141,7 @@ edx-django-release-util==1.0.0
 edx-django-utils==4.0.0
     # via
     #   -r requirements/base.txt
+    #   django-config-models
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles

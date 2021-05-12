@@ -13,6 +13,8 @@ auth.Group:
   ".. no_pii:": "This model has no PII"
 auth.Permission:
   ".. no_pii:": "This model has no PII"
+catalog.CatalogUpdateCommandConfig:
+  ".. no_pii:": "This model has no PII"
 catalog.HistoricalCatalogContentKey:
   ".. no_pii": "This model has no PII"
 catalog.HistoricalContentMetadata:

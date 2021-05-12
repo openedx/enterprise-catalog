@@ -98,6 +98,8 @@ distlib==0.3.1
     #   virtualenv
 django-celery-results==2.0.1
     # via -r requirements/test.txt
+django-config-models==2.1.1
+    # via -r requirements/test.txt
 django-cors-headers==3.7.0
     # via -r requirements/test.txt
 django-crum==0.7.9
@@ -129,6 +131,7 @@ django==2.2.20
     # via
     #   -r requirements/test.txt
     #   code-annotations
+    #   django-config-models
     #   django-cors-headers
     #   django-crum
     #   django-extensions
@@ -150,6 +153,7 @@ djangorestframework-xml==2.0.0
 djangorestframework==3.12.4
     # via
     #   -r requirements/test.txt
+    #   django-config-models
     #   django-rest-swagger
     #   drf-jwt
     #   edx-drf-extensions
@@ -175,6 +179,7 @@ edx-django-release-util==1.0.0
 edx-django-utils==4.0.0
     # via
     #   -r requirements/test.txt
+    #   django-config-models
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles

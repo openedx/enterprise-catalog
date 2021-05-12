@@ -23,7 +23,9 @@ cffi==1.14.5
 chardet==4.0.0
     # via requests
 click==7.1.2
-    # via code-annotations
+    # via
+    #   -c requirements/constraints.txt
+    #   code-annotations
 code-annotations==1.1.1
     # via edx-toggles
 coreapi==2.3.3
@@ -43,6 +45,8 @@ defusedxml==0.7.1
     #   python3-openid
     #   social-auth-core
 django-celery-results==2.0.1
+    # via -r requirements/base.in
+django-config-models==2.1.1
     # via -r requirements/base.in
 django-cors-headers==3.7.0
     # via -r requirements/base.in
@@ -74,6 +78,7 @@ django==2.2.20
     #   -c requirements/constraints.txt
     #   -r requirements/base.in
     #   code-annotations
+    #   django-config-models
     #   django-cors-headers
     #   django-crum
     #   django-extensions
@@ -94,6 +99,7 @@ djangorestframework-xml==2.0.0
 djangorestframework==3.12.4
     # via
     #   -r requirements/base.in
+    #   django-config-models
     #   django-rest-swagger
     #   drf-jwt
     #   edx-drf-extensions
@@ -108,6 +114,7 @@ edx-django-release-util==1.0.0
     # via -r requirements/base.in
 edx-django-utils==4.0.0
     # via
+    #   django-config-models
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
@@ -133,6 +140,7 @@ itypes==1.2.0
     # via coreapi
 jinja2==2.11.3
     # via
+    #   -c requirements/constraints.txt
     #   code-annotations
     #   coreschema
 jsonfield2==4.0.0.post0
@@ -142,7 +150,9 @@ jsonfield2==4.0.0.post0
 kombu==4.6.11
     # via celery
 markupsafe==1.1.1
-    # via jinja2
+    # via
+    #   -c requirements/constraints.txt
+    #   jinja2
 mysqlclient==2.0.3
     # via -r requirements/base.in
 newrelic==6.2.0.156
@@ -165,6 +175,7 @@ pyjwkest==1.4.2
     # via edx-drf-extensions
 pyjwt[crypto]==1.7.1
     # via
+    #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -c requirements/constraints.txt
     #   drf-jwt
     #   edx-auth-backends

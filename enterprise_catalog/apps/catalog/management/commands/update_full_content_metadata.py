@@ -6,6 +6,7 @@ from enterprise_catalog.apps.api.tasks import update_full_content_metadata_task
 from enterprise_catalog.apps.catalog.management.utils import (
     get_all_content_keys,
 )
+from enterprise_catalog.apps.catalog.models import CatalogUpdateCommandConfig
 
 
 logger = logging.getLogger(__name__)
@@ -25,6 +26,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        options.update(CatalogUpdateCommandConfig.current_options())
         try:
             force_task_execution = options.get('force', False)
             result = update_full_content_metadata_task.apply_async(kwargs={'force': force_task_execution}).get()
