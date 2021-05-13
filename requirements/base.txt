@@ -72,7 +72,7 @@ django-waffle==2.1.0
     #   edx-django-utils
     #   edx-drf-extensions
     #   edx-toggles
-django==2.2.20
+django==2.2.23
     # via
     #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -c requirements/constraints.txt
