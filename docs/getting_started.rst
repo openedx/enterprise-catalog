@@ -85,6 +85,27 @@ time in the same hour window will result in a ``TaskRecentlyRun`` error and no a
 **Note** You can can add a ``--force`` option to each of these commands; doing so will force the underlying celery
 task to run, regardless of how recently the same task with the same input was run in the past.
 
+Running Management Commands in Stage or Prod environments
+---------------------------------------------------------
+
+The three commands described in the previous section each have corresponding jenkins jobs in tools-edx-jenkins.edx.org
+under the "Enterprise Catalog Jobs" section.
+``update_content_metadata`` and ``reindex_algolia`` are both run on a daily cron (so that new learning content that matches
+an existing content filter will be included in appropriate catalogs as the content is published).  Since these jobs
+only execute the underlying management commands, they are subject to the same hour-long "lock".  In case you
+need to run the same job on the same input more frequently, follow these steps:
+
+- Visit the Django Admin ``/admin/catalog/catalogupdatecommandconfig/`` page for the environment.  Note that you'll
+  need superuser access in enterprise-catalog to do this.
+- Create a new Configuration record, setting both ``enabled`` and ``force`` to true.
+- Save the new record.
+- Rebuild the job from Jenkins.
+- Once the job is complete, go back to the CatalogUpdateCommandConfig Django Admin page and create a new record
+  with ``force`` set to false.
+
+See https://openedx.atlassian.net/wiki/spaces/SRE/pages/146440591/Jenkins for more information about the Tools Jenkins
+service.
+
 
 Permissions
 -----------
