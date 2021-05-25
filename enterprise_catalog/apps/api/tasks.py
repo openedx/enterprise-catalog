@@ -511,3 +511,91 @@ def update_catalog_metadata_task(self, catalog_query_id, force=False):  # pylint
     logger.info('Finished update_catalog_metadata_task with {} associated content keys for catalog {}'.format(
         len(associated_content_keys), catalog_query_id
     ))
+
+
+##### Fun simple examples for python study group #####
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import time
+import functools
+import operator
+
+
+@shared_task(base=LoggedTask, bind=True)
+def add_two_numbers(self, x, y):
+    logger.info('Adding %r and %r and waiting 3 seconds', x, y)
+    time.sleep(3)
+    return x + y
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@shared_task(base=LoggedTask, bind=True)
+def multiply_addition_results(self):
+    queryset = TaskResult.objects.filter(
+        task_name=add_two_numbers.name,
+        status=states.SUCCESS,  # states is a celery module that lists valid task states
+    )
+
+    operands = [float(task_result.result) for task_result in queryset]
+    logger.info('Multiplying %r and waiting 3 seconds', operands)
+    time.sleep(3)
+    return functools.reduce(
+        operator.mul,
+        operands,
+    )
