@@ -16,6 +16,9 @@ Django>=2.2,<2.3
 # celery 5.0 has dropped python3.5 support.
 celery<5.0
 
+# django celesry results wants celery >=5
+django-celery-results<2.1
+
 # cryptography 3.3 has dropped python3.5 support.
 cryptography<3.3
 
