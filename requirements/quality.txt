@@ -4,7 +4,7 @@
 #
 #    make upgrade
 #
-algoliasearch==2.4.0
+algoliasearch==2.5.0
     # via -r requirements/base.txt
 amqp==2.6.1
     # via
@@ -23,7 +23,7 @@ celery==4.4.7
     #   -r requirements/base.txt
     #   django-celery-results
     #   edx-celeryutils
-certifi==2020.12.5
+certifi==2021.5.30
     # via
     #   -r requirements/base.txt
     #   requests
@@ -43,7 +43,7 @@ click==7.1.2
     #   click-log
     #   code-annotations
     #   edx-lint
-code-annotations==1.1.1
+code-annotations==1.1.2
     # via
     #   -r requirements/base.txt
     #   edx-lint
@@ -91,16 +91,15 @@ django-rest-swagger==2.2.0
     # via -r requirements/base.txt
 django-simple-history==3.0.0
     # via -r requirements/base.txt
-django-waffle==2.1.0
+django-waffle==2.2.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
     #   edx-drf-extensions
     #   edx-toggles
-django==2.2.23
+django==2.2.24
     # via
     #   -r requirements/base.txt
-    #   code-annotations
     #   django-config-models
     #   django-cors-headers
     #   django-crum
@@ -138,7 +137,7 @@ edx-celeryutils==1.0.0
     # via -r requirements/base.txt
 edx-django-release-util==1.0.0
     # via -r requirements/base.txt
-edx-django-utils==4.0.0
+edx-django-utils==4.1.0
     # via
     #   -r requirements/base.txt
     #   django-config-models
@@ -151,7 +150,7 @@ edx-drf-extensions==6.5.0
     #   edx-rbac
 edx-lint==5.0.0
     # via -r requirements/quality.in
-edx-opaque-keys==2.2.0
+edx-opaque-keys==2.2.1
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
@@ -201,11 +200,11 @@ mccabe==0.6.1
     # via pylint
 mysqlclient==2.0.3
     # via -r requirements/base.txt
-newrelic==6.2.0.156
+newrelic==6.4.1.158
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
-oauthlib==3.1.0
+oauthlib==3.1.1
     # via
     #   -r requirements/base.txt
     #   requests-oauthlib
@@ -232,7 +231,7 @@ pycryptodomex==3.10.1
     # via
     #   -r requirements/base.txt
     #   pyjwkest
-pydocstyle==6.0.0
+pydocstyle==6.1.1
     # via -r requirements/quality.in
 pyjwkest==1.4.2
     # via
@@ -253,7 +252,7 @@ pylint-plugin-utils==0.6
     # via
     #   pylint-celery
     #   pylint-django
-pylint==2.8.2
+pylint==2.8.3
     # via
     #   edx-lint
     #   pylint-celery
@@ -364,7 +363,7 @@ uritemplate==3.0.1
     # via
     #   -r requirements/base.txt
     #   coreapi
-urllib3==1.26.4
+urllib3==1.26.5
     # via
     #   -r requirements/base.txt
     #   requests
