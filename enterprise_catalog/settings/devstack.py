@@ -72,3 +72,10 @@ CORS_ORIGIN_WHITELIST = [
     'http://localhost:18000',
     'http://localhost:18130',
 ]
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': 'enterprise.catalog.memcached:11211',
+    }
+}

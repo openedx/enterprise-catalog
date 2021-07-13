@@ -7,6 +7,7 @@ from config_models.models import ConfigurationModel
 from django.conf import settings
 from django.db import IntegrityError, models, transaction
 from django.db.models import Q
+from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 from edx_rbac.models import UserRole, UserRoleAssignment
 from jsonfield.encoder import JSONEncoder
@@ -188,6 +189,14 @@ class EnterpriseCatalog(TimeStampedModel):
             return ContentMetadata.objects.none()
         return self.catalog_query.contentmetadata_set.all()
 
+    @cached_property
+    def enterprise_customer(self):
+        """
+        A cached (for the life of this EnterpriseCatalog instance) EnterpriseCustomerDetails instance
+        for this catalog's customer uuid.
+        """
+        return EnterpriseCustomerDetails(self.enterprise_uuid)
+
     def contains_content_keys(self, content_keys):
         """
         Determines whether content_keys are part of the catalog.
@@ -255,9 +264,7 @@ class EnterpriseCatalog(TimeStampedModel):
         if self.publish_audit_enrollment_urls:
             params['audit'] = 'true'
 
-        enterprise_customer = EnterpriseCustomerDetails(self.enterprise_uuid)
-        learner_portal_enabled = enterprise_customer.learner_portal_enabled
-        if learner_portal_enabled and content_resource is not PROGRAM:
+        if self.enterprise_customer.learner_portal_enabled and content_resource is not PROGRAM:
             # parent_content_key is our way of telling if this is a course run
             # since this function is never called with COURSE_RUN as content_resource
             if parent_content_key:
@@ -269,7 +276,7 @@ class EnterpriseCatalog(TimeStampedModel):
                 course_key = content_key
             url = '{}/{}/course/{}'.format(
                 settings.ENTERPRISE_LEARNER_PORTAL_BASE_URL,
-                enterprise_customer.slug,
+                self.enterprise_customer.slug,
                 course_key
             )
         else:

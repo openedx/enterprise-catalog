@@ -20,6 +20,7 @@ services:
     container_name: enterprise.catalog.memcached
     networks:
       - devstack_default
+    command: memcached -vv
 
   app:
     # Uncomment this line to use the official catalog base image
