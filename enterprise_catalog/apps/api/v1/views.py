@@ -168,7 +168,8 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
     lookup_field = 'uuid'
     pagination_class = PageNumberWithSizePagination
 
-    def get_enterprise_catalog(self):
+    @cached_property
+    def enterprise_catalog(self):
         """
         Helper for retrieving the specified enterprise catalog, or 404ing if it doesn't exist.
         """
@@ -181,16 +182,14 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
 
         This object is passed to the rule predicate(s).
         """
-        enterprise_catalog = self.get_enterprise_catalog()
-        return str(enterprise_catalog.enterprise_uuid)
+        return str(self.enterprise_catalog.enterprise_uuid)
 
     def get_queryset(self):
         """
         Returns all of the json of content metadata associated with the catalog.
         """
-        enterprise_catalog = self.get_enterprise_catalog()
         # Avoids ordering the content metadata by any field on that model to avoid using a temporary table / filesort
-        return enterprise_catalog.content_metadata.order_by('catalog_queries')
+        return self.enterprise_catalog.content_metadata.order_by('catalog_queries')
 
     def get_response_with_enterprise_fields(self, response):
         """
@@ -202,10 +201,9 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
         Returns:
             HttpResponse: The new response with additional fields added on
         """
-        enterprise_catalog = self.get_enterprise_catalog()
-        response.data['uuid'] = enterprise_catalog.uuid
-        response.data['title'] = enterprise_catalog.title
-        response.data['enterprise_customer'] = enterprise_catalog.enterprise_uuid
+        response.data['uuid'] = self.enterprise_catalog.uuid
+        response.data['title'] = self.enterprise_catalog.title
+        response.data['enterprise_customer'] = self.enterprise_catalog.enterprise_uuid
         response.data.move_to_end('results')  # Place the results at the end of the response again
         return response
 
@@ -217,9 +215,8 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
         Adding the query parameter `traverse_pagination` will collect the results onto a single page.
         """
         queryset = self.filter_queryset(self.get_queryset())
-        enterprise_catalog = self.get_enterprise_catalog()
         context = self.get_serializer_context()
-        context['enterprise_catalog'] = enterprise_catalog
+        context['enterprise_catalog'] = self.enterprise_catalog
         # Traverse pagination query parameter signals that we should collect the results onto a single page
         traverse_pagination = request.query_params.get('traverse_pagination', False)
         page = self.paginate_queryset(queryset)
