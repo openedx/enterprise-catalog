@@ -1,6 +1,6 @@
 import logging
 
-from django.db import IntegrityError
+from django.db import IntegrityError, models
 from rest_framework import serializers, status
 
 from enterprise_catalog.apps.api.v1.utils import (
@@ -77,6 +77,8 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
     publish_audit_enrollment_urls = serializers.BooleanField(write_only=True)
     content_filter = serializers.JSONField(write_only=True)
     catalog_query_uuid = serializers.UUIDField(required=False, allow_null=True)
+    catalog_modified = serializers.DateTimeField(source='modified', required=False)
+    content_last_modified = serializers.SerializerMethodField()
 
     class Meta:
         model = EnterpriseCatalog
@@ -89,7 +91,12 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
             'publish_audit_enrollment_urls',
             'content_filter',
             'catalog_query_uuid',
+            'content_last_modified',
+            'catalog_modified',
         ]
+
+    def get_content_last_modified(self, obj):
+        return obj.content_metadata.aggregate(models.Max('modified')).get('modified__max')
 
     def create(self, validated_data):
         content_filter = validated_data.pop('content_filter')
