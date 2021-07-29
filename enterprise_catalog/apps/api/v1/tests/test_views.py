@@ -593,7 +593,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
                 json_metadata['enrollment_url'] = course_enrollment_url
                 for course_run in course_runs:
                     course_run_key = quote_plus(course_run.get('key'))
-                    course_run_key_param = 'course_run_key={}&'.format(course_run_key)
+                    course_run_key_param = f'course_run_key={course_run_key}&'
                     course_run_enrollment_url = enrollment_url.format(
                         settings.ENTERPRISE_LEARNER_PORTAL_BASE_URL,
                         self.enterprise_slug,
@@ -631,7 +631,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
             if learner_portal_enabled:
                 course_key = get_parent_content_key(json_metadata)
                 course_run_key = quote_plus(json_metadata.get('key'))
-                course_run_key_param = 'course_run_key={}&'.format(course_run_key)
+                course_run_key_param = f'course_run_key={course_run_key}&'
                 course_run_enrollment_url = enrollment_url.format(
                     settings.ENTERPRISE_LEARNER_PORTAL_BASE_URL,
                     self.enterprise_slug,
