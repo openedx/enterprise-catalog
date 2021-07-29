@@ -24,7 +24,7 @@ class CatalogQueryForm(forms.ModelForm):
         fields = ('content_filter',)
 
     def validate_content_filter_fields(self, content_filter):
-        for key in cftypes:
+        for key in cftypes:  # pylint: disable=consider-using-dict-items
             if key in content_filter.keys():
                 if not isinstance(content_filter[key], cftypes[key]['type']):
                     raise ValidationError(
