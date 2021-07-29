@@ -28,12 +28,12 @@ class CatalogQueryForm(forms.ModelForm):
             if key in content_filter.keys():
                 if not isinstance(content_filter[key], cftypes[key]['type']):
                     raise ValidationError(
-                        "Content filter '%s' must be of type %s" % (key, cftypes[key]['type'])
+                        "Content filter '{}' must be of type {}".format(key, cftypes[key]['type'])
                     )
                 if cftypes[key]['type'] == list:
                     if not all(cftypes[key]['subtype'] == type(x) for x in content_filter[key]):
                         raise ValidationError(
-                            "Content filter '%s' must contain values of type %s" % (
+                            "Content filter '{}' must contain values of type {}".format(
                                 key, cftypes[key]['subtype']
                             )
                         )

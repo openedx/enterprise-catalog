@@ -238,7 +238,7 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         tasks.update_full_content_metadata_task.apply().get()
 
         actual_course_keys_args = mock_partition_course_keys.call_args_list[0][0][0]
-        self.assertEqual(set(actual_course_keys_args), set([metadata_1, metadata_2]))
+        self.assertEqual(set(actual_course_keys_args), {metadata_1, metadata_2})
 
         metadata_1 = ContentMetadata.objects.get(content_key='fakeX')
         metadata_2 = ContentMetadata.objects.get(content_key='testX')
