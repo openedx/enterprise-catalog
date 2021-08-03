@@ -178,6 +178,8 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
         content_key = json_metadata.get('key')
         parent_content_key = get_parent_content_key(json_metadata)
 
+        json_metadata['content_last_modified'] = instance.modified
+
         if marketing_url:
             marketing_url = update_query_parameters(
                 marketing_url,
