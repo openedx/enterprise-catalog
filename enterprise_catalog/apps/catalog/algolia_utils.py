@@ -65,7 +65,6 @@ ALGOLIA_INDEX_SETTINGS = {
     ],
     'unretrievableAttributes': [
         'enterprise_catalog_uuids',
-        'enterprise_catalog_query_uuids',
         'enterprise_customer_uuids',
     ],
     'customRanking': [
