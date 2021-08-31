@@ -34,9 +34,8 @@ services:
       - .:/edx/app/enterprise_catalog/enterprise_catalog
       - ../src:/edx/src:cached
 
-    # This should be the same as the `CMD` in the legacy devapp build stage
-    # of the Dockerfile
-    command: bash -c 'gunicorn --reload --workers=2 --name enterprise_catalog -b :18160 -c /edx/app/enterprise_catalog/enterprise_catalog/enterprise_catalog/docker_gunicorn_configuration.py --log-file - --max-requests=1000 enterprise_catalog.wsgi:application'
+    # Use the Django devserver, so that we can hot-reload code changes
+    command: bash -c 'while true; do python /edx/app/enterprise_catalog/enterprise_catalog/manage.py runserver 0.0.0.0:18160; sleep 2; done'
     ports:
       - "18160:18160"
     depends_on:
