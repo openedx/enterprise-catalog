@@ -33,6 +33,7 @@ ALGOLIA_FIELDS = [
     'skills',
     'title',
     'advertised_course_run',  # a part of the advertised course run
+    'first_enrollable_paid_seat_price',
 ]
 
 # default configuration for the index
@@ -62,6 +63,7 @@ ALGOLIA_INDEX_SETTINGS = {
         'searchable(skill_names)',
         'searchable(skills)',
         'searchable(subjects)',
+        'first_enrollable_paid_seat_price',
     ],
     'unretrievableAttributes': [
         'enterprise_catalog_uuids',
@@ -392,6 +394,33 @@ def _get_course_run_by_uuid(course, course_run_uuid):
     return course_run
 
 
+def get_course_first_paid_enrollable_seat_price(course):
+    """
+    Gets the appropriate image to use for course cards.
+
+    Arguments:
+        course (dict): a dictionary representing a course
+
+    Returns:
+        str: the url for the course card image
+    """
+    # Use advertised course run.
+    # If that fails use one of the other active course runs. (The latter is what Discovery does)
+    advertised_course_run = _get_course_run_by_uuid(course, course.get('advertised_course_run_uuid'))
+    if advertised_course_run.get('first_enrollable_paid_seat_price'):
+        return advertised_course_run.get('first_enrollable_paid_seat_price')
+
+    course_runs = course.get('course_runs') or []
+    active_course_runs = [run for run in course_runs if is_course_run_active(run)]
+    for course_run in sorted(
+        active_course_runs,
+        key=lambda active_course_run: active_course_run['key'].lower(),
+    ):
+        if 'first_enrollable_paid_seat_price' in course_run:
+            return course_run['first_enrollable_paid_seat_price']
+    return None
+
+
 def _algolia_object_from_course(course, algolia_fields):
     """
     Transforms a course into an Algolia object.
@@ -415,6 +444,7 @@ def _algolia_object_from_course(course, algolia_fields):
         'advertised_course_run': get_advertised_course_run(searchable_course),
         'skill_names': get_course_skill_names(searchable_course),
         'skills': get_course_skills(searchable_course),
+        'first_enrollable_paid_seat_price': get_course_first_paid_enrollable_seat_price(searchable_course),
     })
 
     algolia_object = {}
