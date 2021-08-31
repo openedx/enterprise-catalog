@@ -34,6 +34,7 @@ ALGOLIA_FIELDS = [
     'title',
     'advertised_course_run',  # a part of the advertised course run
     'first_enrollable_paid_seat_price',
+    'banner_image_urls',
 ]
 
 # default configuration for the index
@@ -64,6 +65,7 @@ ALGOLIA_INDEX_SETTINGS = {
         'searchable(skills)',
         'searchable(subjects)',
         'first_enrollable_paid_seat_price',
+        'banner_image_urls',
     ],
     'unretrievableAttributes': [
         'enterprise_catalog_uuids',
@@ -312,6 +314,23 @@ def get_course_subjects(course):
     return list(subject_names)
 
 
+def get_course_banner_image_url(course):
+    """
+    Gets the appropriate banner image to use for displaying course metadata.
+
+    Arguments:
+        course (dict): a dictionary representing a course
+
+    Returns:
+        str: the url for the course banner image
+    """
+    # Account for the small chance that the original image will be None
+    banner_image_url = course.get('original_image')
+    if banner_image_url:
+        banner_image_url = banner_image_url.get('src')
+    return banner_image_url
+
+
 def get_course_card_image_url(course):
     """
     Gets the appropriate image to use for course cards.
@@ -445,6 +464,7 @@ def _algolia_object_from_course(course, algolia_fields):
         'skill_names': get_course_skill_names(searchable_course),
         'skills': get_course_skills(searchable_course),
         'first_enrollable_paid_seat_price': get_course_first_paid_enrollable_seat_price(searchable_course),
+        'banner_image_url': get_course_banner_image_url(searchable_course)
     })
 
     algolia_object = {}
