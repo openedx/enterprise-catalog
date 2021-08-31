@@ -76,6 +76,12 @@ class CatalogQuery(TimeStampedModel):
         editable=False,
     )
 
+    title = models.CharField(
+        null=True,
+        unique=True,
+        max_length=100
+    )
+
     class Meta:
         verbose_name = _("Catalog Query")
         verbose_name_plural = _("Catalog Queries")

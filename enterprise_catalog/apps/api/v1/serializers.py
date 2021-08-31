@@ -1,4 +1,5 @@
 import logging
+from re import search
 
 from django.db import IntegrityError, models
 from rest_framework import serializers, status
@@ -26,16 +27,18 @@ from enterprise_catalog.apps.catalog.utils import (
 logger = logging.getLogger(__name__)
 
 
-def find_and_modify_catalog_query(content_filter, catalog_query_uuid=None):
+def find_and_modify_catalog_query(content_filter, catalog_query_uuid=None, query_title=None):
     """
-    This method aims to make sure UUID and content_filter in the catalog service
+    This method aims to make sure UUID, query title and content_filter in the catalog service
     match what Django Admin/passed in parameters have. We take the parameters as source of truth,
-    but do not want to duplicate either UUID or content filter.
+    but do not want to duplicate UUID, title or content filter.
 
     Arguments:
         content_filter(dict): filter used to pick which courses are retrieved
         catalog_query_uuid(UUID/str): query uuid generated from LMS Django Admin.
             - If not provided, we should be receiving a "direct" content filter.
+        query_title(str): query title created in LMS Django Admin.
+            - Can be null.
     Returns:
         a CatalogQuery object.
     """
@@ -43,25 +46,28 @@ def find_and_modify_catalog_query(content_filter, catalog_query_uuid=None):
         catalog_query_from_uuid = CatalogQuery.get_by_uuid(uuid=catalog_query_uuid)
         if catalog_query_from_uuid:
             catalog_query_from_uuid.content_filter = content_filter
+            catalog_query_from_uuid.title = query_title
             catalog_query_from_uuid.content_filter_hash = get_content_filter_hash(content_filter)
             try:
                 catalog_query_from_uuid.save()
             except IntegrityError as exc:
+                column = search("(?<=for key ')(.*)(?=')", str(exc))
+                logger.exception(f'Error occurred while saving catalog query: {exc}')  # pylint:disable=logging-fstring-interpolation
                 raise serializers.ValidationError(
-                    {'catalog_query': 'Content filter is not unique'},
+                    {'catalog_query': f'{column} is not unique'},
                     code=status.HTTP_422_UNPROCESSABLE_ENTITY
                 ) from exc
             return catalog_query_from_uuid
         else:
             content_filter_from_hash, _ = CatalogQuery.objects.update_or_create(
                 content_filter_hash=get_content_filter_hash(content_filter),
-                defaults={'content_filter': content_filter, 'uuid': catalog_query_uuid}
+                defaults={'content_filter': content_filter, 'uuid': catalog_query_uuid, 'title': query_title}
             )
             return content_filter_from_hash
     else:
         content_filter_from_hash, _ = CatalogQuery.objects.get_or_create(
             content_filter_hash=get_content_filter_hash(content_filter),
-            defaults={'content_filter': content_filter}
+            defaults={'content_filter': content_filter, 'title': query_title}
         )
 
         return content_filter_from_hash
@@ -79,6 +85,7 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
     catalog_query_uuid = serializers.UUIDField(required=False, allow_null=True)
     catalog_modified = serializers.DateTimeField(source='modified', required=False)
     content_last_modified = serializers.SerializerMethodField()
+    query_title = serializers.CharField(allow_null=True, required=False)
 
     class Meta:
         model = EnterpriseCatalog
@@ -93,6 +100,7 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
             'catalog_query_uuid',
             'content_last_modified',
             'catalog_modified',
+            'query_title'
         ]
 
     def get_content_last_modified(self, obj):
@@ -101,7 +109,8 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         content_filter = validated_data.pop('content_filter')
         catalog_query_uuid = validated_data.pop('catalog_query_uuid', None)
-        catalog_query = find_and_modify_catalog_query(content_filter, catalog_query_uuid)
+        query_title = validated_data.pop('query_title', None)
+        catalog_query = find_and_modify_catalog_query(content_filter, catalog_query_uuid, query_title)
         try:
             catalog = EnterpriseCatalog.objects.create(
                 **validated_data,
@@ -123,11 +132,12 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
         default_content_filter = None
         if instance.catalog_query:
             default_content_filter = instance.catalog_query.content_filter
+            default_query_title = instance.catalog_query.title if hasattr(instance.catalog_query, 'title') else None
 
         content_filter = validated_data.get('content_filter', default_content_filter)
+        query_title = validated_data.get('query_title', default_query_title)
         catalog_query_uuid = validated_data.pop('catalog_query_uuid', None)
-        instance.catalog_query = find_and_modify_catalog_query(content_filter, catalog_query_uuid)
-
+        instance.catalog_query = find_and_modify_catalog_query(content_filter, catalog_query_uuid, query_title)
         return super().update(instance, validated_data)
 
 
