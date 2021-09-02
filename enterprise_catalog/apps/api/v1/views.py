@@ -1,3 +1,4 @@
+import logging
 from collections import OrderedDict, defaultdict
 
 import crum
@@ -6,12 +7,14 @@ from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
 from edx_rbac.mixins import PermissionRequiredMixin
+from edx_rbac.utils import get_decoded_jwt
 from edx_rest_framework_extensions.auth.jwt.authentication import (
     JwtAuthentication,
 )
 from rest_framework import permissions, viewsets
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import GenericAPIView
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -41,6 +44,9 @@ from enterprise_catalog.apps.catalog.rules import (
     enterprises_with_admin_access,
     has_access_to_all_enterprises,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class BaseViewSet(PermissionRequiredMixin, viewsets.ViewSet):
@@ -277,6 +283,28 @@ class EnterpriseCustomerViewSet(BaseViewSet):
     permission_required = 'catalog.has_learner_access'
     # Just a convenience so that `enterprise_uuid` becomes an argument on our detail routes
     lookup_field = 'enterprise_uuid'
+
+    def check_permissions(self, request):
+        """
+        Helper to log information from Auth token on
+        PermissionDenied errors.
+        See https://openedx.atlassian.net/browse/ENT-4885
+        """
+        try:
+            super().check_permissions(request)
+        except PermissionDenied:
+            decoded_jwt = get_decoded_jwt(request)
+            message = (
+                'PermissionDenied for user_id (from JWT) %s and EnterpriseCustomer %s in '
+                'contains_content_items. JWT roles: %s',
+            )
+            logger.exception(
+                message,
+                decoded_jwt.get('user_id'),
+                self.kwargs.get('enterprise_uuid'),
+                decoded_jwt.get('roles'),
+            )
+            raise
 
     def get_permission_object(self):
         """
