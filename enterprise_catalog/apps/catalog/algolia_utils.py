@@ -35,6 +35,7 @@ ALGOLIA_FIELDS = [
     'advertised_course_run',  # a part of the advertised course run
     'first_enrollable_paid_seat_price',
     'original_image_url',
+    'marketing_url',
 ]
 
 # default configuration for the index
@@ -66,6 +67,7 @@ ALGOLIA_INDEX_SETTINGS = {
         'searchable(subjects)',
         'first_enrollable_paid_seat_price',
         'original_image_url',
+        'marketing_url',
     ],
     'unretrievableAttributes': [
         'enterprise_catalog_uuids',
@@ -314,6 +316,20 @@ def get_course_subjects(course):
     return list(subject_names)
 
 
+def get_course_marketing_url(course):
+    """
+    Gets the appropriate marketing url to direct users to the course details page.
+
+    Arguments:
+        course (dict): a dictionary representing a course
+
+    Returns:
+        str: the url for the B2C course details page
+    """
+    marketing_url = course.get('marketing_url')
+    return marketing_url
+
+
 def get_course_original_image_url(course):
     """
     Gets the appropriate original image to use for displaying course metadata.
@@ -464,7 +480,8 @@ def _algolia_object_from_course(course, algolia_fields):
         'skill_names': get_course_skill_names(searchable_course),
         'skills': get_course_skills(searchable_course),
         'first_enrollable_paid_seat_price': get_course_first_paid_enrollable_seat_price(searchable_course),
-        'original_image_url': get_course_original_image_url(searchable_course)
+        'original_image_url': get_course_original_image_url(searchable_course),
+        'marketing_url': get_course_marketing_url(searchable_course),
     })
 
     algolia_object = {}
