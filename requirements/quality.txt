@@ -10,7 +10,7 @@ amqp==2.6.1
     # via
     #   -r requirements/base.txt
     #   kombu
-astroid==2.5.6
+astroid==2.6.5
     # via
     #   pylint
     #   pylint-celery
@@ -27,11 +27,11 @@ certifi==2021.5.30
     # via
     #   -r requirements/base.txt
     #   requests
-cffi==1.14.5
+cffi==1.14.6
     # via
     #   -r requirements/base.txt
     #   cryptography
-chardet==4.0.0
+charset-normalizer==2.0.3
     # via
     #   -r requirements/base.txt
     #   requests
@@ -43,7 +43,7 @@ click==7.1.2
     #   click-log
     #   code-annotations
     #   edx-lint
-code-annotations==1.1.2
+code-annotations==1.2.0
     # via
     #   -r requirements/base.txt
     #   edx-lint
@@ -70,7 +70,7 @@ defusedxml==0.7.1
     #   social-auth-core
 django-celery-results==2.0.1
     # via -r requirements/base.txt
-django-config-models==2.1.1
+django-config-models==2.2.0
     # via -r requirements/base.txt
 django-cors-headers==3.7.0
     # via -r requirements/base.txt
@@ -91,7 +91,7 @@ django-rest-swagger==2.2.0
     # via -r requirements/base.txt
 django-simple-history==3.0.0
     # via -r requirements/base.txt
-django-waffle==2.2.0
+django-waffle==2.2.1
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -131,45 +131,45 @@ drf-jwt==1.19.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-edx-auth-backends==3.3.3
+edx-auth-backends==3.4.0
     # via -r requirements/base.txt
-edx-celeryutils==1.0.0
+edx-celeryutils==1.1.0
     # via -r requirements/base.txt
-edx-django-release-util==1.0.0
+edx-django-release-util==1.1.0
     # via -r requirements/base.txt
-edx-django-utils==4.1.0
+edx-django-utils==4.2.0
     # via
     #   -r requirements/base.txt
     #   django-config-models
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==6.5.0
+edx-drf-extensions==6.6.0
     # via
     #   -r requirements/base.txt
     #   edx-rbac
 edx-lint==5.0.0
     # via -r requirements/quality.in
-edx-opaque-keys==2.2.1
+edx-opaque-keys==2.2.2
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-edx-rbac==1.4.2
+edx-rbac==1.5.0
     # via -r requirements/base.txt
-edx-rest-api-client==5.3.0
+edx-rest-api-client==5.4.0
     # via -r requirements/base.txt
-edx-toggles==4.1.0
+edx-toggles==4.2.0
     # via -r requirements/base.txt
 future==0.18.2
     # via
     #   -r requirements/base.txt
     #   edx-celeryutils
     #   pyjwkest
-idna==2.10
+idna==3.2
     # via
     #   -r requirements/base.txt
     #   requests
-isort==5.8.0
+isort==5.9.3
     # via
     #   -r requirements/quality.in
     #   pylint
@@ -200,7 +200,7 @@ mccabe==0.6.1
     # via pylint
 mysqlclient==2.0.3
     # via -r requirements/base.txt
-newrelic==6.4.1.158
+newrelic==6.4.4.161
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -252,17 +252,17 @@ pylint-plugin-utils==0.6
     # via
     #   pylint-celery
     #   pylint-django
-pylint==2.8.3
+pylint==2.9.6
     # via
     #   edx-lint
     #   pylint-celery
     #   pylint-django
     #   pylint-plugin-utils
-pymongo==3.11.4
+pymongo==3.12.0
     # via
     #   -r requirements/base.txt
     #   edx-opaque-keys
-python-dateutil==2.8.1
+python-dateutil==2.8.2
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
@@ -290,7 +290,7 @@ requests-oauthlib==1.3.0
     # via
     #   -r requirements/base.txt
     #   social-auth-core
-requests==2.25.1
+requests==2.26.0
     # via
     #   -r requirements/base.txt
     #   algoliasearch
@@ -311,7 +311,7 @@ semantic-version==2.8.5
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-simplejson==3.17.2
+simplejson==3.17.3
     # via
     #   -r requirements/base.txt
     #   django-rest-swagger
@@ -363,7 +363,7 @@ uritemplate==3.0.1
     # via
     #   -r requirements/base.txt
     #   coreapi
-urllib3==1.26.5
+urllib3==1.26.6
     # via
     #   -r requirements/base.txt
     #   requests
@@ -376,3 +376,6 @@ wrapt==1.12.1
     # via astroid
 zipp==1.2.0
     # via -r requirements/base.txt
+
+# The following packages are considered to be unsafe in a requirements file:
+# setuptools

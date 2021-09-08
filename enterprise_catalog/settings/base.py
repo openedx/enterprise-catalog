@@ -25,6 +25,10 @@ root = lambda *x: join(abspath(PROJECT_ROOT), *x)
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('ENTERPRISE_CATALOG_SECRET_KEY', 'insecure-secret-key')
 
+DEFAULT_HASHING_ALGORITHM = "sha1"
+
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
@@ -175,6 +179,7 @@ TEMPLATES = [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.i18n',
                 'django.template.context_processors.media',
+                'django.template.context_processors.request',
                 'django.template.context_processors.static',
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
