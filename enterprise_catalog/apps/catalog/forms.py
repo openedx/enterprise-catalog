@@ -24,17 +24,17 @@ class CatalogQueryForm(forms.ModelForm):
         fields = ('content_filter',)
 
     def validate_content_filter_fields(self, content_filter):
-        for key in cftypes:
+        for key, value in cftypes.items():
             if key in content_filter.keys():
-                if not isinstance(content_filter[key], cftypes[key]['type']):
+                if not isinstance(content_filter[key], value['type']):
                     raise ValidationError(
-                        "Content filter '%s' must be of type %s" % (key, cftypes[key]['type'])
+                        "Content filter '{}' must be of type {}".format(key, value['type'])
                     )
-                if cftypes[key]['type'] == list:
-                    if not all(cftypes[key]['subtype'] == type(x) for x in content_filter[key]):
+                if value['type'] == list:
+                    if not all(value['subtype'] == type(x) for x in content_filter[key]):
                         raise ValidationError(
-                            "Content filter '%s' must contain values of type %s" % (
-                                key, cftypes[key]['subtype']
+                            "Content filter '{}' must contain values of type {}".format(
+                                key, value['subtype']
                             )
                         )
 
