@@ -263,8 +263,12 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
     def setUpTestData(cls):
         super().setUpTestData()
         cls.ALGOLIA_FIELDS = [
-            'key', 'objectID', 'enterprise_customer_uuids', 'enterprise_catalog_uuids',
-            'enterprise_catalog_query_uuids'
+            'key',
+            'objectID',
+            'enterprise_customer_uuids',
+            'enterprise_catalog_uuids',
+            'enterprise_catalog_query_uuids',
+            'enterprise_catalog_query_titles',
         ]
 
         # Set up a catalog, query, and metadata for a course
@@ -281,6 +285,11 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         # Set up new catalog, query, and metadata for a course run
         cls.enterprise_catalog_course_runs = EnterpriseCatalogFactory()
+
+        # for testing indexing catalog queries when titles aren't present
+        cls.enterprise_catalog_course_runs.catalog_query.title = None
+        cls.enterprise_catalog_course_runs.catalog_query.save()
+
         course_runs_catalog_query = cls.enterprise_catalog_course_runs.catalog_query
         course_run_metadata_published = ContentMetadataFactory(content_type=COURSE_RUN, parent_content_key='fakeX')
         course_run_metadata_published.catalog_queries.set([course_runs_catalog_query])
@@ -304,11 +313,16 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             str(self.enterprise_catalog_courses.catalog_query.uuid),
             str(self.enterprise_catalog_course_runs.catalog_query.uuid),
         ])
+        expected_catalog_query_titles = sorted([
+            str(self.enterprise_catalog_courses.catalog_query.title),
+            'catalog_query_{}'.format(self.enterprise_catalog_course_runs.catalog_query.id)
+        ])
 
         return {
             'catalog_uuids': expected_catalog_uuids,
             'customer_uuids': expected_customer_uuids,
             'query_uuids': expected_catalog_query_uuids,
+            'query_titles': expected_catalog_query_titles,
             'course_metadata_published': self.course_metadata_published,
             'course_metadata_unpublished': self.course_metadata_unpublished,
         }
@@ -344,6 +358,11 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'key': algolia_data['course_metadata_published'].content_key,
             'objectID': f'course-{published_course_uuid}-catalog-query-uuids-0',
             'enterprise_catalog_query_uuids': algolia_data['query_uuids'],
+        })
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-catalog-query-titles-0',
+            'enterprise_catalog_query_titles': algolia_data['query_titles'],
         })
 
         # verify replace_all_objects is called with the correct Algolia object data
@@ -404,6 +423,16 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'key': algolia_data['course_metadata_published'].content_key,
             'objectID': f'course-{published_course_uuid}-catalog-query-uuids-1',
             'enterprise_catalog_query_uuids': [algolia_data['query_uuids'][1]],
+        })
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-catalog-query-titles-0',
+            'enterprise_catalog_query_titles': [algolia_data['query_titles'][0]],
+        })
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-catalog-query-titles-1',
+            'enterprise_catalog_query_titles': [algolia_data['query_titles'][1]],
         })
 
         # verify replace_all_objects is called with the correct Algolia object data
