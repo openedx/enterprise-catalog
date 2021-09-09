@@ -36,6 +36,7 @@ ALGOLIA_FIELDS = [
     'first_enrollable_paid_seat_price',
     'original_image_url',
     'marketing_url',
+    'enterprise_catalog_query_titles',
 ]
 
 # default configuration for the index
@@ -68,6 +69,7 @@ ALGOLIA_INDEX_SETTINGS = {
         'first_enrollable_paid_seat_price',
         'original_image_url',
         'marketing_url',
+        'enterprise_catalog_query_titles',
     ],
     'unretrievableAttributes': [
         'enterprise_catalog_uuids',

@@ -334,6 +334,7 @@ def index_content_keys_in_algolia(content_keys, algolia_client):
     for content_keys_batch in batch(content_keys, batch_size=TASK_BATCH_SIZE):
         catalog_uuids_by_course_key = defaultdict(set)
         catalog_query_uuids_by_course_key = defaultdict(set)
+        catalog_query_title_by_course_key = defaultdict(set)
         customer_uuids_by_course_key = defaultdict(set)
 
         # retrieve ContentMetadata records that match the specified content_keys in the
@@ -359,9 +360,13 @@ def index_content_keys_in_algolia(content_keys, algolia_client):
             associated_queries = metadata.catalog_queries.all()
             enterprise_catalog_uuids = set()
             enterprise_catalog_query_uuids = set()
+            enterprise_catalog_query_titles = set()
             enterprise_customer_uuids = set()
             for query in associated_queries:
                 enterprise_catalog_query_uuids.add(str(query.uuid))
+                # Many stage queries have no title
+                query_title = query.title if query.title else "catalog_query_{}".format(str(query.id))
+                enterprise_catalog_query_titles.add(query_title)
                 associated_catalogs = query.enterprise_catalogs.all()
                 for catalog in associated_catalogs:
                     enterprise_catalog_uuids.add(str(catalog.uuid))
@@ -371,6 +376,7 @@ def index_content_keys_in_algolia(content_keys, algolia_client):
             catalog_uuids_by_course_key[course_content_key].update(enterprise_catalog_uuids)
             customer_uuids_by_course_key[course_content_key].update(enterprise_customer_uuids)
             catalog_query_uuids_by_course_key[course_content_key].update(enterprise_catalog_query_uuids)
+            catalog_query_title_by_course_key[course_content_key].update(enterprise_catalog_query_titles)
 
         # iterate through only the courses, retrieving the enterprise-related uuids from the
         # dictionary created above. there is at least 2 duplicate course records per course,
@@ -419,6 +425,16 @@ def index_content_keys_in_algolia(content_keys, algolia_client):
                 query_uuids,
                 'enterprise_catalog_query_uuids',
                 '{}-catalog-query-uuids-{}',
+            )
+            courses.extend(batched_metadata)
+
+            # enterprise catalog query title
+            query_titles = sorted(list(catalog_query_title_by_course_key[content_key]))
+            batched_metadata = _batched_metadata(
+                json_metadata,
+                query_titles,
+                'enterprise_catalog_query_titles',
+                '{}-catalog-query-titles-{}',
             )
             courses.extend(batched_metadata)
 

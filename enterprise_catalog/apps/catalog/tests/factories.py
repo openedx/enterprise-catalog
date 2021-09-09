@@ -31,6 +31,7 @@ class CatalogQueryFactory(factory.django.DjangoModelFactory):
         model = CatalogQuery
 
     content_filter = factory.Dict({'content_type': factory.Faker('words', nb=3)})
+    title = factory.Faker('word')
 
 
 class EnterpriseCatalogFactory(factory.django.DjangoModelFactory):
