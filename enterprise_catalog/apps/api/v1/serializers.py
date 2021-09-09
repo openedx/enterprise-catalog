@@ -136,7 +136,7 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
 
         content_filter = validated_data.get('content_filter', default_content_filter)
         query_title = validated_data.get('query_title', default_query_title)
-        catalog_query_uuid = validated_data.pop('catalog_query_uuid', None)
+        catalog_query_uuid = validated_data.pop('catalog_query_uuid', str(instance.catalog_query.uuid))
         instance.catalog_query = find_and_modify_catalog_query(content_filter, catalog_query_uuid, query_title)
         return super().update(instance, validated_data)
 
