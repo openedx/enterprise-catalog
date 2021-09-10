@@ -130,13 +130,16 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         default_content_filter = None
+        default_query_title = None
+        default_query_uuid = None
         if instance.catalog_query:
             default_content_filter = instance.catalog_query.content_filter
             default_query_title = instance.catalog_query.title if hasattr(instance.catalog_query, 'title') else None
+            default_query_uuid = str(instance.catalog_query.uuid)
 
         content_filter = validated_data.get('content_filter', default_content_filter)
         query_title = validated_data.get('query_title', default_query_title)
-        catalog_query_uuid = validated_data.pop('catalog_query_uuid', str(instance.catalog_query.uuid))
+        catalog_query_uuid = validated_data.pop('catalog_query_uuid', default_query_uuid)
         instance.catalog_query = find_and_modify_catalog_query(content_filter, catalog_query_uuid, query_title)
         return super().update(instance, validated_data)
 
