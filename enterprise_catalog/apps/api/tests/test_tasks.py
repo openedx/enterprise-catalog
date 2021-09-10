@@ -24,6 +24,7 @@ from enterprise_catalog.apps.catalog.utils import localized_utcnow
 
 # An object that represents the output of some hard work done by a task.
 COMPUTED_PRECIOUS_OBJECT = object()
+SORTED_QUERY_UUID_LIST = sorted([uuid.uuid4(), uuid.uuid4()])
 
 
 @tasks.expiring_task_semaphore()
@@ -272,23 +273,21 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         ]
 
         # Set up a catalog, query, and metadata for a course
-        cls.enterprise_catalog_courses = EnterpriseCatalogFactory()
-        courses_catalog_query = cls.enterprise_catalog_courses.catalog_query
+        cls.enterprise_catalog_query = CatalogQueryFactory(uuid=SORTED_QUERY_UUID_LIST[0])
+        cls.enterprise_catalog_courses = EnterpriseCatalogFactory(catalog_query=cls.enterprise_catalog_query)
         cls.course_metadata_published = ContentMetadataFactory(content_type=COURSE, content_key='fakeX')
-        cls.course_metadata_published.catalog_queries.set([courses_catalog_query])
+        cls.course_metadata_published.catalog_queries.set([cls.enterprise_catalog_query])
         cls.course_metadata_unpublished = ContentMetadataFactory(content_type=COURSE, content_key='testX')
         cls.course_metadata_unpublished.json_metadata.get('course_runs')[0].update({
             'status': 'unpublished',
         })
-        cls.course_metadata_unpublished.catalog_queries.set([courses_catalog_query])
+        cls.course_metadata_unpublished.catalog_queries.set([cls.enterprise_catalog_query])
         cls.course_metadata_unpublished.save()
 
-        # Set up new catalog, query, and metadata for a course run
-        cls.enterprise_catalog_course_runs = EnterpriseCatalogFactory()
-
-        # for testing indexing catalog queries when titles aren't present
-        cls.enterprise_catalog_course_runs.catalog_query.title = None
-        cls.enterprise_catalog_course_runs.catalog_query.save()
+        # Set up new catalog, query, and metadata for a course run]
+        # Testing indexing catalog queries when titles aren't present
+        cls.course_run_catalog_query = CatalogQueryFactory(uuid=SORTED_QUERY_UUID_LIST[1], title=None)
+        cls.enterprise_catalog_course_runs = EnterpriseCatalogFactory(catalog_query=cls.course_run_catalog_query)
 
         course_runs_catalog_query = cls.enterprise_catalog_course_runs.catalog_query
         course_run_metadata_published = ContentMetadataFactory(content_type=COURSE_RUN, parent_content_key='fakeX')
@@ -309,20 +308,20 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             str(self.enterprise_catalog_courses.enterprise_uuid),
             str(self.enterprise_catalog_course_runs.enterprise_uuid),
         ])
-        expected_catalog_query_uuids = sorted([
+        expected_queries = sorted([(
             str(self.enterprise_catalog_courses.catalog_query.uuid),
+            self.enterprise_catalog_courses.catalog_query.title,
+        ), (
             str(self.enterprise_catalog_course_runs.catalog_query.uuid),
-        ])
-        expected_catalog_query_titles = sorted([
-            str(self.enterprise_catalog_courses.catalog_query.title),
-            'catalog_query_{}'.format(self.enterprise_catalog_course_runs.catalog_query.id)
-        ])
+            None,
+        )])
 
+        query_uuids, query_titles = list(map(list, zip(*expected_queries)))
         return {
             'catalog_uuids': expected_catalog_uuids,
             'customer_uuids': expected_customer_uuids,
-            'query_uuids': expected_catalog_query_uuids,
-            'query_titles': expected_catalog_query_titles,
+            'query_uuids': query_uuids,
+            'query_titles': query_titles,
             'course_metadata_published': self.course_metadata_published,
             'course_metadata_unpublished': self.course_metadata_unpublished,
         }
@@ -357,12 +356,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         expected_algolia_objects_to_index.append({
             'key': algolia_data['course_metadata_published'].content_key,
             'objectID': f'course-{published_course_uuid}-catalog-query-uuids-0',
-            'enterprise_catalog_query_uuids': algolia_data['query_uuids'],
-        })
-        expected_algolia_objects_to_index.append({
-            'key': algolia_data['course_metadata_published'].content_key,
-            'objectID': f'course-{published_course_uuid}-catalog-query-titles-0',
-            'enterprise_catalog_query_titles': algolia_data['query_titles'],
+            'enterprise_catalog_query_uuids': sorted(algolia_data['query_uuids']),
+            'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
         })
 
         # verify replace_all_objects is called with the correct Algolia object data
@@ -418,21 +413,13 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'key': algolia_data['course_metadata_published'].content_key,
             'objectID': f'course-{published_course_uuid}-catalog-query-uuids-0',
             'enterprise_catalog_query_uuids': [algolia_data['query_uuids'][0]],
+            'enterprise_catalog_query_titles': [algolia_data['query_titles'][0]],
         })
         expected_algolia_objects_to_index.append({
             'key': algolia_data['course_metadata_published'].content_key,
             'objectID': f'course-{published_course_uuid}-catalog-query-uuids-1',
             'enterprise_catalog_query_uuids': [algolia_data['query_uuids'][1]],
-        })
-        expected_algolia_objects_to_index.append({
-            'key': algolia_data['course_metadata_published'].content_key,
-            'objectID': f'course-{published_course_uuid}-catalog-query-titles-0',
-            'enterprise_catalog_query_titles': [algolia_data['query_titles'][0]],
-        })
-        expected_algolia_objects_to_index.append({
-            'key': algolia_data['course_metadata_published'].content_key,
-            'objectID': f'course-{published_course_uuid}-catalog-query-titles-1',
-            'enterprise_catalog_query_titles': [algolia_data['query_titles'][1]],
+            'enterprise_catalog_query_titles': [],
         })
 
         # verify replace_all_objects is called with the correct Algolia object data
