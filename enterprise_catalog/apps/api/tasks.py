@@ -24,10 +24,13 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     get_algolia_object_id,
     get_initialized_algolia_client,
     partition_course_keys_for_indexing,
+    partition_program_keys_for_indexing,
 )
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
     DISCOVERY_COURSE_KEY_BATCH_SIZE,
+    DISCOVERY_PROGRAM_KEY_BATCH_SIZE,
+    PROGRAM,
     TASK_BATCH_SIZE,
 )
 from enterprise_catalog.apps.catalog.models import (
@@ -65,6 +68,28 @@ def _fetch_courses_by_keys(course_keys):
         courses.extend(discovery_client.get_courses(query_params=query_params))
 
     return courses
+
+
+def _fetch_programs_by_keys(program_keys):
+    """
+    Fetches program data from discovery's /api/v1/programs endpoint for the provided program keys.
+
+    Args:
+        program_keys (list of str): Content keys for Program ContentMetadata objects.
+    Returns:
+        list of dict: Returns a list of dictionaries where each dictionary represents the program data from discovery.
+    """
+    programs = []
+    discovery_client = DiscoveryApiClient()
+
+    # Batch the program keys into smaller chunks so that we don't send too big of a request to discovery
+    batched_program_keys = batch(program_keys, batch_size=DISCOVERY_PROGRAM_KEY_BATCH_SIZE)
+    for program_keys_chunk in batched_program_keys:
+        # Discovery expects the uuids param to be in the format ?uuids=program1,program2,...
+        query_params = {'uuids': ','.join(program_keys_chunk)}
+        programs.extend(discovery_client.get_programs(query_params=query_params))
+
+    return programs
 
 
 def unready_tasks(celery_task, time_delta):
@@ -195,8 +220,8 @@ class LoggedTaskWithRetry(LoggedTask):  # pylint: disable=abstract-method
 @expiring_task_semaphore()
 def update_full_content_metadata_task(self, force=False):  # pylint: disable=unused-argument
     """
-    Looks up the full course metadata from discovery's `/api/v1/courses` endpoint to pad all
-    ContentMetadata objects with. The course metadata is merged with the existing contents
+    Looks up the full metadata from discovery's `/api/v1/courses` and `/api/v1/programs` endpoints to pad all
+    ContentMetadata objects. The metadata is merged with the existing contents
     of the json_metadata field for each ContentMetadata record.
 
     Args:
@@ -208,13 +233,15 @@ def update_full_content_metadata_task(self, force=False):  # pylint: disable=unu
         )
 
     content_keys = [metadata.content_key for metadata in ContentMetadata.objects.filter(content_type=COURSE)]
-    _update_full_content_metadata(content_keys)
+    _update_full_content_metadata_course(content_keys)
+    content_keys = [metadata.content_key for metadata in ContentMetadata.objects.filter(content_type=PROGRAM)]
+    _update_full_content_metadata_program(content_keys)
 
 
-def _update_full_content_metadata(content_keys):
+def _update_full_content_metadata_course(content_keys):
     """
     Given content_keys, finds the associated ContentMetadata records with a type of course and looks up the full
-    course metadata from discovery's /api/v1/cousres endpoint to pad the ContentMetadata objects with. The course
+    course metadata from discovery's /api/v1/courses endpoint to pad the ContentMetadata objects. The course
     metadata is merged with the existing contents of the json_metadata field for each ContentMetadata record.
 
     Args:
@@ -271,11 +298,78 @@ def _update_full_content_metadata(content_keys):
         )
 
         # record the course keys that were updated and should be indexed in Algolia by the B2C logic
-        indexable_course_keys, __ = partition_course_keys_for_indexing(modified_content_metadata_records)
-        indexable_course_keys.extend(indexable_course_keys)
+        partitioned_indexable_course_keys, __ = partition_course_keys_for_indexing(modified_content_metadata_records)
+        indexable_course_keys.extend(partitioned_indexable_course_keys)
 
     logger.info(
         '{} total course keys were updated and are ready for indexing in Algolia'.format(len(indexable_course_keys))
+    )
+
+
+def _update_full_content_metadata_program(content_keys):
+    """
+    Given content_keys, finds the associated ContentMetadata records with a type of program and looks up the full
+    program metadata from discovery's /api/v1/programs endpoint to pad the ContentMetadata objects. The program
+    metadata is merged with the existing contents of the json_metadata field for each ContentMetadata record.
+
+    Args:
+        content_keys (list of str): A list of content keys representing ContentMetadata objects that should have their
+            metadata updated with the full Program metadata. This list gets filtered down to only those representing
+            Program ContentMetadata objects.
+
+    Returns:
+        list of str: Returns the program keys that were updated and should be indexed in Algolia
+            by the B2C logic.
+    """
+    indexable_program_keys = []
+    for content_keys_batch in batch(content_keys, batch_size=TASK_BATCH_SIZE):
+        full_program_dicts = _fetch_programs_by_keys(content_keys_batch)
+        if not full_program_dicts:
+            logger.info('No programs were retrieved from course-discovery in this batch.')
+            continue
+
+        # Build a dictionary of the metadata that corresponds to the fetched keys to avoid a query for every course
+        fetched_program_keys = [program['uuid'] for program in full_program_dicts]
+        metadata_records_for_fetched_keys = ContentMetadata.objects.filter(
+            content_key__in=fetched_program_keys,
+        )
+        metadata_by_key = {
+            metadata.content_key: metadata
+            for metadata in metadata_records_for_fetched_keys
+        }
+
+        # Iterate through the programs to update the json_metadata field,
+        # merging the minimal json_metadata retrieved by
+        # `/search/all/` with the full json_metadata retrieved by `/programs/`.
+        modified_content_metadata_records = []
+        for program_metadata_dict in full_program_dicts:
+            content_key = program_metadata_dict.get('uuid')
+            metadata_record = metadata_by_key.get(content_key)
+            if not metadata_record:
+                logger.error('Could not find ContentMetadata record for content_key %s.', content_key)
+                continue
+
+            metadata_record.json_metadata.update(program_metadata_dict)
+            modified_content_metadata_records.append(metadata_record)
+
+        ContentMetadata.objects.bulk_update(
+            modified_content_metadata_records,
+            ['json_metadata'],
+            batch_size=10,
+        )
+
+        logger.info(
+            'Successfully updated %d of %d ContentMetadata records with full metadata from course-discovery.',
+            len(modified_content_metadata_records),
+            len(full_program_dicts),
+        )
+
+        # record the program uuids that were updated and should be indexed in Algolia by the B2C logic
+        partitioned_indexable_program_keys, __ = partition_program_keys_for_indexing(modified_content_metadata_records)
+        indexable_program_keys.extend(partitioned_indexable_program_keys)
+
+    logger.info(
+        '{} total program keys were updated and are ready for indexing in Algolia'.format(len(indexable_program_keys))
     )
 
 
