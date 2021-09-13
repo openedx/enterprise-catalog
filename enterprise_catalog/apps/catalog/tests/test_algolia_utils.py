@@ -290,6 +290,27 @@ class AlgoliaUtilsTests(TestCase):
             },
             ['Archived'],
         ),
+        (
+            {
+                'course_runs': [{
+                    'status': 'published',
+                    'is_enrollable': True,
+                    'is_marketable': True,
+                    'availability': 'Starting Soon'
+                }]
+            },
+            ['Starting Soon'],
+        ),
+        (
+            {
+                'course_runs': [{
+                    'status': 'published',
+                    'is_enrollable': True,
+                    'is_marketable': True,
+                }]
+            },
+            ['Archived'],
+        ),
     )
     @ddt.unpack
     def test_get_course_availability(self, course_metadata, expected_availability):

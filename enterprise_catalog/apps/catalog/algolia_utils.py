@@ -205,6 +205,7 @@ def get_course_availability(course):
     COURSE_AVAILABILITY_MESSAGES = {
         'current': 'Available Now',
         'upcoming': 'Upcoming',
+        'starting soon': 'Starting Soon',
     }
     course_runs = course.get('course_runs') or []
     active_course_runs = [run for run in course_runs if is_course_run_active(run)]
