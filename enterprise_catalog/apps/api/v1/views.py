@@ -23,7 +23,7 @@ from rest_framework.views import APIView
 from rest_framework_xml.renderers import XMLRenderer
 
 from enterprise_catalog.apps.api.tasks import (
-    index_enterprise_catalog_courses_in_algolia_task,
+    index_enterprise_catalog_in_algolia_task,
     update_catalog_metadata_task,
     update_full_content_metadata_task,
 )
@@ -266,7 +266,7 @@ class EnterpriseCatalogRefreshDataFromDiscovery(BaseViewSet, APIView):
         async_update_metadata_chain = chain(
             update_catalog_metadata_task.si(catalog_query_id),
             update_full_content_metadata_task.si(),
-            index_enterprise_catalog_courses_in_algolia_task.si(),
+            index_enterprise_catalog_in_algolia_task.si(),
         )
         async_task = async_update_metadata_chain.apply_async()
 
