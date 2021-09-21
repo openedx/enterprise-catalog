@@ -82,6 +82,7 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
                 'is_marketable': True,
             }]
             json_metadata.update({
+                'content_type': COURSE,
                 'marketing_url': f'https://marketing.url/{self.content_key}',
                 'image_url': FAKE_IMAGE_URL,
                 'owners': owners,
@@ -90,12 +91,14 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
             })
         elif self.content_type == COURSE_RUN:
             json_metadata.update({
+                'content_type': COURSE_RUN,
                 'status': 'published',
                 'is_enrollable': True,
                 'is_marketable': True,
             })
         elif self.content_type == PROGRAM:
             json_metadata.update({
+                'content_type': PROGRAM,
                 'type': 'MicroMasters',
                 'hidden': True,
                 'marketing_url': f'https://marketing.url/{self.content_key}',

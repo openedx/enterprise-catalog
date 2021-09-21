@@ -25,12 +25,12 @@ There are three tasks included in this dance of updates:
 * ``update_catalog_metadata_task`` which updates the association of ``ContentMetadata`` records to
   ``CatalogQuery`` records, and does a partial update of the metadata records' ``json_metadata`` field.
 * ``update_full_content_metadata_task`` which does a full update of the metadata records' ``json_metadata``
-  based on a request to the discovery service's ``/api/v1/courses`` endpoint.
-* ``index_enterprise_catalog_courses_in_algolia_task`` which rebuilds the Algolia index with a series of
+  based on a request to the discovery service's ``/api/v1/courses`` and ``/api/v1/programs`` endpoints.
+* ``index_enterprise_catalog_in_algolia_task`` which rebuilds the Algolia index with a series of
   partial-update requests.
 
 We really only need the ``update_full_content_metadata_task`` to run for the sake of
-``index_enterprise_catalog_courses_in_algolia_task`` .  Here’s a quick sketch of a series of events that could occur::
+``index_enterprise_catalog_in_algolia_task`` .  Here’s a quick sketch of a series of events that could occur::
 
   update_metadata(1) # gets a lock and updates catalog query 1
   update_metadata(2) # gets a lock and updates query 2
@@ -45,7 +45,7 @@ We really only need the ``update_full_content_metadata_task`` to run for the sak
   # First, update all of the content metadata we have - don't accept
   # a list of it as a parameter any more.
   update_full_content_metadata_task()
-  
+
   # Then reindex algolia with every piece of content metadata
   # and importantly, on the content-catalog associations, we have.
   index_enterprise_catalog_courses_in_algolia()
@@ -60,7 +60,7 @@ We want our celery tasks around this update/re-indexing to behave as follows:
 2. ``update_full_content_metadata_task`` should wait for any ``update_catalog_metadata_tasks`` that have started
    in a recent window of time to finish before starting.  It should also not execute more
    than once in a given time period.
-3. ``index_enterprise_catalog_courses_in_algolia_task`` should wait for any ``update_full_content_metadata_tasks``
+3. ``index_enterprise_catalog_in_algolia_task`` should wait for any ``update_full_content_metadata_tasks``
    that have started in a recent window of time to finish before starting.  It should also not execute more than
    once in a given time period.
 

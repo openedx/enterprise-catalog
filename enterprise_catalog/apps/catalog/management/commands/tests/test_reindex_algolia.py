@@ -20,10 +20,10 @@ class ReindexAlgoliaCommandTests(TestCase):
         super().setUpTestData()
         cls.content_metadata = ContentMetadataFactory.create_batch(3, content_type=COURSE)
 
-    @mock.patch(PATH_PREFIX + 'index_enterprise_catalog_courses_in_algolia_task')
+    @mock.patch(PATH_PREFIX + 'index_enterprise_catalog_in_algolia_task')
     def test_reindex_algolia(self, mock_task):
         """
-        Verify that the job spins off the correct number of index_enterprise_catalog_courses_in_algolia_task
+        Verify that the job spins off the correct number of index_enterprise_catalog_in_algolia_task
         """
         call_command(self.command_name)
         mock_task.apply_async.return_value.get.assert_called_once_with()
