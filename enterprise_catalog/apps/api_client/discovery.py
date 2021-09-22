@@ -9,6 +9,7 @@ from .base_oauth import BaseOAuthClient
 from .constants import (
     DISCOVERY_COURSES_ENDPOINT,
     DISCOVERY_OFFSET_SIZE,
+    DISCOVERY_PROGRAMS_ENDPOINT,
     DISCOVERY_SEARCH_ALL_ENDPOINT,
 )
 
@@ -131,3 +132,59 @@ class DiscoveryApiClient(BaseOAuthClient):
             )
 
         return courses
+
+    def _retrieve_programs(self, offset, request_params):
+        """
+        Makes a request to discovery's /api/v1/programs/ endpoint with the specified offset and request_params
+        """
+        LOGGER.info('Retrieving programs from course-discovery for offset %s...', offset)
+        response = self.client.get(
+            DISCOVERY_PROGRAMS_ENDPOINT,
+            params=request_params,
+        ).json()
+        return response
+
+    def get_programs(self, query_params=None):
+        """
+        Return results from the discovery service's /programs endpoint.
+
+        Arguments:
+            query_params (dict): additional query params for the rest api endpoint
+                we're hitting. e.g. - {'limit': 100}
+
+        Returns:
+            list: a list of the results, or None if there was an error calling the discovery service.
+        """
+        request_params = {
+            'ordering': 'key',
+            'limit': DISCOVERY_OFFSET_SIZE,
+        }
+        request_params.update(query_params or {})
+
+        programs = []
+        offset = 0
+        try:
+            response = self._retrieve_programs(offset, request_params)
+            programs += response.get('results')
+            # Traverse all pages and concatenate results
+            while response.get('next'):
+                offset += DISCOVERY_OFFSET_SIZE
+                request_params.update({'offset': offset})
+                response = self._retrieve_programs(offset, request_params)
+                programs += response.get('results', [])
+        except SoftTimeLimitExceeded as exc:
+            LOGGER.warning(
+                'A task reached the soft time limit while traversing programs. %d programs already retrieved'
+                ' from course-discovery will continue to be processed: %s',
+                len(programs),
+                exc,
+            )
+        except Exception as exc:  # pylint: disable=broad-except
+            LOGGER.error(
+                'Could not get programs from course-discovery (offset %d) with query params %s: %s',
+                offset,
+                request_params,
+                exc,
+            )
+
+        return programs

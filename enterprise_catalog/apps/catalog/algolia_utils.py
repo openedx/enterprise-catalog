@@ -141,6 +141,56 @@ def partition_course_keys_for_indexing(courses_content_metadata):
     return list(indexable_course_keys), list(nonindexable_course_keys)
 
 
+def _should_index_program(program_metadata):
+    """
+    Replicates the B2C index check of whether a certain program should be indexed for search.
+
+    A program should only be indexed for algolia search if it has a marketing url,
+    non-null program_type and availability_level, an active status and 'edX' as the partner.
+    The course-discovery check that the course's partner is edX is included by default as the discovery API filters
+    to the request's site's partner.
+    The discovery check that the course has an availability level is a duplicate check that the website team
+    plans on removing.
+    Original code:
+    https://github.com/edx/course-discovery/blob/e0ece69ce8363eb765c524cd4eccb4b5cda35181/course_discovery/apps/course_metadata/algolia_models.py#L353
+
+    Args:
+        program (ContentMetadata): The ContentMetadata representing a program object.
+
+    Returns:
+        bool: Whether or not the program should be indexed by algolia.
+    """
+    program_json_metadata = program_metadata.json_metadata
+
+    return program_json_metadata.get('marketing_url')\
+        and program_json_metadata.get('type')\
+        and not program_json_metadata.get('hidden')
+
+
+def partition_program_keys_for_indexing(programs_content_metadata):
+    """
+    Returns both the indexable and non-indexable program content keys for Algolia.
+
+    Args:
+        programs_content_metadata (list of ContentMetadata): A list of ContentMetadata objects representing programs
+        that should be filtered down.
+
+    Returns:
+        indexable_program_keys (list): Content key strings to be indexed
+        nonindexable_program_keys (list): Content key strings to NOT be indexed
+    """
+    indexable_program_keys = set()
+    nonindexable_program_keys = set()
+
+    for program_metadata in programs_content_metadata:
+        if _should_index_program(program_metadata):
+            indexable_program_keys.add(program_metadata.content_key)
+        else:
+            nonindexable_program_keys.add(program_metadata.content_key)
+
+    return list(indexable_program_keys), list(nonindexable_program_keys)
+
+
 def get_initialized_algolia_client():
     """
     Initializes and returns an Algolia client for updating search indices
