@@ -64,8 +64,8 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
     @factory.lazy_attribute
     def json_metadata(self):
         json_metadata = {
-            'aggregation_key': f'{self.content_type}:{self.content_key}',
             'key': self.content_key,
+            'aggregation_key': f'{self.content_type}:{self.content_key}',
             'uuid': str(uuid4()),
         }
         if self.content_type == COURSE:
@@ -94,7 +94,12 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
                 'is_enrollable': True,
                 'is_marketable': True,
             })
-
+        elif self.content_type == PROGRAM:
+            json_metadata.update({
+                'type': 'MicroMasters',
+                'hidden': True,
+                'marketing_url': f'https://marketing.url/{self.content_key}',
+            })
         return json_metadata
 
 

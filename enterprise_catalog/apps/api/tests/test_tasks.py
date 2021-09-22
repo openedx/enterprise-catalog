@@ -12,7 +12,11 @@ from django.test import TestCase
 from django_celery_results.models import TaskResult
 
 from enterprise_catalog.apps.api import tasks
-from enterprise_catalog.apps.catalog.constants import COURSE, COURSE_RUN
+from enterprise_catalog.apps.catalog.constants import (
+    COURSE,
+    COURSE_RUN,
+    PROGRAM,
+)
 from enterprise_catalog.apps.catalog.models import ContentMetadata
 from enterprise_catalog.apps.catalog.tests.factories import (
     CatalogQueryFactory,
@@ -253,6 +257,51 @@ class UpdateFullContentMetadataTaskTests(TestCase):
 
         assert metadata_1.json_metadata == course_data_1
         assert metadata_2.json_metadata == course_data_2
+
+    # pylint: disable=unused-argument
+    @mock.patch('enterprise_catalog.apps.api.tasks.task_recently_run', return_value=False)
+    @mock.patch('enterprise_catalog.apps.api.tasks.partition_program_keys_for_indexing')
+    @mock.patch('enterprise_catalog.apps.api_client.base_oauth.OAuthAPIClient')
+    def test_update_full_metadata_program(self, mock_oauth_client, mock_partition_program_keys, mock_task_recently_run):
+        """
+        Assert that full program metadata is merged with original json_metadata for all ContentMetadata records.
+        """
+        program_key_1 = '02f5edeb-6604-4131-bf45-acd8df91e1f9'
+        program_data_1 = {'uuid': program_key_1, 'full_program_only_field': 'test_1'}
+        program_key_2 = 'be810df3-a059-42a7-b11f-d9bfb2877b15'
+        program_data_2 = {'uuid': program_key_2, 'full_program_only_field': 'test_2'}
+
+        # Mock out the data that should be returned from discovery's /api/v1/programs endpoint
+        mock_oauth_client.return_value.get.return_value.json.return_value = {
+            'results': [program_data_1, program_data_2],
+        }
+        mock_partition_program_keys.return_value = ([], [],)
+
+        metadata_1 = ContentMetadataFactory(content_type=PROGRAM, content_key=program_key_1)
+        metadata_1.catalog_queries.set([self.catalog_query])
+        metadata_2 = ContentMetadataFactory(content_type=PROGRAM, content_key=program_key_2)
+        metadata_2.catalog_queries.set([self.catalog_query])
+
+        assert metadata_1.json_metadata != program_data_1
+        assert metadata_2.json_metadata != program_data_2
+
+        tasks.update_full_content_metadata_task.apply().get()
+
+        actual_program_keys_args = mock_partition_program_keys.call_args_list[0][0][0]
+        self.assertEqual(set(actual_program_keys_args), {metadata_1, metadata_2})
+
+        metadata_1 = ContentMetadata.objects.get(content_key='02f5edeb-6604-4131-bf45-acd8df91e1f9')
+        metadata_2 = ContentMetadata.objects.get(content_key='be810df3-a059-42a7-b11f-d9bfb2877b15')
+
+        # add aggregation_key and uuid to program objects since they should now exist
+        # after merging the original json_metadata with the course metadata
+        program_data_1.update(metadata_1.json_metadata)
+        program_data_2.update(metadata_2.json_metadata)
+        program_data_1.update({'aggregation_key': 'program:02f5edeb-6604-4131-bf45-acd8df91e1f9'})
+        program_data_2.update({'aggregation_key': 'program:be810df3-a059-42a7-b11f-d9bfb2877b15'})
+
+        assert metadata_1.json_metadata == program_data_1
+        assert metadata_2.json_metadata == program_data_2
 
 
 class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
