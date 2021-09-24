@@ -3,14 +3,14 @@
 -c constraints.txt
 -r github.in              # Forks and other dependencies not yet on PyPI
 
-Django>=2.2,<2.3          # Web application framework
+Django
 django-celery-results
 django-config-models
 django-cors-headers
 django-crum
 django-extensions
 django-model-utils
-django-rest-swagger
+edx-api-doc-tools
 django-simple-history
 djangorestframework
 djangorestframework-xml
@@ -27,6 +27,7 @@ jsonfield2
 celery
 redis
 rules
+simplejson
 zipp<2.0
 algoliasearch
 social-auth-app-django
