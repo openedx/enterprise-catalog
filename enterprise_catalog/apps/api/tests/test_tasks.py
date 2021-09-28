@@ -306,7 +306,7 @@ class UpdateFullContentMetadataTaskTests(TestCase):
 
 class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
     """
-    Tests for `index_enterprise_catalog_courses_in_algolia_task`
+    Tests for `index_enterprise_catalog_in_algolia_task`
     """
 
     @classmethod
@@ -385,9 +385,9 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         algolia_data = self._set_up_factory_data_for_algolia()
 
         with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
-            tasks.index_enterprise_catalog_courses_in_algolia_task()  # pylint: disable=no-value-for-parameter
+            tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
             # call it a second time, make assertions that only one thing happened below
-            tasks.index_enterprise_catalog_courses_in_algolia_task()  # pylint: disable=no-value-for-parameter
+            tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         # create expected data to be added/updated in the Algolia index.
         expected_algolia_objects_to_index = []
@@ -433,7 +433,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_UUID_BATCH_SIZE', 1), \
              mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
-            tasks.index_enterprise_catalog_courses_in_algolia_task()  # pylint: disable=no-value-for-parameter
+            tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         # create expected data to be added/updated in the Algolia index.
         expected_algolia_objects_to_index = []

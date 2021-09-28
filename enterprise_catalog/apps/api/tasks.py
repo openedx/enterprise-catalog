@@ -20,7 +20,7 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     ALGOLIA_FIELDS,
     ALGOLIA_UUID_BATCH_SIZE,
     configure_algolia_index,
-    create_algolia_objects_from_courses,
+    create_algolia_objects,
     get_algolia_object_id,
     get_initialized_algolia_client,
     partition_course_keys_for_indexing,
@@ -251,7 +251,7 @@ def _update_full_content_metadata_course(content_keys):
 
     Returns:
         list of str: Returns the course keys that were updated and should be indexed in Algolia
-            by the B2C logic. This is passed to the `index_enterprise_catalog_courses_in_algolia_task` from
+            by the B2C logic. This is passed to the `index_enterprise_catalog_in_algolia_task` from
             the `EnterpriseCatalogRefreshDataFromDiscovery` view.
     """
     indexable_course_keys = []
@@ -408,7 +408,7 @@ def _batched_metadata_with_queries(json_metadata, sorted_queries):
 
 @shared_task(base=LoggedTaskWithRetry, bind=True, default_retry_delay=UNREADY_TASK_RETRY_COUNTDOWN_SECONDS)
 @expiring_task_semaphore()
-def index_enterprise_catalog_courses_in_algolia_task(self, force=False):  # pylint: disable=unused-argument
+def index_enterprise_catalog_in_algolia_task(self, force=False):  # pylint: disable=unused-argument
     """
     Index course data in Algolia with enterprise-related fields.
 
@@ -426,7 +426,11 @@ def index_enterprise_catalog_courses_in_algolia_task(self, force=False):  # pyli
         )
 
     courses_content_metadata = ContentMetadata.objects.filter(content_type=COURSE)
-    indexable_content_keys, nonindexable_content_keys = partition_course_keys_for_indexing(courses_content_metadata)
+    indexable_course_keys, nonindexable_course_keys = partition_course_keys_for_indexing(courses_content_metadata)
+    programs_content_metadata = ContentMetadata.objects.filter(content_type=PROGRAM)
+    indexable_program_keys, nonindexable_program_keys = partition_program_keys_for_indexing(programs_content_metadata)
+    indexable_content_keys = indexable_course_keys + indexable_program_keys
+    nonindexable_content_keys = nonindexable_course_keys + nonindexable_program_keys
     _reindex_algolia(
         indexable_content_keys=indexable_content_keys,
         nonindexable_content_keys=nonindexable_content_keys,
@@ -445,14 +449,14 @@ def index_content_keys_in_algolia(content_keys, algolia_client):
     logger.info(
         'There are {} total content keys to include in the Algolia index.'.format(len(content_keys))
     )
-    courses = []
+    products = []
     for content_keys_batch in batch(content_keys, batch_size=TASK_BATCH_SIZE):
-        catalog_uuids_by_course_key = defaultdict(set)
-        customer_uuids_by_course_key = defaultdict(set)
-        catalog_queries_by_course_key = defaultdict(set)
+        catalog_uuids_by_key = defaultdict(set)
+        customer_uuids_by_key = defaultdict(set)
+        catalog_queries_by_key = defaultdict(set)
 
         # retrieve ContentMetadata records that match the specified content_keys in the
-        # content_key or parent_content_key. returns both courses and course runs.
+        # content_key or parent_content_key. returns courses, programs and course runs.
         query = Q(content_key__in=content_keys_batch) | Q(parent_content_key__in=content_keys_batch)
 
         catalog_queries = CatalogQuery.objects.prefetch_related(
@@ -464,13 +468,15 @@ def index_content_keys_in_algolia(content_keys, algolia_client):
 
         # iterate through ContentMetadata records, retrieving the enterprise_catalog_uuids
         # and enterprise_customer_uuids associated with each ContentMetadata record (either
-        # a course or a course run), storing them in a dictionary with the related course's
-        # content_key as a key for later retrieval. the course's content_key is determined by
-        # the content_key field if the metadata is a `COURSE` or by the parent_content_key
+        # a course or a course run or program), storing them in a dictionary with the related
+        # content_key as a key for later retrieval. the content_key is determined by
+        # the content_key field if the metadata is a `COURSE` or `PROGRAM` or by the parent_content_key
         # field if the metadata is a `COURSE_RUN`.
         for metadata in content_metadata:
-            is_course_content_type = metadata.content_type == COURSE
-            course_content_key = metadata.content_key if is_course_content_type else metadata.parent_content_key
+            if metadata.content_type in (COURSE, PROGRAM):
+                content_key = metadata.content_key
+            else:
+                content_key = metadata.parent_content_key
             associated_queries = metadata.catalog_queries.all()
             enterprise_catalog_uuids = set()
             enterprise_customer_uuids = set()
@@ -483,9 +489,9 @@ def index_content_keys_in_algolia(content_keys, algolia_client):
                     enterprise_customer_uuids.add(str(catalog.enterprise_uuid))
 
             # add to any existing enterprise catalog uuids, enterprise customer uuids or catalog query uuids
-            catalog_uuids_by_course_key[course_content_key].update(enterprise_catalog_uuids)
-            customer_uuids_by_course_key[course_content_key].update(enterprise_customer_uuids)
-            catalog_queries_by_course_key[course_content_key].update(enterprise_catalog_queries)
+            catalog_uuids_by_key[content_key].update(enterprise_catalog_uuids)
+            customer_uuids_by_key[content_key].update(enterprise_customer_uuids)
+            catalog_queries_by_key[content_key].update(enterprise_catalog_queries)
 
         # iterate through only the courses, retrieving the enterprise-related uuids from the
         # dictionary created above. there is at least 2 duplicate course records per course,
@@ -494,8 +500,8 @@ def index_content_keys_in_algolia(content_keys, algolia_client):
         # if the number of uuids for both catalogs/customers exceeds ALGOLIA_UUID_BATCH_SIZE, then
         # create duplicate course records, batching the uuids (flattened records) to reduce
         # the payload size of the Algolia objects.
-        course_content_metadata = content_metadata.filter(content_type=COURSE)
-        for metadata in course_content_metadata:
+        filtered_content_metadata = content_metadata.filter(Q(content_type=COURSE) | Q(content_type=PROGRAM))
+        for metadata in filtered_content_metadata:
             content_key = metadata.content_key
             if _was_recently_indexed(content_key):
                 continue
@@ -503,44 +509,44 @@ def index_content_keys_in_algolia(content_keys, algolia_client):
             # add enterprise-related uuids to json_metadata
             json_metadata = copy.deepcopy(metadata.json_metadata)
             json_metadata.update({
-                'objectID': get_algolia_object_id(json_metadata.get('uuid')),
+                'objectID': get_algolia_object_id(json_metadata.get('content_type'), json_metadata.get('uuid')),
             })
 
             # enterprise catalog uuids
-            catalog_uuids = sorted(list(catalog_uuids_by_course_key[content_key]))
+            catalog_uuids = sorted(list(catalog_uuids_by_key[content_key]))
             batched_metadata = _batched_metadata(
                 json_metadata,
                 catalog_uuids,
                 'enterprise_catalog_uuids',
                 '{}-catalog-uuids-{}',
             )
-            courses.extend(batched_metadata)
+            products.extend(batched_metadata)
 
             # enterprise customer uuids
-            customer_uuids = sorted(list(customer_uuids_by_course_key[content_key]))
+            customer_uuids = sorted(list(customer_uuids_by_key[content_key]))
             batched_metadata = _batched_metadata(
                 json_metadata,
                 customer_uuids,
                 'enterprise_customer_uuids',
                 '{}-customer-uuids-{}',
             )
-            courses.extend(batched_metadata)
+            products.extend(batched_metadata)
             _mark_recently_indexed(content_key)
 
             # enterprise catalog queries (tuples of (query uuid, query title)), note: account for None being present
             # within the list
-            queries = sorted(list(catalog_queries_by_course_key[content_key]))
+            queries = sorted(list(catalog_queries_by_key[content_key]))
             batched_metadata = _batched_metadata_with_queries(json_metadata, queries)
-            courses.extend(batched_metadata)
+            products.extend(batched_metadata)
 
     # extract out only the fields we care about and send to Algolia index
-    algolia_objects = create_algolia_objects_from_courses(courses, ALGOLIA_FIELDS)
+    algolia_objects = create_algolia_objects(products, ALGOLIA_FIELDS)
     algolia_client.replace_all_objects(algolia_objects)
 
 
 def _reindex_algolia(indexable_content_keys, nonindexable_content_keys):
     """
-    Indexes course metadata in the Algolia search index.
+    Indexes courses and programs metadata in the Algolia search index.
     """
     # NOTE: this log message is used in a Splunk alert and should remain consistent in its language
     logger.info(
