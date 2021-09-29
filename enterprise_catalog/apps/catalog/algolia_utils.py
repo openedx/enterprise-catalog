@@ -3,7 +3,7 @@ import logging
 
 from enterprise_catalog.apps.api.v1.utils import is_course_run_active
 from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
-from enterprise_catalog.apps.catalog.constants import COURSE
+from enterprise_catalog.apps.catalog.constants import COURSE, PROGRAM
 
 
 logger = logging.getLogger(__name__)
@@ -19,8 +19,7 @@ ALGOLIA_FIELDS = [
     'availability',
     'card_image_url',  # for display on course cards
     'content_type',
-    'courses',
-    'degree',
+    'course_keys',
     'enterprise_catalog_uuids',
     'enterprise_catalog_query_uuids',
     'enterprise_customer_uuids',
@@ -322,6 +321,36 @@ def _get_course_program_field(course, field):
     })
 
 
+def _get_program_course_field(program, field):
+    """
+    Helper to pluck a list of values for the given field out of a program's courses.
+
+    Arguments:
+        program (dict): a dictionary representing a program
+        field (str): the name of a field to return values of.
+    Returns:
+        list: a list of the values for a certain field in a course associated with the program.
+    """
+    courses = program.get('courses') or []
+    return list({
+        value for course in courses
+        if (value := course.get(field))
+    })
+
+
+def get_program_course_keys(program):
+    """
+       Gets list of course keys associated with the program.
+
+       Arguments:
+           program (dict): a dictionary representing a program.
+
+       Returns:
+           list: a list of course keys associated with the program.
+       """
+    return _get_program_course_field(program, 'key')
+
+
 def get_course_program_types(course):
     """
     Gets list of program types associated with the course. Used for the "Programs"
@@ -547,6 +576,10 @@ def _algolia_object_from_product(product, algolia_fields):
             'first_enrollable_paid_seat_price': get_course_first_paid_enrollable_seat_price(searchable_product),
             'original_image_url': get_course_original_image_url(searchable_product),
             'marketing_url': get_course_marketing_url(searchable_product),
+        })
+    elif searchable_product.get('content_type') == PROGRAM:
+        searchable_product.update({
+            'course_keys': get_program_course_keys(searchable_product),
         })
 
     algolia_object = {}
