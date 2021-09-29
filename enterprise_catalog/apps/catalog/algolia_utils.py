@@ -20,7 +20,6 @@ ALGOLIA_FIELDS = [
     'card_image_url',  # for display on course cards
     'content_type',
     'courses',
-    'curricula',
     'degree',
     'enterprise_catalog_uuids',
     'enterprise_catalog_query_uuids',
