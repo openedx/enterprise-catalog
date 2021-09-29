@@ -410,7 +410,7 @@ def _batched_metadata_with_queries(json_metadata, sorted_queries):
 @expiring_task_semaphore()
 def index_enterprise_catalog_in_algolia_task(self, force=False):  # pylint: disable=unused-argument
     """
-    Index course data in Algolia with enterprise-related fields.
+    Index course and program data in Algolia with enterprise-related fields.
 
     Note: It is especially important that this task uses the increased maximum ``CELERY_TASK_SOFT_TIME_LIMIT`` and
     ``CELERY_TASK_TIME_LIMIT`` as it makes somewhat time-intensive reads/writes to the database along with sending
