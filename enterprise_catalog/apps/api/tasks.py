@@ -38,7 +38,11 @@ from enterprise_catalog.apps.catalog.models import (
     ContentMetadata,
     update_contentmetadata_from_discovery,
 )
-from enterprise_catalog.apps.catalog.utils import batch, localized_utcnow
+from enterprise_catalog.apps.catalog.utils import (
+    batch,
+    get_content_filter_hash,
+    localized_utcnow,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -627,4 +631,46 @@ def update_catalog_metadata_task(self, catalog_query_id, force=False):  # pylint
     associated_content_keys = update_contentmetadata_from_discovery(catalog_query)
     logger.info('Finished update_catalog_metadata_task with {} associated content keys for catalog {}'.format(
         len(associated_content_keys), catalog_query_id
+    ))
+
+
+@shared_task(base=LoggedTaskWithRetry, bind=True)
+@expiring_task_semaphore()
+def fetch_missing_course_metadata_task(self):  # pylint: disable=unused-argument
+    """
+    Creates a CatalogQuery for all the courses that do not have ContentMetadata instance.
+
+    After creating the catalog query it calls update_contentmetadata_from_discovery to update the metadata for these
+    courses. Course metadata is only missing for program courses so the initial query only looks for course metadata
+    that are embedded inside a program.
+    """
+
+    program_metadata_list = ContentMetadata.objects.filter(content_type=PROGRAM).values_list('json_metadata', flat=True)
+    course_keys = set()
+    for program_metadata in program_metadata_list:
+        if program_metadata is not None:
+            course_keys.update([item.get('key') for item in program_metadata.get('courses', [])])
+
+    # Check which courses do not have content metadata.
+    present_course_keys = ContentMetadata.objects.filter(
+        content_type=COURSE, content_key__in=course_keys
+    ).values_list(
+        'content_key', flat=True
+    )
+
+    missing_course_keys = course_keys.difference(present_course_keys)
+    content_filter = {
+        'status': 'published',
+        'key': list(missing_course_keys),
+        'content_type': 'course',
+    }
+
+    catalog_query, _ = CatalogQuery.objects.get_or_create(
+        content_filter_hash=get_content_filter_hash(content_filter),
+        defaults={'content_filter': content_filter, 'title': None},
+    )
+
+    associated_content_keys = update_contentmetadata_from_discovery(catalog_query)
+    logger.info('Finished fetch_missing_course_metadata_task with {} associated content keys for catalog {}'.format(
+        len(associated_content_keys), catalog_query.id
     ))
