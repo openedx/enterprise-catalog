@@ -17,7 +17,7 @@ from enterprise_catalog.apps.catalog.constants import (
     COURSE_RUN,
     PROGRAM,
 )
-from enterprise_catalog.apps.catalog.models import ContentMetadata
+from enterprise_catalog.apps.catalog.models import CatalogQuery, ContentMetadata
 from enterprise_catalog.apps.catalog.tests.factories import (
     CatalogQueryFactory,
     ContentMetadataFactory,
@@ -197,6 +197,38 @@ class UpdateCatalogMetadataTaskTests(TestCase):
         bad_id = 412
         tasks.update_catalog_metadata_task.apply(args=(bad_id,))
         mock_update_data_from_discovery.assert_not_called()
+
+
+class FetchMissingCourseMetadataTaskTests(TestCase):
+    """
+    Tests for the `fetch_missing_course_metadata_task`.
+    """
+    @mock.patch('enterprise_catalog.apps.api.tasks.update_contentmetadata_from_discovery')
+    def test_fetch_missing_course_metadata_task(self, mock_update_data_from_discovery):
+        """
+        Validate the fetch_missing_course_metadata_task gathers correct data of missing courses and calls
+        update_contentmetadata_from_discovery with correct arguments.
+        """
+        test_course = 'course:edX+testX'
+        course_content_metadata = ContentMetadataFactory.create(content_type=COURSE)
+        ContentMetadataFactory.create(content_type=PROGRAM, json_metadata={
+            'courses': [
+                course_content_metadata.json_metadata,
+                {
+                    'key': test_course,
+                },
+            ]
+        })
+
+        tasks.fetch_missing_course_metadata_task.apply()
+
+        assert CatalogQuery.objects.filter().count() == 1
+        catalog_query = CatalogQuery.objects.first()
+        assert catalog_query.content_filter['status'] == 'published'
+        assert catalog_query.content_filter['content_type'] == 'course'
+        assert catalog_query.content_filter['key'] == [test_course]
+
+        mock_update_data_from_discovery.assert_called_with(catalog_query)
 
 
 class UpdateFullContentMetadataTaskTests(TestCase):
