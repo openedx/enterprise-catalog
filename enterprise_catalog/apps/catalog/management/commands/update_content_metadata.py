@@ -4,6 +4,7 @@ from celery import group
 from django.core.management.base import BaseCommand
 
 from enterprise_catalog.apps.api.tasks import (
+    fetch_missing_course_metadata_task,
     update_catalog_metadata_task,
     update_full_content_metadata_task,
 )
@@ -29,6 +30,13 @@ class Command(BaseCommand):
         )
         logger.info(message, catalog_query)
         return update_catalog_metadata_task.s(catalog_query.id, force=force)
+
+    def _fetch_missing_course_metadata_task(self):
+        logger.info(
+            'Spinning off fetch_missing_course_metadata_task from update_content_metadata command'
+            ' to update content_metadata of missing courses.'
+        )
+        return fetch_missing_course_metadata_task.s()
 
     def _update_full_content_metadata_task(self, *args, **kwargs):
         """
@@ -65,6 +73,10 @@ class Command(BaseCommand):
         a single `update_full_content_metadata_task` instance.
         """
         options.update(CatalogUpdateCommandConfig.current_options())
+
+        # Fetch course metadata for the courses that are missing.
+        self._fetch_missing_course_metadata_task()
+
         # find all CatalogQuery records used by at least one EnterpriseCatalog to avoid
         # calling /search/all/ for a CatalogQuery that is not currently used by any catalogs.
         catalog_queries = CatalogQuery.objects.filter(enterprise_catalogs__isnull=False).distinct()
