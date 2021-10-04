@@ -31,11 +31,7 @@ cffi==1.14.6
     # via
     #   -r requirements/base.txt
     #   cryptography
-<<<<<<< HEAD
-charset-normalizer==2.0.4
-=======
 charset-normalizer==2.0.6
->>>>>>> master
     # via
     #   -r requirements/base.txt
     #   requests
@@ -55,12 +51,8 @@ coreschema==0.0.4
     # via
     #   -r requirements/base.txt
     #   coreapi
-<<<<<<< HEAD
-cryptography==3.4.8
-=======
     #   drf-yasg
-cryptography==3.2.1
->>>>>>> master
+cryptography==3.4.8
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -71,11 +63,7 @@ defusedxml==0.7.1
     #   djangorestframework-xml
     #   python3-openid
     #   social-auth-core
-<<<<<<< HEAD
-django==2.2.24
-=======
 django==3.2.7
->>>>>>> master
     # via
     #   -r requirements/base.txt
     #   django-config-models
@@ -85,11 +73,8 @@ django==3.2.7
     #   django-model-utils
     #   djangorestframework
     #   drf-jwt
-<<<<<<< HEAD
-=======
     #   drf-yasg
     #   edx-api-doc-tools
->>>>>>> master
     #   edx-auth-backends
     #   edx-celeryutils
     #   edx-django-release-util
@@ -98,12 +83,11 @@ django==3.2.7
     #   edx-rbac
     #   edx-toggles
     #   jsonfield2
-    #   rest-condition
 django-celery-results==2.0.1
     # via -r requirements/base.txt
 django-config-models==2.2.0
     # via -r requirements/base.txt
-django-cors-headers==3.8.0
+django-cors-headers==3.9.0
     # via -r requirements/base.txt
 django-crum==0.7.9
     # via
@@ -127,8 +111,6 @@ django-waffle==2.2.1
     #   edx-drf-extensions
     #   edx-toggles
 djangorestframework==3.12.4
-<<<<<<< HEAD
-=======
     # via
     #   -r requirements/base.txt
     #   django-config-models
@@ -136,49 +118,32 @@ djangorestframework==3.12.4
     #   drf-yasg
     #   edx-api-doc-tools
     #   edx-drf-extensions
-    #   rest-condition
 djangorestframework-xml==2.0.0
     # via -r requirements/base.txt
-drf-jwt==1.19.0
->>>>>>> master
+drf-jwt==1.19.1
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-<<<<<<< HEAD
-    #   rest-condition
-djangorestframework-xml==2.0.0
-    # via -r requirements/base.txt
-drf-jwt==1.19.0
-    # via
-    #   -r requirements/base.txt
-    #   edx-drf-extensions
-edx-auth-backends==4.0.0
-=======
 drf-yasg==1.20.0
     # via
     #   -r requirements/base.txt
     #   edx-api-doc-tools
 edx-api-doc-tools==1.5.0
     # via -r requirements/base.txt
-edx-auth-backends==3.4.0
->>>>>>> master
+edx-auth-backends==4.0.0
     # via -r requirements/base.txt
 edx-celeryutils==1.1.0
     # via -r requirements/base.txt
 edx-django-release-util==1.1.0
     # via -r requirements/base.txt
-<<<<<<< HEAD
-edx-django-utils==4.3.0
-=======
 edx-django-utils==4.4.0
->>>>>>> master
     # via
     #   -r requirements/base.txt
     #   django-config-models
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==7.0.1
+edx-drf-extensions==8.0.0
     # via
     #   -r requirements/base.txt
     #   edx-rbac
@@ -199,7 +164,7 @@ future==0.18.2
     #   pyjwkest
 gevent==21.8.0
     # via -r requirements/production.in
-greenlet==1.1.1
+greenlet==1.1.2
     # via gevent
 gunicorn==20.1.0
     # via -r requirements/production.in
@@ -234,11 +199,7 @@ markupsafe==1.1.1
     #   jinja2
 mysqlclient==2.0.3
     # via -r requirements/base.txt
-<<<<<<< HEAD
-newrelic==6.8.1.164
-=======
-newrelic==6.10.0.165
->>>>>>> master
+newrelic==7.0.0.166
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -263,7 +224,7 @@ pycparser==2.20
     # via
     #   -r requirements/base.txt
     #   cffi
-pycryptodomex==3.10.1
+pycryptodomex==3.10.4
     # via
     #   -r requirements/base.txt
     #   pyjwkest
@@ -301,7 +262,7 @@ python3-openid==3.2.0
     # via
     #   -r requirements/base.txt
     #   social-auth-core
-pytz==2021.1
+pytz==2021.3
     # via
     #   -r requirements/base.txt
     #   celery
@@ -329,10 +290,6 @@ requests-oauthlib==1.3.0
     # via
     #   -r requirements/base.txt
     #   social-auth-core
-rest-condition==1.0.3
-    # via
-    #   -r requirements/base.txt
-    #   edx-drf-extensions
 ruamel.yaml==0.17.16
     # via
     #   -r requirements/base.txt
@@ -348,13 +305,7 @@ semantic-version==2.8.5
     #   -r requirements/base.txt
     #   edx-drf-extensions
 simplejson==3.17.5
-<<<<<<< HEAD
-    # via
-    #   -r requirements/base.txt
-    #   django-rest-swagger
-=======
     # via -r requirements/base.txt
->>>>>>> master
 six==1.16.0
     # via
     #   -r requirements/base.txt
@@ -398,7 +349,7 @@ uritemplate==3.0.1
     #   -r requirements/base.txt
     #   coreapi
     #   drf-yasg
-urllib3==1.26.6
+urllib3==1.26.7
     # via
     #   -r requirements/base.txt
     #   requests
