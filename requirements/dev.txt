@@ -13,7 +13,12 @@ amqp==2.6.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   kombu
-astroid==2.6.5
+asgiref==3.4.1
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   django
+astroid==2.8.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -37,6 +42,7 @@ billiard==3.6.4.0
     #   celery
 celery==4.4.7
     # via
+    #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   django-celery-results
@@ -53,15 +59,20 @@ cffi==1.14.6
     #   bcrypt
     #   cryptography
     #   pynacl
+<<<<<<< HEAD
 chardet==4.0.0
     # via diff-cover
 charset-normalizer==2.0.4
+=======
+charset-normalizer==2.0.6
+>>>>>>> master
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   requests
 click==7.1.2
     # via
+    #   -c requirements/constraints.txt
     #   -r requirements/pip-tools.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -84,19 +95,20 @@ coreapi==2.3.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-    #   django-rest-swagger
-    #   openapi-codec
+    #   drf-yasg
 coreschema==0.0.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   coreapi
+    #   drf-yasg
 coverage==5.5
     # via
     #   -r requirements/test.txt
     #   pytest-cov
 cryptography==3.4.8
     # via
+    #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   paramiko
@@ -113,16 +125,30 @@ defusedxml==0.7.1
     #   djangorestframework-xml
     #   python3-openid
     #   social-auth-core
+<<<<<<< HEAD
 diff-cover==6.3.4
     # via -r requirements/dev.in
 distlib==0.3.2
+=======
+diff-cover==4.0.0
+    # via
+    #   -c requirements/constraints.txt
+    #   -r requirements/dev.in
+distlib==0.3.3
+>>>>>>> master
     # via
     #   -r requirements/test.txt
     #   virtualenv
 distro==1.6.0
     # via docker-compose
+<<<<<<< HEAD
 django==2.2.24
     # via
+=======
+django==3.2.7
+    # via
+    #   -c requirements/constraints.txt
+>>>>>>> master
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   django-config-models
@@ -133,19 +159,28 @@ django==2.2.24
     #   django-model-utils
     #   djangorestframework
     #   drf-jwt
+<<<<<<< HEAD
+=======
+    #   drf-yasg
+    #   edx-api-doc-tools
+>>>>>>> master
     #   edx-auth-backends
     #   edx-celeryutils
     #   edx-django-release-util
     #   edx-django-utils
     #   edx-drf-extensions
     #   edx-i18n-tools
+<<<<<<< HEAD
     #   edx-lint
+=======
+>>>>>>> master
     #   edx-rbac
     #   edx-toggles
     #   jsonfield2
     #   rest-condition
 django-celery-results==2.0.1
     # via
+    #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
 django-config-models==2.2.0
@@ -177,10 +212,6 @@ django-model-utils==4.1.1
     #   -r requirements/test.txt
     #   edx-celeryutils
     #   edx-rbac
-django-rest-swagger==2.2.0
-    # via
-    #   -r requirements/quality.txt
-    #   -r requirements/test.txt
 django-simple-history==3.0.0
     # via
     #   -r requirements/quality.txt
@@ -197,15 +228,25 @@ djangorestframework==3.12.4
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   django-config-models
+<<<<<<< HEAD
     #   django-rest-swagger
     #   drf-jwt
+=======
+    #   drf-jwt
+    #   drf-yasg
+    #   edx-api-doc-tools
+>>>>>>> master
     #   edx-drf-extensions
     #   rest-condition
 djangorestframework-xml==2.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+<<<<<<< HEAD
 docker[ssh]==5.0.0
+=======
+docker[ssh]==5.0.2
+>>>>>>> master
     # via docker-compose
 docker-compose==1.29.2
     # via -r requirements/dev.in
@@ -215,11 +256,26 @@ docopt==0.6.2
     # via docker-compose
 drf-jwt==1.19.0
     # via
+    #   -c requirements/common_constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-drf-extensions
+<<<<<<< HEAD
 edx-auth-backends==4.0.0
+=======
+drf-yasg==1.20.0
     # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   edx-api-doc-tools
+edx-api-doc-tools==1.5.0
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+edx-auth-backends==3.4.0
+>>>>>>> master
+    # via
+    #   -c requirements/common_constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
 edx-celeryutils==1.1.0
@@ -230,7 +286,11 @@ edx-django-release-util==1.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+<<<<<<< HEAD
 edx-django-utils==4.3.0
+=======
+edx-django-utils==4.4.0
+>>>>>>> master
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -240,12 +300,13 @@ edx-django-utils==4.3.0
     #   edx-toggles
 edx-drf-extensions==7.0.1
     # via
+    #   -c requirements/common_constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-rbac
 edx-i18n-tools==0.7.0
     # via -r requirements/dev.in
-edx-lint==5.0.0
+edx-lint==5.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -268,7 +329,11 @@ edx-toggles==4.2.0
     #   -r requirements/test.txt
 factory-boy==3.2.0
     # via -r requirements/test.txt
+<<<<<<< HEAD
 faker==8.12.1
+=======
+faker==8.13.2
+>>>>>>> master
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -290,10 +355,18 @@ idna==3.2
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   requests
-inflect==5.3.0
+importlib-metadata==4.8.1
+    # via inflect
+inflect==3.0.2
     # via
+    #   -c requirements/constraints.txt
     #   -r requirements/dev.in
     #   jinja2-pluralize
+inflection==0.5.1
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   drf-yasg
 iniconfig==1.1.1
     # via
     #   -r requirements/test.txt
@@ -310,6 +383,7 @@ itypes==1.2.0
     #   coreapi
 jinja2==2.11.3
     # via
+    #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   code-annotations
@@ -337,6 +411,7 @@ lazy-object-proxy==1.6.0
     #   astroid
 markupsafe==1.1.1
     # via
+    #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   jinja2
@@ -349,7 +424,11 @@ mysqlclient==2.0.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+<<<<<<< HEAD
 newrelic==6.8.1.164
+=======
+newrelic==6.10.0.165
+>>>>>>> master
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -360,14 +439,11 @@ oauthlib==3.1.1
     #   -r requirements/test.txt
     #   requests-oauthlib
     #   social-auth-core
-openapi-codec==1.3.2
+packaging==21.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-    #   django-rest-swagger
-packaging==21.0
-    # via
-    #   -r requirements/test.txt
+    #   drf-yasg
     #   pytest
     #   tox
 paramiko==2.7.2
@@ -383,14 +459,19 @@ pep517==0.11.0
     # via
     #   -r requirements/pip-tools.txt
     #   pip-tools
-pip-tools==6.2.0
+pip-tools==6.3.0
     # via -r requirements/pip-tools.txt
+<<<<<<< HEAD
 platformdirs==2.2.0
+=======
+platformdirs==2.3.0
+>>>>>>> master
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+    #   pylint
     #   virtualenv
-pluggy==0.13.1
+pluggy==1.0.0
     # via
     #   -r requirements/test.txt
     #   diff-cover
@@ -431,6 +512,8 @@ pyjwkest==1.4.2
     #   edx-drf-extensions
 pyjwt[crypto]==2.1.0
     # via
+    #   -c requirements/common_constraints.txt
+    #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   drf-jwt
@@ -438,6 +521,14 @@ pyjwt[crypto]==2.1.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
+pylint==2.11.1
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   edx-lint
+    #   pylint-celery
+    #   pylint-django
+    #   pylint-plugin-utils
 pylint-celery==0.3
     # via
     #   -r requirements/quality.txt
@@ -454,14 +545,6 @@ pylint-plugin-utils==0.6
     #   -r requirements/test.txt
     #   pylint-celery
     #   pylint-django
-pylint==2.9.6
-    # via
-    #   -r requirements/quality.txt
-    #   -r requirements/test.txt
-    #   edx-lint
-    #   pylint-celery
-    #   pylint-django
-    #   pylint-plugin-utils
 pymongo==3.12.0
     # via
     #   -r requirements/quality.txt
@@ -471,16 +554,29 @@ pynacl==1.4.0
     # via paramiko
 pyparsing==2.4.7
     # via
+    #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   packaging
 pyrsistent==0.18.0
     # via jsonschema
+<<<<<<< HEAD
 pytest==6.2.4
+=======
+pytest==6.2.5
+>>>>>>> master
     # via
     #   -r requirements/test.txt
     #   pytest-cov
     #   pytest-django
+<<<<<<< HEAD
 python-dateutil==2.8.1
+=======
+pytest-cov==2.12.1
+    # via -r requirements/test.txt
+pytest-django==4.4.0
+    # via -r requirements/test.txt
+python-dateutil==2.8.2
+>>>>>>> master
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -540,6 +636,16 @@ rest-condition==1.0.3
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-drf-extensions
+ruamel.yaml==0.17.16
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   drf-yasg
+ruamel.yaml.clib==0.2.6
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   ruamel.yaml
 rules==3.0
     # via
     #   -r requirements/quality.txt
@@ -553,7 +659,6 @@ simplejson==3.17.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-    #   django-rest-swagger
 six==1.16.0
     # via
     #   -r requirements/quality.txt
@@ -586,16 +691,19 @@ snowballstemmer==2.1.0
     #   pydocstyle
 social-auth-app-django==4.0.0
     # via
+    #   -c requirements/common_constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-auth-backends
 social-auth-core==4.1.0
     # via
+    #   -c requirements/common_constraints.txt
+    #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-auth-backends
     #   social-auth-app-django
-sqlparse==0.4.1
+sqlparse==0.4.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -628,13 +736,24 @@ tomli==1.2.1
     # via
     #   -r requirements/pip-tools.txt
     #   pep517
+<<<<<<< HEAD
 tox==3.24.3
+=======
+tox==3.24.4
+>>>>>>> master
     # via -r requirements/test.txt
+typing-extensions==3.10.0.2
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   astroid
+    #   pylint
 uritemplate==3.0.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   coreapi
+    #   drf-yasg
 urllib3==1.26.6
     # via
     #   -r requirements/quality.txt
@@ -646,7 +765,11 @@ vine==1.3.0
     #   -r requirements/test.txt
     #   amqp
     #   celery
+<<<<<<< HEAD
 virtualenv==20.7.2
+=======
+virtualenv==20.8.0
+>>>>>>> master
     # via
     #   -r requirements/test.txt
     #   tox
@@ -667,6 +790,7 @@ zipp==1.2.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+    #   importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip

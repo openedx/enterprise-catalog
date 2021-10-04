@@ -8,10 +8,14 @@
 # pin when possible.  Writing an issue against the offending project and
 # linking to it here is good.
 
-Django>=2.2,<2.3
+-c common_constraints.txt
 
+<<<<<<< HEAD
 # Common constraints for edx repos
 -c common_constraints.txt
+=======
+Django>=3.2,<4.0
+>>>>>>> master
 
 # celery 5.0 has dropped python3.5 support.
 celery<5.0
@@ -29,3 +33,9 @@ MarkupSafe<2.0
 
 # Not sure (circa May 12, 2021 @adusenbery)
 click<8.0
+
+# diff-cover latest requires (pluggy>=0.13.1,<0.14.0)
+# which conflicts with pytest(pluggy>=0.12,<2.0.0) and tox(pluggy>0.12) both of these fetch pluggy==1.0.0
+# but diff-cover latest has a pin (pluggy<1.0.0a1)
+# Using the same version of diff-cover which is being used currently in edx-platform to avoid this conflict.
+diff-cover==4.0.0

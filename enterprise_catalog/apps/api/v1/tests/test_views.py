@@ -810,7 +810,7 @@ class EnterpriseCatalogRefreshDataFromDiscoveryTests(APITestMixin):
     @mock.patch('enterprise_catalog.apps.api.v1.views.chain')
     @mock.patch('enterprise_catalog.apps.api.v1.views.update_catalog_metadata_task')
     @mock.patch('enterprise_catalog.apps.api.v1.views.update_full_content_metadata_task')
-    @mock.patch('enterprise_catalog.apps.api.v1.views.index_enterprise_catalog_courses_in_algolia_task')
+    @mock.patch('enterprise_catalog.apps.api.v1.views.index_enterprise_catalog_in_algolia_task')
     def test_refresh_catalog(
         self,
         mock_index_task,

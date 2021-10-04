@@ -17,7 +17,7 @@ from enterprise_catalog.apps.catalog.constants import (
     COURSE_RUN,
     PROGRAM,
 )
-from enterprise_catalog.apps.catalog.models import ContentMetadata
+from enterprise_catalog.apps.catalog.models import CatalogQuery, ContentMetadata
 from enterprise_catalog.apps.catalog.tests.factories import (
     CatalogQueryFactory,
     ContentMetadataFactory,
@@ -199,6 +199,38 @@ class UpdateCatalogMetadataTaskTests(TestCase):
         mock_update_data_from_discovery.assert_not_called()
 
 
+class FetchMissingCourseMetadataTaskTests(TestCase):
+    """
+    Tests for the `fetch_missing_course_metadata_task`.
+    """
+    @mock.patch('enterprise_catalog.apps.api.tasks.update_contentmetadata_from_discovery')
+    def test_fetch_missing_course_metadata_task(self, mock_update_data_from_discovery):
+        """
+        Validate the fetch_missing_course_metadata_task gathers correct data of missing courses and calls
+        update_contentmetadata_from_discovery with correct arguments.
+        """
+        test_course = 'course:edX+testX'
+        course_content_metadata = ContentMetadataFactory.create(content_type=COURSE)
+        ContentMetadataFactory.create(content_type=PROGRAM, json_metadata={
+            'courses': [
+                course_content_metadata.json_metadata,
+                {
+                    'key': test_course,
+                },
+            ]
+        })
+
+        tasks.fetch_missing_course_metadata_task.apply()
+
+        assert CatalogQuery.objects.filter().count() == 1
+        catalog_query = CatalogQuery.objects.first()
+        assert catalog_query.content_filter['status'] == 'published'
+        assert catalog_query.content_filter['content_type'] == 'course'
+        assert catalog_query.content_filter['key'] == [test_course]
+
+        mock_update_data_from_discovery.assert_called_with(catalog_query)
+
+
 class UpdateFullContentMetadataTaskTests(TestCase):
     """
     Tests for the `update_full_content_metadata_task`.
@@ -306,7 +338,7 @@ class UpdateFullContentMetadataTaskTests(TestCase):
 
 class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
     """
-    Tests for `index_enterprise_catalog_courses_in_algolia_task`
+    Tests for `index_enterprise_catalog_in_algolia_task`
     """
 
     @classmethod
@@ -385,9 +417,9 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         algolia_data = self._set_up_factory_data_for_algolia()
 
         with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
-            tasks.index_enterprise_catalog_courses_in_algolia_task()  # pylint: disable=no-value-for-parameter
+            tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
             # call it a second time, make assertions that only one thing happened below
-            tasks.index_enterprise_catalog_courses_in_algolia_task()  # pylint: disable=no-value-for-parameter
+            tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         # create expected data to be added/updated in the Algolia index.
         expected_algolia_objects_to_index = []
@@ -433,7 +465,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_UUID_BATCH_SIZE', 1), \
              mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
-            tasks.index_enterprise_catalog_courses_in_algolia_task()  # pylint: disable=no-value-for-parameter
+            tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         # create expected data to be added/updated in the Algolia index.
         expected_algolia_objects_to_index = []

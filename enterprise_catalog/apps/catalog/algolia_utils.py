@@ -3,6 +3,7 @@ import logging
 
 from enterprise_catalog.apps.api.v1.utils import is_course_run_active
 from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
+from enterprise_catalog.apps.catalog.constants import COURSE, PROGRAM
 
 
 logger = logging.getLogger(__name__)
@@ -10,11 +11,15 @@ logger = logging.getLogger(__name__)
 ALGOLIA_UUID_BATCH_SIZE = 100
 
 
-# keep attributes from course objects that we explicitly want in Algolia
+# keep attributes from content objects that we explicitly want in Algolia
 ALGOLIA_FIELDS = [
     'additional_information',
+    'aggregation_key',
+    'authoring_organizations',
     'availability',
     'card_image_url',  # for display on course cards
+    'content_type',
+    'course_keys',
     'enterprise_catalog_uuids',
     'enterprise_catalog_query_uuids',
     'enterprise_customer_uuids',
@@ -23,6 +28,7 @@ ALGOLIA_FIELDS = [
     'language',
     'level_type',
     'objectID',  # required by Algolia, e.g. "course-{uuid}"
+    'partner',
     'partners',
     'programs',
     'program_titles',
@@ -31,7 +37,9 @@ ALGOLIA_FIELDS = [
     'subjects',
     'skill_names',
     'skills',
+    'subtitle',
     'title',
+    'type',
     'advertised_course_run',  # a part of the advertised course run
     'first_enrollable_paid_seat_price',
     'original_image_url',
@@ -41,7 +49,7 @@ ALGOLIA_FIELDS = [
 
 # default configuration for the index
 ALGOLIA_INDEX_SETTINGS = {
-    'attributeForDistinct': 'key',
+    'attributeForDistinct': 'aggregation_key',
     'distinct': True,
     'typoTolerance': False,
     'searchableAttributes': [
@@ -55,6 +63,7 @@ ALGOLIA_INDEX_SETTINGS = {
     ],
     'attributesForFaceting': [
         'availability',
+        'content_type',
         'enterprise_catalog_uuids',
         'enterprise_catalog_query_uuids',
         'enterprise_customer_uuids',
@@ -207,18 +216,19 @@ def configure_algolia_index(algolia_client):
     algolia_client.set_index_settings(ALGOLIA_INDEX_SETTINGS)
 
 
-def get_algolia_object_id(uuid):
+def get_algolia_object_id(content_type, uuid):
     """
     Given a uuid, returns an object_id to use for Algolia indexing.
 
     Arguments:
-        uuid (str): a course uuid
+        uuid (str): a content uuid
+        content_type(str): course or program
 
     Returns:
         str: the generated Algolia object_id or None if uuid is not specified
     """
     if uuid:
-        return f'course-{uuid}'
+        return f'{content_type}-{uuid}'
     return None
 
 
@@ -309,6 +319,36 @@ def _get_course_program_field(course, field):
         value for program in programs
         if (value := program.get(field))
     })
+
+
+def _get_program_course_field(program, field):
+    """
+    Helper to pluck a list of values for the given field out of a program's courses.
+
+    Arguments:
+        program (dict): a dictionary representing a program
+        field (str): the name of a field to return values of.
+    Returns:
+        list: a list of the values for a certain field in a course associated with the program.
+    """
+    courses = program.get('courses') or []
+    return list({
+        value for course in courses
+        if (value := course.get(field))
+    })
+
+
+def get_program_course_keys(program):
+    """
+       Gets list of course keys associated with the program.
+
+       Arguments:
+           program (dict): a dictionary representing a program.
+
+       Returns:
+           list: a list of course keys associated with the program.
+       """
+    return _get_program_course_field(program, 'key')
 
 
 def get_course_program_types(course):
@@ -509,50 +549,57 @@ def get_course_first_paid_enrollable_seat_price(course):
     return None
 
 
-def _algolia_object_from_course(course, algolia_fields):
+def _algolia_object_from_product(product, algolia_fields):
     """
-    Transforms a course into an Algolia object.
+    Transforms a course or program into an Algolia object.
 
     Arguments:
-        course (dict): a course dict
-        algolia_fields (list): list of fields to extract from the course
+        product (dict): a course or program dict
+        algolia_fields (list): list of fields to extract from the course or program
 
     Returns:
         dict: a dictionary containing only the fields noted in algolia_fields
     """
-    searchable_course = copy.deepcopy(course)
-    searchable_course.update({
-        'language': get_course_language(searchable_course),
-        'availability': get_course_availability(searchable_course),
-        'partners': get_course_partners(searchable_course),
-        'programs': get_course_program_types(searchable_course),
-        'program_titles': get_course_program_titles(searchable_course),
-        'subjects': get_course_subjects(searchable_course),
-        'card_image_url': get_course_card_image_url(searchable_course),
-        'advertised_course_run': get_advertised_course_run(searchable_course),
-        'skill_names': get_course_skill_names(searchable_course),
-        'skills': get_course_skills(searchable_course),
-        'first_enrollable_paid_seat_price': get_course_first_paid_enrollable_seat_price(searchable_course),
-        'original_image_url': get_course_original_image_url(searchable_course),
-        'marketing_url': get_course_marketing_url(searchable_course),
-    })
+    searchable_product = copy.deepcopy(product)
+    if searchable_product.get('content_type') == COURSE:
+        searchable_product.update({
+            'language': get_course_language(searchable_product),
+            'availability': get_course_availability(searchable_product),
+            'partners': get_course_partners(searchable_product),
+            'programs': get_course_program_types(searchable_product),
+            'program_titles': get_course_program_titles(searchable_product),
+            'subjects': get_course_subjects(searchable_product),
+            'card_image_url': get_course_card_image_url(searchable_product),
+            'advertised_course_run': get_advertised_course_run(searchable_product),
+            'skill_names': get_course_skill_names(searchable_product),
+            'skills': get_course_skills(searchable_product),
+            'first_enrollable_paid_seat_price': get_course_first_paid_enrollable_seat_price(searchable_product),
+            'original_image_url': get_course_original_image_url(searchable_product),
+            'marketing_url': get_course_marketing_url(searchable_product),
+        })
+    elif searchable_product.get('content_type') == PROGRAM:
+        searchable_product.update({
+            'course_keys': get_program_course_keys(searchable_product),
+        })
 
     algolia_object = {}
+    keys = searchable_product.keys()
     for field in algolia_fields:
-        field_value = searchable_course.get(field)
-        if field_value is not None:
-            algolia_object[field] = field_value
+        if field in keys:
+            field_value = searchable_product.get(field)
+            if field_value is not None:
+                algolia_object[field] = field_value
 
     return algolia_object
 
 
-def create_algolia_objects_from_courses(courses, algolia_fields):
+def create_algolia_objects(products, algolia_fields):
     """
-    Transforms all courses into Algolia objects.
+    Transforms content into Algolia objects.
 
     Arguments:
-        courses (list): list of courses
-        algolia_fields (list): list of fields to extract from courses
+        products (list): list of courses or programs
+        algolia_fields (list): list of fields to extract from courses and programs
 
     Returns:
         list: a list of Algolia objects containing only the fields noted in algolia_fields
@@ -561,8 +608,8 @@ def create_algolia_objects_from_courses(courses, algolia_fields):
         algolia_fields = []
 
     algolia_objects = [
-        _algolia_object_from_course(course, algolia_fields)
-        for course in courses
+        _algolia_object_from_product(product, algolia_fields)
+        for product in products
     ]
 
     return algolia_objects

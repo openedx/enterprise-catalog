@@ -3,7 +3,7 @@ import logging
 from django.core.management.base import BaseCommand
 
 from enterprise_catalog.apps.api.tasks import (
-    index_enterprise_catalog_courses_in_algolia_task,
+    index_enterprise_catalog_in_algolia_task,
 )
 from enterprise_catalog.apps.catalog.models import CatalogUpdateCommandConfig
 
@@ -31,9 +31,9 @@ class Command(BaseCommand):
         options.update(CatalogUpdateCommandConfig.current_options())
         try:
             force_task_execution = options.get('force', False)
-            index_enterprise_catalog_courses_in_algolia_task.apply_async(kwargs={'force': force_task_execution}).get()
+            index_enterprise_catalog_in_algolia_task.apply_async(kwargs={'force': force_task_execution}).get()
             logger.info(
-                'index_enterprise_catalog_courses_in_algolia_task from command reindex_algolia finished successfully.'
+                'index_enterprise_catalog_in_algolia_task from command reindex_algolia finished successfully.'
             )
         except Exception as exc:
             # celery weirdly hijacks and prefixes the path of the below Exception
@@ -43,6 +43,6 @@ class Command(BaseCommand):
                 raise
             else:
                 logger.info(
-                    'index_enterprise_catalog_courses_in_algolia_task was recently run prior to this command, '
+                    'index_enterprise_catalog_in_algolia_task was recently run prior to this command, '
                     'and was thus skipped during the execution of this command.'
                 )
