@@ -10,12 +10,9 @@
 
 -c common_constraints.txt
 
-<<<<<<< HEAD
 # Common constraints for edx repos
 -c common_constraints.txt
-=======
 Django>=3.2,<4.0
->>>>>>> master
 
 # celery 5.0 has dropped python3.5 support.
 celery<5.0
