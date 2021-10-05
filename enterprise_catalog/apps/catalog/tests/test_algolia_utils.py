@@ -277,14 +277,13 @@ class AlgoliaUtilsTests(TestCase):
                     'start': '2013-10-16T14:00:00Z',
                     'end': '2014-10-16T14:00:00Z',
                     'seats': [{
-                            'type':'audit',
-                            'upgrade_deadline':None,
-                        },
+                        'type': 'audit',
+                        'upgrade_deadline': None,
+                    },
                         {
-                            'type':'verified',
-                            'upgrade_deadline':'2015-01-04T15:52:00Z',
-                        }
-                    ],
+                        'type': 'verified',
+                        'upgrade_deadline': '2015-01-04T15:52:00Z',
+                    }],
                 }],
                 'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID
             },
