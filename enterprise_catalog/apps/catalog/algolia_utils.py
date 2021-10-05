@@ -501,6 +501,12 @@ def get_advertised_course_run(course):
         'start': full_course_run.get('start'),
         'end': full_course_run.get('end'),
     }
+    # only include upgrade deadline if there is a verified seat present in the course runs
+    upgrade_deadline = _get_verified_upgrade_deadline(full_course_run)
+    if upgrade_deadline is not None:
+        course_run['upgrade_deadline'] = upgrade_deadline
+    if full_course_run.get('enrollment_end') is not None:
+        course_run['enrollment_end'] = full_course_run.get('enrollment_end')
     return course_run
 
 
@@ -520,6 +526,24 @@ def _get_course_run_by_uuid(course, course_run_uuid):
     except IndexError:
         return None
     return course_run
+
+
+def _get_verified_upgrade_deadline(full_course_run):
+    """
+    Check to see if course has a verified seat option, and if so, return the verified upgrade deadline
+
+    Arguments:
+        full_course_run (dict): a course_run or None
+
+    Returns:
+        str: VUD or None
+    """
+
+    if "seats" in full_course_run:
+        for seat in full_course_run.get("seats"):
+            if seat.get('type') == 'verified':
+                return seat.get('upgrade_deadline')
+    return None
 
 
 def get_course_first_paid_enrollable_seat_price(course):
