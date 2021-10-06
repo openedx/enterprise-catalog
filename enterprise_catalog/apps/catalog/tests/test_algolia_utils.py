@@ -247,6 +247,53 @@ class AlgoliaUtilsTests(TestCase):
             },
             None,
         ),
+        (
+            {
+                'course_runs': [{
+                    'key': 'course-v1:org+course+1T2021',
+                    'uuid': ADVERTISED_COURSE_RUN_UUID,
+                    'pacing_type': 'instructor_paced',
+                    'start': '2013-10-16T14:00:00Z',
+                    'end': '2014-10-16T14:00:00Z',
+                    'availability': 'Current',
+                    'enrollment_end': '2021-09-30T23:59:00Z',
+                }],
+                'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID
+            },
+            {
+                'key': 'course-v1:org+course+1T2021',
+                'pacing_type': 'instructor_paced',
+                'start': '2013-10-16T14:00:00Z',
+                'end': '2014-10-16T14:00:00Z',
+                'enrollment_end': '2021-09-30T23:59:00Z',
+            }
+        ),
+        (
+            {
+                'course_runs': [{
+                    'key': 'course-v1:org+course+1T2021',
+                    'uuid': ADVERTISED_COURSE_RUN_UUID,
+                    'pacing_type': 'instructor_paced',
+                    'start': '2013-10-16T14:00:00Z',
+                    'end': '2014-10-16T14:00:00Z',
+                    'seats': [{
+                        'type': 'audit',
+                        'upgrade_deadline': None,
+                    }, {
+                        'type': 'verified',
+                        'upgrade_deadline': '2015-01-04T15:52:00Z',
+                    }],
+                }],
+                'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID
+            },
+            {
+                'key': 'course-v1:org+course+1T2021',
+                'pacing_type': 'instructor_paced',
+                'start': '2013-10-16T14:00:00Z',
+                'end': '2014-10-16T14:00:00Z',
+                'upgrade_deadline': '2015-01-04T15:52:00Z',
+            }
+        )
     )
     @ddt.unpack
     def test_get_advertised_course_run(self, searchable_course, expected_course_run):

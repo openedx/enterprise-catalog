@@ -14,3 +14,4 @@ gunicorn                  # For running the application locally
 #transifex-client         # For managing translations
 inflect
 ddt
+python-memcached
