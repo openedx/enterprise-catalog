@@ -279,8 +279,7 @@ class AlgoliaUtilsTests(TestCase):
                     'seats': [{
                         'type': 'audit',
                         'upgrade_deadline': None,
-                    },
-                        {
+                    }, {
                         'type': 'verified',
                         'upgrade_deadline': '2015-01-04T15:52:00Z',
                     }],

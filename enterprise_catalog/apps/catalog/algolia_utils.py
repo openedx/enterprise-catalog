@@ -539,10 +539,10 @@ def _get_verified_upgrade_deadline(full_course_run):
         str: VUD or None
     """
 
-    if "seats" in full_course_run:
-        for seat in full_course_run.get("seats"):
-            if seat.get('type') == 'verified':
-                return seat.get('upgrade_deadline')
+    seats = full_course_run.get('seats') or []
+    for seat in seats:
+        if seat.get('type') == 'verified':
+            return seat.get('upgrade_deadline')
     return None
 
 
