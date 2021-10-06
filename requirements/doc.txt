@@ -167,7 +167,7 @@ docutils==0.17.1
     #   readme-renderer
     #   restructuredtext-lint
     #   sphinx
-drf-jwt==1.19.1
+drf-jwt==1.19.0
     # via
     #   -r requirements/test.txt
     #   edx-drf-extensions
@@ -210,7 +210,7 @@ edx-toggles==4.2.0
     # via -r requirements/test.txt
 factory-boy==3.2.0
     # via -r requirements/test.txt
-faker==8.16.0
+faker==9.0.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -453,7 +453,6 @@ six==1.16.0
     #   edx-sphinx-theme
     #   pyjwkest
     #   python-dateutil
-    #   social-auth-app-django
     #   tox
     #   virtualenv
 slumber==0.7.1
@@ -462,7 +461,7 @@ slumber==0.7.1
     #   edx-rest-api-client
 snowballstemmer==2.1.0
     # via sphinx
-social-auth-app-django==4.0.0
+social-auth-app-django==5.0.0
     # via
     #   -r requirements/test.txt
     #   edx-auth-backends

@@ -121,7 +121,7 @@ djangorestframework==3.12.4
     #   edx-drf-extensions
 djangorestframework-xml==2.0.0
     # via -r requirements/base.txt
-drf-jwt==1.19.1
+drf-jwt==1.19.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
@@ -319,12 +319,11 @@ six==1.16.0
     #   pyjwkest
     #   python-dateutil
     #   python-memcached
-    #   social-auth-app-django
 slumber==0.7.1
     # via
     #   -r requirements/base.txt
     #   edx-rest-api-client
-social-auth-app-django==4.0.0
+social-auth-app-django==5.0.0
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends

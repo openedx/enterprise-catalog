@@ -219,8 +219,9 @@ dockerpty==0.4.1
     # via docker-compose
 docopt==0.6.2
     # via docker-compose
-drf-jwt==1.19.1
+drf-jwt==1.19.0
     # via
+    #   -c requirements/common_constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-drf-extensions
@@ -258,7 +259,7 @@ edx-drf-extensions==8.0.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-rbac
-edx-i18n-tools==0.7.0
+edx-i18n-tools==0.8.1
     # via -r requirements/dev.in
 edx-lint==5.2.0
     # via
@@ -283,7 +284,7 @@ edx-toggles==4.2.0
     #   -r requirements/test.txt
 factory-boy==3.2.0
     # via -r requirements/test.txt
-faker==8.16.0
+faker==9.0.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -602,14 +603,13 @@ six==1.16.0
     #   edx-auth-backends
     #   edx-django-release-util
     #   edx-drf-extensions
-    #   edx-i18n-tools
     #   edx-lint
     #   edx-rbac
     #   jsonschema
     #   pyjwkest
     #   pynacl
     #   python-dateutil
-    #   social-auth-app-django
+    #   python-memcached
     #   tox
     #   virtualenv
     #   websocket-client
@@ -622,9 +622,8 @@ snowballstemmer==2.1.0
     # via
     #   -r requirements/quality.txt
     #   pydocstyle
-social-auth-app-django==4.0.0
+social-auth-app-django==5.0.0
     # via
-    #   -c requirements/common_constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-auth-backends

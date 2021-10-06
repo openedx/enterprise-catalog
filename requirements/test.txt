@@ -149,8 +149,9 @@ djangorestframework==3.12.4
     #   edx-drf-extensions
 djangorestframework-xml==2.0.0
     # via -r requirements/base.txt
-drf-jwt==1.19.1
+drf-jwt==1.19.0
     # via
+    #   -c requirements/common_constraints.txt
     #   -r requirements/base.txt
     #   edx-drf-extensions
 drf-yasg==1.20.0
@@ -190,7 +191,7 @@ edx-toggles==4.2.0
     # via -r requirements/base.txt
 factory-boy==3.2.0
     # via -r requirements/test.in
-faker==8.16.0
+faker==9.0.0
     # via factory-boy
 filelock==3.3.0
     # via
@@ -396,16 +397,14 @@ six==1.16.0
     #   edx-rbac
     #   pyjwkest
     #   python-dateutil
-    #   social-auth-app-django
     #   tox
     #   virtualenv
 slumber==0.7.1
     # via
     #   -r requirements/base.txt
     #   edx-rest-api-client
-social-auth-app-django==4.0.0
+social-auth-app-django==5.0.0
     # via
-    #   -c requirements/common_constraints.txt
     #   -r requirements/base.txt
     #   edx-auth-backends
 social-auth-core==4.1.0
