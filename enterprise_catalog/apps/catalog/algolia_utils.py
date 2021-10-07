@@ -506,6 +506,12 @@ def get_advertised_course_run(course):
         'end': full_course_run.get('end'),
         'upgrade_deadline': _get_verified_upgrade_deadline(full_course_run),
     }
+    # only include upgrade deadline if there is a verified seat present in the course runs
+    upgrade_deadline = _get_verified_upgrade_deadline(full_course_run)
+    if upgrade_deadline is not None:
+        course_run['upgrade_deadline'] = upgrade_deadline
+    if full_course_run.get('enrollment_end') is not None:
+        course_run['enrollment_end'] = full_course_run.get('enrollment_end')
     return course_run
 
 
@@ -535,7 +541,7 @@ def _get_verified_upgrade_deadline(full_course_run):
         full_course_run (dict): a course_run or None
 
     Returns:
-        str: VUD or default large expiration date
+    str: VUD or default large expiration date
     """
     seats = full_course_run.get('seats') or []
     for seat in seats:
