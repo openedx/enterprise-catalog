@@ -512,15 +512,15 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
     def test_index_algolia_with_important_catalog_titles(self, mock_search_client, mock_was_recently_indexed):
         """
-        Assert that every Algolia batch contains all the important catalog titles
+        Assert that every Algolia batch contains all the explore UI catalog titles
         """
         algolia_data = self._set_up_factory_data_for_algolia()
-        # override the important titles with test data to show every batch contains them
-        important_titles = [algolia_data['query_titles'][0]]
+        # override the explore UI titles with test data to show every batch contains them
+        explore_titles = [algolia_data['query_titles'][0]]
 
         with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_UUID_BATCH_SIZE', 1), \
              mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS), \
-             mock.patch('enterprise_catalog.apps.api.tasks.IMPORTANT_CATALOG_TITLES', important_titles):
+             mock.patch('enterprise_catalog.apps.api.tasks.EXPLORE_CATALOG_TITLES', explore_titles):
             tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         # create expected data to be added/updated in the Algolia index.
