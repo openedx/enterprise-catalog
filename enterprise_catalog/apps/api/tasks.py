@@ -51,6 +51,9 @@ ONE_HOUR = timedelta(hours=1)
 
 UNREADY_TASK_RETRY_COUNTDOWN_SECONDS = 60 * 5
 
+# ENT-4980 every batch "shard" record in Algolia should have all of these that pertain to the course
+EXPLORE_CATALOG_TITLES = ['A la carte', 'Business', 'Education']
+
 
 def _fetch_courses_by_keys(course_keys):
     """
@@ -394,16 +397,21 @@ def _batched_metadata_with_queries(json_metadata, sorted_queries):
     Batched catalog queries are represented as tuples (<query uuid>, <query title>). Unzip the two fields and update
     them together.
     """
+
+    # ENT-4980 every batch "shard" record in Algolia should have all of these that pertain to the course
+    course_catalog_query_titles = list(map(lambda x: x[1], sorted_queries))
+    explore_catalog_membership = list(filter(lambda y: y in EXPLORE_CATALOG_TITLES, course_catalog_query_titles))
     batched_metadata = []
     for batch_index, query_batch in enumerate(batch(sorted_queries, batch_size=ALGOLIA_UUID_BATCH_SIZE)):
         json_metadata_with_uuids = copy.deepcopy(json_metadata)
 
         query_uuids, query_titles = list(map(list, zip(*query_batch)))
+        # filter out `None` from `query_titles`, join with explore titles, dedupe (set), sort
+        batch_titles = sorted(set([title for title in query_titles if title] + explore_catalog_membership))
         metadata_to_update = {
             'objectID': f"{json_metadata['objectID']}-catalog-query-uuids-{batch_index}",
             'enterprise_catalog_query_uuids': sorted(query_uuids),
-            # filter out `None` from `query_titles`
-            'enterprise_catalog_query_titles': sorted([title for title in query_titles if title]),
+            'enterprise_catalog_query_titles': batch_titles,
         }
         json_metadata_with_uuids.update(metadata_to_update)
         batched_metadata.append(json_metadata_with_uuids)
