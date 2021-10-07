@@ -552,11 +552,13 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'enterprise_catalog_query_uuids': [algolia_data['query_uuids'][0]],
             'enterprise_catalog_query_titles': [algolia_data['query_titles'][0]],
         })
+
+        # the title is also in the second batch
         expected_algolia_objects_to_index.append({
             'key': algolia_data['course_metadata_published'].content_key,
             'objectID': f'course-{published_course_uuid}-catalog-query-uuids-1',
             'enterprise_catalog_query_uuids': [algolia_data['query_uuids'][1]],
-            'enterprise_catalog_query_titles': [algolia_data['query_titles'][0]],  # the title is also in the second batch
+            'enterprise_catalog_query_titles': [algolia_data['query_titles'][0]],
         })
 
         # verify replace_all_objects is called with the correct Algolia object data
