@@ -399,7 +399,8 @@ def _batched_metadata_with_queries(json_metadata, sorted_queries):
     """
 
     # ENT-4980 every batch "shard" record in algoilia should have all of these that pertain to the course
-    important_catalog_membership = list(filter(lambda y: y in IMPORTANT_CATALOG_TITLES, map(lambda x: x[1], sorted_queries)))
+    course_catalog_query_titles = list(map(lambda x: x[1], sorted_queries))
+    important_catalog_membership = list(filter(lambda y: y in IMPORTANT_CATALOG_TITLES, course_catalog_query_titles))
     batched_metadata = []
     for batch_index, query_batch in enumerate(batch(sorted_queries, batch_size=ALGOLIA_UUID_BATCH_SIZE)):
         json_metadata_with_uuids = copy.deepcopy(json_metadata)
