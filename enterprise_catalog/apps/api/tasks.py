@@ -54,6 +54,7 @@ UNREADY_TASK_RETRY_COUNTDOWN_SECONDS = 60 * 5
 # ENT-4980 every batch "shard" record in algoilia should have all of these that pertain to the course
 IMPORTANT_CATALOG_TITLES = ['A la carte', 'Business', 'Education']
 
+
 def _fetch_courses_by_keys(course_keys):
     """
     Fetches course data from discovery's /api/v1/courses endpoint for the provided course keys.

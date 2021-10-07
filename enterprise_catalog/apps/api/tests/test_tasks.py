@@ -508,7 +508,6 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         mock_was_recently_indexed.assert_called_once_with(self.course_metadata_published.content_key)
 
-
     @mock.patch('enterprise_catalog.apps.api.tasks._was_recently_indexed', return_value=False)
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
     def test_index_algolia_with_important_catalog_titles(self, mock_search_client, mock_was_recently_indexed):
@@ -557,7 +556,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'key': algolia_data['course_metadata_published'].content_key,
             'objectID': f'course-{published_course_uuid}-catalog-query-uuids-1',
             'enterprise_catalog_query_uuids': [algolia_data['query_uuids'][1]],
-            'enterprise_catalog_query_titles': [algolia_data['query_titles'][0]], # the title is also in the second batch
+            'enterprise_catalog_query_titles': [algolia_data['query_titles'][0]],  # the title is also in the second batch
         })
 
         # verify replace_all_objects is called with the correct Algolia object data
