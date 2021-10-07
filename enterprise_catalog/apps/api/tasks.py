@@ -51,7 +51,7 @@ ONE_HOUR = timedelta(hours=1)
 
 UNREADY_TASK_RETRY_COUNTDOWN_SECONDS = 60 * 5
 
-# ENT-4980 every batch "shard" record in algoilia should have all of these that pertain to the course
+# ENT-4980 every batch "shard" record in Algolia should have all of these that pertain to the course
 EXPLORE_CATALOG_TITLES = ['A la carte', 'Business', 'Education']
 
 
@@ -398,7 +398,7 @@ def _batched_metadata_with_queries(json_metadata, sorted_queries):
     them together.
     """
 
-    # ENT-4980 every batch "shard" record in algoilia should have all of these that pertain to the course
+    # ENT-4980 every batch "shard" record in Algolia should have all of these that pertain to the course
     course_catalog_query_titles = list(map(lambda x: x[1], sorted_queries))
     explore_catalog_membership = list(filter(lambda y: y in EXPLORE_CATALOG_TITLES, course_catalog_query_titles))
     batched_metadata = []
