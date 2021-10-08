@@ -1,5 +1,7 @@
 import copy
+import datetime
 import logging
+import time
 
 from enterprise_catalog.apps.api.v1.utils import is_course_run_active
 from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
@@ -69,6 +71,7 @@ ALGOLIA_INDEX_SETTINGS = {
         'enterprise_customer_uuids',
         'language',
         'level_type',
+        'filterOnly(advertised_course_run.upgrade_deadline)'
         'searchable(partners.name)',
         'searchable(programs)',
         'searchable(program_titles)',
@@ -490,7 +493,8 @@ def get_advertised_course_run(course):
         course (dict)
 
     Returns:
-        dict: containing key, pacing_type, start and end for the course_run, or None
+        dict: containing key, pacing_type, start, end, and upgrade deadline
+        for the course_run, or None
     """
     full_course_run = _get_course_run_by_uuid(course, course.get('advertised_course_run_uuid'))
     if full_course_run is None:
@@ -500,13 +504,8 @@ def get_advertised_course_run(course):
         'pacing_type': full_course_run.get('pacing_type'),
         'start': full_course_run.get('start'),
         'end': full_course_run.get('end'),
+        'upgrade_deadline': _get_verified_upgrade_deadline(full_course_run),
     }
-    # only include upgrade deadline if there is a verified seat present in the course runs
-    upgrade_deadline = _get_verified_upgrade_deadline(full_course_run)
-    if upgrade_deadline is not None:
-        course_run['upgrade_deadline'] = upgrade_deadline
-    if full_course_run.get('enrollment_end') is not None:
-        course_run['enrollment_end'] = full_course_run.get('enrollment_end')
     return course_run
 
 
@@ -536,14 +535,15 @@ def _get_verified_upgrade_deadline(full_course_run):
         full_course_run (dict): a course_run or None
 
     Returns:
-        str: VUD or None
+        str: Verified Upgrade Deadline (VUD) as Unix timestamp or default large expiration date
     """
-
     seats = full_course_run.get('seats') or []
     for seat in seats:
         if seat.get('type') == 'verified':
-            return seat.get('upgrade_deadline')
-    return None
+            vud_datetime = datetime.datetime.strptime(seat.get('upgrade_deadline'), '%Y-%m-%dT%H:%M:%SZ')
+            return time.mktime(vud_datetime.timetuple())
+    # defaults to year 3000, as algolia cannot filter on null values
+    return (datetime.datetime(3000, 1, 1)).timestamp()
 
 
 def get_course_first_paid_enrollable_seat_price(course):
