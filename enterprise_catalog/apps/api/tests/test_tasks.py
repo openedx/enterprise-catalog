@@ -507,3 +507,61 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         mock_search_client().replace_all_objects.assert_called_once_with(expected_algolia_objects_to_index)
 
         mock_was_recently_indexed.assert_called_once_with(self.course_metadata_published.content_key)
+
+    @mock.patch('enterprise_catalog.apps.api.tasks._was_recently_indexed', return_value=False)
+    @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
+    def test_index_algolia_with_important_catalog_titles(self, mock_search_client, mock_was_recently_indexed):
+        """
+        Assert that every Algolia batch contains all the explore UI catalog titles
+        """
+        algolia_data = self._set_up_factory_data_for_algolia()
+        # override the explore UI titles with test data to show every batch contains them
+        explore_titles = [algolia_data['query_titles'][0]]
+
+        with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_UUID_BATCH_SIZE', 1), \
+             mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS), \
+             mock.patch('enterprise_catalog.apps.api.tasks.EXPLORE_CATALOG_TITLES', explore_titles):
+            tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
+
+        # create expected data to be added/updated in the Algolia index.
+        expected_algolia_objects_to_index = []
+        published_course_uuid = algolia_data['course_metadata_published'].json_metadata.get('uuid')
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-catalog-uuids-0',
+            'enterprise_catalog_uuids': [algolia_data['catalog_uuids'][0]],
+        })
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-catalog-uuids-1',
+            'enterprise_catalog_uuids': [algolia_data['catalog_uuids'][1]],
+        })
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-customer-uuids-0',
+            'enterprise_customer_uuids': [algolia_data['customer_uuids'][0]],
+        })
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-customer-uuids-1',
+            'enterprise_customer_uuids': [algolia_data['customer_uuids'][1]],
+        })
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-catalog-query-uuids-0',
+            'enterprise_catalog_query_uuids': [algolia_data['query_uuids'][0]],
+            'enterprise_catalog_query_titles': [algolia_data['query_titles'][0]],
+        })
+
+        # the title is also in the second batch
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-catalog-query-uuids-1',
+            'enterprise_catalog_query_uuids': [algolia_data['query_uuids'][1]],
+            'enterprise_catalog_query_titles': [algolia_data['query_titles'][0]],
+        })
+
+        # verify replace_all_objects is called with the correct Algolia object data
+        mock_search_client().replace_all_objects.assert_called_once_with(expected_algolia_objects_to_index)
+
+        mock_was_recently_indexed.assert_called_once_with(self.course_metadata_published.content_key)
