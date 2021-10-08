@@ -19,20 +19,36 @@ from auth_backends.urls import oauth2_urlpatterns
 from django.conf import settings
 from django.conf.urls import include, url
 from django.contrib import admin
-from rest_framework_swagger.views import get_swagger_view
-
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+from rest_framework import permissions
 from enterprise_catalog.apps.api import urls as api_urls
 from enterprise_catalog.apps.core import views as core_views
 
 
 admin.autodiscover()
 
+schema_view = get_schema_view(
+   openapi.Info(
+      title="Snippets API",
+      default_version='v1',
+      description="Enterprise Catalog API'",
+      terms_of_service="https://www.google.com/policies/terms/",
+      contact=openapi.Contact(email="contact@snippets.local"),
+      license=openapi.License(name="BSD License"),
+   ),
+   public=True,
+   permission_classes=[permissions.AllowAny],
+)
+
 urlpatterns = [
     url(r'', include(oauth2_urlpatterns)),
     url(r'', include('csrf.urls')),  # Include csrf urls from edx-drf-extensions
     url(r'^admin/', admin.site.urls),
     url(r'^api/', include(api_urls), name='api'),
-    url(r'^api-docs/', get_swagger_view(title='Enterprise Catalog API')),
+    url(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    url(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    url(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     # Use the same auth views for all logins, including those originating from the browseable API.
     url(r'^auto_auth/$', core_views.AutoAuth.as_view(), name='auto_auth'),
     url(r'^health/$', core_views.health, name='health'),

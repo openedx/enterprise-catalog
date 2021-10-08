@@ -45,7 +45,7 @@ THIRD_PARTY_APPS = (
     'csrf.apps.CsrfAppConfig',  # Enables frontend apps to retrieve CSRF tokens
     'django_celery_results',  # Enables a Django model as the celery result backend
     'rest_framework',
-    'rest_framework_swagger',
+    'drf_yasg',
     'social_django',
     'waffle',
     'release_util',
