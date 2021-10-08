@@ -31,6 +31,7 @@ ALGOLIA_FIELDS = [
     'level_type',
     'objectID',  # required by Algolia, e.g. "course-{uuid}"
     'partner',
+    'partners',
     'programs',
     'program_titles',
     'recent_enrollment_count',
