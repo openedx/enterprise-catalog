@@ -539,7 +539,7 @@ def _get_verified_upgrade_deadline(full_course_run):
     """
     seats = full_course_run.get('seats') or []
     for seat in seats:
-        if seat.get('type') == 'verified':
+        if seat.get('type') == 'verified' and 'upgrade_deadline' in seat:
             vud_datetime = datetime.datetime.strptime(seat.get('upgrade_deadline'), '%Y-%m-%dT%H:%M:%SZ')
             return time.mktime(vud_datetime.timetuple())
     # defaults to year 3000, as algolia cannot filter on null values
