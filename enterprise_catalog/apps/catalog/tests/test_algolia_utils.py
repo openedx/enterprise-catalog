@@ -284,6 +284,7 @@ class AlgoliaUtilsTests(TestCase):
                     'end': '2014-10-16T14:00:00Z',
                     'seats': [{
                         'type': 'verified',
+                        'upgrade_deadline': None,
                     }],
                 }],
                 'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID
