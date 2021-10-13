@@ -203,6 +203,53 @@ class EnterpriseCatalog(TimeStampedModel):
         """
         return EnterpriseCustomerDetails(self.enterprise_uuid)
 
+    def get_catalog_content_diff(self, content_keys):
+        """
+        Generate a catalog diff based on a provided list of content keys and what currently exists with the catalog's
+        metadata.
+
+        Arguments:
+            content_keys: (list) A list of string content keys used to calculate the diff on the catalog.
+
+        Returns:
+            items_not_found: (list) A list of objects representing the content keys that were provided but not found
+                under the catalog.
+            items_not_included: (list) A list of objects representing the content keys not provided but were found under
+                the catalog.
+            items_found: (list) A list of objects representing content keys that were provided and found, paired with
+                most recent updated at timestamp.
+
+        A content key is considered contained within the catalog when:
+          - associated metadata contains the specified content key.
+          - associated metadata contains the specified content key as a parent (to handle when
+            a catalog only contains course runs but a course id is searched).
+          - associated metadata contains the specified content key in a nested course run (to
+            handle when a catalog only contains courses but a course run id is searched).
+        """
+        found_content_keys = set()
+        items_not_included = []
+        items_found = []
+        items_not_found = set()
+
+        # cannot determine if specified content keys are part of catalog when a catalog query doesn't exist.
+        if not self.catalog_query:
+            return [items_not_found], items_not_included, items_found
+
+        distinct_content_keys = set(content_keys)
+        for content in self.content_metadata.all().values('modified', 'content_key'):
+            content_key = content.get('content_key')
+            found_content_keys.add(content_key)
+            if content_key in distinct_content_keys:
+                items_found.append({
+                    "content_key": content_key,
+                    "date_updated": content.get('modified')
+                })
+            else:
+                items_not_included.append({'content_key': content_key})
+
+        items_not_found = distinct_content_keys - found_content_keys
+        return [{'content_key': item} for item in items_not_found], items_not_included, items_found
+
     def contains_content_keys(self, content_keys):
         """
         Determines whether content_keys are part of the catalog.
