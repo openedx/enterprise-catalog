@@ -71,7 +71,7 @@ ALGOLIA_INDEX_SETTINGS = {
         'enterprise_customer_uuids',
         'language',
         'level_type',
-        'filterOnly(advertised_course_run.upgrade_deadline)'
+        'filterOnly(advertised_course_run.upgrade_deadline)',
         'searchable(partners.name)',
         'searchable(programs)',
         'searchable(program_titles)',
