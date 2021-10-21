@@ -190,7 +190,7 @@ class EnterpriseCatalogDiff(BaseViewSet, viewsets.ModelViewSet):
     def post(self, request, **kwargs):
         content_keys = []
         if request.data:
-            content_keys = request.data.getlist('content_keys')
+            content_keys = request.data.get('content_keys')
         return self.catalog_diff(content_keys)
 
     @method_decorator(require_at_least_one_query_parameter('content_keys'))
