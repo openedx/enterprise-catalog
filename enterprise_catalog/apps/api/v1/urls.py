@@ -17,6 +17,11 @@ router.register(r'enterprise-customer', views.EnterpriseCustomerViewSet, basenam
 
 urlpatterns = [
     url(
+        r'^enterprise-catalogs/(?P<uuid>[\S]+)/generate_diff',
+        views.EnterpriseCatalogDiff.as_view({'post': 'post'}),
+        name='generate-catalog-diff'
+    ),
+    url(
         r'^enterprise-catalogs/(?P<uuid>[\S]+)/refresh_metadata',
         views.EnterpriseCatalogRefreshDataFromDiscovery.as_view({'post': 'post'}),
         name='update-enterprise-catalog'
