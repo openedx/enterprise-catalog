@@ -905,7 +905,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         self.set_up_invalid_jwt_role()
         self.remove_role_assignments()
         url = self._get_generate_diff_base_url()
-        response = self.client.post(url)
+        response = self.client.post(url, content_type='application/json',)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_generate_diff_get_supports_up_to_max_content_keys(self):
@@ -937,7 +937,8 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         url = self._get_generate_diff_base_url()
         response = self.client.post(
             url,
-            data={'content_keys': [content.content_key, content2.content_key, 'bad+key', 'bad+key2']}
+            data=json.dumps({"content_keys": [content.content_key, content2.content_key, "bad+key", "bad+key2"]}),
+            content_type='application/json',
         )
         assert response.status_code == 200
         response_data = response.data
@@ -962,7 +963,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         content = ContentMetadataFactory()
         self.add_metadata_to_catalog(self.enterprise_catalog, [content])
         url = self._get_generate_diff_base_url()
-        response = self.client.post(url)
+        response = self.client.post(url, content_type='application/json')
         assert response.data.get('items_not_included') == [{'content_key': content.content_key}]
         assert not response.data.get('items_not_found')
         assert not response.data.get('items_found')
@@ -977,7 +978,11 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         self.add_metadata_to_catalog(self.enterprise_catalog, [content, content2])
 
         url = self._get_generate_diff_base_url()
-        response = self.client.post(url, data={'content_keys': [content.content_key, content2.content_key]})
+        response = self.client.post(
+            url,
+            data=json.dumps({'content_keys': [content.content_key, content2.content_key]}),
+            content_type='application/json'
+        )
         for item in response.data.get('items_found'):
             assert item.get('content_key') in [content.content_key, content2.content_key]
         assert not response.data.get('items_not_found')
@@ -991,7 +996,11 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         key = 'bad+key'
         key2 = 'bad+key2'
         url = self._get_generate_diff_base_url()
-        response = self.client.post(url, data={'content_keys': [key, key2]})
+        response = self.client.post(
+            url,
+            data=json.dumps({'content_keys': [key, key2]}),
+            content_type='application/json'
+        )
         for item in response.data.get('items_not_found'):
             assert item in [{'content_key': key}, {'content_key': key2}]
         assert not response.data.get('items_found')
