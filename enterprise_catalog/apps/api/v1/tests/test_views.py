@@ -889,6 +889,114 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
             kwargs={'enterprise_uuid': enterprise_uuid or self.enterprise_uuid},
         )
 
+    def _get_generate_diff_base_url(self, enterprise_catalog_uuid=None):
+        """
+        Helper to construct the base url for the catalog `generate_diff` endpoint
+        """
+        return reverse(
+            'api:v1:generate-catalog-diff',
+            kwargs={'uuid': enterprise_catalog_uuid or self.enterprise_catalog.uuid},
+        )
+
+    def test_generate_diff_unauthorized_non_catalog_learner(self):
+        """
+        Verify the generate_diff endpoint rejects users that are not catalog learners
+        """
+        self.set_up_invalid_jwt_role()
+        self.remove_role_assignments()
+        url = self._get_generate_diff_base_url()
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_generate_diff_get_supports_up_to_max_content_keys(self):
+        """
+        Test that GET requests to generate_diff supports up to but not more than the max number of content keys.
+        """
+        content = ContentMetadataFactory()
+        self.add_metadata_to_catalog(self.enterprise_catalog, [content])
+        url = self._get_generate_diff_base_url() + '?content_keys=key'
+
+        for key in range(150):
+            url += f"&content_keys=key{key}"
+
+        response = self.client.get(url)
+        assert response.status_code == 400
+        assert response.data == 'catalog_diff GET requests supports up to 100. If more content keys required, please ' \
+                                'use a POST body.'
+
+    def test_generate_diff_get_parses_all_buckets(self):
+        """
+        Test that GET requests to the generate_diff endpoint behave the same as POST requests.
+        """
+        content = ContentMetadataFactory()
+        content2 = ContentMetadataFactory()
+        content3 = ContentMetadataFactory()
+        content4 = ContentMetadataFactory()
+
+        self.add_metadata_to_catalog(self.enterprise_catalog, [content, content2, content3, content4])
+        url = self._get_generate_diff_base_url()
+        response = self.client.post(
+            url,
+            data={'content_keys': [content.content_key, content2.content_key, 'bad+key', 'bad+key2']}
+        )
+        assert response.status_code == 200
+        response_data = response.data
+
+        for item in response_data.get('items_not_found'):
+            assert item in [{'content_key': 'bad+key'}, {'content_key': 'bad+key2'}]
+
+        for item in response_data.get('items_not_included'):
+            assert item in [{'content_key': content3.content_key}, {'content_key': content4.content_key}]
+
+        for item in response_data.get('items_found'):
+            assert item in [
+                {'content_key': content.content_key, 'date_updated': content.modified},
+                {'content_key': content2.content_key, 'date_updated': content2.modified}
+            ]
+
+    def test_generate_diff_returns_whole_catalog_w_empty_key_list(self):
+        """
+        Test that the generate_diff endpoint will return all content keys under the catalog not provided under the
+        `items_not_included` bucket
+        """
+        content = ContentMetadataFactory()
+        self.add_metadata_to_catalog(self.enterprise_catalog, [content])
+        url = self._get_generate_diff_base_url()
+        response = self.client.post(url)
+        assert response.data.get('items_not_included') == [{'content_key': content.content_key}]
+        assert not response.data.get('items_not_found')
+        assert not response.data.get('items_found')
+
+    def test_generate_diff_returns_content_items_found(self):
+        """
+        Test that the generate_diff endpoint will return under the `items_found` bucket all content keys within the
+        catalog that were provided.
+        """
+        content = ContentMetadataFactory()
+        content2 = ContentMetadataFactory()
+        self.add_metadata_to_catalog(self.enterprise_catalog, [content, content2])
+
+        url = self._get_generate_diff_base_url()
+        response = self.client.post(url, data={'content_keys': [content.content_key, content2.content_key]})
+        for item in response.data.get('items_found'):
+            assert item.get('content_key') in [content.content_key, content2.content_key]
+        assert not response.data.get('items_not_found')
+        assert not response.data.get('items_not_included')
+
+    def test_generate_diff_returns_content_items_not_found(self):
+        """
+        Test that the generate_diff endpoint will return all content keys provided that were not found under the catalog
+        under the `items_not_found` bucket.
+        """
+        key = 'bad+key'
+        key2 = 'bad+key2'
+        url = self._get_generate_diff_base_url()
+        response = self.client.post(url, data={'content_keys': [key, key2]})
+        for item in response.data.get('items_not_found'):
+            assert item in [{'content_key': key}, {'content_key': key2}]
+        assert not response.data.get('items_found')
+        assert not response.data.get('items_not_included')
+
     def test_contains_content_items_unauthorized_non_catalog_learner(self):
         """
         Verify the contains_content_items endpoint rejects users that are not catalog learners
