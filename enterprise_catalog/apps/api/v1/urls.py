@@ -12,10 +12,14 @@ app_name = 'v1'
 router = DefaultRouter()
 router.register(r'enterprise-catalogs', views.EnterpriseCatalogCRUDViewSet, basename='enterprise-catalog')
 router.register(r'enterprise-catalogs', views.EnterpriseCatalogContainsContentItems, basename='enterprise-catalog')
-router.register(r'enterprise-catalogs', views.EnterpriseCatalogGetContentMetadata, basename='enterprise-catalog')
 router.register(r'enterprise-customer', views.EnterpriseCustomerViewSet, basename='enterprise-customer')
 
 urlpatterns = [
+    url(
+        r'^enterprise-catalogs/(?P<uuid>[\S]+)/get_content_metadata',
+        views.EnterpriseCatalogGetContentMetadata.as_view({'get': 'get'}),
+        name='get-content-metadata'
+    ),
     url(
         r'^enterprise-catalogs/(?P<uuid>[\S]+)/generate_diff',
         views.EnterpriseCatalogDiff.as_view({'post': 'post'}),

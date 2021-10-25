@@ -1,10 +1,12 @@
 import json
 import uuid
 from collections import OrderedDict
+from datetime import datetime, timedelta
 from operator import itemgetter
 from unittest import mock
 
 import ddt
+import pytz
 from django.conf import settings
 from django.db import IntegrityError
 from django.utils.text import slugify
@@ -546,7 +548,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         """
         Helper to get the get_content_metadata endpoint url for a given catalog
         """
-        return reverse('api:v1:enterprise-catalog-get-content-metadata', kwargs={'uuid': enterprise_catalog.uuid})
+        return reverse('api:v1:get-content-metadata', kwargs={'uuid': enterprise_catalog.uuid})
 
     def _get_expected_json_metadata(self, content_metadata, learner_portal_enabled):
         """
@@ -715,6 +717,37 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         False,
         True
     )
+    def test_get_content_metadata_content_filters(self, learner_portal_enabled, mock_api_client):
+        """
+        Test that the get_content_metadata view GET view will filter provided content_keys (up to a limit)
+        """
+        mock_api_client.return_value.get_enterprise_customer.return_value = {
+            'slug': self.enterprise_slug,
+            'enable_learner_portal': learner_portal_enabled,
+            'modified': str(datetime.now().replace(tzinfo=pytz.UTC)),
+        }
+        ContentMetadataFactory.reset_sequence(10)
+        metadata = ContentMetadataFactory.create_batch(api_settings.PAGE_SIZE)
+        filtered_content_keys = []
+        url = self._get_content_metadata_url(self.enterprise_catalog)
+        for filter_content_key_index in range(int(api_settings.PAGE_SIZE / 2)):
+            filtered_content_keys.append(metadata[filter_content_key_index].content_key)
+            url += f"&content_keys={metadata[filter_content_key_index].content_key}"
+
+        self.add_metadata_to_catalog(self.enterprise_catalog, metadata)
+        response = self.client.get(
+            url,
+            {'content_keys': filtered_content_keys}
+        )
+        assert response.data.get('count') == int(api_settings.PAGE_SIZE / 2)
+        for result in response.data.get('results'):
+            assert result.get('key') in filtered_content_keys
+
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
+    @ddt.data(
+        False,
+        True
+    )
     def test_get_content_metadata(self, learner_portal_enabled, mock_api_client):
         """
         Verify the get_content_metadata endpoint returns all the metadata associated with a particular catalog
@@ -722,6 +755,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         mock_api_client.return_value.get_enterprise_customer.return_value = {
             'slug': self.enterprise_slug,
             'enable_learner_portal': learner_portal_enabled,
+            'modified': str(datetime.now().replace(tzinfo=pytz.UTC)),
         }
         # The ContentMetadataFactory creates content with keys that are generated using a string builder with a
         # factory sequence (index is appended onto each content key). The results are sorted by key which creates
@@ -774,6 +808,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         mock_api_client.return_value.get_enterprise_customer.return_value = {
             'slug': self.enterprise_slug,
             'enable_learner_portal': learner_portal_enabled,
+            'modified': str(datetime.now().replace(tzinfo=pytz.UTC)),
         }
         # Create enough metadata to force pagination (if the query parameter wasn't sent)
         metadata = ContentMetadataFactory.create_batch(api_settings.PAGE_SIZE + 1)
@@ -924,10 +959,90 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         assert response.data == 'catalog_diff GET requests supports up to 100. If more content keys required, please ' \
                                 'use a POST body.'
 
-    def test_generate_diff_get_parses_all_buckets(self):
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
+    def test_generate_diff_matched_modified_uses_content(self, mock_api_client):
+        """
+        Test that the generate_diff endpoint, when matching content keys, takes the content modified times into
+        consideration when generating the matched key's `date_updated`.
+        """
+        now = self.enterprise_catalog.modified
+        customer_modified = str(now - timedelta(hours=1))
+        mock_api_client.return_value.get_enterprise_customer.return_value = {
+            'slug': self.enterprise_slug,
+            'enable_learner_portal': True,
+            'modified': customer_modified,
+        }
+        content_modified = now + timedelta(hours=1)
+        content = ContentMetadataFactory(modified=content_modified)
+
+        self.add_metadata_to_catalog(self.enterprise_catalog, [content])
+        url = self._get_generate_diff_base_url()
+        response = self.client.post(
+            url,
+            data=json.dumps({"content_keys": [content.content_key]}),
+            content_type='application/json',
+        )
+        assert response.data.get('items_found')[0].get('date_updated') == content_modified
+
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
+    def test_generate_diff_matched_modified_uses_customer(self, mock_api_client):
+        """
+        Test that the generate_diff endpoint, when matching content keys, takes the customer's modified times into
+        consideration when generating the matched key's `date_updated`.
+        """
+        now = self.enterprise_catalog.modified
+        customer_modified = now + timedelta(hours=1)
+        customer_modified_str = str(customer_modified)
+        mock_api_client.return_value.get_enterprise_customer.return_value = {
+            'slug': self.enterprise_slug,
+            'enable_learner_portal': True,
+            'modified': customer_modified_str,
+        }
+        content = ContentMetadataFactory(modified=now - timedelta(hours=1))
+
+        self.add_metadata_to_catalog(self.enterprise_catalog, [content])
+        url = self._get_generate_diff_base_url()
+        response = self.client.post(
+            url,
+            data=json.dumps({"content_keys": [content.content_key]}),
+            content_type='application/json',
+        )
+        assert response.data.get('items_found')[0].get('date_updated') == customer_modified
+
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
+    def test_generate_diff_matched_modified_uses_catalog(self, mock_api_client):
+        """
+        Test that the generate_diff endpoint, when matching content keys, takes the catalog modified times into
+        consideration when generating the matched key's `date_updated`.
+        """
+        now = self.enterprise_catalog.modified
+        mock_api_client.return_value.get_enterprise_customer.return_value = {
+            'slug': self.enterprise_slug,
+            'enable_learner_portal': True,
+            'modified': str(now - timedelta(hours=1)),
+        }
+        content = ContentMetadataFactory(modified=now - timedelta(hours=1))
+
+        self.add_metadata_to_catalog(self.enterprise_catalog, [content])
+        url = self._get_generate_diff_base_url()
+
+        response = self.client.post(
+            url,
+            data=json.dumps({"content_keys": [content.content_key]}),
+            content_type='application/json',
+        )
+        assert response.data.get('items_found')[0].get('date_updated') == now
+
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
+    def test_generate_diff_get_parses_all_buckets(self, mock_api_client):
         """
         Test that GET requests to the generate_diff endpoint behave the same as POST requests.
         """
+        mock_api_client.return_value.get_enterprise_customer.return_value = {
+            'slug': self.enterprise_slug,
+            'enable_learner_portal': True,
+            'modified': str(datetime.now().replace(tzinfo=pytz.UTC)),
+        }
         content = ContentMetadataFactory()
         content2 = ContentMetadataFactory()
         content3 = ContentMetadataFactory()
@@ -955,11 +1070,17 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
                 {'content_key': content2.content_key, 'date_updated': content2.modified}
             ]
 
-    def test_generate_diff_returns_whole_catalog_w_empty_key_list(self):
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
+    def test_generate_diff_returns_whole_catalog_w_empty_key_list(self, mock_api_client):
         """
         Test that the generate_diff endpoint will return all content keys under the catalog not provided under the
         `items_not_included` bucket
         """
+        mock_api_client.return_value.get_enterprise_customer.return_value = {
+            'slug': self.enterprise_slug,
+            'enable_learner_portal': True,
+            'modified': str(datetime.now().replace(tzinfo=pytz.UTC)),
+        }
         content = ContentMetadataFactory()
         self.add_metadata_to_catalog(self.enterprise_catalog, [content])
         url = self._get_generate_diff_base_url()
@@ -968,11 +1089,17 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         assert not response.data.get('items_not_found')
         assert not response.data.get('items_found')
 
-    def test_generate_diff_returns_content_items_found(self):
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
+    def test_generate_diff_returns_content_items_found(self, mock_api_client):
         """
         Test that the generate_diff endpoint will return under the `items_found` bucket all content keys within the
         catalog that were provided.
         """
+        mock_api_client.return_value.get_enterprise_customer.return_value = {
+            'slug': self.enterprise_slug,
+            'enable_learner_portal': True,
+            'modified': str(datetime.now().replace(tzinfo=pytz.UTC)),
+        }
         content = ContentMetadataFactory()
         content2 = ContentMetadataFactory()
         self.add_metadata_to_catalog(self.enterprise_catalog, [content, content2])
@@ -988,11 +1115,17 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         assert not response.data.get('items_not_found')
         assert not response.data.get('items_not_included')
 
-    def test_generate_diff_returns_content_items_not_found(self):
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
+    def test_generate_diff_returns_content_items_not_found(self, mock_api_client):
         """
         Test that the generate_diff endpoint will return all content keys provided that were not found under the catalog
         under the `items_not_found` bucket.
         """
+        mock_api_client.return_value.get_enterprise_customer.return_value = {
+            'slug': self.enterprise_slug,
+            'enable_learner_portal': True,
+            'modified': str(datetime.now()),
+        }
         key = 'bad+key'
         key2 = 'bad+key2'
         url = self._get_generate_diff_base_url()
