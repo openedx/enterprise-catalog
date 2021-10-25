@@ -6,6 +6,7 @@ from rest_framework import serializers, status
 
 from enterprise_catalog.apps.api.v1.utils import (
     get_enterprise_utm_context,
+    get_most_recent_modified_time,
     is_any_course_run_active,
     update_query_parameters,
 )
@@ -191,7 +192,16 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
         content_key = json_metadata.get('key')
         parent_content_key = get_parent_content_key(json_metadata)
 
-        json_metadata['content_last_modified'] = instance.modified
+        # The enrollment URL field of content metadata is generated on request and is determined by the status of the
+        # enterprise customer as well as the catalog. So, in order to detect when content metadata has last been
+        # modified, we have to also check the customer and the catalog's modified times.
+        modified_time = get_most_recent_modified_time(
+            instance.modified,
+            enterprise_catalog.modified,
+            enterprise_catalog.enterprise_customer.last_modified_date
+        )
+
+        json_metadata['content_last_modified'] = modified_time
 
         if marketing_url:
             marketing_url = update_query_parameters(
