@@ -5,7 +5,11 @@ import time
 
 from enterprise_catalog.apps.api.v1.utils import is_course_run_active
 from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
-from enterprise_catalog.apps.catalog.constants import COURSE, PROGRAM
+from enterprise_catalog.apps.catalog.constants import (
+    COURSE,
+    PROGRAM,
+    PROGRAM_TYPES_MAP,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -34,6 +38,7 @@ ALGOLIA_FIELDS = [
     'partners',
     'programs',
     'program_titles',
+    'program_type',
     'recent_enrollment_count',
     'short_description',
     'subjects',
@@ -71,6 +76,7 @@ ALGOLIA_INDEX_SETTINGS = {
         'enterprise_customer_uuids',
         'language',
         'level_type',
+        'program_type',
         'filterOnly(advertised_course_run.upgrade_deadline)',
         'searchable(partners.name)',
         'searchable(programs)',
@@ -354,6 +360,20 @@ def get_program_course_keys(program):
     return _get_program_course_field(program, 'key')
 
 
+def get_program_type(program):
+    """
+    Gets the program_type for a program. Used for the "program_type" facet in Algolia.
+
+    Arguments:
+        program (dict): a dictionary representing a program.
+
+    Returns:
+        str: program_type e.g: MicroMasters® Program
+    """
+    program_type = program.get('type')
+    return PROGRAM_TYPES_MAP.get(program_type)
+
+
 def get_course_program_types(course):
     """
     Gets list of program types associated with the course. Used for the "Programs"
@@ -607,6 +627,7 @@ def _algolia_object_from_product(product, algolia_fields):
     elif searchable_product.get('content_type') == PROGRAM:
         searchable_product.update({
             'course_keys': get_program_course_keys(searchable_product),
+            'program_type': get_program_type(searchable_product),
         })
 
     algolia_object = {}
