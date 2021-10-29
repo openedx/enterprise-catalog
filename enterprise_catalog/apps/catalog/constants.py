@@ -52,6 +52,16 @@ DEFAULT_COURSE_FIELDS_TO_PLUCK_FROM_SEARCH_ALL = [
     'languages',
 ]
 
+PROGRAM_TYPES_MAP = {
+    'XSeries': 'XSeries Program',
+    'MicroMasters': 'MicroMasters® Program',
+    'Professional Certificate': 'Professional Certificate',
+    'Professional Program': 'Professional Program',
+    'Masters': "Master's Degree Program",
+    'MicroBachelors': 'MicroBachelors® Program',
+    'Certificación Profesional': 'Certificación Profesional',
+}
+
 
 def json_serialized_course_modes():
     """
