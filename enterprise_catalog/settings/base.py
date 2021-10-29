@@ -49,7 +49,7 @@ THIRD_PARTY_APPS = (
     # API Documentation
     'drf_yasg',
     'edx_api_doc_tools',
-    
+
     'corsheaders',
     'csrf.apps.CsrfAppConfig',  # Enables frontend apps to retrieve CSRF tokens
     'django_celery_results',  # Enables a Django model as the celery result backend
@@ -70,6 +70,7 @@ INSTALLED_APPS += THIRD_PARTY_APPS
 INSTALLED_APPS += PROJECT_APPS
 
 MIDDLEWARE = (
+    'edx_django_utils.monitoring.DeploymentMonitoringMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
