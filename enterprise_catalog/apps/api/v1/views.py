@@ -177,7 +177,7 @@ class EnterpriseCatalogDiff(BaseViewSet, viewsets.ModelViewSet):
 
     def get_permission_object(self):
         """
-        Retrieves the apporpriate object to use during edx-rbac's permission checks.
+        Retrieves the appropriate object to use during edx-rbac's permission checks.
 
         This object is passed to the rule predicate(s).
         """
@@ -243,6 +243,7 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
     renderer_classes = [JSONRenderer, XMLRenderer]
     lookup_field = 'uuid'
     pagination_class = PageNumberWithSizePagination
+    MAX_GET_CONTENT_KEYS = 100
 
     @cached_property
     def enterprise_catalog(self):
@@ -260,12 +261,17 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
         """
         return str(self.enterprise_catalog.enterprise_uuid)
 
-    def get_queryset(self):
+    def get_queryset(self, **kwargs):
         """
         Returns all of the json of content metadata associated with the catalog.
         """
         # Avoids ordering the content metadata by any field on that model to avoid using a temporary table / filesort
-        return self.enterprise_catalog.content_metadata.order_by('catalog_queries')
+        queryset = self.enterprise_catalog.content_metadata
+        content_filter = kwargs.get('content_keys_filter')
+        if content_filter:
+            queryset = queryset.filter(content_key__in=content_filter)
+
+        return queryset.order_by('catalog_queries')
 
     def get_response_with_enterprise_fields(self, response):
         """
@@ -284,18 +290,45 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
         return response
 
     @action(detail=True)
-    def get_content_metadata(self, request, uuid, **kwargs):  # pylint: disable=unused-argument
+    def get(self, request, **kwargs):
+        """
+        GET view entry point to the `get_content_metadata` API
+
+        Query params:
+            (Optional) content_keys (list): list of content keys for which to fetch content metadata for. If no content
+            keys are provided then all content under the catalog will be fetched.
+        """
+        content_keys_filter = request.query_params.getlist('content_keys')
+        if content_keys_filter == "[]":
+            content_keys_filter = []
+        else:
+            if len(content_keys_filter) > self.MAX_GET_CONTENT_KEYS:
+                return Response(
+                    f'get_content_metadata GET requests supports up to {self.MAX_GET_CONTENT_KEYS}. If more content'
+                    f'keys required, please use a POST body.',
+                    status=HTTP_400_BAD_REQUEST
+                )
+
+        traverse_pagination = request.query_params.get('traverse_pagination', False)
+
+        return self.get_content_metadata(request, traverse_pagination, content_keys_filter)
+
+    @action(detail=True)
+    def get_content_metadata(self, request, traverse_pagination, content_keys_filter):
         """
         Returns all the content metadata associated with the enterprise catalog.
 
-        Adding the query parameter `traverse_pagination` will collect the results onto a single page.
+        The parameter `traverse_pagination`, if provided, will collect the results onto a single page.
+
+        The parameter `content_keys_filter`, if provided, will result in only content metadata associated with the
+        provided content keys being returned.
         """
-        queryset = self.filter_queryset(self.get_queryset())
+        queryset = self.filter_queryset(self.get_queryset(content_keys_filter=content_keys_filter))
         context = self.get_serializer_context()
         context['enterprise_catalog'] = self.enterprise_catalog
-        # Traverse pagination query parameter signals that we should collect the results onto a single page
-        traverse_pagination = request.query_params.get('traverse_pagination', False)
         page = self.paginate_queryset(queryset)
+
+        # Traverse pagination query parameter signals that we should collect the results onto a single page
         if page is not None and not traverse_pagination:
             serializer = ContentMetadataSerializer(page, context=context, many=True)
             paginated_response = self.get_paginated_response(serializer.data)

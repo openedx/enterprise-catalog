@@ -92,3 +92,14 @@ def is_any_course_run_active(course_runs):
         if is_course_run_active(course_run):
             return True
     return False
+
+
+def get_most_recent_modified_time(content_modified, catalog_modified, customer_modified):
+    """
+    Helper function to get the appropriate content last modified time for a content metadata object under a specific
+    customer
+    """
+    content_modified = max([content_modified, catalog_modified])
+    if customer_modified:
+        content_modified = max([content_modified, customer_modified])
+    return content_modified
