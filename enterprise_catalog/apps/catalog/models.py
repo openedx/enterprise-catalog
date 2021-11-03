@@ -17,6 +17,7 @@ from simple_history.models import HistoricalRecords
 
 from enterprise_catalog.apps.api.v1.utils import (
     get_enterprise_utm_context,
+    get_most_recent_modified_time,
     update_query_parameters,
 )
 from enterprise_catalog.apps.api_client.discovery_cache import (
@@ -239,10 +240,13 @@ class EnterpriseCatalog(TimeStampedModel):
         for content in self.content_metadata.all().values('modified', 'content_key'):
             content_key = content.get('content_key')
             found_content_keys.add(content_key)
+            content_modified = get_most_recent_modified_time(
+                content.get('modified'), self.modified, self.enterprise_customer.last_modified_date
+            )
             if content_key in distinct_content_keys:
                 items_found.append({
                     "content_key": content_key,
-                    "date_updated": content.get('modified')
+                    "date_updated": content_modified
                 })
             else:
                 items_not_included.append({'content_key': content_key})

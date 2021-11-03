@@ -1,6 +1,7 @@
 """
 Interface to Enterprise Customer details from edx-enterprise API using a volatile cache.
 """
+from dateutil import parser
 from django.conf import settings
 from django.core.cache import cache
 
@@ -39,6 +40,13 @@ class EnterpriseCustomerDetails:
         Return Enterprise Customer slug OR empty string if unavailable.
         """
         return self.customer_data.get('slug', '')
+
+    @property
+    def last_modified_date(self):
+        """
+        Return Enterprise Customer last modified datetime or None if unavailable.
+        """
+        return parser.parse(self.customer_data.get('modified', None))
 
 
 def _get_enterprise_customer_data(uuid):
