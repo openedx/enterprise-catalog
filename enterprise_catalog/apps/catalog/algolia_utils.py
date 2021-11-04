@@ -3,6 +3,8 @@ import datetime
 import logging
 import time
 
+from django.utils.translation import ugettext as _
+
 from enterprise_catalog.apps.api.v1.utils import is_course_run_active
 from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
 from enterprise_catalog.apps.catalog.constants import (
@@ -349,14 +351,14 @@ def _get_program_course_field(program, field):
 
 def get_program_course_keys(program):
     """
-       Gets list of course keys associated with the program.
+    Gets list of course keys associated with the program.
 
-       Arguments:
-           program (dict): a dictionary representing a program.
+    Arguments:
+       program (dict): a dictionary representing a program.
 
-       Returns:
-           list: a list of course keys associated with the program.
-       """
+    Returns:
+       list: a list of course keys associated with the program.
+    """
     return _get_program_course_field(program, 'key')
 
 
@@ -372,6 +374,114 @@ def get_program_type(program):
     """
     program_type = program.get('type')
     return PROGRAM_TYPES_MAP.get(program_type)
+
+
+def get_program_title(program):
+    """
+    Gets the title for a program.
+
+    Arguments:
+        program (dict): a dictionary representing a program.
+
+    Returns:
+        str: program_title e.g: Data Engineering Fundamentals
+    """
+    return program.get('title')
+
+
+def get_program_availability(program):
+    """
+    Gets the availability for a program. Used for the "availability" facet in Algolia.
+
+    Arguments:
+        program (dict): a dictionary representing a program.
+
+    Returns:
+        list: a union of program courses availability.
+    """
+    # Master's programs don't have courses in the same way that our other programs do.
+    program_type = program.get('type')
+    if program_type and program_type == 'Masters':
+        return [_('Available now')]
+
+    availability = set()
+    for course in program.get('courses', []):
+        course_status = get_course_availability(course)
+        for status in course_status:
+            availability.add(status)
+    return list(availability)
+
+
+def get_program_partners(program):
+    """
+    Gets the partners for a program. Used for the "partners.name" facet in Algolia.
+
+    Arguments:
+        program (dict): a dictionary representing a program.
+
+    Returns:
+        list: a list of partners associated with the program.
+    """
+    partners = []
+    for course in program.get('courses', []):
+        course_partners = get_course_partners(course)
+        for partner in course_partners:
+            partner_name = partner.get('name')
+            if partner_name not in [item.get('name') for item in partners]:
+                partners.append(partner)
+    return partners
+
+
+def get_program_subjects(program):
+    """
+    Gets the subjects for a program. Used for the "subjects" facet in Algolia.
+
+    Arguments:
+        program (dict): a dictionary representing a program.
+
+    Returns:
+        list: a list of subjects associated with the program.
+    """
+    subjects = set()
+    for course in program.get('courses', []):
+        course_subjects = get_course_subjects(course)
+        subjects.update(course_subjects)
+    return list(subjects)
+
+
+def get_program_skill_names(program):
+    """
+    Gets the skills for a program. Used for the "skill_names" facet in Algolia.
+
+    Arguments:
+        program (dict): a dictionary representing a program.
+
+    Returns:
+        list: a list of skill_names associated with the program.
+    """
+    skill_names = set()
+    for course in program.get('courses', []):
+        course_skills = get_course_skill_names(course)
+        skill_names.update(course_skills)
+    return list(skill_names)
+
+
+def get_program_level_type(program):
+    """
+    Gets the level_type for a program. Used for the "level_type" facet in Algolia.
+
+    Arguments:
+        program (dict): a dictionary representing a program.
+
+    Returns:
+        str: level type associated with the program.
+    """
+    level_types = []
+    for course in program.get('courses', []):
+        course_level_type = course.get('level_type')
+        if course_level_type:
+            level_types.append(course_level_type)
+    return max(set(level_types), key=level_types.count) if level_types else ''
 
 
 def get_course_program_types(course):
@@ -627,7 +737,14 @@ def _algolia_object_from_product(product, algolia_fields):
     elif searchable_product.get('content_type') == PROGRAM:
         searchable_product.update({
             'course_keys': get_program_course_keys(searchable_product),
+            'programs': [get_program_type(searchable_product)],
+            'program_titles': [get_program_title(searchable_product)],
             'program_type': get_program_type(searchable_product),
+            'availability': get_program_availability(searchable_product),
+            'partners': get_program_partners(searchable_product),
+            'subjects': get_program_subjects(searchable_product),
+            'skill_names': get_program_skill_names(searchable_product),
+            'level_type': get_program_level_type(searchable_product),
         })
 
     algolia_object = {}
