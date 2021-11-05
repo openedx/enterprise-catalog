@@ -370,7 +370,6 @@ class EnterpriseCatalog(TimeStampedModel):
         )
         return xapi_activity_id
 
-
 class ContentMetadata(TimeStampedModel):
     """
     Stores the JSON metadata for a piece of content, such as a course, course run, or program.
@@ -414,7 +413,7 @@ class ContentMetadata(TimeStampedModel):
             "endpoint results, specified as a JSON object."
         )
     )
-    catalog_queries = models.ManyToManyField(CatalogQuery)
+    catalog_queries = models.ManyToManyField(CatalogQuery, through='ContentMetadataToQueries')
 
     history = HistoricalRecords()
 
@@ -628,6 +627,19 @@ def associate_content_metadata_with_query(metadata, catalog_query):
     associated_content_keys = [metadata.content_key for metadata in metadata_list]
     return associated_content_keys
 
+class ContentMetadataToQueries(TimeStampedModel):
+    catalog_query = models.ForeignKey(
+        CatalogQuery,
+        on_delete=models.deletion.DO_NOTHING,
+        )
+    content_metadata = models.ForeignKey(
+        ContentMetadata,
+        on_delete=models.deletion.DO_NOTHING,
+        )
+
+    # catalog_contentmetadata_catalog_queries
+    class Meta:
+        db_table = 'catalog_contentmetadata_catalog_queries'
 
 class EnterpriseCatalogFeatureRole(UserRole):
     """
