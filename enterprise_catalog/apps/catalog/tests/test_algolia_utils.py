@@ -18,6 +18,13 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     get_course_skill_names,
     get_course_subjects,
     get_initialized_algolia_client,
+    get_program_availability,
+    get_program_level_type,
+    get_program_partners,
+    get_program_skill_names,
+    get_program_subjects,
+    get_program_title,
+    get_program_type,
 )
 from enterprise_catalog.apps.catalog.constants import COURSE
 from enterprise_catalog.apps.catalog.tests.factories import (
@@ -444,3 +451,220 @@ class AlgoliaUtilsTests(TestCase):
         algolia_client = get_initialized_algolia_client()
         configure_algolia_index(algolia_client)
         mock_search_client.return_value.set_index_settings.assert_called_once_with(ALGOLIA_INDEX_SETTINGS)
+
+    @ddt.data(
+        (
+            {'courses': [{'skill_names': ['Python', 'Programming']}]},
+            ['Python', 'Programming'],
+        ),
+    )
+    @ddt.unpack
+    def test_get_program_skill_names(self, program_metadata, expected_skill_names):
+        """
+        Assert that the list of skill names associated with a program is properly parsed.
+        """
+        skill_names = get_program_skill_names(program_metadata)
+        self.assertEqual(sorted(skill_names), sorted(expected_skill_names))
+
+    @ddt.data(
+        (
+            {'type': 'Professional Certificate'},
+            'Professional Certificate',
+        ),
+    )
+    @ddt.unpack
+    def test_get_program_type(self, program_metadata, expected_type):
+        """
+        Assert that the type associated with a program is properly parsed.
+        """
+        program_type = get_program_type(program_metadata)
+        self.assertEqual(expected_type, program_type)
+
+    @ddt.data(
+        (
+            {'title': 'edX Demonstration Program'},
+            'edX Demonstration Program',
+        ),
+    )
+    @ddt.unpack
+    def test_get_program_title(self, program_metadata, expected_title):
+        """
+        Assert that the title associated with a program is properly parsed.
+        """
+        program_title = get_program_title(program_metadata)
+        self.assertEqual(expected_title, program_title)
+
+    @ddt.data(
+        (
+            {'courses': [{
+                'course_runs': [{
+                    'status': 'published',
+                    'is_enrollable': True,
+                    'is_marketable': True,
+                    'availability': 'Current'
+                }]
+            }]},
+            ['Available Now'],
+        ),
+        (
+            {'courses': [{
+                'course_runs': [{
+                    'status': 'published',
+                    'is_enrollable': True,
+                    'is_marketable': True,
+                    'availability': 'Upcoming'
+                }]
+            }]},
+            ['Upcoming'],
+        ),
+        (
+            {'courses': [{
+                'course_runs': [{
+                    'status': 'published',
+                    'is_enrollable': True,
+                    'is_marketable': True,
+                    'availability': 'Archived'
+                }]
+            }]},
+            ['Archived'],
+        ),
+        (
+            {'courses': [{
+                'course_runs': [{
+                    'status': 'published',
+                    'is_enrollable': True,
+                    'is_marketable': True,
+                    'availability': 'Starting Soon'
+                }]
+            }]},
+            ['Starting Soon'],
+        ),
+        (
+            {'courses': [{
+                'course_runs': [{
+                    'status': 'published',
+                    'is_enrollable': True,
+                    'is_marketable': True,
+                }]
+            }]},
+            ['Archived'],
+        ),
+        (
+            {
+                'type': 'Masters',
+                'courses': [{
+                    'course_runs': [{
+                        'status': 'published',
+                        'is_enrollable': True,
+                        'is_marketable': True,
+                        'availability': 'Archived'
+                    }]
+                }]
+            },
+            ['Available now'],
+        ),
+    )
+    @ddt.unpack
+    def test_get_program_availability(self, program_metadata, expected_availability):
+        """
+        Assert that the Availability associated with a program is properly parsed.
+        """
+        program_availability = get_program_availability(program_metadata)
+        self.assertEqual(expected_availability, program_availability)
+
+    @ddt.data(
+        (
+            {'courses': [{'owners': None}]},
+            [],
+        ),
+        (
+            {'courses': [{'owners': []}]},
+            [],
+        ),
+        (
+            {'courses': [{
+                'owners': [
+                    {
+                        'name': 'Test Org Name',
+                        'logo_image_url': 'https://fake.image1',
+                        'ignored_attr': None,
+                    },
+                    {
+                        'name': 'Another Org Name',
+                        'logo_image_url': 'https://fake.image2',
+                        'ignored_attr': None,
+                    },
+                ]
+            }]},
+            [
+                {
+                    'name': 'Test Org Name',
+                    'logo_image_url': 'https://fake.image1',
+                },
+                {
+                    'name': 'Another Org Name',
+                    'logo_image_url': 'https://fake.image2',
+                },
+            ],
+        ),
+    )
+    @ddt.unpack
+    def test_get_program_partners(self, program_metadata, expected_partners):
+        """
+        Assert that the Partners associated with a program are properly parsed.
+        """
+        program_partners = get_program_partners(program_metadata)
+        self.assertEqual(expected_partners, program_partners)
+
+    @ddt.data(
+        (
+            {'courses': [{'subjects': ['Computer Science', 'Communication']}]},
+            ['Computer Science', 'Communication'],
+        ),
+        (
+            {'courses': [{
+                'subjects': [
+                    {'name': 'Computer Science'},
+                    {'name': 'Communication'},
+                ],
+            }]},
+            ['Computer Science', 'Communication'],
+        ),
+        (
+            {'courses': [{'subjects': None}]},
+            [],
+        ),
+        (
+            {'courses': [{'subjects': []}]},
+            [],
+        ),
+    )
+    @ddt.unpack
+    def test_get_program_subjects(self, program_metadata, expected_subjects):
+        """
+        Assert that the Subjects associated with a program are properly parsed.
+        """
+        program_subjects = get_program_subjects(program_metadata)
+        self.assertEqual(sorted(expected_subjects), sorted(program_subjects))
+
+    @ddt.data(
+        (
+            {'courses': [
+                {'level_type': 'Intermediate'},
+                {'level_type': 'Intermediate'},
+                {'level_type': 'Introductory'},
+            ]},
+            'Intermediate',
+        ),
+        (
+            {'courses': [{'level_type': None}]},
+            '',
+        ),
+    )
+    @ddt.unpack
+    def test_get_program_level_type(self, program_metadata, expected_level_type):
+        """
+        Assert that the level_type associated with a program is properly parsed.
+        """
+        program_level_type = get_program_level_type(program_metadata)
+        self.assertEqual(expected_level_type, program_level_type)
