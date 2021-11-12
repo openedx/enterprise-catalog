@@ -12,6 +12,7 @@ from enterprise_catalog.apps.catalog.constants import (
     PROGRAM,
     PROGRAM_TYPES_MAP,
 )
+from enterprise_catalog.apps.catalog.models import ContentMetadata
 
 
 logger = logging.getLogger(__name__)
@@ -444,8 +445,10 @@ def get_program_subjects(program):
     """
     subjects = set()
     for course in program.get('courses', []):
-        course_subjects = get_course_subjects(course)
-        subjects.update(course_subjects)
+        course_metadata = ContentMetadata.objects.filter(content_key=course.get('key')).first()
+        if course_metadata:
+            course_subjects = get_course_subjects(course_metadata.json_metadata)
+            subjects.update(course_subjects)
     return list(subjects)
 
 
@@ -461,8 +464,10 @@ def get_program_skill_names(program):
     """
     skill_names = set()
     for course in program.get('courses', []):
-        course_skills = get_course_skill_names(course)
-        skill_names.update(course_skills)
+        course_metadata = ContentMetadata.objects.filter(content_key=course.get('key')).first()
+        if course_metadata:
+            course_skills = get_course_skill_names(course_metadata.json_metadata)
+            skill_names.update(course_skills)
     return list(skill_names)
 
 
@@ -478,9 +483,11 @@ def get_program_level_type(program):
     """
     level_types = []
     for course in program.get('courses', []):
-        course_level_type = course.get('level_type')
-        if course_level_type:
-            level_types.append(course_level_type)
+        course_metadata = ContentMetadata.objects.filter(content_key=course.get('key')).first()
+        if course_metadata:
+            course_level_type = course_metadata.json_metadata.get('level_type')
+            if course_level_type:
+                level_types.append(course_level_type)
     return max(set(level_types), key=level_types.count) if level_types else ''
 
 
