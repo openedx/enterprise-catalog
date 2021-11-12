@@ -454,15 +454,21 @@ class AlgoliaUtilsTests(TestCase):
 
     @ddt.data(
         (
-            {'courses': [{'skill_names': ['Python', 'Programming']}]},
+            {'courses': [{'key': 'program_course_key'}]},
+            {'skill_names': ['Python', 'Programming']},
             ['Python', 'Programming'],
         ),
     )
     @ddt.unpack
-    def test_get_program_skill_names(self, program_metadata, expected_skill_names):
+    def test_get_program_skill_names(self, program_metadata, course_metadata, expected_skill_names):
         """
         Assert that the list of skill names associated with a program is properly parsed.
         """
+        ContentMetadataFactory.create(
+            content_key=program_metadata['courses'][0]['key'],
+            content_type=COURSE,
+            json_metadata=course_metadata,
+        )
         skill_names = get_program_skill_names(program_metadata)
         self.assertEqual(sorted(skill_names), sorted(expected_skill_names))
 
@@ -618,53 +624,80 @@ class AlgoliaUtilsTests(TestCase):
 
     @ddt.data(
         (
-            {'courses': [{'subjects': ['Computer Science', 'Communication']}]},
+            {'courses': [{'key': 'program_course_key'}]},
+            {'subjects': ['Computer Science', 'Communication']},
             ['Computer Science', 'Communication'],
         ),
         (
-            {'courses': [{
-                'subjects': [
-                    {'name': 'Computer Science'},
-                    {'name': 'Communication'},
-                ],
-            }]},
+            {'courses': [{'key': 'program_course_key'}]},
+            {'subjects': [
+                {'name': 'Computer Science'},
+                {'name': 'Communication'},
+            ]},
             ['Computer Science', 'Communication'],
         ),
         (
-            {'courses': [{'subjects': None}]},
+            {'courses': [{'key': 'program_course_key'}]},
+            {'subjects': None},
             [],
         ),
         (
-            {'courses': [{'subjects': []}]},
+            {'courses': [{'key': 'program_course_key'}]},
+            {'subjects': []},
             [],
         ),
     )
     @ddt.unpack
-    def test_get_program_subjects(self, program_metadata, expected_subjects):
+    def test_get_program_subjects(self, program_metadata, course_metadata, expected_subjects):
         """
         Assert that the Subjects associated with a program are properly parsed.
         """
+        ContentMetadataFactory.create(
+            content_key=program_metadata['courses'][0]['key'],
+            content_type=COURSE,
+            json_metadata=course_metadata,
+        )
         program_subjects = get_program_subjects(program_metadata)
         self.assertEqual(sorted(expected_subjects), sorted(program_subjects))
 
     @ddt.data(
         (
             {'courses': [
-                {'level_type': 'Intermediate'},
-                {'level_type': 'Intermediate'},
-                {'level_type': 'Introductory'},
+                {'key': 'program_course_key1'},
+                {'key': 'program_course_key2'},
+                {'key': 'program_course_key3'},
             ]},
+            [
+                {'key': 'program_course_key1', 'level_type': 'Intermediate'},
+                {'key': 'program_course_key2', 'level_type': 'Intermediate'},
+                {'key': 'program_course_key3', 'level_type': 'Introductory'},
+            ],
             'Intermediate',
         ),
         (
-            {'courses': [{'level_type': None}]},
+            {'courses': [
+                {'key': 'program_course_key1'},
+                {'key': 'program_course_key2'},
+                {'key': 'program_course_key3'},
+            ]},
+            [
+                {'key': 'program_course_key1', 'level_type': None},
+                {'key': 'program_course_key2', 'level_type': ''},
+                {'key': 'program_course_key3', 'level_type': None},
+            ],
             '',
         ),
     )
     @ddt.unpack
-    def test_get_program_level_type(self, program_metadata, expected_level_type):
+    def test_get_program_level_type(self, program_metadata, course_metadata, expected_level_type):
         """
         Assert that the level_type associated with a program is properly parsed.
         """
+        for i in range(3):
+            ContentMetadataFactory.create(
+                content_key=program_metadata['courses'][i]['key'],
+                content_type=COURSE,
+                json_metadata=course_metadata[i],
+            )
         program_level_type = get_program_level_type(program_metadata)
         self.assertEqual(expected_level_type, program_level_type)
