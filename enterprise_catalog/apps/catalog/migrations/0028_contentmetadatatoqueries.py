@@ -6,26 +6,11 @@ import django.utils.timezone
 import model_utils.fields
 
 
-def backfill_many_to_many(apps, schema_editor):
-    content_metadata_model = apps.get_model("catalog", "ContentMetadata")
-    catalog_query_model = apps.get_model("catalog", "CatalogQuery")
-    query_content_metadata_many_to_many = content_metadata_model.catalog_queries.through.objects.all()
-    content_metadata_to_queries_model = apps.get_model("catalog", "ContentMetadataToQueries")
-    for row in query_content_metadata_many_to_many:
-        query_object = catalog_query_model.objects.filter(id=row.catalogquery_id).first()
-        content_metadata_object = content_metadata_model.objects.filter(id=row.contentmetadata_id).first()
-        content_metadata_to_queries_model.objects.update_or_create(
-            catalog_query=query_object,
-            content_metadata=content_metadata_object
-        )
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('catalog', '0026_catalogquery_title'),
+        ('catalog', '0027_auto_20211125_0559'),
     ]
-
     operations = [
         migrations.CreateModel(
             name='ContentMetadataToQueries',
@@ -38,7 +23,22 @@ class Migration(migrations.Migration):
                 ('content_metadata', models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, to='catalog.contentmetadata')),
             ],
         ),
-        migrations.RunPython(backfill_many_to_many),
+        migrations.RunSQL(
+            """
+            /* there's some funky stuff with defaults and the timestamped model */
+            INSERT INTO catalog_contentmetadatatoqueries (catalog_query_id, content_metadata_id, created, modified)
+            SELECT catalogquery_id, contentmetadata_id, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM catalog_contentmetadata_catalog_queries;
+            """,
+            """
+            INSERT INTO catalog_contentmetadata_catalog_queries (catalogquery_id, contentmetadata_id)
+            SELECT catalog_query_id, content_metadata_id
+            FROM catalog_contentmetadatatoqueries
+            WHERE NOT EXISTS (SELECT catalog_query_id FROM catalog_contentmetadata_catalog_queries A2
+            WHERE A2.catalogquery_id = catalog_contentmetadatatoqueries.catalog_query_id AND
+            A2.contentmetadata_id = catalog_contentmetadatatoqueries.content_metadata_id AND
+            catalog_contentmetadatatoqueries.deleted_at IS NULL);
+            """
+        )
     ]
 
 
