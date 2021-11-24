@@ -251,9 +251,9 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         Assert that full course metadata is merged with original json_metadata for all ContentMetadata records.
         """
         course_key_1 = 'fakeX'
-        course_data_1 = {'key': course_key_1, 'full_course_only_field': 'test_1'}
+        course_data_1 = {'key': course_key_1, 'full_course_only_field': 'test_1', 'programs': []}
         course_key_2 = 'testX'
-        course_data_2 = {'key': course_key_2, 'full_course_only_field': 'test_2'}
+        course_data_2 = {'key': course_key_2, 'full_course_only_field': 'test_2', 'programs': []}
         non_course_key = 'course-runX'
 
         # Mock out the data that should be returned from discovery's /api/v1/courses endpoint
