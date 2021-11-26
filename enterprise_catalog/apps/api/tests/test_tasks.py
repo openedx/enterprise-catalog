@@ -250,16 +250,24 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         """
         Assert that full course metadata is merged with original json_metadata for all ContentMetadata records.
         """
+        program_key = '02f5edeb-6604-4131-bf45-acd8df91e1f9'
+        program_data = {'uuid': program_key, 'full_program_only_field': 'test_1'}
         course_key_1 = 'fakeX'
-        course_data_1 = {'key': course_key_1, 'full_course_only_field': 'test_1'}
+        course_data_1 = {'key': course_key_1, 'full_course_only_field': 'test_1', 'programs': []}
         course_key_2 = 'testX'
-        course_data_2 = {'key': course_key_2, 'full_course_only_field': 'test_2'}
+        course_data_2 = {'key': course_key_2, 'full_course_only_field': 'test_2', 'programs': [program_data]}
+
         non_course_key = 'course-runX'
 
-        # Mock out the data that should be returned from discovery's /api/v1/courses endpoint
-        mock_oauth_client.return_value.get.return_value.json.return_value = {
-            'results': [course_data_1, course_data_2],
-        }
+        # Mock out the data that should be returned from discovery's /api/v1/courses and /api/v1/programs endpoints
+        mock_oauth_client.return_value.get.return_value.json.side_effect = [
+            {
+                'results': [course_data_1, course_data_2],  # first call will be /api/v1/courses
+            },
+            {
+                'results': [program_data],                  # second call will be to /api/v1/programs
+            }
+        ]
         mock_partition_course_keys.return_value = ([], [],)
 
         metadata_1 = ContentMetadataFactory(content_type=COURSE, content_key=course_key_1)
@@ -289,6 +297,11 @@ class UpdateFullContentMetadataTaskTests(TestCase):
 
         assert metadata_1.json_metadata == course_data_1
         assert metadata_2.json_metadata == course_data_2
+
+        # make sure course associated program metadata has been created and linked correctly
+        assert ContentMetadata.objects.filter(content_key=program_key).exists()
+        assert metadata_2.associated_content_metadata.filter(content_key=program_key).exists()
+        assert not metadata_1.associated_content_metadata.filter(content_key=program_key).exists()
 
     # pylint: disable=unused-argument
     @mock.patch('enterprise_catalog.apps.api.tasks.task_recently_run', return_value=False)
@@ -353,7 +366,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'enterprise_catalog_query_titles',
         ]
 
-        # Set up a catalog, query, and metadata for a course
+        # Set up a catalog, query, and metadata for a course and course associated program
         cls.enterprise_catalog_query = CatalogQueryFactory(uuid=SORTED_QUERY_UUID_LIST[0])
         cls.enterprise_catalog_courses = EnterpriseCatalogFactory(catalog_query=cls.enterprise_catalog_query)
         cls.course_metadata_published = ContentMetadataFactory(content_type=COURSE, content_key='fakeX')
@@ -364,6 +377,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         })
         cls.course_metadata_unpublished.catalog_queries.set([cls.enterprise_catalog_query])
         cls.course_metadata_unpublished.save()
+        cls.course_associated_program_metadata = ContentMetadataFactory(content_type=PROGRAM, content_key='program-1')
+        cls.course_metadata_published.associated_content_metadata.set([cls.course_associated_program_metadata])
 
         # Set up new catalog, query, and metadata for a course run]
         # Testing indexing catalog queries when titles aren't present
@@ -405,9 +420,10 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'query_titles': query_titles,
             'course_metadata_published': self.course_metadata_published,
             'course_metadata_unpublished': self.course_metadata_unpublished,
+            'course_associated_program_metadata': self.course_associated_program_metadata,
         }
 
-    @mock.patch('enterprise_catalog.apps.api.tasks._was_recently_indexed', side_effect=[False, True])
+    @mock.patch('enterprise_catalog.apps.api.tasks._was_recently_indexed', side_effect=[False, False, True, True])
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
     def test_index_algolia_with_all_uuids(self, mock_search_client, mock_was_recently_indexed):
         """
@@ -415,6 +431,10 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         catalog and enterprise customer associations.
         """
         algolia_data = self._set_up_factory_data_for_algolia()
+        self.course_associated_program_metadata.json_metadata.update({
+            'hidden': False,
+        })
+        self.course_associated_program_metadata.save()
 
         with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
             tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
@@ -441,6 +461,24 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
         })
 
+        program_uuid = self.course_associated_program_metadata.json_metadata.get('uuid')
+        expected_algolia_objects_to_index.append({
+            'key': self.course_associated_program_metadata.content_key,
+            'objectID': f'program-{program_uuid}-catalog-uuids-0',
+            'enterprise_catalog_uuids': [str(self.enterprise_catalog_courses.uuid)],
+        })
+        expected_algolia_objects_to_index.append({
+            'key': self.course_associated_program_metadata.content_key,
+            'objectID': f'program-{program_uuid}-customer-uuids-0',
+            'enterprise_customer_uuids': [str(self.enterprise_catalog_courses.enterprise_uuid)],
+        })
+        expected_algolia_objects_to_index.append({
+            'key': self.course_associated_program_metadata.content_key,
+            'objectID': f'program-{program_uuid}-catalog-query-uuids-0',
+            'enterprise_catalog_query_uuids': [str(self.enterprise_catalog_courses.catalog_query.uuid)],
+            'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
+        })
+
         # verify replace_all_objects is called with the correct Algolia object data
         # on the first invocation and with an empty list on the second invocation.
         mock_search_client().replace_all_objects.assert_has_calls([
@@ -451,7 +489,9 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # Verify that we checked the cache twice, though
         mock_was_recently_indexed.assert_has_calls([
             mock.call(self.course_metadata_published.content_key),
+            mock.call(self.course_associated_program_metadata.content_key),
             mock.call(self.course_metadata_published.content_key),
+            mock.call(self.course_associated_program_metadata.content_key),
         ])
 
     @mock.patch('enterprise_catalog.apps.api.tasks._was_recently_indexed', return_value=False)

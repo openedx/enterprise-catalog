@@ -10,7 +10,7 @@ from celery.exceptions import Ignore
 from celery_utils.logged_task import LoggedTask
 from django.core.cache import cache
 from django.db import IntegrityError
-from django.db.models import Prefetch, Q
+from django.db.models import F, Prefetch, Q
 from django.db.utils import OperationalError
 from django_celery_results.models import TaskResult
 from requests.exceptions import ConnectionError as RequestsConnectionError
@@ -36,6 +36,7 @@ from enterprise_catalog.apps.catalog.constants import (
 from enterprise_catalog.apps.catalog.models import (
     CatalogQuery,
     ContentMetadata,
+    create_course_associated_programs,
     update_contentmetadata_from_discovery,
 )
 from enterprise_catalog.apps.catalog.utils import (
@@ -291,6 +292,8 @@ def _update_full_content_metadata_course(content_keys):
 
             metadata_record.json_metadata.update(course_metadata_dict)
             modified_content_metadata_records.append(metadata_record)
+            program_content_keys = create_course_associated_programs(course_metadata_dict['programs'], metadata_record)
+            _update_full_content_metadata_program(program_content_keys)
 
         ContentMetadata.objects.bulk_update(
             modified_content_metadata_records,
@@ -468,14 +471,24 @@ def index_content_keys_in_algolia(content_keys, algolia_client):
         catalog_queries_by_key = defaultdict(set)
 
         # retrieve ContentMetadata records that match the specified content_keys in the
-        # content_key or parent_content_key. returns courses, programs and course runs.
-        query = Q(content_key__in=content_keys_batch) | Q(parent_content_key__in=content_keys_batch)
+        # content_key or parent_content_key or course associated programs. returns courses, programs and course runs.
+        query = (
+            Q(content_key__in=content_keys_batch)
+            | Q(parent_content_key__in=content_keys_batch)
+            | Q(
+                associated_content_metadata__content_key__in=content_keys_batch,
+                associated_content_metadata__id=F('id'),
+                content_type=PROGRAM
+            )
+        )
 
         catalog_queries = CatalogQuery.objects.prefetch_related(
             'enterprise_catalogs',
         )
+        associate_programs_query = ContentMetadata.objects.filter(content_type=PROGRAM)
         content_metadata = ContentMetadata.objects.filter(query).prefetch_related(
             Prefetch('catalog_queries', queryset=catalog_queries),
+            Prefetch('associated_content_metadata', queryset=associate_programs_query, to_attr='associate_programs'),
         )
 
         # iterate through ContentMetadata records, retrieving the enterprise_catalog_uuids
@@ -505,7 +518,14 @@ def index_content_keys_in_algolia(content_keys, algolia_client):
             customer_uuids_by_key[content_key].update(enterprise_customer_uuids)
             catalog_queries_by_key[content_key].update(enterprise_catalog_queries)
 
-        # iterate through only the courses, retrieving the enterprise-related uuids from the
+            # course metadata might have associated programs. add them as well.
+            for program_metadata in metadata.associate_programs:
+                content_key = program_metadata.content_key
+                catalog_uuids_by_key[content_key].update(enterprise_catalog_uuids)
+                customer_uuids_by_key[content_key].update(enterprise_customer_uuids)
+                catalog_queries_by_key[content_key].update(enterprise_catalog_queries)
+
+        # iterate through the courses and programs, retrieving the enterprise-related uuids from the
         # dictionary created above. there is at least 2 duplicate course records per course,
         # each including the catalog uuids and customer uuids respectively.
         #
