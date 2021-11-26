@@ -400,9 +400,13 @@ class ContentMetadata(TimeStampedModel):
         null=True,
         db_index=True,
         help_text=_(
-            "The key that represents this content's parent, such as a course or program."
+            "The key represents this content's parent. For example for course_runs content their parent course key."
         )
     )
+
+    # one course can be associated with many programs and one program can contain many courses.
+    associated_content_metadata = models.ManyToManyField('self')
+
     json_metadata = JSONField(
         default={},
         blank=True,
@@ -591,17 +595,15 @@ def _create_new_content_metadata(nonexisting_metadata_defaults):
     return metadata_list
 
 
-def associate_content_metadata_with_query(metadata, catalog_query):
+def create_content_metadata(metadata):
     """
-    Creates or updates a ContentMetadata object for each entry in `metadata`,
-    and then associates that object with the `catalog_query` provided.
+    Creates or updates a ContentMetadata object.
 
     Arguments:
         metadata (list): List of content metadata dictionaries.
-        catalog_query (CatalogQuery): CatalogQuery object
 
     Returns:
-        list: The list of content_keys for the metadata associated with the query.
+        list: The list of ContentMetaData.
     """
     metadata_list = []
     for batched_metadata in batch(metadata, batch_size=100):
@@ -620,11 +622,54 @@ def associate_content_metadata_with_query(metadata, catalog_query):
         created_metadata = _create_new_content_metadata(nonexisting_metadata_defaults)
         metadata_list.extend(created_metadata)
 
+    return metadata_list
+
+
+def associate_content_metadata_with_query(metadata, catalog_query):
+    """
+    Creates or updates a ContentMetadata object for each entry in `metadata`,
+    and then associates that object with the `catalog_query` provided.
+
+    Arguments:
+        metadata (list): List of content metadata dictionaries.
+        catalog_query (CatalogQuery): CatalogQuery object
+
+    Returns:
+        list: The list of content_keys for the metadata associated with the query.
+    """
+    metadata_list = create_content_metadata(metadata)
+
     # Setting `clear=True` will remove all prior relationships between
     # the CatalogQuery's associated ContentMetadata objects
     # before setting all new relationships from `metadata_list`.
     # https://docs.djangoproject.com/en/2.2/ref/models/relations/#django.db.models.fields.related.RelatedManager.set
     catalog_query.contentmetadata_set.set(metadata_list, clear=True)
+    associated_content_keys = [metadata.content_key for metadata in metadata_list]
+    return associated_content_keys
+
+
+def create_course_associated_programs(programs, course_content_metadata):
+    """
+    Creates or updates a ContentMetadata object for each entry in `programs`,
+    and then associates that object with the `course_content_metadata` provided.
+
+    Arguments:
+        programs (list): List of program metadata dictionaries extracted from course.
+        course_content_metadata (ContentMetadata): ContentMetaData object
+
+    Returns:
+        list: The list of content_keys for the metadata associated with the query.
+    """
+    for program in programs:
+        program['aggregation_key'] = f'program:{program["uuid"]}'
+        program['content_type'] = 'program'
+    metadata_list = create_content_metadata(programs)
+
+    # Setting `clear=True` will remove all prior relationships between
+    # the ContentMetadata's associated ContentMetadata objects
+    # before setting all new relationships from `metadata_list`.
+    # https://docs.djangoproject.com/en/2.2/ref/models/relations/#django.db.models.fields.related.RelatedManager.set
+    course_content_metadata.associated_content_metadata.set(metadata_list, clear=True)
     associated_content_keys = [metadata.content_key for metadata in metadata_list]
     return associated_content_keys
 
