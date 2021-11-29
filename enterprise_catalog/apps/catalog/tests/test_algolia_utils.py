@@ -25,6 +25,7 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     get_program_subjects,
     get_program_title,
     get_program_type,
+    get_upcoming_course_runs,
 )
 from enterprise_catalog.apps.catalog.constants import COURSE
 from enterprise_catalog.apps.catalog.tests.factories import (
@@ -33,6 +34,8 @@ from enterprise_catalog.apps.catalog.tests.factories import (
 
 
 ADVERTISED_COURSE_RUN_UUID = uuid4()
+FUTURE_COURSE_RUN_UUID_1 = uuid4()
+FUTURE_COURSE_RUN_UUID_2 = uuid4()
 
 
 @ddt.ddt
@@ -312,6 +315,51 @@ class AlgoliaUtilsTests(TestCase):
         """
         advertised_course_run = get_advertised_course_run(searchable_course)
         assert advertised_course_run == expected_course_run
+
+    @ddt.data(
+        (
+            {
+                'course_runs': [
+                    {
+                        'key': 'course-v1:org+course+1T2021',
+                        'uuid': ADVERTISED_COURSE_RUN_UUID,
+                        'pacing_type': 'instructor_paced',
+                        'status': 'published',
+                        'is_enrollable': True,
+                        'is_marketable': True,
+                        'availability': 'Current'
+                    },
+                    {
+                        'key': 'course-v1:org+course+1T2021',
+                        'uuid': FUTURE_COURSE_RUN_UUID_1,
+                        'pacing_type': 'instructor_paced',
+                        'status': 'published',
+                        'is_enrollable': True,
+                        'is_marketable': True,
+                        'availability': 'Upcoming'
+                    },
+                    {
+                        'key': 'course-v1:org+course+1T2021',
+                        'uuid': FUTURE_COURSE_RUN_UUID_1,
+                        'pacing_type': 'instructor_paced',
+                        'status': 'unpublished',
+                        'is_enrollable': True,
+                        'is_marketable': True,
+                        'availability': 'Starting Soon'
+                    }
+                ],
+                'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID
+            },
+            1,
+        ),
+    )
+    @ddt.unpack
+    def test_get_upcoming_course_runs(self, searchable_course, expected_course_runs):
+        """
+        Assert get_advertised_course_runs fetches just enough info about advertised course run
+        """
+        upcoming_course_runs = get_upcoming_course_runs(searchable_course)
+        assert upcoming_course_runs == expected_course_runs
 
     @ddt.data(
         (
