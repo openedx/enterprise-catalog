@@ -51,6 +51,7 @@ ALGOLIA_FIELDS = [
     'title',
     'type',
     'advertised_course_run',  # a part of the advertised course run
+    'upcoming_course_runs',
     'first_enrollable_paid_seat_price',
     'original_image_url',
     'marketing_url',
@@ -646,6 +647,23 @@ def get_advertised_course_run(course):
     return course_run
 
 
+def get_upcoming_course_runs(course):
+    """
+    Get number of upcoming course runs.
+
+    Argument:
+        course (dict)
+
+    Returns:
+        int: the number of course runs in the future
+    """
+    course_runs = course.get('course_runs') or []
+    active_course_runs = [run for run in course_runs if is_course_run_active(run)]
+    if get_advertised_course_run(course) is not None:
+        return len(active_course_runs) - 1
+    return len(active_course_runs)
+
+
 def _get_course_run_by_uuid(course, course_run_uuid):
     """
     Find a course_run based on uuid
@@ -735,6 +753,7 @@ def _algolia_object_from_product(product, algolia_fields):
             'subjects': get_course_subjects(searchable_product),
             'card_image_url': get_course_card_image_url(searchable_product),
             'advertised_course_run': get_advertised_course_run(searchable_product),
+            'upcoming_course_runs': get_upcoming_course_runs(searchable_product),
             'skill_names': get_course_skill_names(searchable_product),
             'skills': get_course_skills(searchable_product),
             'first_enrollable_paid_seat_price': get_course_first_paid_enrollable_seat_price(searchable_product),
