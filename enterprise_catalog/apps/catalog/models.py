@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from config_models.models import ConfigurationModel
 from django.conf import settings
-from django.db import IntegrityError, models, transaction
+from django.db import IntegrityError, OperationalError, models, transaction
 from django.db.models import Q
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
@@ -568,7 +568,25 @@ def _update_existing_content_metadata(existing_metadata_defaults, existing_metad
             metadata_list.append(content_metadata)
 
     metadata_fields_to_update = ['content_key', 'parent_content_key', 'content_type', 'json_metadata']
-    ContentMetadata.objects.bulk_update(metadata_list, metadata_fields_to_update, batch_size=10)
+    # Using batch_size of 10 or higher makes us prone to exceeding
+    # the MySql default `max_allowed_packet` size of 4MB.
+    # This can occur because we have a good handful of records
+    # that are around 600k each (really big `json_metadata` values),
+    # and 0.6MB * 10 = 6MB > 4MB (in the worse case where we're updating
+    # mostly our largest records in a single query).
+    batch_size = 8
+    for batched_metadata in batch(metadata_list, batch_size=batch_size):
+        try:
+            ContentMetadata.objects.bulk_update(
+                batched_metadata,
+                metadata_fields_to_update,
+                batch_size=batch_size,
+            )
+        except OperationalError:
+            content_keys = [record.content_key for record in batched_metadata]
+            log_message = 'Operational error while updating batch of ContentMetadata objects with keys: %s'
+            LOGGER.exception(log_message, content_keys)
+            raise
     return metadata_list
 
 
