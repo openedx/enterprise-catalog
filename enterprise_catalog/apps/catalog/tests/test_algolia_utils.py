@@ -9,7 +9,6 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     _should_index_course,
     configure_algolia_index,
     get_advertised_course_run,
-    get_upcoming_course_runs,
     get_course_availability,
     get_course_card_image_url,
     get_course_language,
@@ -26,6 +25,7 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     get_program_subjects,
     get_program_title,
     get_program_type,
+    get_upcoming_course_runs,
 )
 from enterprise_catalog.apps.catalog.constants import COURSE
 from enterprise_catalog.apps.catalog.tests.factories import (
