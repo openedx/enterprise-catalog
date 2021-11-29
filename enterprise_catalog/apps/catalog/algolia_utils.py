@@ -655,7 +655,7 @@ def get_upcoming_course_runs(course):
         course (dict)
 
     Returns:
-        str: the number of course runs in the future
+        int: the number of course runs in the future
     """
     course_runs = course.get('course_runs') or []
     active_course_runs = [run for run in course_runs if is_course_run_active(run)]
