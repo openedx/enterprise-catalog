@@ -1,5 +1,8 @@
+import csv
+import datetime
 import logging
 from collections import OrderedDict, defaultdict
+from io import StringIO
 
 import crum
 from celery import chain
@@ -39,6 +42,10 @@ from enterprise_catalog.apps.api.v1.serializers import (
     EnterpriseCatalogSerializer,
 )
 from enterprise_catalog.apps.api.v1.utils import unquote_course_keys
+from enterprise_catalog.apps.catalog.algolia_utils import (
+    ALGOLIA_INDEX_SETTINGS,
+    get_initialized_algolia_client,
+)
 from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
 from enterprise_catalog.apps.catalog.rules import (
     enterprises_with_admin_access,
@@ -162,6 +169,177 @@ class EnterpriseCatalogContainsContentItems(BaseViewSet, viewsets.ModelViewSet):
         enterprise_catalog = self.get_object()
         contains_content_items = enterprise_catalog.contains_content_keys(course_run_ids + program_uuids)
         return Response({'contains_content_items': contains_content_items})
+
+
+class CatalogCsvDataView(GenericAPIView):
+    """
+    Catalog CSV data generation view. All query params are assumed to be facet filters used to filter indexed data when
+    searching. All distinct facets provided are interpreted as a conjunction (AND), however multiple identical facets
+    query params use a disjunction (OR).
+
+    Returns:
+        string IO stream representation of CSV data correlating to filtered Algolia catalog metadata.
+    """
+    permission_classes = []
+    csv_headers = [
+        'Title',
+        'Partner Name',
+        'Start',
+        'End',
+        'Verified Upgrade Deadline',
+        'Program Type',
+        'Program Name',
+        'Pacing',
+        'Level',
+        'Price',
+        'Language',
+        'URL',
+        'Short Description',
+        'Subjects',
+        'Key',
+        'Short Key',
+        'Skills',
+    ]
+    algolia_attributes_to_retrieve = [
+        'title',
+        'partners',
+        'advertised_course_run',
+        'programs',
+        'program_titles',
+        'level_type',
+        'language',
+        'short_description',
+        'subjects',
+        'aggregation_key',
+        'skills',
+        'first_enrollable_paid_seat_price',
+        'marketing_url',
+    ]
+    valid_facets = []
+    for facet in ALGOLIA_INDEX_SETTINGS['attributesForFaceting']:
+        # Because this is pulled from the settings `attributesForFaceting`, we need to strip potential `searchable()`
+        # wrappers
+        valid_facets.append(facet.replace('searchable(', '').rstrip(')'))
+
+    @action(detail=True)
+    def get(self, request, **kwargs):
+        """
+        GET entry point for the `CatalogCsvDataView`
+        """
+        facets = self.querydict_to_dict(request.query_params)
+        if facets.get('query'):
+            algoliaQuery = facets.pop('query')
+        else:
+            algoliaQuery = ''
+
+        invalid_facets = self.validate_query_facets(facets)
+        if invalid_facets:
+            return Response(f'Error: invalid facet(s): {invalid_facets} provided.', status=HTTP_400_BAD_REQUEST)
+
+        csv_data = self.retrieve_indexed_data(facets, algoliaQuery)
+        return Response({'csv_data': csv_data}, status=HTTP_200_OK)
+
+    def validate_query_facets(self, facets):
+        """
+        Verify that provided query facet params are valid Algolia facets.
+        """
+        invalid_facets = []
+        for facet in facets.keys():
+            if facet not in self.valid_facets:
+                invalid_facets.append(facet)
+        return invalid_facets
+
+    def querydict_to_dict(self, query_dict):
+        """
+        Utility function to easily retrieve lists from the params in a QueryDict
+        """
+        data = {}
+        for key in query_dict.keys():
+            v = query_dict.getlist(key)
+            data[key] = v
+        return data
+
+    def construct_csv_row(self, hit):
+        """
+        Helper function to construct a CSV row according to a single Algolia result hit.
+        """
+        csv_row = []
+        csv_row.append(hit['title'])
+        if hit['partners']:
+            csv_row.append(hit['partners'][0]['name'])
+        else:
+            csv_row.append('No partners')
+
+        csv_row.append(hit['advertised_course_run']['start'])
+
+        end = hit['advertised_course_run'].get('end')
+        if not end:
+            end = 'No end date'
+        csv_row.append(end)
+
+        upgrade_deadline = hit['advertised_course_run'].get('upgrade_deadline')
+        if upgrade_deadline:
+            upgrade_deadline = datetime.datetime.fromtimestamp(upgrade_deadline)
+        else:
+            upgrade_deadline = 'No upgrade deadline'
+        csv_row.append(upgrade_deadline)
+
+        programs = hit.get('programs')
+        if not programs:
+            programs = 'No program'
+        csv_row.append(programs)
+
+        program_titles = hit.get('program_titles')
+        if not program_titles:
+            program_titles = 'No program'
+        csv_row.append(program_titles)
+
+        pacing_type = hit['advertised_course_run']['pacing_type']
+        if not pacing_type:
+            pacing_type = 'No pacing type'
+        csv_row.append(pacing_type)
+
+        csv_row.append(hit.get('level_type', 'No level_type'))
+
+        csv_row.append(hit.get('first_enrollable_paid_seat_price', 'No price'))
+        csv_row.append(hit.get('language', 'No language'))
+        csv_row.append(hit.get('marketing_url', 'No url'))
+        csv_row.append(hit.get('short_description', 'No short description'))
+
+        csv_row.append(str(hit['subjects']))
+        csv_row.append(hit['advertised_course_run']['key'])
+        csv_row.append(hit['aggregation_key'])
+
+        skills = [skill['name'] for skill in hit['skills']]
+        csv_row.append(str(skills))
+        return csv_row
+
+    def retrieve_indexed_data(self, facets, algoliaQuery):
+        """
+        Helper function to retrieve and format indexed Algolia data into a CSV format.
+        """
+        algolia_client = get_initialized_algolia_client()
+
+        facet_filters = []
+        for facet_name, facet_values in facets.items():
+            combined_facets = []
+            for facet_value in facet_values:
+                combined_facets.append(f'{facet_name}:{facet_value}')
+            facet_filters.append(combined_facets)
+
+        # Algolia search will only retrieve all results if you query by empty string.
+        algolia_hits = algolia_client.algolia_index.browse_objects({
+            'query': algoliaQuery,
+            'facetFilters': facet_filters,
+            'attributesToRetrieve': self.algolia_attributes_to_retrieve
+        })
+        with StringIO() as file:
+            writer = csv.writer(file)
+            writer.writerow(self.csv_headers)
+            for hit in algolia_hits:
+                row = self.construct_csv_row(hit)
+                writer.writerow(row)
+            return file.getvalue()
 
 
 class EnterpriseCatalogDiff(BaseViewSet, viewsets.ModelViewSet):
