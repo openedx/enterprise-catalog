@@ -546,6 +546,12 @@ class ContentMetadataToQueries(SoftDeletionModel):
 
     class Meta:
         app_label = 'catalog'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['content_metadata_id', 'catalog_query_id', 'deleted_at'],
+                name='unique content metadata to query'
+            )
+        ]
 
 
 def content_metadata_with_type_course():
