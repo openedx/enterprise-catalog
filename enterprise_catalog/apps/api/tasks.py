@@ -10,7 +10,7 @@ from celery.exceptions import Ignore
 from celery_utils.logged_task import LoggedTask
 from django.core.cache import cache
 from django.db import IntegrityError
-from django.db.models import F, Prefetch, Q
+from django.db.models import Prefetch, Q
 from django.db.utils import OperationalError
 from django_celery_results.models import TaskResult
 from requests.exceptions import ConnectionError as RequestsConnectionError
@@ -472,15 +472,7 @@ def index_content_keys_in_algolia(content_keys, algolia_client):
 
         # retrieve ContentMetadata records that match the specified content_keys in the
         # content_key or parent_content_key or course associated programs. returns courses, programs and course runs.
-        query = (
-            Q(content_key__in=content_keys_batch)
-            | Q(parent_content_key__in=content_keys_batch)
-            | Q(
-                associated_content_metadata__content_key__in=content_keys_batch,
-                associated_content_metadata__id=F('id'),
-                content_type=PROGRAM
-            )
-        )
+        query = (Q(content_key__in=content_keys_batch) | Q(parent_content_key__in=content_keys_batch))
 
         catalog_queries = CatalogQuery.objects.prefetch_related(
             'enterprise_catalogs',
@@ -518,12 +510,13 @@ def index_content_keys_in_algolia(content_keys, algolia_client):
             customer_uuids_by_key[content_key].update(enterprise_customer_uuids)
             catalog_queries_by_key[content_key].update(enterprise_catalog_queries)
 
-            # course metadata might have associated programs. add them as well.
-            for program_metadata in metadata.associate_programs:
-                content_key = program_metadata.content_key
-                catalog_uuids_by_key[content_key].update(enterprise_catalog_uuids)
-                customer_uuids_by_key[content_key].update(enterprise_customer_uuids)
-                catalog_queries_by_key[content_key].update(enterprise_catalog_queries)
+            if metadata.content_type == COURSE:
+                # course metadata might have associated programs. add them as well.
+                for program_metadata in metadata.associate_programs:
+                    content_key = program_metadata.content_key
+                    catalog_uuids_by_key[content_key].update(enterprise_catalog_uuids)
+                    customer_uuids_by_key[content_key].update(enterprise_customer_uuids)
+                    catalog_queries_by_key[content_key].update(enterprise_catalog_queries)
 
         # iterate through the courses and programs, retrieving the enterprise-related uuids from the
         # dictionary created above. there is at least 2 duplicate course records per course,
