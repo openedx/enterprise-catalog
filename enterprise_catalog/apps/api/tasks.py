@@ -465,103 +465,104 @@ def index_content_keys_in_algolia(content_keys, algolia_client):
         'There are {} total content keys to include in the Algolia index.'.format(len(content_keys))
     )
     products = []
-    catalog_uuids_by_key = defaultdict(set)
-    customer_uuids_by_key = defaultdict(set)
-    catalog_queries_by_key = defaultdict(set)
+    for content_keys_batch in batch(content_keys, batch_size=TASK_BATCH_SIZE):
+        catalog_uuids_by_key = defaultdict(set)
+        customer_uuids_by_key = defaultdict(set)
+        catalog_queries_by_key = defaultdict(set)
 
-    # retrieve ContentMetadata records that match the specified content_keys in the
-    # content_key or parent_content_key or course associated programs. returns courses, programs and course runs.
-    query = (Q(content_key__in=content_keys) | Q(parent_content_key__in=content_keys))
+        # retrieve ContentMetadata records that match the specified content_keys in the
+        # content_key or parent_content_key or course associated programs. returns courses, programs and course runs.
+        query = (Q(content_key__in=content_keys_batch) | Q(parent_content_key__in=content_keys_batch))
 
-    catalog_queries = CatalogQuery.objects.prefetch_related(
-        'enterprise_catalogs',
-    )
-    associate_programs_query = ContentMetadata.objects.filter(content_type=PROGRAM)
-    content_metadata = ContentMetadata.objects.filter(query).prefetch_related(
-        Prefetch('catalog_queries', queryset=catalog_queries),
-        Prefetch('associated_content_metadata', queryset=associate_programs_query, to_attr='associate_programs'),
-    )
+        catalog_queries = CatalogQuery.objects.prefetch_related(
+            'enterprise_catalogs',
+        )
+        associate_programs_query = ContentMetadata.objects.filter(content_type=PROGRAM)
+        content_metadata = ContentMetadata.objects.filter(query).prefetch_related(
+            Prefetch('catalog_queries', queryset=catalog_queries),
+            Prefetch('associated_content_metadata', queryset=associate_programs_query, to_attr='associate_programs'),
+        )
 
-    # iterate through ContentMetadata records, retrieving the enterprise_catalog_uuids
-    # and enterprise_customer_uuids associated with each ContentMetadata record (either
-    # a course or a course run or program), storing them in a dictionary with the related
-    # content_key as a key for later retrieval. the content_key is determined by
-    # the content_key field if the metadata is a `COURSE` or `PROGRAM` or by the parent_content_key
-    # field if the metadata is a `COURSE_RUN`.
-    for metadata in content_metadata:
-        if metadata.content_type in (COURSE, PROGRAM):
+        # iterate through ContentMetadata records, retrieving the enterprise_catalog_uuids
+        # and enterprise_customer_uuids associated with each ContentMetadata record (either
+        # a course or a course run or program), storing them in a dictionary with the related
+        # content_key as a key for later retrieval. the content_key is determined by
+        # the content_key field if the metadata is a `COURSE` or `PROGRAM` or by the parent_content_key
+        # field if the metadata is a `COURSE_RUN`.
+        for metadata in content_metadata:
+            if metadata.content_type in (COURSE, PROGRAM):
+                content_key = metadata.content_key
+            else:
+                content_key = metadata.parent_content_key
+            associated_queries = metadata.catalog_queries.all()
+            enterprise_catalog_uuids = set()
+            enterprise_customer_uuids = set()
+            enterprise_catalog_queries = set()
+            for query in associated_queries:
+                enterprise_catalog_queries.add((str(query.uuid), query.title))
+                associated_catalogs = query.enterprise_catalogs.all()
+                for catalog in associated_catalogs:
+                    enterprise_catalog_uuids.add(str(catalog.uuid))
+                    enterprise_customer_uuids.add(str(catalog.enterprise_uuid))
+
+            # add to any existing enterprise catalog uuids, enterprise customer uuids or catalog query uuids
+            catalog_uuids_by_key[content_key].update(enterprise_catalog_uuids)
+            customer_uuids_by_key[content_key].update(enterprise_customer_uuids)
+            catalog_queries_by_key[content_key].update(enterprise_catalog_queries)
+
+            if metadata.content_type == COURSE:
+                # course metadata might have associated programs. add them as well.
+                for program_metadata in metadata.associate_programs:
+                    content_key = program_metadata.content_key
+                    catalog_uuids_by_key[content_key].update(enterprise_catalog_uuids)
+                    customer_uuids_by_key[content_key].update(enterprise_customer_uuids)
+                    catalog_queries_by_key[content_key].update(enterprise_catalog_queries)
+
+        # iterate through the courses and programs, retrieving the enterprise-related uuids from the
+        # dictionary created above. there is at least 2 duplicate course records per course,
+        # each including the catalog uuids and customer uuids respectively.
+        #
+        # if the number of uuids for both catalogs/customers exceeds ALGOLIA_UUID_BATCH_SIZE, then
+        # create duplicate course records, batching the uuids (flattened records) to reduce
+        # the payload size of the Algolia objects.
+        filtered_content_metadata = content_metadata.filter(Q(content_type=COURSE) | Q(content_type=PROGRAM))
+        for metadata in filtered_content_metadata:
             content_key = metadata.content_key
-        else:
-            content_key = metadata.parent_content_key
-        associated_queries = metadata.catalog_queries.all()
-        enterprise_catalog_uuids = set()
-        enterprise_customer_uuids = set()
-        enterprise_catalog_queries = set()
-        for query in associated_queries:
-            enterprise_catalog_queries.add((str(query.uuid), query.title))
-            associated_catalogs = query.enterprise_catalogs.all()
-            for catalog in associated_catalogs:
-                enterprise_catalog_uuids.add(str(catalog.uuid))
-                enterprise_customer_uuids.add(str(catalog.enterprise_uuid))
+            if _was_recently_indexed(content_key) and not metadata.content_type == PROGRAM:
+                continue
 
-        # add to any existing enterprise catalog uuids, enterprise customer uuids or catalog query uuids
-        catalog_uuids_by_key[content_key].update(enterprise_catalog_uuids)
-        customer_uuids_by_key[content_key].update(enterprise_customer_uuids)
-        catalog_queries_by_key[content_key].update(enterprise_catalog_queries)
+            # add enterprise-related uuids to json_metadata
+            json_metadata = copy.deepcopy(metadata.json_metadata)
+            json_metadata.update({
+                'objectID': get_algolia_object_id(json_metadata.get('content_type'), json_metadata.get('uuid')),
+            })
 
-        if metadata.content_type == COURSE:
-            # course metadata might have associated programs. add them as well.
-            for program_metadata in metadata.associate_programs:
-                content_key = program_metadata.content_key
-                catalog_uuids_by_key[content_key].update(enterprise_catalog_uuids)
-                customer_uuids_by_key[content_key].update(enterprise_customer_uuids)
-                catalog_queries_by_key[content_key].update(enterprise_catalog_queries)
+            # enterprise catalog uuids
+            catalog_uuids = sorted(list(catalog_uuids_by_key[content_key]))
+            batched_metadata = _batched_metadata(
+                json_metadata,
+                catalog_uuids,
+                'enterprise_catalog_uuids',
+                '{}-catalog-uuids-{}',
+            )
+            products.extend(batched_metadata)
 
-    # iterate through the courses and programs, retrieving the enterprise-related uuids from the
-    # dictionary created above. there is at least 2 duplicate course records per course,
-    # each including the catalog uuids and customer uuids respectively.
-    #
-    # if the number of uuids for both catalogs/customers exceeds ALGOLIA_UUID_BATCH_SIZE, then
-    # create duplicate course records, batching the uuids (flattened records) to reduce
-    # the payload size of the Algolia objects.
-    filtered_content_metadata = content_metadata.filter(Q(content_type=COURSE) | Q(content_type=PROGRAM))
-    for metadata in filtered_content_metadata:
-        content_key = metadata.content_key
-        if _was_recently_indexed(content_key):
-            continue
+            # enterprise customer uuids
+            customer_uuids = sorted(list(customer_uuids_by_key[content_key]))
+            batched_metadata = _batched_metadata(
+                json_metadata,
+                customer_uuids,
+                'enterprise_customer_uuids',
+                '{}-customer-uuids-{}',
+            )
+            products.extend(batched_metadata)
+            _mark_recently_indexed(content_key)
 
-        # add enterprise-related uuids to json_metadata
-        json_metadata = copy.deepcopy(metadata.json_metadata)
-        json_metadata.update({
-            'objectID': get_algolia_object_id(json_metadata.get('content_type'), json_metadata.get('uuid')),
-        })
-
-        # enterprise catalog uuids
-        catalog_uuids = sorted(list(catalog_uuids_by_key[content_key]))
-        batched_metadata = _batched_metadata(
-            json_metadata,
-            catalog_uuids,
-            'enterprise_catalog_uuids',
-            '{}-catalog-uuids-{}',
-        )
-        products.extend(batched_metadata)
-
-        # enterprise customer uuids
-        customer_uuids = sorted(list(customer_uuids_by_key[content_key]))
-        batched_metadata = _batched_metadata(
-            json_metadata,
-            customer_uuids,
-            'enterprise_customer_uuids',
-            '{}-customer-uuids-{}',
-        )
-        products.extend(batched_metadata)
-        _mark_recently_indexed(content_key)
-
-        # enterprise catalog queries (tuples of (query uuid, query title)), note: account for None being present
-        # within the list
-        queries = sorted(list(catalog_queries_by_key[content_key]))
-        batched_metadata = _batched_metadata_with_queries(json_metadata, queries)
-        products.extend(batched_metadata)
+            # enterprise catalog queries (tuples of (query uuid, query title)), note: account for None being present
+            # within the list
+            queries = sorted(list(catalog_queries_by_key[content_key]))
+            batched_metadata = _batched_metadata_with_queries(json_metadata, queries)
+            products.extend(batched_metadata)
 
     # extract out only the fields we care about and send to Algolia index
     algolia_objects = create_algolia_objects(products, ALGOLIA_FIELDS)
