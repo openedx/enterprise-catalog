@@ -423,7 +423,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'course_associated_program_metadata': self.course_associated_program_metadata,
         }
 
-    @mock.patch('enterprise_catalog.apps.api.tasks._was_recently_indexed', side_effect=[False, False, True, True])
+    @mock.patch('enterprise_catalog.apps.api.tasks._was_recently_indexed', side_effect=[False, True])
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
     def test_index_algolia_with_all_uuids(self, mock_search_client, mock_was_recently_indexed):
         """
@@ -431,10 +431,6 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         catalog and enterprise customer associations.
         """
         algolia_data = self._set_up_factory_data_for_algolia()
-        self.course_associated_program_metadata.json_metadata.update({
-            'hidden': False,
-        })
-        self.course_associated_program_metadata.save()
 
         with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
             tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
@@ -461,24 +457,6 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
         })
 
-        program_uuid = self.course_associated_program_metadata.json_metadata.get('uuid')
-        expected_algolia_objects_to_index.append({
-            'key': self.course_associated_program_metadata.content_key,
-            'objectID': f'program-{program_uuid}-catalog-uuids-0',
-            'enterprise_catalog_uuids': [str(self.enterprise_catalog_courses.uuid)],
-        })
-        expected_algolia_objects_to_index.append({
-            'key': self.course_associated_program_metadata.content_key,
-            'objectID': f'program-{program_uuid}-customer-uuids-0',
-            'enterprise_customer_uuids': [str(self.enterprise_catalog_courses.enterprise_uuid)],
-        })
-        expected_algolia_objects_to_index.append({
-            'key': self.course_associated_program_metadata.content_key,
-            'objectID': f'program-{program_uuid}-catalog-query-uuids-0',
-            'enterprise_catalog_query_uuids': [str(self.enterprise_catalog_courses.catalog_query.uuid)],
-            'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
-        })
-
         # verify replace_all_objects is called with the correct Algolia object data
         # on the first invocation and with an empty list on the second invocation.
         mock_search_client().replace_all_objects.assert_has_calls([
@@ -489,9 +467,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # Verify that we checked the cache twice, though
         mock_was_recently_indexed.assert_has_calls([
             mock.call(self.course_metadata_published.content_key),
-            mock.call(self.course_associated_program_metadata.content_key),
             mock.call(self.course_metadata_published.content_key),
-            mock.call(self.course_associated_program_metadata.content_key),
         ])
 
     @mock.patch('enterprise_catalog.apps.api.tasks._was_recently_indexed', return_value=False)
