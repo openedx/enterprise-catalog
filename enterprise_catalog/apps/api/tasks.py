@@ -462,10 +462,11 @@ def index_content_keys_in_algolia(content_keys, algolia_client):
         algolia_client: Instance of an Algolia API client
     """
     logger.info(
-        'There are {} total content keys to include in the Algolia index.'.format(len(content_keys))
+        f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] There are {len(content_keys)} total content keys to include in the'
+        f' Algolia index.'
     )
     products = []
-    for content_keys_batch in batch(content_keys, batch_size=TASK_BATCH_SIZE):
+    for content_keys_batch, batch_num in enumerate(batch(content_keys, batch_size=TASK_BATCH_SIZE), start=1):
         catalog_uuids_by_key = defaultdict(set)
         customer_uuids_by_key = defaultdict(set)
         catalog_queries_by_key = defaultdict(set)
@@ -524,7 +525,12 @@ def index_content_keys_in_algolia(content_keys, algolia_client):
                     content_key = program_metadata.content_key
                     catalog_uuids_by_key[content_key].update(enterprise_catalog_uuids)
                     customer_uuids_by_key[content_key].update(enterprise_customer_uuids)
-                    catalog_queries_by_key[content_key].update(enterprise_catalog_queries)
+                   catalog_queries_by_key[content_key].update(enterprise_catalog_queries)
+
+        customer_uuids_by_key_counts = {k: len(v) for k, v in customer_uuids_by_key.items()}
+        logger.info(
+            f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] {len(customer_uuids_by_key.keys())} number of records found'
+            f' for customer_uuids_by_key for Batch" {batch_num}, Counts: {customer_uuids_by_key_counts}')
 
         # iterate through the courses and programs, retrieving the enterprise-related uuids from the
         # dictionary created above. there is at least 2 duplicate course records per course,
