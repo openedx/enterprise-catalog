@@ -10,7 +10,7 @@ from celery.exceptions import Ignore
 from celery_utils.logged_task import LoggedTask
 from django.core.cache import cache
 from django.db import IntegrityError
-from django.db.models import F, Prefetch, Q
+from django.db.models import Prefetch, Q
 from django.db.utils import OperationalError
 from django_celery_results.models import TaskResult
 from requests.exceptions import ConnectionError as RequestsConnectionError
@@ -452,7 +452,7 @@ def index_enterprise_catalog_in_algolia_task(self, force=False):  # pylint: disa
     )
 
 
-def index_content_keys_in_algolia(content_keys, algolia_client):
+def index_content_keys_in_algolia(content_keys, algolia_client):  # pylint: disable=too-many-statements
     """
     Determines list of Algolia objects to include in the Algolia index based on the
     specified content keys, and replaces all existing objects with the new ones in an atomic reindex.
@@ -462,24 +462,21 @@ def index_content_keys_in_algolia(content_keys, algolia_client):
         algolia_client: Instance of an Algolia API client
     """
     logger.info(
-        'There are {} total content keys to include in the Algolia index.'.format(len(content_keys))
+        f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] There are {len(content_keys)} total content keys to include in the'
+        f' Algolia index.'
     )
     products = []
+    batch_num = 1
+    catalog_uuids_by_key = defaultdict(set)
+    customer_uuids_by_key = defaultdict(set)
+    catalog_queries_by_key = defaultdict(set)
     for content_keys_batch in batch(content_keys, batch_size=TASK_BATCH_SIZE):
-        catalog_uuids_by_key = defaultdict(set)
-        customer_uuids_by_key = defaultdict(set)
-        catalog_queries_by_key = defaultdict(set)
-
         # retrieve ContentMetadata records that match the specified content_keys in the
         # content_key or parent_content_key or course associated programs. returns courses, programs and course runs.
         query = (
             Q(content_key__in=content_keys_batch)
             | Q(parent_content_key__in=content_keys_batch)
-            | Q(
-                associated_content_metadata__content_key__in=content_keys_batch,
-                associated_content_metadata__id=F('id'),
-                content_type=PROGRAM
-            )
+            | Q(associated_content_metadata__content_key__in=content_keys_batch, content_type=PROGRAM)
         )
 
         catalog_queries = CatalogQuery.objects.prefetch_related(
@@ -489,6 +486,9 @@ def index_content_keys_in_algolia(content_keys, algolia_client):
         content_metadata = ContentMetadata.objects.filter(query).prefetch_related(
             Prefetch('catalog_queries', queryset=catalog_queries),
             Prefetch('associated_content_metadata', queryset=associate_programs_query, to_attr='associate_programs'),
+        )
+        logger.info(
+            f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] batch#{batch_num}: {content_metadata.count()} metadata found.'
         )
 
         # iterate through ContentMetadata records, retrieving the enterprise_catalog_uuids
@@ -571,6 +571,25 @@ def index_content_keys_in_algolia(content_keys, algolia_client):
             queries = sorted(list(catalog_queries_by_key[content_key]))
             batched_metadata = _batched_metadata_with_queries(json_metadata, queries)
             products.extend(batched_metadata)
+        batch_num += 1
+
+    # -------------------------------->>>>>>>>>>>Logging code starts<<<<<<<<<---------------------
+    customer_uuids_by_key_counts = {k: len(v) for k, v in customer_uuids_by_key.items()}
+    logger.info(
+        f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] {len(customer_uuids_by_key.keys())} number of keys found'
+        f' for customer_uuids_by_key Counts: {customer_uuids_by_key_counts}')
+    log_products = {product['objectID']: product.get('enterprise_customer_uuids') for product in products}
+    duplicate_products_count = len(products) - len(log_products.keys())
+    logger.info(
+        f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] Found {len(products)} products having {duplicate_products_count}'
+        f'duplicates. Products: {json.dumps(log_products)}'
+    )
+    # -------------------------------->>>>>>>>>>>Logging code ends<<<<<<<<<---------------------
+
+    # There can be possible duplicate products due to course associated programs coming in different batches.
+    # Remove duplicate products having same objectId by keeping the latest one only.
+    products_by_keys = {product["objectID"]: product for product in products}
+    products = list(products_by_keys.values())
 
     # extract out only the fields we care about and send to Algolia index
     algolia_objects = create_algolia_objects(products, ALGOLIA_FIELDS)
