@@ -25,6 +25,7 @@ from enterprise_catalog.apps.catalog.constants import (
 from enterprise_catalog.apps.catalog.models import (
     CatalogQuery,
     ContentMetadata,
+    ContentMetadataToQueries,
     EnterpriseCatalog,
 )
 from enterprise_catalog.apps.catalog.tests.factories import (
@@ -911,6 +912,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
     def tearDown(self):
         super().tearDown()
         # clean up any stale test objects
+        ContentMetadataToQueries.all_objects.all().hard_delete()
         CatalogQuery.objects.all().delete()
         ContentMetadata.objects.all().delete()
         EnterpriseCatalog.objects.all().delete()
