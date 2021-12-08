@@ -435,21 +435,28 @@ def index_enterprise_catalog_in_algolia_task(self, force=False):  # pylint: disa
     Args:
         force (bool): If true, forces execution of task and ignores time since last run.
     """
-    if unready_tasks(update_full_content_metadata_task, ONE_HOUR).exists():
-        raise self.retry(
-            exc=RequiredTaskUnreadyError(),
+    try:
+        if unready_tasks(update_full_content_metadata_task, ONE_HOUR).exists():
+            raise self.retry(
+                exc=RequiredTaskUnreadyError(),
+            )
+        courses_content_metadata = ContentMetadata.objects.filter(content_type=COURSE)
+        indexable_course_keys, nonindexable_course_keys = partition_course_keys_for_indexing(
+            courses_content_metadata,
         )
-
-    courses_content_metadata = ContentMetadata.objects.filter(content_type=COURSE)
-    indexable_course_keys, nonindexable_course_keys = partition_course_keys_for_indexing(courses_content_metadata)
-    programs_content_metadata = ContentMetadata.objects.filter(content_type=PROGRAM)
-    indexable_program_keys, nonindexable_program_keys = partition_program_keys_for_indexing(programs_content_metadata)
-    indexable_content_keys = indexable_course_keys + indexable_program_keys
-    nonindexable_content_keys = nonindexable_course_keys + nonindexable_program_keys
-    _reindex_algolia(
-        indexable_content_keys=indexable_content_keys,
-        nonindexable_content_keys=nonindexable_content_keys,
-    )
+        programs_content_metadata = ContentMetadata.objects.filter(content_type=PROGRAM)
+        indexable_program_keys, nonindexable_program_keys = partition_program_keys_for_indexing(
+            programs_content_metadata,
+        )
+        indexable_content_keys = indexable_course_keys + indexable_program_keys
+        nonindexable_content_keys = nonindexable_course_keys + nonindexable_program_keys
+        _reindex_algolia(
+            indexable_content_keys=indexable_content_keys,
+            nonindexable_content_keys=nonindexable_content_keys,
+        )
+    except Exception as exep:
+        logger.exception(f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] reindex_algolia failed. Error: {exep}')
+        raise exep
 
 
 def index_content_keys_in_algolia(content_keys, algolia_client):  # pylint: disable=too-many-statements
@@ -602,8 +609,8 @@ def _reindex_algolia(indexable_content_keys, nonindexable_content_keys):
     """
     # NOTE: this log message is used in a Splunk alert and should remain consistent in its language
     logger.info(
-        'There are %s indexable content keys, which will replace all existing objects in the '
-        'Algolia index. %s nonindexable content keys will be removed.',
+        '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] There are %s indexable content keys, which will replace all existing'
+        ' objects in the Algolia index. %s nonindexable content keys will be removed.',
         len(indexable_content_keys), len(nonindexable_content_keys),
     )
     if len(indexable_content_keys) == 0:
