@@ -383,6 +383,17 @@ def _update_full_content_metadata_program(content_keys):
     )
 
 
+def _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata):
+    """
+    Adds batched_metadata in algolia_products_by_object_id dict.
+
+    There can be possible duplicate products due to course associated programs coming in different batches.
+    We are added metadata in products by objectId here to remove duplicate data.
+    """
+    for metadata in batched_metadata:
+        algolia_products_by_object_id[metadata['objectID']] = metadata
+
+
 def _batched_metadata(json_metadata, sorted_uuids, uuid_key_name, obj_id_fmt):
     batched_metadata = []
     for batch_index, uuid_batch in enumerate(batch(sorted_uuids, batch_size=ALGOLIA_UUID_BATCH_SIZE)):
@@ -472,7 +483,7 @@ def index_content_keys_in_algolia(content_keys, algolia_client):  # pylint: disa
         f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] There are {len(content_keys)} total content keys to include in the'
         f' Algolia index.'
     )
-    products = []
+    algolia_products_by_object_id = {}
     batch_num = 1
     catalog_uuids_by_key = defaultdict(set)
     customer_uuids_by_key = defaultdict(set)
@@ -543,6 +554,8 @@ def index_content_keys_in_algolia(content_keys, algolia_client):  # pylint: disa
         filtered_content_metadata = content_metadata.filter(Q(content_type=COURSE) | Q(content_type=PROGRAM))
         for metadata in filtered_content_metadata:
             content_key = metadata.content_key
+
+            # We need to process PROGRAMS everytime as course associated programs can come in multiple batches.
             if _was_recently_indexed(content_key) and not metadata.content_type == PROGRAM:
                 continue
 
@@ -560,7 +573,7 @@ def index_content_keys_in_algolia(content_keys, algolia_client):  # pylint: disa
                 'enterprise_catalog_uuids',
                 '{}-catalog-uuids-{}',
             )
-            products.extend(batched_metadata)
+            _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata)
 
             # enterprise customer uuids
             customer_uuids = sorted(list(customer_uuids_by_key[content_key]))
@@ -570,36 +583,22 @@ def index_content_keys_in_algolia(content_keys, algolia_client):  # pylint: disa
                 'enterprise_customer_uuids',
                 '{}-customer-uuids-{}',
             )
-            products.extend(batched_metadata)
+            _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata)
             _mark_recently_indexed(content_key)
 
             # enterprise catalog queries (tuples of (query uuid, query title)), note: account for None being present
             # within the list
             queries = sorted(list(catalog_queries_by_key[content_key]))
             batched_metadata = _batched_metadata_with_queries(json_metadata, queries)
-            products.extend(batched_metadata)
+            _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata)
         batch_num += 1
 
-    # -------------------------------->>>>>>>>>>>Logging code starts<<<<<<<<<---------------------
-    customer_uuids_by_key_counts = {k: len(v) for k, v in customer_uuids_by_key.items()}
     logger.info(
-        f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] {len(customer_uuids_by_key.keys())} number of keys found'
-        f' for customer_uuids_by_key Counts: {customer_uuids_by_key_counts}')
-    log_products = {product['objectID']: product.get('enterprise_customer_uuids') for product in products}
-    duplicate_products_count = len(products) - len(log_products.keys())
-    logger.info(
-        f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] Found {len(products)} products having {duplicate_products_count}'
-        f'duplicates. Products: {json.dumps(log_products)}'
+        f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] {len(algolia_products_by_object_id.keys())} products found.'
     )
-    # -------------------------------->>>>>>>>>>>Logging code ends<<<<<<<<<---------------------
-
-    # There can be possible duplicate products due to course associated programs coming in different batches.
-    # Remove duplicate products having same objectId by keeping the latest one only.
-    products_by_keys = {product["objectID"]: product for product in products}
-    products = list(products_by_keys.values())
 
     # extract out only the fields we care about and send to Algolia index
-    algolia_objects = create_algolia_objects(products, ALGOLIA_FIELDS)
+    algolia_objects = create_algolia_objects(algolia_products_by_object_id.values(), ALGOLIA_FIELDS)
     algolia_client.replace_all_objects(algolia_objects)
 
 
