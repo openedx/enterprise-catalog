@@ -31,7 +31,12 @@ class Command(BaseCommand):
         options.update(CatalogUpdateCommandConfig.current_options())
         try:
             force_task_execution = options.get('force', False)
-            index_enterprise_catalog_in_algolia_task.apply_async(kwargs={'force': force_task_execution}).get()
+            if options.get('no_async'):
+                index_enterprise_catalog_in_algolia_task()
+            else:
+                index_enterprise_catalog_in_algolia_task.apply_async(
+                    kwargs={'force': force_task_execution}
+                ).get()
             logger.info(
                 'index_enterprise_catalog_in_algolia_task from command reindex_algolia finished successfully.'
             )

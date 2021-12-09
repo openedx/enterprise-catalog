@@ -27,11 +27,22 @@ class UpdateContentMetadataCommandTests(TestCase):
 
         ContentMetadataFactory.create_batch(3)
 
+    def setUp(self):
+        super().setUp()
+        self.command_config_mock = mock.patch('enterprise_catalog.apps.catalog.models.CatalogUpdateCommandConfig')
+        mock_config = self.command_config_mock.start()
+        mock_config.current_config.return_value = {
+            'force': False,
+            'no_async': False,
+        }
+
     def tearDown(self):
         super().tearDown()
         # clean up any stale test objects
         ContentMetadata.objects.all().delete()
         EnterpriseCatalog.objects.all().delete()
+
+        self.command_config_mock.stop()
 
     @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.group')
     @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.update_catalog_metadata_task')
