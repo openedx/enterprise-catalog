@@ -802,6 +802,14 @@ class CatalogUpdateCommandConfig(ConfigurationModel):
             "has been successfully executed."
         ),
     )
+    no_async = models.BooleanField(
+        default=False,
+        help_text=_(
+            "If true, for management commands that respect this field, "
+            "celery tasks will not be apply_async()'d, but instead "
+            "exectue as regular python functions."
+        ),
+    )
 
     @classmethod
     def current_options(cls):
@@ -812,5 +820,6 @@ class CatalogUpdateCommandConfig(ConfigurationModel):
         if current_config.enabled:
             return {
                 'force': current_config.force,
+                'no_async': current_config.no_async,
             }
         return {}
