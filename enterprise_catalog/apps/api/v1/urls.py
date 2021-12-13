@@ -16,6 +16,11 @@ router.register(r'enterprise-customer', views.EnterpriseCustomerViewSet, basenam
 
 urlpatterns = [
     url(
+        r'^enterprise-catalogs/catalog_csv_data',
+        views.CatalogCsvDataView.as_view(),
+        name='catalog-csv-data'
+    ),
+    url(
         r'^enterprise-catalogs/(?P<uuid>[\S]+)/get_content_metadata',
         views.EnterpriseCatalogGetContentMetadata.as_view({'get': 'get'}),
         name='get-content-metadata'

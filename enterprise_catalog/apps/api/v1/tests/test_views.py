@@ -1,3 +1,4 @@
+import copy
 import json
 import uuid
 from collections import OrderedDict
@@ -418,6 +419,118 @@ class EnterpriseCatalogCRUDViewSetListTests(APITestMixin):
         url = reverse('api:v1:enterprise-catalog-list')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class EnterpriseCatalogCsvDataViewTests(APITestMixin):
+    """
+    Tests for the CatalogCsvDataView view.
+    """
+    mock_algolia_hits = [{
+        'aggregation_key': 'course:MITx+18.01.2x',
+        'language': 'English',
+        'level_type': 'Intermediate',
+        'partners': [
+            {'name': 'Massachusetts Institute of Technology',
+             'logo_image_url': 'https://edx.org/image.png'}
+        ],
+        'programs': ['Professional Certificate'],
+        'program_titles': ['Totally Awesome Program'],
+        'short_description': 'description',
+        'subjects': ['Math'],
+        'skills': [{
+            'name': 'Probability And Statistics',
+            'description': 'description'
+        }, {
+            'name': 'Engineering Design Process',
+            'description': 'description'
+        }],
+        'title': 'Calculus 1B: Integration',
+        'marketing_url': 'edx.org/foo-bar',
+        'first_enrollable_paid_seat_price': 100,
+        'advertised_course_run': {
+            'key': 'MITx/18.01.2x/3T2015',
+            'pacing_type': 'instructor_paced',
+            'start': '2015-09-08T00:00:00Z',
+            'end': '2015-09-08T00:00:01Z',
+            'upgrade_deadline': 32503680000.0,
+        },
+        'objectID': 'course-3543aa4e-3c64-4d9a-a343-5d5eda1dacf8-catalog-query-uuids-0'
+    }]
+
+    expected_result_data = 'Title,Partner Name,Start,End,Verified Upgrade Deadline,Program Type,Program Name,Pacing,' \
+                           'Level,Price,Language,URL,Short Description,Subjects,Key,Short Key,Skills\r\nCalculus 1B: ' \
+                           'Integration,Massachusetts Institute of Technology,2015-09-08T00:00:00Z,' \
+                           '2015-09-08T00:00:01Z,3000-01-01 00:00:00,[\'Professional Certificate\'],[\'Totally ' \
+                           'Awesome Program\'],instructor_paced,Intermediate,100,English,edx.org/foo-bar,description,' \
+                           '[\'Math\'],MITx/18.01.2x/3T2015,course:MITx+18.01.2x,"[\'Probability And Statistics\', ' \
+                           '\'Engineering Design Process\']"\r\n'
+
+    def setUp(self):
+        super().setUp()
+        self.set_up_staff_user()
+
+    def _get_contains_content_base_url(self):
+        """
+        Helper to construct the base url for the contains_content_items endpoint
+        """
+        return reverse('api:v1:catalog-csv-data')
+
+    def _get_mock_algolia_hits_with_missing_values(self):
+        mock_hits_missing_values = copy.deepcopy(self.mock_algolia_hits)
+        mock_hits_missing_values[0]['advertised_course_run'].pop('upgrade_deadline')
+        mock_hits_missing_values[0].pop('marketing_url')
+        mock_hits_missing_values[0].pop('first_enrollable_paid_seat_price')
+        mock_hits_missing_values[0]['advertised_course_run']['end'] = None
+        return mock_hits_missing_values
+
+    def test_facet_validation(self):
+        """
+        Tests that the view validates Algolia facets provided by query params
+        """
+        url = self._get_contains_content_base_url()
+        invalid_facets = 'invalid_facet=wrong'
+        response = self.client.get(f'{url}?{invalid_facets}')
+        assert response.status_code == 400
+        assert response.data == "Error: invalid facet(s): ['invalid_facet'] provided."
+
+    @mock.patch('enterprise_catalog.apps.api.v1.views.get_initialized_algolia_client')
+    def test_valid_facet_validation(self, mock_algolia_client):
+        """
+        Tests a successful request with facets.
+        """
+        mock_algolia_client.return_value.algolia_index.browse_objects.return_value = self.mock_algolia_hits
+        url = self._get_contains_content_base_url()
+        facets = 'language=English'
+        response = self.client.get(f'{url}?{facets}')
+        assert response.status_code == 200
+
+        expected_response = {
+            'csv_data': self.expected_result_data
+        }
+        assert response.data == expected_response
+
+    @mock.patch('enterprise_catalog.apps.api.v1.views.get_initialized_algolia_client')
+    def test_csv_row_construction_handles_missing_values(self, mock_algolia_client):
+        """
+        Tests that the view properly handles situations where data is missing from the Algolia hit.
+        """
+        mock_algolia_client.return_value.algolia_index.browse_objects.return_value = \
+            self._get_mock_algolia_hits_with_missing_values()
+        url = self._get_contains_content_base_url()
+        facets = 'language=English'
+        response = self.client.get(f'{url}?{facets}')
+        assert response.status_code == 200
+        excpected_csv_data = 'Title,Partner Name,Start,End,Verified Upgrade Deadline,Program Type,Program Name,' \
+                             'Pacing,Level,Price,Language,URL,Short Description,Subjects,Key,Short Key,Skills\r\n' \
+                             'Calculus 1B: Integration,Massachusetts Institute of Technology,2015-09-08T00:00:00Z,' \
+                             'No end date,No upgrade deadline,[\'Professional Certificate\'],[\'Totally Awesome ' \
+                             'Program\'],instructor_paced,Intermediate,No price,English,No url,description,' \
+                             '[\'Math\'],MITx/18.01.2x/3T2015,course:MITx+18.01.2x,"[\'Probability And Statistics\', ' \
+                             '\'Engineering Design Process\']"\r\n'
+        expected_response = {
+            'csv_data': excpected_csv_data
+        }
+        assert response.data == expected_response
 
 
 class EnterpriseCatalogContainsContentItemsTests(APITestMixin):
