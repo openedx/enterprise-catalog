@@ -264,25 +264,36 @@ class CatalogCsvDataView(GenericAPIView):
         Helper function to construct a CSV row according to a single Algolia result hit.
         """
         csv_row = []
-        csv_row.append(hit['title'])
-        if hit['partners']:
+        csv_row.append(hit.get('title', 'No title'))
+
+        if hit.get('partners'):
             csv_row.append(hit['partners'][0]['name'])
         else:
             csv_row.append('No partners')
 
-        csv_row.append(hit['advertised_course_run']['start'])
+        if hit.get('advertised_course_run'):
+            csv_row.append(hit['advertised_course_run']['start'])
 
-        end = hit['advertised_course_run'].get('end')
-        if not end:
-            end = 'No end date'
-        csv_row.append(end)
+            end = hit['advertised_course_run'].get('end')
+            if not end:
+                end = 'No end date'
+            csv_row.append(end)
 
-        upgrade_deadline = hit['advertised_course_run'].get('upgrade_deadline')
-        if upgrade_deadline:
-            upgrade_deadline = datetime.datetime.fromtimestamp(upgrade_deadline)
+            upgrade_deadline = hit['advertised_course_run'].get('upgrade_deadline')
+            if upgrade_deadline:
+                upgrade_deadline = datetime.datetime.fromtimestamp(upgrade_deadline)
+            else:
+                upgrade_deadline = 'No upgrade deadline'
+            csv_row.append(upgrade_deadline)
+
+            pacing_type = hit['advertised_course_run']['pacing_type']
+            key = hit['advertised_course_run'].get('key', 'No key')
         else:
-            upgrade_deadline = 'No upgrade deadline'
-        csv_row.append(upgrade_deadline)
+            csv_row.append('No start date')
+            csv_row.append('No end date')
+            csv_row.append('No upgrade deadline')
+            pacing_type = None
+            key = 'No key'
 
         programs = hit.get('programs')
         if not programs:
@@ -294,7 +305,6 @@ class CatalogCsvDataView(GenericAPIView):
             program_titles = 'No program'
         csv_row.append(program_titles)
 
-        pacing_type = hit['advertised_course_run']['pacing_type']
         if not pacing_type:
             pacing_type = 'No pacing type'
         csv_row.append(pacing_type)
@@ -306,11 +316,11 @@ class CatalogCsvDataView(GenericAPIView):
         csv_row.append(hit.get('marketing_url', 'No url'))
         csv_row.append(hit.get('short_description', 'No short description'))
 
-        csv_row.append(str(hit['subjects']))
-        csv_row.append(hit['advertised_course_run']['key'])
-        csv_row.append(hit['aggregation_key'])
+        csv_row.append(str(hit.get('subjects', 'No subjects')))
+        csv_row.append(key)
+        csv_row.append(hit.get('aggregation_key', 'No aggregation key'))
 
-        skills = [skill['name'] for skill in hit['skills']]
+        skills = [skill['name'] for skill in hit.get('skills', [])]
         csv_row.append(str(skills))
         return csv_row
 
