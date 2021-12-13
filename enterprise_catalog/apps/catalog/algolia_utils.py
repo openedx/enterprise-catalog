@@ -637,6 +637,7 @@ def get_advertised_course_run(course):
     full_course_run = _get_course_run_by_uuid(course, course.get('advertised_course_run_uuid'))
     if full_course_run is None:
         return None
+    # upgrade_deadline is recorded in EPOCH time
     course_run = {
         'key': full_course_run.get('key'),
         'pacing_type': full_course_run.get('pacing_type'),
