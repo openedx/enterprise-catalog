@@ -520,7 +520,7 @@ def index_content_keys_in_algolia(content_keys, algolia_client):  # pylint: disa
                 content_key = metadata.content_key
             else:
                 content_key = metadata.parent_content_key
-            associated_queries = metadata.catalog_queries.all()
+            associated_queries = metadata.catalog_query_mapping.all()
             enterprise_catalog_uuids = set()
             enterprise_customer_uuids = set()
             enterprise_catalog_queries = set()
