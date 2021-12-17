@@ -8,7 +8,7 @@ import model_utils.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('catalog', '0028_command_no_sync_option'),
+        ('catalog', '0027_auto_20211125_0559'),
     ]
     operations = [
         migrations.CreateModel(
