@@ -502,7 +502,7 @@ def index_content_keys_in_algolia(content_keys, algolia_client):  # pylint: disa
         )
         associate_programs_query = ContentMetadata.objects.filter(content_type=PROGRAM)
         content_metadata = ContentMetadata.objects.filter(query).prefetch_related(
-            Prefetch('catalog_query_mapping', queryset=catalog_queries),
+            Prefetch('catalog_queries', queryset=catalog_queries),
             Prefetch('associated_content_metadata', queryset=associate_programs_query, to_attr='associate_programs'),
         )
         logger.info(
@@ -520,7 +520,7 @@ def index_content_keys_in_algolia(content_keys, algolia_client):  # pylint: disa
                 content_key = metadata.content_key
             else:
                 content_key = metadata.parent_content_key
-            associated_queries = metadata.catalog_query_mapping.all()
+            associated_queries = metadata.catalog_queries.all()
             enterprise_catalog_uuids = set()
             enterprise_customer_uuids = set()
             enterprise_catalog_queries = set()
