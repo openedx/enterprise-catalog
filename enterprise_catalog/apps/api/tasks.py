@@ -478,6 +478,40 @@ def index_content_keys_in_algolia(content_keys, algolia_client):  # pylint: disa
     Arguments:
         content_keys (list): List of indexable content_key strings.
         algolia_client: Instance of an Algolia API client
+
+    How to improve this giant function - 
+    1. create a mapping (before iterating over content_keys) from course keys to sets of program keys.
+       use this mapping on each pass of the loop over single metadata records to conditionally update
+       the facet maps.  e.g.
+
+       ```
+       from enterprise_catalog.apps.catalog.models import *
+       from collections import *
+       program_membership_by_course_key = defaultdict(set)
+       programs = ContentMetadata.objects.filter(content_type=PROGRAM).prefetch_related('associated_content_metadata')
+       for prog in programs:
+           for course in prog.associated_content_metadata.all():
+               program_membership_by_course_key[course.content_key].add(prog.content_key)
+       ```
+
+    2. Switch to using a queryset iterator: https://docs.djangoproject.com/en/2.2/ref/models/querysets/#iterator
+    3. iterator() is incongruous with prefetch_related, so stop prefetching.  We're going to make more total
+       queries to the DB, but each one will be small. So we'll end up with something naive and akin to this:
+
+       ```
+       all_metadata = ContentMetadata.objects.all().iterator()
+       for metadata in all_metadata:
+           print('Metadata record: {}'.format(metadata.content_key))
+           related_queries = metadata.catalog_queries.iterator()
+           for q in related_queries:
+               print('CatalogQuery: {}'.format(q.uuid))
+               for cat in q.enterprise_catalogs.iterator():
+                   print('Catalog: {}'.format(cat.uuid))
+       ```
+       If there are N metadata records and M catalogs we'll end up with:
+       1 query to fetch N metadata records
+       N queries to fetch all queries
+       N * M queries to fetch all ....fuck this is a million+ queries.
     """
     logger.info(
         f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] There are {len(content_keys)} total content keys to include in the'
