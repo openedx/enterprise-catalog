@@ -1,12 +1,9 @@
-import csv
-import datetime
 import logging
 import time
 from collections import OrderedDict, defaultdict
 
 import crum
 from celery import chain
-from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
@@ -35,8 +32,8 @@ from enterprise_catalog.apps.api.v1.decorators import (
     require_at_least_one_query_parameter,
 )
 from enterprise_catalog.apps.api.v1.export_utils import (
-    hit_to_row,
     query_to_csv,
+    query_to_workbook,
     querydict_to_dict,
     validate_query_facets,
 )
@@ -205,12 +202,12 @@ class CatalogCsvDataView(GenericAPIView):
 
 class CatalogExcelDataView(GenericAPIView):
     """
-    Catalog Excel data generation view. All query params are assumed to be facet filters used to filter indexed data when
-    searching. All distinct facets provided are interpreted as a conjunction (AND), however multiple identical facets
-    query params use a disjunction (OR).
+    Catalog Excel data generation view. All query params are assumed to be facet filters used to filter indexed data
+    when searching. All distinct facets provided are interpreted as a conjunction (AND), however multiple identical
+    facets query params use a disjunction (OR).
 
     Returns:
-        string IO stream representation of CSV data correlating to filtered Algolia catalog metadata.
+        IO stream representation of Excel data correlating to filtered Algolia catalog metadata.
     """
     permission_classes = []
 
@@ -233,7 +230,7 @@ class CatalogExcelDataView(GenericAPIView):
 
         filename = f'Enterprise-Catalog-Export-{time.strftime("%Y%m%d%H%M%S")}.xlsx'
         response = Response(
-            output,
+            workbook_data,
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
         response['Content-Disposition'] = f'attachment; filename={filename}'

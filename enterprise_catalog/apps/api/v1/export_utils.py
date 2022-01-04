@@ -1,6 +1,7 @@
 import csv
-import io
+import datetime
 import logging
+from io import BytesIO, StringIO
 
 import xlsxwriter
 
@@ -175,14 +176,14 @@ def query_to_csv(facets, algoliaQuery):
 
 def query_to_workbook(facets, algoliaQuery):
 	# Create an in-memory output file for the new workbook.
-	output = io.BytesIO()
+	output = BytesIO()
 	workbook = xlsxwriter.Workbook(output)
 	worksheet = workbook.add_worksheet()
 	algolia_hits = retrieve_indexed_data(facets, algoliaQuery)
 
 	# write headers
 	for col_num, cell_data in enumerate(CSV_HEADERS):
-		worksheet.write(row_num, col_num, cell_data)
+		worksheet.write(0, col_num, cell_data)
 
 	# write hit data
 	for row_num, columns in enumerate(algolia_hits):
