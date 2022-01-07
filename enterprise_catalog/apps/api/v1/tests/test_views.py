@@ -422,6 +422,7 @@ class EnterpriseCatalogCRUDViewSetListTests(APITestMixin):
 
 
 class EnterpriseCatalogCsvDataViewTests(APITestMixin):
+    # pylint: disable=line-too-long
     """
     Tests for the CatalogCsvDataView view.
     """

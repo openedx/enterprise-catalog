@@ -268,6 +268,7 @@ class CatalogCsvDataView(GenericAPIView):
         return data
 
     def construct_csv_row(self, hit):
+        # pylint: disable=too-many-statements
         """
         Helper function to construct a CSV row according to a single Algolia result hit.
         """
@@ -379,8 +380,8 @@ class CatalogCsvDataView(GenericAPIView):
             course_keys_chunk = [hit['key'] for hit in page.get('hits', [])]
             query_params = {'keys': ','.join(course_keys_chunk)}
             courses = discovery_client.get_courses(query_params=query_params)
-            
-            # build a lookup dictionary for efficient lookup for combining
+
+            # build a lookup dictionary for efficient lookup when combining
             course_by_key = {}
             for course in courses:
                 course_by_key[course['key']] = course
