@@ -6,9 +6,11 @@ from io import StringIO
 
 import crum
 from celery import chain
+from dateutil import parser
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
+from django.utils.html import strip_tags
 from edx_rbac.mixins import PermissionRequiredMixin
 from edx_rbac.utils import get_decoded_jwt
 from edx_rest_framework_extensions.auth.jwt.authentication import (
@@ -264,64 +266,57 @@ class CatalogCsvDataView(GenericAPIView):
         Helper function to construct a CSV row according to a single Algolia result hit.
         """
         csv_row = []
-        csv_row.append(hit.get('title', 'No title'))
+        csv_row.append(hit.get('title'))
 
         if hit.get('partners'):
             csv_row.append(hit['partners'][0]['name'])
         else:
-            csv_row.append('No partners')
+            csv_row.append(None)
 
         if hit.get('advertised_course_run'):
-            csv_row.append(hit['advertised_course_run']['start'])
+            start_date = None
+            if hit['advertised_course_run'].get('start'):
+                start_date = parser.parse(hit['advertised_course_run']['start']).strftime("%Y-%m-%d")
+            csv_row.append(start_date)
 
-            end = hit['advertised_course_run'].get('end')
-            if not end:
-                end = 'No end date'
-            csv_row.append(end)
+            end_date = None
+            if hit['advertised_course_run'].get('end'):
+                end_date = parser.parse(hit['advertised_course_run']['end']).strftime("%Y-%m-%d")
+            csv_row.append(end_date)
 
-            upgrade_deadline = hit['advertised_course_run'].get('upgrade_deadline')
-            if upgrade_deadline:
-                upgrade_deadline = datetime.datetime.fromtimestamp(upgrade_deadline)
-            else:
-                upgrade_deadline = 'No upgrade deadline'
+            upgrade_deadline = None
+            if hit['advertised_course_run'].get('upgrade_deadline'):
+                raw_deadline = hit['advertised_course_run']['upgrade_deadline']
+                upgrade_deadline = datetime.datetime.fromtimestamp(raw_deadline).strftime("%Y-%m-%d")
             csv_row.append(upgrade_deadline)
 
             pacing_type = hit['advertised_course_run']['pacing_type']
-            key = hit['advertised_course_run'].get('key', 'No key')
+            key = hit['advertised_course_run'].get('key')
         else:
-            csv_row.append('No start date')
-            csv_row.append('No end date')
-            csv_row.append('No upgrade deadline')
+            csv_row.append(None)  # no start date
+            csv_row.append(None)  # no end date
+            csv_row.append(None)  # no upgrade deadline
             pacing_type = None
-            key = 'No key'
+            key = None
 
-        programs = hit.get('programs')
-        if not programs:
-            programs = 'No program'
-        csv_row.append(programs)
+        csv_row.append(', '.join(hit.get('programs', [])))
+        csv_row.append(', '.join(hit.get('program_titles', [])))
 
-        program_titles = hit.get('program_titles')
-        if not program_titles:
-            program_titles = 'No program'
-        csv_row.append(program_titles)
-
-        if not pacing_type:
-            pacing_type = 'No pacing type'
         csv_row.append(pacing_type)
 
         csv_row.append(hit.get('level_type', 'No level_type'))
 
-        csv_row.append(hit.get('first_enrollable_paid_seat_price', 'No price'))
-        csv_row.append(hit.get('language', 'No language'))
-        csv_row.append(hit.get('marketing_url', 'No url'))
-        csv_row.append(hit.get('short_description', 'No short description'))
+        csv_row.append(hit.get('first_enrollable_paid_seat_price'))
+        csv_row.append(hit.get('language'))
+        csv_row.append(hit.get('marketing_url'))
+        csv_row.append(strip_tags(hit.get('short_description', '')))
 
-        csv_row.append(str(hit.get('subjects', 'No subjects')))
+        csv_row.append(', '.join(hit.get('subjects', [])))
         csv_row.append(key)
-        csv_row.append(hit.get('aggregation_key', 'No aggregation key'))
+        csv_row.append(hit.get('aggregation_key'))
 
         skills = [skill['name'] for skill in hit.get('skills', [])]
-        csv_row.append(str(skills))
+        csv_row.append(', '.join(skills))
         return csv_row
 
     def retrieve_indexed_data(self, facets, algoliaQuery):
@@ -337,12 +332,21 @@ class CatalogCsvDataView(GenericAPIView):
                 combined_facets.append(f'{facet_name}:{facet_value}')
             facet_filters.append(combined_facets)
 
-        # Algolia search will only retrieve all results if you query by empty string.
-        algolia_hits = algolia_client.algolia_index.browse_objects({
-            'query': algoliaQuery,
+        search_options = {
             'facetFilters': facet_filters,
-            'attributesToRetrieve': self.algolia_attributes_to_retrieve
-        })
+            'attributesToRetrieve': self.algolia_attributes_to_retrieve,
+            'hitsPerPage': 100,
+            'page': 0,
+        }
+
+        # Algolia search will only retrieve all results if you query by empty string.
+        algolia_hits = []
+        page = algolia_client.algolia_index.search(algoliaQuery, search_options)
+        while len(page['hits']) > 0:
+            algolia_hits.extend(page['hits'])
+            search_options['page'] = search_options['page'] + 1
+            page = algolia_client.algolia_index.search(algoliaQuery, search_options)
+
         with StringIO() as file:
             writer = csv.writer(file)
             writer.writerow(self.csv_headers)
