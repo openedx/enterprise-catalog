@@ -389,6 +389,8 @@ class CatalogCsvDataView(GenericAPIView):
             # combine discovery metadata with the algolia results
             # append the hit to the results
             for hit in page['hits']:
+                if hit['content_type'] != 'course':
+                    continue
                 if course_by_key.get(hit['key']):
                     hit['discovery_course'] = course_by_key.get(hit['key'])
                 algolia_hits.append(hit)
