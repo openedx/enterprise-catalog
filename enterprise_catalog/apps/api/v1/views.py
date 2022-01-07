@@ -328,10 +328,10 @@ class CatalogCsvDataView(GenericAPIView):
         discovery_course_runs = discovery_course.get('course_runs', [])
 
         try:
-           discovery_first_course_run = discovery_course_runs[0]
+            discovery_first_course_run = discovery_course_runs[0]
         except IndexError:
-           discovery_first_course_run = {}
-        
+            discovery_first_course_run = {}
+
         # Min Effort
         csv_row.append(discovery_first_course_run.get('min_effort'))
 
