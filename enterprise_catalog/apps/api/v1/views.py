@@ -388,7 +388,6 @@ class CatalogCsvDataView(GenericAPIView):
                     hit['discovery_course'] = course_by_key.get(hit['key'])
                 algolia_hits.append(hit)
 
-            # algolia_hits.extend(page['hits'])
             search_options['page'] = search_options['page'] + 1
             page = algolia_client.algolia_index.search(algoliaQuery, search_options)
 
