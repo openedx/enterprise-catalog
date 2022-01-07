@@ -44,6 +44,7 @@ from enterprise_catalog.apps.api.v1.serializers import (
     EnterpriseCatalogSerializer,
 )
 from enterprise_catalog.apps.api.v1.utils import unquote_course_keys
+from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 from enterprise_catalog.apps.catalog.algolia_utils import (
     ALGOLIA_INDEX_SETTINGS,
     get_initialized_algolia_client,
@@ -201,6 +202,11 @@ class CatalogCsvDataView(GenericAPIView):
         'Key',
         'Short Key',
         'Skills',
+        'Min Effort',
+        'Max Effort',
+        'Length',
+        'What You’ll Learn',
+        'Pre-requisites',
     ]
     algolia_attributes_to_retrieve = [
         'title',
@@ -317,13 +323,40 @@ class CatalogCsvDataView(GenericAPIView):
 
         skills = [skill['name'] for skill in hit.get('skills', [])]
         csv_row.append(', '.join(skills))
+
+        discovery_course = hit.get('discovery_course', {})
+        discovery_course_runs = discovery_course.get('course_runs', [])
+
+        try:
+           discovery_first_course_run = discovery_course_runs[0]
+        except IndexError:
+           discovery_first_course_run = {}
+        
+        # Min Effort
+        csv_row.append(discovery_first_course_run.get('min_effort'))
+
+        # Max Effort
+        csv_row.append(discovery_first_course_run.get('max_effort'))
+
+        # Length
+        csv_row.append(discovery_first_course_run.get('weeks_to_complete'))
+
+        # What You’ll Learn -> outcome
+        csv_row.append(strip_tags(discovery_course.get('outcome', '')))
+
+        # Pre-requisites -> prerequisites_raw
+        csv_row.append(strip_tags(discovery_course.get('prerequisites_raw', '')))
+
         return csv_row
 
     def retrieve_indexed_data(self, facets, algoliaQuery):
         """
         Helper function to retrieve and format indexed Algolia data into a CSV format.
         """
+        # algolia to search
         algolia_client = get_initialized_algolia_client()
+        # discovery to gather extra, non-indexed fields
+        discovery_client = DiscoveryApiClient()
 
         facet_filters = []
         for facet_name, facet_values in facets.items():
@@ -343,7 +376,19 @@ class CatalogCsvDataView(GenericAPIView):
         algolia_hits = []
         page = algolia_client.algolia_index.search(algoliaQuery, search_options)
         while len(page['hits']) > 0:
-            algolia_hits.extend(page['hits'])
+            course_keys_chunk = [hit['key'] for hit in page.get('hits', [])]
+            query_params = {'keys': ','.join(course_keys_chunk)}
+            courses = discovery_client.get_courses(query_params=query_params)
+            course_by_key = {}
+            for course in courses:
+                course_by_key[course['key']] = course
+
+            for hit in page['hits']:
+                if course_by_key.get(hit['key']):
+                    hit['discovery_course'] = course_by_key.get(hit['key'])
+                algolia_hits.append(hit)
+
+            # algolia_hits.extend(page['hits'])
             search_options['page'] = search_options['page'] + 1
             page = algolia_client.algolia_index.search(algoliaQuery, search_options)
 
