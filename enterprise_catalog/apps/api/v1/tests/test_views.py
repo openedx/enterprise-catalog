@@ -425,7 +425,7 @@ class EnterpriseCatalogCsvDataViewTests(APITestMixin):
     """
     Tests for the CatalogCsvDataView view.
     """
-    mock_algolia_hits = [{
+    mock_algolia_hits = {'hits': [{
         'aggregation_key': 'course:MITx+18.01.2x',
         'language': 'English',
         'level_type': 'Intermediate',
@@ -455,15 +455,15 @@ class EnterpriseCatalogCsvDataViewTests(APITestMixin):
             'upgrade_deadline': 32503680000.0,
         },
         'objectID': 'course-3543aa4e-3c64-4d9a-a343-5d5eda1dacf8-catalog-query-uuids-0'
-    }]
+    }]}
 
     expected_result_data = 'Title,Partner Name,Start,End,Verified Upgrade Deadline,Program Type,Program Name,Pacing,' \
                            'Level,Price,Language,URL,Short Description,Subjects,Key,Short Key,Skills\r\nCalculus 1B: ' \
-                           'Integration,Massachusetts Institute of Technology,2015-09-08T00:00:00Z,' \
-                           '2015-09-08T00:00:01Z,3000-01-01 00:00:00,[\'Professional Certificate\'],[\'Totally ' \
-                           'Awesome Program\'],instructor_paced,Intermediate,100,English,edx.org/foo-bar,description,' \
-                           '[\'Math\'],MITx/18.01.2x/3T2015,course:MITx+18.01.2x,"[\'Probability And Statistics\', ' \
-                           '\'Engineering Design Process\']"\r\n'
+                           'Integration,Massachusetts Institute of Technology,2015-09-08,' \
+                           '2015-09-08,3000-01-01,Professional Certificate,Totally ' \
+                           'Awesome Program,instructor_paced,Intermediate,100,English,edx.org/foo-bar,description,' \
+                           'Math,MITx/18.01.2x/3T2015,course:MITx+18.01.2x,"Probability And Statistics, ' \
+                           'Engineering Design Process"\r\n'
 
     def setUp(self):
         super().setUp()
@@ -477,10 +477,10 @@ class EnterpriseCatalogCsvDataViewTests(APITestMixin):
 
     def _get_mock_algolia_hits_with_missing_values(self):
         mock_hits_missing_values = copy.deepcopy(self.mock_algolia_hits)
-        mock_hits_missing_values[0]['advertised_course_run'].pop('upgrade_deadline')
-        mock_hits_missing_values[0].pop('marketing_url')
-        mock_hits_missing_values[0].pop('first_enrollable_paid_seat_price')
-        mock_hits_missing_values[0]['advertised_course_run']['end'] = None
+        mock_hits_missing_values['hits'][0]['advertised_course_run'].pop('upgrade_deadline')
+        mock_hits_missing_values['hits'][0].pop('marketing_url')
+        mock_hits_missing_values['hits'][0].pop('first_enrollable_paid_seat_price')
+        mock_hits_missing_values['hits'][0]['advertised_course_run']['end'] = None
         return mock_hits_missing_values
 
     def test_facet_validation(self):
@@ -498,7 +498,7 @@ class EnterpriseCatalogCsvDataViewTests(APITestMixin):
         """
         Tests a successful request with facets.
         """
-        mock_algolia_client.return_value.algolia_index.browse_objects.return_value = self.mock_algolia_hits
+        mock_algolia_client.return_value.algolia_index.search.side_effect = [self.mock_algolia_hits, {'hits': []}]
         url = self._get_contains_content_base_url()
         facets = 'language=English'
         response = self.client.get(f'{url}?{facets}')
@@ -514,19 +514,19 @@ class EnterpriseCatalogCsvDataViewTests(APITestMixin):
         """
         Tests that the view properly handles situations where data is missing from the Algolia hit.
         """
-        mock_algolia_client.return_value.algolia_index.browse_objects.return_value = \
-            self._get_mock_algolia_hits_with_missing_values()
+        mock_side_effects = [self._get_mock_algolia_hits_with_missing_values(), {'hits': []}]
+        mock_algolia_client.return_value.algolia_index.search.side_effect = mock_side_effects
         url = self._get_contains_content_base_url()
         facets = 'language=English'
         response = self.client.get(f'{url}?{facets}')
         assert response.status_code == 200
         excpected_csv_data = 'Title,Partner Name,Start,End,Verified Upgrade Deadline,Program Type,Program Name,' \
                              'Pacing,Level,Price,Language,URL,Short Description,Subjects,Key,Short Key,Skills\r\n' \
-                             'Calculus 1B: Integration,Massachusetts Institute of Technology,2015-09-08T00:00:00Z,' \
-                             'No end date,No upgrade deadline,[\'Professional Certificate\'],[\'Totally Awesome ' \
-                             'Program\'],instructor_paced,Intermediate,No price,English,No url,description,' \
-                             '[\'Math\'],MITx/18.01.2x/3T2015,course:MITx+18.01.2x,"[\'Probability And Statistics\', ' \
-                             '\'Engineering Design Process\']"\r\n'
+                             'Calculus 1B: Integration,Massachusetts Institute of Technology,2015-09-08,' \
+                             ',,Professional Certificate,Totally Awesome ' \
+                             'Program,instructor_paced,Intermediate,,English,,description,' \
+                             'Math,MITx/18.01.2x/3T2015,course:MITx+18.01.2x,"Probability And Statistics, ' \
+                             'Engineering Design Process"\r\n'
         expected_response = {
             'csv_data': excpected_csv_data
         }
