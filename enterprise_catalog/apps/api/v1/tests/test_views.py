@@ -431,6 +431,7 @@ class EnterpriseCatalogCsvDataViewTests(APITestMixin):
         'key': 'MITx+18.01.2x',
         'language': 'English',
         'level_type': 'Intermediate',
+        'content_type': 'course',
         'partners': [
             {'name': 'Massachusetts Institute of Technology',
              'logo_image_url': 'https://edx.org/image.png'}
