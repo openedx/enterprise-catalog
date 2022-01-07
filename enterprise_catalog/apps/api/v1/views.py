@@ -377,7 +377,12 @@ class CatalogCsvDataView(GenericAPIView):
         algolia_hits = []
         page = algolia_client.algolia_index.search(algoliaQuery, search_options)
         while len(page['hits']) > 0:
-            course_keys_chunk = [hit['key'] for hit in page.get('hits', [])]
+            course_keys_chunk = []
+            for hit in page.get('hits', []):
+                # ignore program data (for now)
+                if hit['content_type'] != 'course':
+                    continue
+                course_keys_chunk.append(hit['key'])
             query_params = {'keys': ','.join(course_keys_chunk)}
             courses = discovery_client.get_courses(query_params=query_params)
 
@@ -389,6 +394,7 @@ class CatalogCsvDataView(GenericAPIView):
             # combine discovery metadata with the algolia results
             # append the hit to the results
             for hit in page['hits']:
+                # ignore program data (for now)
                 if hit['content_type'] != 'course':
                     continue
                 if course_by_key.get(hit['key']):
