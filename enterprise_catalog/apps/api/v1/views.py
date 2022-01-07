@@ -293,9 +293,9 @@ class CatalogCsvDataView(GenericAPIView):
             pacing_type = hit['advertised_course_run']['pacing_type']
             key = hit['advertised_course_run'].get('key')
         else:
-            csv_row.append(None) # no start date
-            csv_row.append(None) # no end date
-            csv_row.append(None) # no upgrade deadline
+            csv_row.append(None)  # no start date
+            csv_row.append(None)  # no end date
+            csv_row.append(None)  # no upgrade deadline
             pacing_type = None
             key = None
 

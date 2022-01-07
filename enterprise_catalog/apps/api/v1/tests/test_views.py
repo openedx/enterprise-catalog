@@ -425,7 +425,7 @@ class EnterpriseCatalogCsvDataViewTests(APITestMixin):
     """
     Tests for the CatalogCsvDataView view.
     """
-    mock_algolia_hits = {'hits':[{
+    mock_algolia_hits = {'hits': [{
         'aggregation_key': 'course:MITx+18.01.2x',
         'language': 'English',
         'level_type': 'Intermediate',
