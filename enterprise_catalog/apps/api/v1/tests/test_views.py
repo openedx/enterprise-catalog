@@ -458,7 +458,21 @@ class EnterpriseCatalogCsvDataViewTests(APITestMixin):
             'upgrade_deadline': 32503680000.0,
         },
         'objectID': 'course-3543aa4e-3c64-4d9a-a343-5d5eda1dacf8-catalog-query-uuids-0'
-    }]}
+    },
+        {
+        'aggregation_key': 'course:MITx+19',
+        'key': 'MITx+19',
+        'language': 'English',
+        'level_type': 'Intermediate',
+        'objectID': 'course-3543aa4e-3c64-4d9a-a343-5d5eda1dacf9-catalog-query-uuids-0'
+    },
+        {
+        'aggregation_key': 'course:MITx+20',
+        'language': 'English',
+        'level_type': 'Intermediate',
+        'objectID': 'course-3543aa4e-3c64-4d9a-a343-5d5eda1dacf7-catalog-query-uuids-0'
+    }
+    ]}
 
     mock_discovery_courses = [
         {

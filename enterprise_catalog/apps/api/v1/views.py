@@ -380,25 +380,26 @@ class CatalogCsvDataView(GenericAPIView):
             course_keys_chunk = []
             for hit in page.get('hits', []):
                 # ignore program data (for now)
-                if hit['content_type'] != 'course':
+                if hit.get('content_type') != 'course':
                     continue
-                course_keys_chunk.append(hit['key'])
+                if hit.get('key'):
+                    course_keys_chunk.append(hit.get('key'))
             query_params = {'keys': ','.join(course_keys_chunk)}
             courses = discovery_client.get_courses(query_params=query_params)
 
             # build a lookup dictionary for efficient lookup when combining
             course_by_key = {}
             for course in courses:
-                course_by_key[course['key']] = course
+                course_by_key[course.get('key')] = course
 
             # combine discovery metadata with the algolia results
             # append the hit to the results
             for hit in page['hits']:
                 # ignore program data (for now)
-                if hit['content_type'] != 'course':
+                if hit.get('content_type') != 'course':
                     continue
-                if course_by_key.get(hit['key']):
-                    hit['discovery_course'] = course_by_key.get(hit['key'])
+                if course_by_key.get(hit.get('key')):
+                    hit['discovery_course'] = course_by_key.get(hit.get('key'))
                 algolia_hits.append(hit)
 
             search_options['page'] = search_options['page'] + 1
