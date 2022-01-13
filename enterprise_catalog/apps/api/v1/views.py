@@ -524,7 +524,7 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
         if content_filter:
             queryset = queryset.filter(content_key__in=content_filter)
 
-        return queryset.order_by('catalog_query_mapping')
+        return queryset.order_by('catalog_queries')
 
     def get_response_with_enterprise_fields(self, response):
         """
