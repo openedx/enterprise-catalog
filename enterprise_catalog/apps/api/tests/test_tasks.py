@@ -271,11 +271,11 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         mock_partition_course_keys.return_value = ([], [],)
 
         metadata_1 = ContentMetadataFactory(content_type=COURSE, content_key=course_key_1)
-        metadata_1.catalog_query_mapping.set([self.catalog_query])
+        metadata_1.catalog_queries.set([self.catalog_query])
         metadata_2 = ContentMetadataFactory(content_type=COURSE, content_key=course_key_2)
-        metadata_2.catalog_query_mapping.set([self.catalog_query])
+        metadata_2.catalog_queries.set([self.catalog_query])
         non_course_metadata = ContentMetadataFactory(content_type=COURSE_RUN, content_key=non_course_key)
-        non_course_metadata.catalog_query_mapping.set([self.catalog_query])
+        non_course_metadata.catalog_queries.set([self.catalog_query])
 
         assert metadata_1.json_metadata != course_data_1
         assert metadata_2.json_metadata != course_data_2
@@ -323,9 +323,9 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         mock_partition_program_keys.return_value = ([], [],)
 
         metadata_1 = ContentMetadataFactory(content_type=PROGRAM, content_key=program_key_1)
-        metadata_1.catalog_query_mapping.set([self.catalog_query])
+        metadata_1.catalog_queries.set([self.catalog_query])
         metadata_2 = ContentMetadataFactory(content_type=PROGRAM, content_key=program_key_2)
-        metadata_2.catalog_query_mapping.set([self.catalog_query])
+        metadata_2.catalog_queries.set([self.catalog_query])
 
         assert metadata_1.json_metadata != program_data_1
         assert metadata_2.json_metadata != program_data_2
@@ -370,27 +370,27 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         cls.enterprise_catalog_query = CatalogQueryFactory(uuid=SORTED_QUERY_UUID_LIST[0])
         cls.enterprise_catalog_courses = EnterpriseCatalogFactory(catalog_query=cls.enterprise_catalog_query)
         cls.course_metadata_published = ContentMetadataFactory(content_type=COURSE, content_key='fakeX')
-        cls.course_metadata_published.catalog_query_mapping.set([cls.enterprise_catalog_query])
+        cls.course_metadata_published.catalog_queries.set([cls.enterprise_catalog_query])
         cls.course_metadata_unpublished = ContentMetadataFactory(content_type=COURSE, content_key='testX')
         cls.course_metadata_unpublished.json_metadata.get('course_runs')[0].update({
             'status': 'unpublished',
         })
-        cls.course_metadata_unpublished.catalog_query_mapping.set([cls.enterprise_catalog_query])
+        cls.course_metadata_unpublished.catalog_queries.set([cls.enterprise_catalog_query])
         cls.course_metadata_unpublished.save()
 
-        # Set up new catalog, query, and metadata for a course run
+        # Set up new catalog, query, and metadata for a course run]
         # Testing indexing catalog queries when titles aren't present
         cls.course_run_catalog_query = CatalogQueryFactory(uuid=SORTED_QUERY_UUID_LIST[1], title=None)
         cls.enterprise_catalog_course_runs = EnterpriseCatalogFactory(catalog_query=cls.course_run_catalog_query)
 
         course_runs_catalog_query = cls.enterprise_catalog_course_runs.catalog_query
         course_run_metadata_published = ContentMetadataFactory(content_type=COURSE_RUN, parent_content_key='fakeX')
-        course_run_metadata_published.catalog_query_mapping.set([course_runs_catalog_query])
+        course_run_metadata_published.catalog_queries.set([course_runs_catalog_query])
         course_run_metadata_unpublished = ContentMetadataFactory(content_type=COURSE_RUN, parent_content_key='testX')
         course_run_metadata_unpublished.json_metadata.update({
             'status': 'unpublished',
         })
-        course_run_metadata_unpublished.catalog_query_mapping.set([course_runs_catalog_query])
+        course_run_metadata_unpublished.catalog_queries.set([course_runs_catalog_query])
         course_run_metadata_unpublished.save()
 
     def _set_up_factory_data_for_algolia(self):
