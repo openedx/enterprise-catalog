@@ -31,6 +31,7 @@ from enterprise_catalog.apps.catalog.constants import (
     DISCOVERY_COURSE_KEY_BATCH_SIZE,
     DISCOVERY_PROGRAM_KEY_BATCH_SIZE,
     PROGRAM,
+    REINDEX_TASK_BATCH_SIZE,
     TASK_BATCH_SIZE,
 )
 from enterprise_catalog.apps.catalog.models import (
@@ -488,7 +489,7 @@ def index_content_keys_in_algolia(content_keys, algolia_client):  # pylint: disa
     catalog_uuids_by_key = defaultdict(set)
     customer_uuids_by_key = defaultdict(set)
     catalog_queries_by_key = defaultdict(set)
-    for content_keys_batch in batch(content_keys, batch_size=TASK_BATCH_SIZE):
+    for content_keys_batch in batch(content_keys, batch_size=REINDEX_TASK_BATCH_SIZE):
         # retrieve ContentMetadata records that match the specified content_keys in the
         # content_key or parent_content_key or course associated programs. returns courses, programs and course runs.
         query = (
