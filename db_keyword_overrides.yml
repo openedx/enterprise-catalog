@@ -6,5 +6,6 @@
 #   - ModelName.field_name
 ---
 MYSQL:
+    - CatalogUpdateCommandConfig.force
 SNOWFLAKE:
 STITCH:
