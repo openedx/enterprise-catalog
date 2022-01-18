@@ -38,7 +38,7 @@ DISCOVERY_COURSE_KEY_BATCH_SIZE = 50
 DISCOVERY_PROGRAM_KEY_BATCH_SIZE = 50
 
 # Async task constants
-REINDEX_TASK_BATCH_SIZE = 10
+REINDEX_TASK_BATCH_SIZE = 1
 TASK_BATCH_SIZE = 250
 TASK_TIMEOUT = 90 * 60  # Gives tasks (usually chains) 90 minutes to return before timing out
 
