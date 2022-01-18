@@ -1,16 +1,15 @@
 import csv
-import datetime
 import logging
+import time
 from collections import OrderedDict, defaultdict
 from io import StringIO
 
 import crum
 from celery import chain
-from dateutil import parser
+from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
-from django.utils.html import strip_tags
 from edx_rbac.mixins import PermissionRequiredMixin
 from edx_rbac.utils import get_decoded_jwt
 from edx_rest_framework_extensions.auth.jwt.authentication import (
@@ -32,6 +31,7 @@ from enterprise_catalog.apps.api.tasks import (
     update_catalog_metadata_task,
     update_full_content_metadata_task,
 )
+from enterprise_catalog.apps.api.v1 import export_utils
 from enterprise_catalog.apps.api.v1.decorators import (
     require_at_least_one_query_parameter,
 )
@@ -46,7 +46,6 @@ from enterprise_catalog.apps.api.v1.serializers import (
 from enterprise_catalog.apps.api.v1.utils import unquote_course_keys
 from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 from enterprise_catalog.apps.catalog.algolia_utils import (
-    ALGOLIA_INDEX_SETTINGS,
     get_initialized_algolia_client,
 )
 from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
@@ -174,6 +173,109 @@ class EnterpriseCatalogContainsContentItems(BaseViewSet, viewsets.ModelViewSet):
         return Response({'contains_content_items': contains_content_items})
 
 
+# CatalogCsvView's StreamingHttpResponse requires a File-like class that has a 'write' method
+class Echo:
+    """An object that implements just the write method of the file-like
+    interface.
+    """
+    def write(self, value):
+        """Write the value by returning it, instead of storing in a buffer."""
+        return value
+
+
+class CatalogCsvView(GenericAPIView):
+    """
+    Catalog CSV data generation view. All query params are assumed to be facet filters used to filter indexed data when
+    searching. All distinct facets provided are interpreted as a conjunction (AND), however multiple identical facets
+    query params use a disjunction (OR).
+
+    Returns:
+        Streams a CSV file correlating to filtered Algolia catalog metadata.
+    """
+    permission_classes = []
+
+    def iter_items(self, facets, algoliaQuery):
+        pseudo_buffer = Echo()
+        writer = csv.writer(pseudo_buffer)
+
+        yield writer.writerow(export_utils.CSV_HEADERS)
+
+        algolia_client = get_initialized_algolia_client()
+        # discovery to gather extra, non-indexed fields
+        discovery_client = DiscoveryApiClient()
+
+        facet_filters = []
+        for facet_name, facet_values in facets.items():
+            combined_facets = []
+            for facet_value in facet_values:
+                combined_facets.append(f'{facet_name}:{facet_value}')
+            facet_filters.append(combined_facets)
+
+        search_options = {
+            'facetFilters': facet_filters,
+            'attributesToRetrieve': export_utils.ALGOLIA_ATTRIBUTES_TO_RETRIEVE,
+            'hitsPerPage': 100,
+            'page': 0,
+        }
+
+        # Algolia search will only retrieve all results if you query by empty string.
+        page = algolia_client.algolia_index.search(algoliaQuery, search_options)
+        while len(page['hits']) > 0:
+            course_keys_chunk = []
+            for hit in page.get('hits', []):
+                # ignore program data (for now)
+                if hit.get('content_type') != 'course':
+                    continue
+                if hit.get('key'):
+                    course_keys_chunk.append(hit.get('key'))
+
+            # build a lookup dictionary for efficient lookup when combining
+            course_by_key = {}
+            if len(course_keys_chunk) > 0:
+                query_params = {'keys': ','.join(course_keys_chunk)}
+                courses = discovery_client.get_courses(query_params=query_params)
+                for course in courses:
+                    course_by_key[course.get('key')] = course
+
+            # combine discovery metadata with the algolia results
+            # append the hit to the results
+            for hit in page.get('hits', []):
+                # ignore program data (for now)
+                if hit.get('content_type') != 'course':
+                    continue
+                if course_by_key.get(hit.get('key')):
+                    hit['discovery_course'] = course_by_key.get(hit.get('key'))
+                row = export_utils.hit_to_row(hit)
+                yield writer.writerow(row)
+
+            search_options['page'] = search_options['page'] + 1
+            page = algolia_client.algolia_index.search(algoliaQuery, search_options)
+
+    @action(detail=True)
+    def get(self, request, **kwargs):
+        """
+        GET entry point for the `CatalogCsvView`
+        """
+        facets = export_utils.querydict_to_dict(request.query_params)
+        if facets.get('query'):
+            algoliaQuery = facets.pop('query')
+        else:
+            algoliaQuery = ''
+
+        invalid_facets = export_utils.validate_query_facets(facets)
+        if invalid_facets:
+            return Response(f'Error: invalid facet(s): {invalid_facets} provided.', status=HTTP_400_BAD_REQUEST)
+
+        filename = f'Enterprise-Catalog-Export-{time.strftime("%Y%m%d%H%M%S")}.csv'
+
+        response = StreamingHttpResponse(
+            streaming_content=(self.iter_items(facets, algoliaQuery)),
+            content_type='text/csv;charset=utf-8',
+        )
+        response['Content-Disposition'] = f'attachment; filename={filename}'
+        return response
+
+
 class CatalogCsvDataView(GenericAPIView):
     """
     Catalog CSV data generation view. All query params are assumed to be facet filters used to filter indexed data when
@@ -181,176 +283,27 @@ class CatalogCsvDataView(GenericAPIView):
     query params use a disjunction (OR).
 
     Returns:
-        string IO stream representation of CSV data correlating to filtered Algolia catalog metadata.
+        json data with a representation of CSV data correlating to filtered Algolia catalog metadata.
     """
     permission_classes = []
-    csv_headers = [
-        'Title',
-        'Partner Name',
-        'Start',
-        'End',
-        'Verified Upgrade Deadline',
-        'Program Type',
-        'Program Name',
-        'Pacing',
-        'Level',
-        'Price',
-        'Language',
-        'URL',
-        'Short Description',
-        'Subjects',
-        'Key',
-        'Short Key',
-        'Skills',
-        'Min Effort',
-        'Max Effort',
-        'Length',
-        'What You’ll Learn',
-        'Pre-requisites',
-    ]
-    algolia_attributes_to_retrieve = [
-        'title',
-        'key',
-        'content_type',
-        'partners',
-        'advertised_course_run',
-        'programs',
-        'program_titles',
-        'level_type',
-        'language',
-        'short_description',
-        'subjects',
-        'aggregation_key',
-        'skills',
-        'first_enrollable_paid_seat_price',
-        'marketing_url',
-    ]
-    valid_facets = []
-    for facet in ALGOLIA_INDEX_SETTINGS['attributesForFaceting']:
-        # Because this is pulled from the settings `attributesForFaceting`, we need to strip potential `searchable()`
-        # wrappers
-        valid_facets.append(facet.replace('searchable(', '').rstrip(')'))
 
     @action(detail=True)
     def get(self, request, **kwargs):
         """
         GET entry point for the `CatalogCsvDataView`
         """
-        facets = self.querydict_to_dict(request.query_params)
+        facets = export_utils.querydict_to_dict(request.query_params)
         if facets.get('query'):
             algoliaQuery = facets.pop('query')
         else:
             algoliaQuery = ''
 
-        invalid_facets = self.validate_query_facets(facets)
+        invalid_facets = export_utils.validate_query_facets(facets)
         if invalid_facets:
             return Response(f'Error: invalid facet(s): {invalid_facets} provided.', status=HTTP_400_BAD_REQUEST)
 
         csv_data = self.retrieve_indexed_data(facets, algoliaQuery)
         return Response({'csv_data': csv_data}, status=HTTP_200_OK)
-
-    def validate_query_facets(self, facets):
-        """
-        Verify that provided query facet params are valid Algolia facets.
-        """
-        invalid_facets = []
-        for facet in facets.keys():
-            if facet not in self.valid_facets:
-                invalid_facets.append(facet)
-        return invalid_facets
-
-    def querydict_to_dict(self, query_dict):
-        """
-        Utility function to easily retrieve lists from the params in a QueryDict
-        """
-        data = {}
-        for key in query_dict.keys():
-            v = query_dict.getlist(key)
-            data[key] = v
-        return data
-
-    def construct_csv_row(self, hit):
-        # pylint: disable=too-many-statements
-        """
-        Helper function to construct a CSV row according to a single Algolia result hit.
-        """
-        csv_row = []
-        csv_row.append(hit.get('title'))
-
-        if hit.get('partners'):
-            csv_row.append(hit['partners'][0]['name'])
-        else:
-            csv_row.append(None)
-
-        if hit.get('advertised_course_run'):
-            start_date = None
-            if hit['advertised_course_run'].get('start'):
-                start_date = parser.parse(hit['advertised_course_run']['start']).strftime("%Y-%m-%d")
-            csv_row.append(start_date)
-
-            end_date = None
-            if hit['advertised_course_run'].get('end'):
-                end_date = parser.parse(hit['advertised_course_run']['end']).strftime("%Y-%m-%d")
-            csv_row.append(end_date)
-
-            upgrade_deadline = None
-            if hit['advertised_course_run'].get('upgrade_deadline'):
-                raw_deadline = hit['advertised_course_run']['upgrade_deadline']
-                upgrade_deadline = datetime.datetime.fromtimestamp(raw_deadline).strftime("%Y-%m-%d")
-            csv_row.append(upgrade_deadline)
-
-            pacing_type = hit['advertised_course_run']['pacing_type']
-            key = hit['advertised_course_run'].get('key')
-        else:
-            csv_row.append(None)  # no start date
-            csv_row.append(None)  # no end date
-            csv_row.append(None)  # no upgrade deadline
-            pacing_type = None
-            key = None
-
-        csv_row.append(', '.join(hit.get('programs', [])))
-        csv_row.append(', '.join(hit.get('program_titles', [])))
-
-        csv_row.append(pacing_type)
-
-        csv_row.append(hit.get('level_type', 'No level_type'))
-
-        csv_row.append(hit.get('first_enrollable_paid_seat_price'))
-        csv_row.append(hit.get('language'))
-        csv_row.append(hit.get('marketing_url'))
-        csv_row.append(strip_tags(hit.get('short_description', '')))
-
-        csv_row.append(', '.join(hit.get('subjects', [])))
-        csv_row.append(key)
-        csv_row.append(hit.get('aggregation_key'))
-
-        skills = [skill['name'] for skill in hit.get('skills', [])]
-        csv_row.append(', '.join(skills))
-
-        discovery_course = hit.get('discovery_course', {})
-        discovery_course_runs = discovery_course.get('course_runs', [])
-
-        try:
-            discovery_first_course_run = discovery_course_runs[0]
-        except IndexError:
-            discovery_first_course_run = {}
-
-        # Min Effort
-        csv_row.append(discovery_first_course_run.get('min_effort'))
-
-        # Max Effort
-        csv_row.append(discovery_first_course_run.get('max_effort'))
-
-        # Length
-        csv_row.append(discovery_first_course_run.get('weeks_to_complete'))
-
-        # What You’ll Learn -> outcome
-        csv_row.append(strip_tags(discovery_course.get('outcome', '')))
-
-        # Pre-requisites -> prerequisites_raw
-        csv_row.append(strip_tags(discovery_course.get('prerequisites_raw', '')))
-
-        return csv_row
 
     def retrieve_indexed_data(self, facets, algoliaQuery):
         """
@@ -370,7 +323,7 @@ class CatalogCsvDataView(GenericAPIView):
 
         search_options = {
             'facetFilters': facet_filters,
-            'attributesToRetrieve': self.algolia_attributes_to_retrieve,
+            'attributesToRetrieve': export_utils.ALGOLIA_ATTRIBUTES_TO_RETRIEVE,
             'hitsPerPage': 100,
             'page': 0,
         }
@@ -410,9 +363,9 @@ class CatalogCsvDataView(GenericAPIView):
 
         with StringIO() as file:
             writer = csv.writer(file)
-            writer.writerow(self.csv_headers)
+            writer.writerow(export_utils.CSV_HEADERS)
             for hit in algolia_hits:
-                row = self.construct_csv_row(hit)
+                row = export_utils.hit_to_row(hit)
                 writer.writerow(row)
             return file.getvalue()
 
