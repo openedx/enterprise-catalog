@@ -22,16 +22,14 @@ django-celery-results<2.1
 # Inflect 4.0.0 requires python>=3.6
 inflect<4.0.0
 
-# Sphinx 4 and Jinja 3 are not playing nicely (circa May 12, 2021 @adusenbery)
-Sphinx<4.0
-jinja2<3.0
-MarkupSafe<2.0
-
-# Not sure (circa May 12, 2021 @adusenbery)
-click<8.0
-
 # diff-cover latest requires (pluggy>=0.13.1,<0.14.0)
 # which conflicts with pytest(pluggy>=0.12,<2.0.0) and tox(pluggy>0.12) both of these fetch pluggy==1.0.0
 # but diff-cover latest has a pin (pluggy<1.0.0a1)
 # Using the same version of diff-cover which is being used currently in edx-platform to avoid this conflict.
 diff-cover==4.0.0
+
+# docker-compose wants pyyaml<6
+pyyaml<6
+
+# redis 4 client won't work with redis 3 server
+redis<4
