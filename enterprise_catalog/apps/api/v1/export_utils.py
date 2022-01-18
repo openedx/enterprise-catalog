@@ -97,7 +97,7 @@ def hit_to_row(hit):
 
     csv_row.append(pacing_type)
 
-    csv_row.append(hit.get('level_type', 'No level_type'))
+    csv_row.append(hit.get('level_type'))
 
     csv_row.append(hit.get('first_enrollable_paid_seat_price'))
     csv_row.append(hit.get('language'))
