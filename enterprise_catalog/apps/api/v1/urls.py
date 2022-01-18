@@ -21,6 +21,11 @@ urlpatterns = [
         name='catalog-csv-data'
     ),
     url(
+        r'^enterprise-catalogs/catalog_csv',
+        views.CatalogCsvView.as_view(),
+        name='catalog-csv'
+    ),
+    url(
         r'^enterprise-catalogs/(?P<uuid>[\S]+)/get_content_metadata',
         views.EnterpriseCatalogGetContentMetadata.as_view({'get': 'get'}),
         name='get-content-metadata'
