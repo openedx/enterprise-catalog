@@ -10,3 +10,4 @@ make requirements
 
 make validate_translations
 make validate
+make check_keywords
