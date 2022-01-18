@@ -9,7 +9,7 @@ TOX = ''
         detect_changed_source_translations validate_translations \
         dev.provision dev.init dev.makemigrations dev.migrate dev.up \
         dev.up.build dev.down dev.destroy dev.stop docker_build \
-        shellcheck
+        shellcheck check_keywords
 
 
 define BROWSER_PYSCRIPT
@@ -225,3 +225,6 @@ docker_push: docker_tag docker_auth ## push to docker hub
 	docker push "openedx/enterprise-catalog:$$GITHUB_SHA"
 	docker push 'openedx/enterprise-catalog:latest-newrelic'
 	docker push "openedx/enterprise-catalog:$$GITHUB_SHA-newrelic"
+
+check_keywords: ## Scan the Django models in all installed apps in this project for restricted field names
+	python manage.py check_reserved_keywords --override_file db_keyword_overrides.yml
