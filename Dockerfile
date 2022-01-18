@@ -1,4 +1,4 @@
-FROM ubuntu:xenial as app
+FROM ubuntu:bionic as app
 LABEL maintainer="devops@edx.org"
 
 # Packages installed:
