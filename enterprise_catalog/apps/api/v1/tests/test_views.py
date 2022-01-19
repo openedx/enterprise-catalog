@@ -38,6 +38,103 @@ from enterprise_catalog.apps.catalog.utils import get_parent_content_key
 
 
 @ddt.ddt
+class EnterpriseCatalogDefaultCatalogResultsTests(APITestMixin):
+    """
+    Tests for the DefaultCatalogResultsView class
+    """
+    mock_algolia_hits = {'hits': [{
+        'aggregation_key': 'course:MITx+18.01.2x',
+        'key': 'MITx+18.01.2x',
+        'language': 'English',
+        'level_type': 'Intermediate',
+        'content_type': 'course',
+        'partners': [
+            {'name': 'Massachusetts Institute of Technology',
+             'logo_image_url': 'https://edx.org/image.png'}
+        ],
+        'programs': ['Professional Certificate'],
+        'program_titles': ['Totally Awesome Program'],
+        'short_description': 'description',
+        'subjects': ['Math'],
+        'skills': [{
+            'name': 'Probability And Statistics',
+            'description': 'description'
+        }, {
+            'name': 'Engineering Design Process',
+            'description': 'description'
+        }],
+        'title': 'Calculus 1B: Integration',
+        'marketing_url': 'edx.org/foo-bar',
+        'first_enrollable_paid_seat_price': 100,
+        'advertised_course_run': {
+            'key': 'MITx/18.01.2x/3T2015',
+            'pacing_type': 'instructor_paced',
+            'start': '2015-09-08T00:00:00Z',
+            'end': '2015-09-08T00:00:01Z',
+            'upgrade_deadline': 32503680000.0,
+        },
+        'objectID': 'course-3543aa4e-3c64-4d9a-a343-5d5eda1dacf8-catalog-query-uuids-0'
+    },
+        {
+        'aggregation_key': 'course:MITx+19',
+        'key': 'MITx+19',
+        'language': 'English',
+        'level_type': 'Intermediate',
+        'objectID': 'course-3543aa4e-3c64-4d9a-a343-5d5eda1dacf9-catalog-query-uuids-0'
+    },
+        {
+        'aggregation_key': 'course:MITx+20',
+        'language': 'English',
+        'level_type': 'Intermediate',
+        'objectID': 'course-3543aa4e-3c64-4d9a-a343-5d5eda1dacf7-catalog-query-uuids-0'
+    }
+    ]}
+
+    def setUp(self):
+        super().setUp()
+        self.set_up_staff_user()
+
+    def _get_contains_content_base_url(self):
+        """
+        Helper to construct the base url for the contains_content_items endpoint
+        """
+        return reverse('api:v1:default-course-set')
+
+    def test_facet_validation(self):
+        """
+        Tests that the view validates Algolia facets provided by query params
+        """
+        url = self._get_contains_content_base_url()
+        invalid_facets = 'invalid_facet=wrong&enterprise_catalog_query_titles=ayylmao'
+        response = self.client.get(f'{url}?{invalid_facets}')
+        assert response.status_code == 400
+        assert response.json() == {'Error': "invalid facet(s): ['invalid_facet'] provided."}
+
+    @mock.patch('enterprise_catalog.apps.api.v1.views.default_catalog_results.get_initialized_algolia_client')
+    def test_valid_facet_validation(self, mock_algolia_client):
+        """
+        Tests a successful request with facets.
+        """
+        mock_algolia_client.return_value.algolia_index.search.side_effect = [self.mock_algolia_hits, {'hits': []}]
+        url = self._get_contains_content_base_url()
+        facets = 'enterprise_catalog_query_titles=foo&content_type=course'
+        response = self.client.get(f'{url}?{facets}')
+        assert response.status_code == 200
+
+    def test_required_param_validation(self):
+        """
+        Tests that the view requires a provided catalog
+        """
+        url = self._get_contains_content_base_url()
+        invalid_facets = 'bad=ayylmao'
+        response = self.client.get(f'{url}?{invalid_facets}')
+        assert response.status_code == 400
+        assert response.json() == [
+            'You must provide at least one of the following query parameters: enterprise_catalog_query_titles.'
+        ]
+
+
+@ddt.ddt
 class EnterpriseCatalogCRUDViewSetTests(APITestMixin):
     """
     Tests for the EnterpriseCatalogCRUDViewSet
