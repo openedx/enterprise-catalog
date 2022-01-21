@@ -1,3 +1,4 @@
+import codecs
 import csv
 import logging
 import time
@@ -198,6 +199,8 @@ class CatalogCsvView(GenericAPIView):
         pseudo_buffer = Echo()
         writer = csv.writer(pseudo_buffer)
 
+        # need a leading BOM for excel-compatible files with UTF-8 content
+        yield codecs.BOM_UTF8
         yield writer.writerow(export_utils.CSV_HEADERS)
 
         algolia_client = get_initialized_algolia_client()
