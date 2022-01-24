@@ -691,8 +691,8 @@ class EnterpriseCatalogCsvDataViewTests(APITestMixin):
         assert response.status_code == 400
         assert response.data == "Error: invalid facet(s): ['invalid_facet'] provided."
 
-    @mock.patch('enterprise_catalog.apps.api.v1.views.DiscoveryApiClient')
-    @mock.patch('enterprise_catalog.apps.api.v1.views.get_initialized_algolia_client')
+    @mock.patch('enterprise_catalog.apps.api.v1.views.catalog_csv_data.DiscoveryApiClient')
+    @mock.patch('enterprise_catalog.apps.api.v1.views.catalog_csv_data.get_initialized_algolia_client')
     def test_valid_facet_validation(self, mock_algolia_client, mock_discovery_client):
         """
         Tests a successful request with facets.
@@ -709,8 +709,8 @@ class EnterpriseCatalogCsvDataViewTests(APITestMixin):
         }
         assert response.data == expected_response
 
-    @mock.patch('enterprise_catalog.apps.api.v1.views.DiscoveryApiClient')
-    @mock.patch('enterprise_catalog.apps.api.v1.views.get_initialized_algolia_client')
+    @mock.patch('enterprise_catalog.apps.api.v1.views.catalog_csv_data.DiscoveryApiClient')
+    @mock.patch('enterprise_catalog.apps.api.v1.views.catalog_csv_data.get_initialized_algolia_client')
     def test_csv_row_construction_handles_missing_values(self, mock_algolia_client, mock_discovery_client):
         """
         Tests that the view properly handles situations where data is missing from the Algolia hit.
@@ -1158,10 +1158,19 @@ class EnterpriseCatalogRefreshDataFromDiscoveryTests(APITestMixin):
             catalog_query=self.catalog_query,
         )
 
-    @mock.patch('enterprise_catalog.apps.api.v1.views.chain')
-    @mock.patch('enterprise_catalog.apps.api.v1.views.update_catalog_metadata_task')
-    @mock.patch('enterprise_catalog.apps.api.v1.views.update_full_content_metadata_task')
-    @mock.patch('enterprise_catalog.apps.api.v1.views.index_enterprise_catalog_in_algolia_task')
+    @mock.patch('enterprise_catalog.apps.api.v1.views.enterprise_catalog_refresh_data_from_discovery.chain')
+    @mock.patch(
+        'enterprise_catalog.apps.api.v1.views.enterprise_catalog_refresh_data_from_discovery.'
+        'update_catalog_metadata_task'
+    )
+    @mock.patch(
+        'enterprise_catalog.apps.api.v1.views.enterprise_catalog_refresh_data_from_discovery.'
+        'update_full_content_metadata_task'
+    )
+    @mock.patch(
+        'enterprise_catalog.apps.api.v1.views.enterprise_catalog_refresh_data_from_discovery.'
+        'index_enterprise_catalog_in_algolia_task'
+    )
     def test_refresh_catalog(
         self,
         mock_index_task,
