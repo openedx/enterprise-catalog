@@ -8,6 +8,9 @@ from enterprise_catalog.apps.api.v1.views.catalog_csv import CatalogCsvView
 from enterprise_catalog.apps.api.v1.views.catalog_csv_data import (
     CatalogCsvDataView,
 )
+from enterprise_catalog.apps.api.v1.views.default_catalog_results import (
+    DefaultCatalogResultsView,
+)
 from enterprise_catalog.apps.api.v1.views.distinct_catalog_queries import (
     DistinctCatalogQueriesView,
 )
@@ -43,6 +46,11 @@ urlpatterns = [
         r'^enterprise-catalogs/catalog_csv_data',
         CatalogCsvDataView.as_view(),
         name='catalog-csv-data'
+    ),
+    url(
+        r'^enterprise-catalogs/default_course_set',
+        DefaultCatalogResultsView.as_view(),
+        name='default-course-set'
     ),
     url(
         r'^enterprise-catalogs/catalog_csv',
