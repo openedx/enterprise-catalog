@@ -389,11 +389,11 @@ SYSTEM_TO_FEATURE_ROLE_MAPPING = {
 
 # Set the query batch size with which existing content metadata records
 # are updated during the `update_catalog_metadata_task()` celery task.
-# Using batch_size of 6 or higher makes us prone to exceeding
+# Using batch_size of 5 or higher makes us prone to exceeding
 # the MySql default `max_allowed_packet` size of 4MB.
 # This can occur because we have a good handful of records
-# that are around 600k each (really big `json_metadata` values),
-# and 0.6MB * 6 = 3.6MB + [all other query tokens] > 4MB
+# that are around 700k each (really big `json_metadata` values),
+# and 0.7MB * 5 = 3.5MB + [all other query tokens] > 4MB
 # (in the worse case where we're updating
 # mostly our largest records in a single query).
-UPDATE_EXISTING_CONTENT_METADATA_BATCH_SIZE = 5
+UPDATE_EXISTING_CONTENT_METADATA_BATCH_SIZE = 4
