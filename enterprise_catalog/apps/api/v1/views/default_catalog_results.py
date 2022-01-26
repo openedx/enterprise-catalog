@@ -54,6 +54,7 @@ class DefaultCatalogResultsView(GenericAPIView):
         'availability',
         'program_type',
         'course_keys',
+        'authoring_organizations',
     ]
 
     @method_decorator(require_at_least_one_query_parameter('enterprise_catalog_query_titles'))
