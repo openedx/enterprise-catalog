@@ -40,7 +40,7 @@ DISCOVERY_PROGRAM_KEY_BATCH_SIZE = 50
 # Async task constants
 REINDEX_TASK_BATCH_SIZE = 1
 TASK_BATCH_SIZE = 250
-TASK_TIMEOUT = 90 * 60  # Gives tasks (usually chains) 90 minutes to return before timing out
+TASK_TIMEOUT = 2 * 60 * 60  # Gives tasks (usually chains) 2 hours to return before timing out
 
 # Which fields should be plucked from the /search/all course-discovery API
 # response in `update_catalog_metadata_task` for course content metadata?
