@@ -506,6 +506,26 @@ def get_program_learning_items(program):
     return program.get('expected_learning_items') or []
 
 
+def get_program_prices(program):
+    """
+    Gets the prices (only USD for now) for a program. Used for the "prices" facet in Algolia.
+
+    Arguments:
+        program (dict): a dictionary representing a program.
+
+    Returns:
+        dict: { total_usd: priceValueInUSD }.
+    """
+    price_ranges = program.get('price_ranges') or []
+    try:
+        usd_price = [price for price in price_ranges if price.get('currency') == 'USD'][0]
+    except IndexError:
+        usd_price = None
+    if usd_price is not None:
+        return {'usd_total': usd_price['total']}
+    return None
+
+
 def get_course_program_types(course):
     """
     Gets list of program types associated with the course. Used for the "Programs"
@@ -787,6 +807,7 @@ def _algolia_object_from_product(product, algolia_fields):
             'skill_names': get_program_skill_names(searchable_product),
             'level_type': get_program_level_type(searchable_product),
             'learning_items': get_program_learning_items(searchable_product),
+            'prices': get_program_prices(searchable_product),
         })
 
     algolia_object = {}

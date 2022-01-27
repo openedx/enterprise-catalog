@@ -22,6 +22,7 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     get_program_learning_items,
     get_program_level_type,
     get_program_partners,
+    get_program_prices,
     get_program_skill_names,
     get_program_subjects,
     get_program_title,
@@ -552,6 +553,20 @@ class AlgoliaUtilsTests(TestCase):
         """
         program_type = get_program_type(program_metadata)
         self.assertEqual(expected_type, program_type)
+
+    @ddt.data(
+        (
+            {'price_ranges': [{'currency': 'USD', 'total': 169}, {'currency': 'GBP', 'total': 1}]},
+            {'usd_total': 169},
+        ),
+    )
+    @ddt.unpack
+    def test_get_program_prices(self, program_metadata, expected_type):
+        """
+        Assert that the prices associated with a program is properly parsed.
+        """
+        program_prices = get_program_prices(program_metadata)
+        self.assertEqual(expected_type, program_prices)
 
     @ddt.data(
         (
