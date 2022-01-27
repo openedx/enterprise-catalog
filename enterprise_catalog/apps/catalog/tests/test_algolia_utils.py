@@ -19,6 +19,7 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     get_course_subjects,
     get_initialized_algolia_client,
     get_program_availability,
+    get_program_learning_items,
     get_program_level_type,
     get_program_partners,
     get_program_skill_names,
@@ -446,6 +447,24 @@ class AlgoliaUtilsTests(TestCase):
         """
         program_types = get_course_program_types(course_metadata)
         assert program_types == expected_program_types
+
+    @ddt.data(
+        (
+            {'expected_learning_items': ['a', 'b', 'x']},
+            ['a', 'b', 'x'],
+        ),
+        (
+            {},
+            [],
+        ),
+    )
+    @ddt.unpack
+    def test_get_course_learning_items(self, program_metadata, expected_program_types):
+        """
+        Assert that the list of program types associated with a course is properly parsed and formatted.
+        """
+        learning_items = get_program_learning_items(program_metadata)
+        assert learning_items == expected_program_types
 
     @ddt.data(
         (

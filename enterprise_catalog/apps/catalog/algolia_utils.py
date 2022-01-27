@@ -1,6 +1,7 @@
 import copy
 import datetime
 import logging
+from re import search
 import time
 
 from django.utils.translation import ugettext as _
@@ -492,6 +493,19 @@ def get_program_level_type(program):
     return max(set(level_types), key=level_types.count) if level_types else ''
 
 
+def get_program_learning_items(program):
+    """
+    Gets the expected_learning_items for a program. Used for the "learning_items" facet in Algolia.
+
+    Arguments:
+        program (dict): a dictionary representing a program.
+
+    Returns:
+        list(str): list of learning items.
+    """
+    return program.get('expected_learning_items') or []
+
+
 def get_course_program_types(course):
     """
     Gets list of program types associated with the course. Used for the "Programs"
@@ -772,6 +786,7 @@ def _algolia_object_from_product(product, algolia_fields):
             'subjects': get_program_subjects(searchable_product),
             'skill_names': get_program_skill_names(searchable_product),
             'level_type': get_program_level_type(searchable_product),
+            'learning_items': get_program_learning_items(searchable_product),
         })
 
     algolia_object = {}
