@@ -824,6 +824,7 @@ def _algolia_object_from_product(product, algolia_fields):
             'level_type': get_program_level_type(searchable_product),
             'learning_items': get_program_learning_items(searchable_product),
             'prices': get_program_prices(searchable_product),
+            'banner_image_url': get_program_banner_image_url(searchable_product),
         })
 
     algolia_object = {}
