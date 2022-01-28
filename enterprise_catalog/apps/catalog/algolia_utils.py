@@ -1,7 +1,6 @@
 import copy
 import datetime
 import logging
-from re import search
 import time
 
 from django.utils.translation import ugettext as _
@@ -503,7 +502,7 @@ def get_program_learning_items(program):
     Returns:
         list(str): list of learning items.
     """
-    return program.get('expected_learning_items') or []
+    return program.get('expected_learning_items', [])
 
 
 def get_program_prices(program):
@@ -516,14 +515,31 @@ def get_program_prices(program):
     Returns:
         dict: { total_usd: priceValueInUSD }.
     """
-    price_ranges = program.get('price_ranges') or []
+    price_ranges = program.get('price_ranges', [])
     try:
-        usd_price = [price for price in price_ranges if price.get('currency') == 'USD'][0]
+        usd_price = [price for price in price_ranges if price.get('currency', '') == 'USD'][0]
     except IndexError:
         usd_price = None
     if usd_price is not None:
         return {'usd_total': usd_price['total']}
     return None
+
+
+def get_program_banner_image_url(program):
+    """
+    Gets the banner_image_url (only large is fetched), rest of urls can be deduced
+
+    Arguments:
+        program (dict): a dictionary representing a program.
+
+    Returns:
+        str: url to large size image
+    """
+    images = program.get('banner_image', {})
+    try:
+        return images.get('large').get('url')
+    except (KeyError, AttributeError):
+        return None
 
 
 def get_course_program_types(course):

@@ -19,6 +19,7 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     get_course_subjects,
     get_initialized_algolia_client,
     get_program_availability,
+    get_program_banner_image_url,
     get_program_learning_items,
     get_program_level_type,
     get_program_partners,
@@ -567,6 +568,28 @@ class AlgoliaUtilsTests(TestCase):
         """
         program_prices = get_program_prices(program_metadata)
         self.assertEqual(expected_type, program_prices)
+
+    @ddt.data(
+        (
+            {'banner_image': {'large': {'url': 'https://test'}}},
+            'https://test',
+        ),
+        (
+            {'banner_image': {}},
+            None,
+        ),
+        (
+            {'banner_image': {'large': {}}},
+            None,
+        ),
+    )
+    @ddt.unpack
+    def test_get_program_banner_image(self, program_metadata, expected_type):
+        """
+        Assert that the prices associated with a program is properly parsed.
+        """
+        image_url = get_program_banner_image_url(program_metadata)
+        self.assertEqual(expected_type, image_url)
 
     @ddt.data(
         (
