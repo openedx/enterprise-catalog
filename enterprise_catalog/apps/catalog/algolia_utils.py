@@ -56,6 +56,9 @@ ALGOLIA_FIELDS = [
     'original_image_url',
     'marketing_url',
     'enterprise_catalog_query_titles',
+    'learning_items',
+    'prices',
+    'banner_image_url',
 ]
 
 # default configuration for the index
@@ -513,7 +516,7 @@ def get_program_prices(program):
         program (dict): a dictionary representing a program.
 
     Returns:
-        dict: { total_usd: priceValueInUSD }.
+        dict: { usd_total: priceValueInUSD }.
     """
     price_ranges = program.get('price_ranges', [])
     try:
