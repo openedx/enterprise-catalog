@@ -56,6 +56,9 @@ ALGOLIA_FIELDS = [
     'original_image_url',
     'marketing_url',
     'enterprise_catalog_query_titles',
+    'learning_items',
+    'prices',
+    'banner_image_url',
 ]
 
 # default configuration for the index
@@ -492,6 +495,56 @@ def get_program_level_type(program):
     return max(set(level_types), key=level_types.count) if level_types else ''
 
 
+def get_program_learning_items(program):
+    """
+    Gets the expected_learning_items for a program. Used for the "learning_items" facet in Algolia.
+
+    Arguments:
+        program (dict): a dictionary representing a program.
+
+    Returns:
+        list(str): list of learning items.
+    """
+    return program.get('expected_learning_items', [])
+
+
+def get_program_prices(program):
+    """
+    Gets the prices (only USD for now) for a program. Used for the "prices" facet in Algolia.
+
+    Arguments:
+        program (dict): a dictionary representing a program.
+
+    Returns:
+        dict: { usd_total: priceValueInUSD }.
+    """
+    price_ranges = program.get('price_ranges', [])
+    try:
+        usd_price = [price for price in price_ranges if price.get('currency', '') == 'USD'][0]
+    except IndexError:
+        usd_price = None
+    if usd_price is not None:
+        return {'usd_total': usd_price['total']}
+    return None
+
+
+def get_program_banner_image_url(program):
+    """
+    Gets the banner_image_url (only large is fetched), rest of urls can be deduced
+
+    Arguments:
+        program (dict): a dictionary representing a program.
+
+    Returns:
+        str: url to large size image
+    """
+    images = program.get('banner_image', {})
+    try:
+        return images.get('large').get('url')
+    except (KeyError, AttributeError):
+        return None
+
+
 def get_course_program_types(course):
     """
     Gets list of program types associated with the course. Used for the "Programs"
@@ -772,6 +825,9 @@ def _algolia_object_from_product(product, algolia_fields):
             'subjects': get_program_subjects(searchable_product),
             'skill_names': get_program_skill_names(searchable_product),
             'level_type': get_program_level_type(searchable_product),
+            'learning_items': get_program_learning_items(searchable_product),
+            'prices': get_program_prices(searchable_product),
+            'banner_image_url': get_program_banner_image_url(searchable_product),
         })
 
     algolia_object = {}

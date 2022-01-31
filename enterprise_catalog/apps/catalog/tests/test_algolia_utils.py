@@ -19,8 +19,11 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     get_course_subjects,
     get_initialized_algolia_client,
     get_program_availability,
+    get_program_banner_image_url,
+    get_program_learning_items,
     get_program_level_type,
     get_program_partners,
+    get_program_prices,
     get_program_skill_names,
     get_program_subjects,
     get_program_title,
@@ -449,6 +452,24 @@ class AlgoliaUtilsTests(TestCase):
 
     @ddt.data(
         (
+            {'expected_learning_items': ['a', 'b', 'x']},
+            ['a', 'b', 'x'],
+        ),
+        (
+            {},
+            [],
+        ),
+    )
+    @ddt.unpack
+    def test_get_course_learning_items(self, program_metadata, expected_program_types):
+        """
+        Assert that the list of program types associated with a course is properly parsed and formatted.
+        """
+        learning_items = get_program_learning_items(program_metadata)
+        assert learning_items == expected_program_types
+
+    @ddt.data(
+        (
             {'programs': [{'type': 'Masters', 'title': 'Reverse Psychology'}]},
             ['Reverse Psychology'],
         ),
@@ -533,6 +554,42 @@ class AlgoliaUtilsTests(TestCase):
         """
         program_type = get_program_type(program_metadata)
         self.assertEqual(expected_type, program_type)
+
+    @ddt.data(
+        (
+            {'price_ranges': [{'currency': 'USD', 'total': 169}, {'currency': 'GBP', 'total': 1}]},
+            {'usd_total': 169},
+        ),
+    )
+    @ddt.unpack
+    def test_get_program_prices(self, program_metadata, expected_type):
+        """
+        Assert that the prices associated with a program is properly parsed.
+        """
+        program_prices = get_program_prices(program_metadata)
+        self.assertEqual(expected_type, program_prices)
+
+    @ddt.data(
+        (
+            {'banner_image': {'large': {'url': 'https://test'}}},
+            'https://test',
+        ),
+        (
+            {'banner_image': {}},
+            None,
+        ),
+        (
+            {'banner_image': {'large': {}}},
+            None,
+        ),
+    )
+    @ddt.unpack
+    def test_get_program_banner_image(self, program_metadata, expected_type):
+        """
+        Assert that the prices associated with a program is properly parsed.
+        """
+        image_url = get_program_banner_image_url(program_metadata)
+        self.assertEqual(expected_type, image_url)
 
     @ddt.data(
         (
