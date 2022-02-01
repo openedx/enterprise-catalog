@@ -461,7 +461,7 @@ class AlgoliaUtilsTests(TestCase):
         ),
     )
     @ddt.unpack
-    def test_get_course_learning_items(self, program_metadata, expected_program_types):
+    def test_get_program_learning_items(self, program_metadata, expected_program_types):
         """
         Assert that the list of program types associated with a course is properly parsed and formatted.
         """
