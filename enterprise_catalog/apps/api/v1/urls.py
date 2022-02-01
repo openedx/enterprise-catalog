@@ -5,6 +5,7 @@ from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 
 from enterprise_catalog.apps.api.v1.views.catalog_csv import CatalogCsvView
+from enterprise_catalog.apps.api.v1.views.catalog_workbook import CatalogWorkbookView
 from enterprise_catalog.apps.api.v1.views.catalog_csv_data import (
     CatalogCsvDataView,
 )
@@ -56,6 +57,11 @@ urlpatterns = [
         r'^enterprise-catalogs/catalog_csv',
         CatalogCsvView.as_view(),
         name='catalog-csv'
+    ),
+    url(
+        r'^enterprise-catalogs/catalog_workbook',
+        CatalogWorkbookView.as_view(),
+        name='catalog-workbook'
     ),
     url(
         r'^enterprise-catalogs/(?P<uuid>[\S]+)/get_content_metadata',
