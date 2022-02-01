@@ -558,8 +558,12 @@ class AlgoliaUtilsTests(TestCase):
     @ddt.data(
         (
             {'price_ranges': [{'currency': 'USD', 'total': 169}, {'currency': 'GBP', 'total': 1}]},
-            {'usd_total': 169},
+            [{'currency': 'USD', 'total': 169}],
         ),
+        (
+            {},
+            [],
+        )
     )
     @ddt.unpack
     def test_get_program_prices(self, program_metadata, expected_type):
