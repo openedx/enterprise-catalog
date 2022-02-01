@@ -516,16 +516,13 @@ def get_program_prices(program):
         program (dict): a dictionary representing a program.
 
     Returns:
-        dict: { usd_total: priceValueInUSD }.
+        array of price dict values: e.g., [{'currency': 'USD', 'total': 169}]
     """
     price_ranges = program.get('price_ranges', [])
-    try:
-        usd_price = [price for price in price_ranges if price.get('currency', '') == 'USD'][0]
-    except IndexError:
-        usd_price = None
-    if usd_price is not None:
-        return {'usd_total': usd_price['total']}
-    return None
+    if not price_ranges:
+        return []
+    prices = [price for price in price_ranges if price.get('currency', '') == 'USD']
+    return prices
 
 
 def get_program_banner_image_url(program):
