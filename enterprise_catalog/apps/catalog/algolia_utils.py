@@ -38,8 +38,10 @@ ALGOLIA_FIELDS = [
     'language',
     'level_type',
     'objectID',  # required by Algolia, e.g. "course-{uuid}"
+    'outcome',
     'partner',
     'partners',
+    'prerequisites',
     'programs',
     'program_titles',
     'program_type',
