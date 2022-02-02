@@ -9,7 +9,7 @@ from enterprise_catalog.apps.catalog.algolia_utils import ALGOLIA_INDEX_SETTINGS
 
 logger = logging.getLogger(__name__)
 
-CSV_HEADERS = [
+CSV_COURSE_HEADERS = [
     'Title',
     'Partner Name',
     'Start',
@@ -34,6 +34,14 @@ CSV_HEADERS = [
     'Pre-requisites',
 ]
 
+CSV_PROGRAM_HEADERS = [
+    'Title',
+    'Program Type',
+    'Partner',
+    'Short Description',
+    'Number of courses',
+]
+
 ALGOLIA_ATTRIBUTES_TO_RETRIEVE = [
     'title',
     'key',
@@ -50,13 +58,35 @@ ALGOLIA_ATTRIBUTES_TO_RETRIEVE = [
     'skills',
     'first_enrollable_paid_seat_price',
     'marketing_url',
+    'outcome',
+    'prerequisites_raw',
+    'program_type',
+    'subtitle',
+    'course_keys',
 ]
 
 
-def hit_to_row(hit):
-    # pylint: disable=too-many-statements
+def program_hit_to_row(hit):
     """
-    Helper function to construct a CSV row according to a single Algolia result hit.
+    Helper function to construct a CSV row according to a single Algolia result program hit.
+    """
+    csv_row = []
+    csv_row.append(hit.get('title'))
+    csv_row.append(hit.get('program_type'))
+
+    partners = [partner['name'] for partner in hit.get('partners', [])]
+    csv_row.append(', '.join(partners))
+
+    csv_row.append(hit.get('subtitle'))
+
+    csv_row.append(len(hit.get('course_keys', [])))
+
+    return csv_row
+
+
+def course_hit_to_row(hit):
+    """
+    Helper function to construct a CSV row according to a single Algolia result course hit.
     """
     csv_row = []
     csv_row.append(hit.get('title'))
@@ -111,30 +141,31 @@ def hit_to_row(hit):
     skills = [skill['name'] for skill in hit.get('skills', [])]
     csv_row.append(', '.join(skills))
 
-    discovery_course = hit.get('discovery_course', {})
-    discovery_course_runs = discovery_course.get('course_runs', [])
-
-    try:
-        discovery_first_course_run = discovery_course_runs[0]
-    except IndexError:
-        discovery_first_course_run = {}
+    advertised_course_run = hit.get('advertised_course_run', {})
 
     # Min Effort
-    csv_row.append(discovery_first_course_run.get('min_effort'))
+    csv_row.append(advertised_course_run.get('min_effort'))
 
     # Max Effort
-    csv_row.append(discovery_first_course_run.get('max_effort'))
+    csv_row.append(advertised_course_run.get('max_effort'))
 
     # Length
-    csv_row.append(discovery_first_course_run.get('weeks_to_complete'))
+    csv_row.append(advertised_course_run.get('weeks_to_complete'))
 
     # What You’ll Learn -> outcome
-    csv_row.append(strip_tags(discovery_course.get('outcome', '')))
+    csv_row.append(strip_tags(hit.get('outcome', '')))
 
     # Pre-requisites -> prerequisites_raw
-    csv_row.append(strip_tags(discovery_course.get('prerequisites_raw', '')))
+    csv_row.append(strip_tags(hit.get('prerequisites_raw', '')))
 
     return csv_row
+
+
+def hit_to_row(hit):
+    """
+    Maintain the legacy API for now.
+    """
+    return course_hit_to_row(hit)
 
 
 def querydict_to_dict(query_dict):

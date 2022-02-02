@@ -3,7 +3,6 @@ import datetime
 import logging
 import time
 
-from django.utils.html import strip_tags
 from django.utils.translation import ugettext as _
 
 from enterprise_catalog.apps.api.v1.utils import is_course_run_active
@@ -686,7 +685,7 @@ def get_course_outcome(course):
     Returns:
         str: the course outcome stripped of tags
     """
-    outcome = strip_tags(course.get('outcome', ''))
+    outcome = course.get('outcome')
     return outcome
 
 
@@ -700,7 +699,7 @@ def get_course_prerequisites(course):
     Returns:
         str: the course prerequisites stripped of tags
     """
-    prerequisites = strip_tags(course.get('prerequisites_raw', ''))
+    prerequisites = course.get('prerequisites_raw')
     return prerequisites
 
 
