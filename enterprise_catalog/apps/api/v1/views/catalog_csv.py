@@ -42,7 +42,7 @@ class CatalogCsvView(GenericAPIView):
 
         # need a leading BOM for excel-compatible files with UTF-8 content
         yield codecs.BOM_UTF8
-        yield writer.writerow(export_utils.CSV_HEADERS)
+        yield writer.writerow(export_utils.CSV_COURSE_HEADERS)
 
         algolia_client = get_initialized_algolia_client()
         # discovery to gather extra, non-indexed fields

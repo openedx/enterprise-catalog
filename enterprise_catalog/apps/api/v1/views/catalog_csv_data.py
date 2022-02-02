@@ -100,7 +100,7 @@ class CatalogCsvDataView(GenericAPIView):
 
         with StringIO() as file:
             writer = csv.writer(file)
-            writer.writerow(export_utils.CSV_HEADERS)
+            writer.writerow(export_utils.CSV_COURSE_HEADERS)
             for hit in algolia_hits:
                 row = export_utils.hit_to_row(hit)
                 writer.writerow(row)

@@ -517,7 +517,7 @@ class AlgoliaUtilsTests(TestCase):
         ),
         (
             {'outcome': '<b>A sense of understanding.</b>'},
-            'A sense of understanding.',
+            '<b>A sense of understanding.</b>',
         ),
         (
             {'outcome': ''},
@@ -539,7 +539,7 @@ class AlgoliaUtilsTests(TestCase):
         ),
         (
             {'prerequisites_raw': '<b>A sense of understanding.</b>'},
-            'A sense of understanding.',
+            '<b>A sense of understanding.</b>',
         ),
         (
             {'prerequisites_raw': ''},
