@@ -12,7 +12,9 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     get_course_availability,
     get_course_card_image_url,
     get_course_language,
+    get_course_outcome,
     get_course_partners,
+    get_course_prerequisites,
     get_course_program_titles,
     get_course_program_types,
     get_course_skill_names,
@@ -241,6 +243,9 @@ class AlgoliaUtilsTests(TestCase):
                     'pacing_type': 'instructor_paced',
                     'start': '2013-10-16T14:00:00Z',
                     'end': '2014-10-16T14:00:00Z',
+                    'min_effort': 10,
+                    'max_effort': 14,
+                    'weeks_to_complete': 13,
                 }],
                 'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID
             },
@@ -249,6 +254,9 @@ class AlgoliaUtilsTests(TestCase):
                 'pacing_type': 'instructor_paced',
                 'start': '2013-10-16T14:00:00Z',
                 'end': '2014-10-16T14:00:00Z',
+                'min_effort': 10,
+                'max_effort': 14,
+                'weeks_to_complete': 13,
                 'upgrade_deadline': 32503680000.0,
             },
         ),
@@ -269,6 +277,9 @@ class AlgoliaUtilsTests(TestCase):
                     'pacing_type': 'instructor_paced',
                     'start': '2013-10-16T14:00:00Z',
                     'end': '2014-10-16T14:00:00Z',
+                    'min_effort': 10,
+                    'max_effort': 14,
+                    'weeks_to_complete': 13,
                     'seats': [{
                         'type': 'audit',
                         'upgrade_deadline': None,
@@ -284,6 +295,9 @@ class AlgoliaUtilsTests(TestCase):
                 'pacing_type': 'instructor_paced',
                 'start': '2013-10-16T14:00:00Z',
                 'end': '2014-10-16T14:00:00Z',
+                'min_effort': 10,
+                'max_effort': 14,
+                'weeks_to_complete': 13,
                 'upgrade_deadline': 1420386720.0,
             }
         ),
@@ -295,6 +309,9 @@ class AlgoliaUtilsTests(TestCase):
                     'pacing_type': 'instructor_paced',
                     'start': '2013-10-16T14:00:00Z',
                     'end': '2014-10-16T14:00:00Z',
+                    'min_effort': 10,
+                    'max_effort': 14,
+                    'weeks_to_complete': 13,
                     'seats': [{
                         'type': 'verified',
                         'upgrade_deadline': None,
@@ -307,6 +324,9 @@ class AlgoliaUtilsTests(TestCase):
                 'pacing_type': 'instructor_paced',
                 'start': '2013-10-16T14:00:00Z',
                 'end': '2014-10-16T14:00:00Z',
+                'min_effort': 10,
+                'max_effort': 14,
+                'weeks_to_complete': 13,
                 'upgrade_deadline': 32503680000.0,
             }
         )
@@ -461,7 +481,7 @@ class AlgoliaUtilsTests(TestCase):
         ),
     )
     @ddt.unpack
-    def test_get_course_learning_items(self, program_metadata, expected_program_types):
+    def test_get_program_learning_items(self, program_metadata, expected_program_types):
         """
         Assert that the list of program types associated with a course is properly parsed and formatted.
         """
@@ -489,6 +509,50 @@ class AlgoliaUtilsTests(TestCase):
         """
         program_titles = get_course_program_titles(course_metadata)
         assert program_titles == expected_program_titles
+
+    @ddt.data(
+        (
+            {'outcome': 'A sense of understanding.'},
+            'A sense of understanding.',
+        ),
+        (
+            {'outcome': '<b>A sense of understanding.</b>'},
+            'A sense of understanding.',
+        ),
+        (
+            {'outcome': ''},
+            '',
+        ),
+    )
+    @ddt.unpack
+    def test_get_course_outcomes(self, course_metadata, expected_course_outcome):
+        """
+        Assert that the course outcome is properly parsed and formatted.
+        """
+        outcome = get_course_outcome(course_metadata)
+        assert outcome == expected_course_outcome
+
+    @ddt.data(
+        (
+            {'prerequisites_raw': 'A sense of understanding.'},
+            'A sense of understanding.',
+        ),
+        (
+            {'prerequisites_raw': '<b>A sense of understanding.</b>'},
+            'A sense of understanding.',
+        ),
+        (
+            {'prerequisites_raw': ''},
+            '',
+        ),
+    )
+    @ddt.unpack
+    def test_get_course_prerequisites(self, course_metadata, expected_course_prerequisites):
+        """
+        Assert that the course prerequisites is properly parsed and formatted.
+        """
+        prerequisites = get_course_prerequisites(course_metadata)
+        assert prerequisites == expected_course_prerequisites
 
     @ddt.data(
         (
@@ -558,8 +622,12 @@ class AlgoliaUtilsTests(TestCase):
     @ddt.data(
         (
             {'price_ranges': [{'currency': 'USD', 'total': 169}, {'currency': 'GBP', 'total': 1}]},
-            {'usd_total': 169},
+            [{'currency': 'USD', 'total': 169}],
         ),
+        (
+            {},
+            [],
+        )
     )
     @ddt.unpack
     def test_get_program_prices(self, program_metadata, expected_type):

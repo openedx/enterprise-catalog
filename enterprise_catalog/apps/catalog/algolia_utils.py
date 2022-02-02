@@ -3,6 +3,7 @@ import datetime
 import logging
 import time
 
+from django.utils.html import strip_tags
 from django.utils.translation import ugettext as _
 
 from enterprise_catalog.apps.api.v1.utils import is_course_run_active
@@ -37,8 +38,10 @@ ALGOLIA_FIELDS = [
     'language',
     'level_type',
     'objectID',  # required by Algolia, e.g. "course-{uuid}"
+    'outcome',
     'partner',
     'partners',
+    'prerequisites',
     'programs',
     'program_titles',
     'program_type',
@@ -516,16 +519,13 @@ def get_program_prices(program):
         program (dict): a dictionary representing a program.
 
     Returns:
-        dict: { usd_total: priceValueInUSD }.
+        array of price dict values: e.g., [{'currency': 'USD', 'total': 169}]
     """
     price_ranges = program.get('price_ranges', [])
-    try:
-        usd_price = [price for price in price_ranges if price.get('currency', '') == 'USD'][0]
-    except IndexError:
-        usd_price = None
-    if usd_price is not None:
-        return {'usd_total': usd_price['total']}
-    return None
+    if not price_ranges:
+        return []
+    prices = [price for price in price_ranges if price.get('currency', '') == 'USD']
+    return prices
 
 
 def get_program_banner_image_url(program):
@@ -676,6 +676,34 @@ def get_course_skills(course):
     return list(skills)
 
 
+def get_course_outcome(course):
+    """
+    Gets the course outcome description, no tags.
+
+    Arguments:
+        course (dict): a dictionary representing a course
+
+    Returns:
+        str: the course outcome stripped of tags
+    """
+    outcome = strip_tags(course.get('outcome', ''))
+    return outcome
+
+
+def get_course_prerequisites(course):
+    """
+    Gets the course prerequisites description, no tags.
+
+    Arguments:
+        course (dict): a dictionary representing a course
+
+    Returns:
+        str: the course prerequisites stripped of tags
+    """
+    prerequisites = strip_tags(course.get('prerequisites_raw', ''))
+    return prerequisites
+
+
 def get_advertised_course_run(course):
     """
     Get part of the advertised course_run as per advertised_course_run_uuid
@@ -696,6 +724,9 @@ def get_advertised_course_run(course):
         'pacing_type': full_course_run.get('pacing_type'),
         'start': full_course_run.get('start'),
         'end': full_course_run.get('end'),
+        'min_effort': full_course_run.get('min_effort'),
+        'max_effort': full_course_run.get('max_effort'),
+        'weeks_to_complete': full_course_run.get('weeks_to_complete'),
         'upgrade_deadline': _get_verified_upgrade_deadline(full_course_run),
     }
     return course_run
@@ -813,6 +844,8 @@ def _algolia_object_from_product(product, algolia_fields):
             'first_enrollable_paid_seat_price': get_course_first_paid_enrollable_seat_price(searchable_product),
             'original_image_url': get_course_original_image_url(searchable_product),
             'marketing_url': get_course_marketing_url(searchable_product),
+            'outcome': get_course_outcome(searchable_product),
+            'prerequisites': get_course_prerequisites(searchable_product),
         })
     elif searchable_product.get('content_type') == PROGRAM:
         searchable_product.update({
