@@ -54,7 +54,6 @@ ALGOLIA_ATTRIBUTES_TO_RETRIEVE = [
 
 
 def hit_to_row(hit):
-    # pylint: disable=too-many-statements
     """
     Helper function to construct a CSV row according to a single Algolia result hit.
     """
@@ -111,28 +110,22 @@ def hit_to_row(hit):
     skills = [skill['name'] for skill in hit.get('skills', [])]
     csv_row.append(', '.join(skills))
 
-    discovery_course = hit.get('discovery_course', {})
-    discovery_course_runs = discovery_course.get('course_runs', [])
-
-    try:
-        discovery_first_course_run = discovery_course_runs[0]
-    except IndexError:
-        discovery_first_course_run = {}
+    advertised_course_run = hit.get('advertised_course_run', {})
 
     # Min Effort
-    csv_row.append(discovery_first_course_run.get('min_effort'))
+    csv_row.append(advertised_course_run.get('min_effort'))
 
     # Max Effort
-    csv_row.append(discovery_first_course_run.get('max_effort'))
+    csv_row.append(advertised_course_run.get('max_effort'))
 
     # Length
-    csv_row.append(discovery_first_course_run.get('weeks_to_complete'))
+    csv_row.append(advertised_course_run.get('weeks_to_complete'))
 
     # What You’ll Learn -> outcome
-    csv_row.append(strip_tags(discovery_course.get('outcome', '')))
+    csv_row.append(strip_tags(hit.get('outcome', '')))
 
     # Pre-requisites -> prerequisites_raw
-    csv_row.append(strip_tags(discovery_course.get('prerequisites_raw', '')))
+    csv_row.append(strip_tags(hit.get('prerequisites_raw', '')))
 
     return csv_row
 

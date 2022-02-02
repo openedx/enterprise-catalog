@@ -520,7 +520,6 @@ class EnterpriseCatalogCRUDViewSetListTests(APITestMixin):
 
 
 class EnterpriseCatalogCsvDataViewTests(APITestMixin):
-    # pylint: disable=line-too-long
     """
     Tests for the CatalogCsvDataView view.
     """
@@ -554,7 +553,12 @@ class EnterpriseCatalogCsvDataViewTests(APITestMixin):
             'start': '2015-09-08T00:00:00Z',
             'end': '2015-09-08T00:00:01Z',
             'upgrade_deadline': 32503680000.0,
+            'max_effort': 10,
+            'min_effort': 1,
+            'weeks_to_complete': 1,
         },
+        'outcome': '<p>learn</p>',
+        'prerequisites_raw': '<p>interest</p>',
         'objectID': 'course-3543aa4e-3c64-4d9a-a343-5d5eda1dacf8-catalog-query-uuids-0'
     },
         {
@@ -572,185 +576,6 @@ class EnterpriseCatalogCsvDataViewTests(APITestMixin):
     }
     ]}
 
-    mock_discovery_courses = [
-        {
-            'additional_information': None,
-            'advertised_course_run_uuid': '92512e9b-7c27-4f0f-8b38-0241fc24a9a0',
-            'canonical_course_run_key': 'course-v1:MITx+18.01.2x+Demo_Course',
-            'card_image_url': None,
-            'collaborators': [],
-            'course_run_keys': ['course-v1:MITx/18.01.2x/3T2015'],
-            'course_run_statuses': ['published'],
-            'course_runs': [{
-                'announcement': '2021-09-16T18:43:26.180818Z',
-                'availability': 'Current',
-                'content_language': 'en-us',
-                'content_language_search_facet_name': 'English',
-                'course': 'edX+DemoX',
-                'course_uuid': '6274dc4e-609c-4c70-abd3-8b691258e177',
-                'eligible_for_financial_aid': True,
-                'end': None,
-                'enrollment_count': 0,
-                'enrollment_end': None,
-                'enrollment_start': None,
-                'estimated_hours': 5.5,
-                'expected_program_name': '',
-                'expected_program_type': None,
-                'external_key': '',
-                'first_enrollable_paid_seat_price': 149,
-                'full_description': '<p>desc</p>',
-                'go_live_date': '2021-09-16T04:00:00Z',
-                'has_ofac_restrictions': False,
-                'hidden': False,
-                'image': {
-                    'description': None,
-                    'height': None,
-                    'src': 'http://localhost:18381/media/media/course/image/6274dc4e-609c-4c70-abd3-8b691258e177-c55b1684ed32.small.png',
-                    'width': None
-                },
-                'instructors': [],
-                'is_enrollable': True,
-                'is_marketable': True,
-                'key': 'course-v1:edX+DemoX+Demo_Course',
-                'level_type': 'level-type-1',
-                'license': '',
-                'marketing_url': 'course/demonstration-course-course-v1edxdemoxdemo_course?utm_source=enterprise_catalog_worker&utm_medium=affiliate_partner',
-                'max_effort': 10,
-                'min_effort': 1,
-                'mobile_available': False,
-                'modified': '2021-09-16T18:43:26.192826Z',
-                'ofac_comment': '',
-                'outcome': '<p>learn</p>',
-                'pacing_type': 'instructor_paced',
-                'recent_enrollment_count': 0,
-                'reporting_type': 'mooc',
-                'run_type': '7be36ac0-79e4-46c4-a90c-f3dce8b117a6',
-                'seats': [{
-                            'bulk_sku': 'A5B6DBE',
-                            'credit_hours': None,
-                            'credit_provider': None,
-                            'currency': 'USD',
-                            'price': '149.00',
-                            'sku': '8CF08E5',
-                            'type': 'verified',
-                            'upgrade_deadline': '2022-07-30T20:19:59.064405Z',
-                            'upgrade_deadline_override': None},
-                          {
-                    'bulk_sku': None,
-                    'credit_hours': None,
-                    'credit_provider': None,
-                    'currency': 'USD',
-                    'price': '0.00',
-                    'sku': '68EFFFF',
-                    'type': 'audit',
-                            'upgrade_deadline': None,
-                            'upgrade_deadline_override': None}],
-                'short_description': '<p>desc</p>',
-                'staff': [{
-                    'areas_of_expertise': [],
-                    'bio': '<p>bio</p>',
-                    'email': None,
-                    'family_name': 'Instructor',
-                    'given_name': 'Joe',
-                    'major_works': '<p>works</p>',
-                    'position': {'organization_id': None,
-                                 'organization_logo_image_url': None,
-                                 'organization_marketing_url': None,
-                                 'organization_name': 'edx',
-                                 'organization_override': 'edx',
-                                 'organization_uuid': None,
-                                 'title': 'Professir'},
-                    'profile_image': {'medium': {'height': 110,
-                                                 'url': 'http://localhost:18381/media/media/people/profile_images/1123d834-330e-4f00-8dab-c476e2b3b690-5cbb79143e20.medium.png',
-                                                 'width': 110}},
-                    'profile_image_url': 'http://localhost:18381/media/media/people/profile_images/1123d834-330e-4f00-8dab-c476e2b3b690-5cbb79143e20.png',
-                    'published': True,
-                    'salutation': None,
-                    'slug': 'joe-instructor-4',
-                    'urls': {'blog': None,
-                             'facebook': None,
-                             'twitter': None},
-                    'urls_detailed': [],
-                    'uuid': '1123d834-330e-4f00-8dab-c476e2b3b690',
-                    'works': []}],
-                'start': '2013-02-05T05:00:00Z',
-                'status': 'published',
-                'title': 'Demonstration Course',
-                'transcript_languages': ['en-us'],
-                'type': 'verified',
-                'uuid': '92512e9b-7c27-4f0f-8b38-0241fc24a9a0',
-                'video': None,
-                'weeks_to_complete': 1}],
-            'editable': True,
-            'editors': [],
-            'enrollment_count': 0,
-            'entitlements': [],
-            'expected_learning_items': [],
-            'extra_description': None,
-            'faq': None,
-            'full_description': '<p>desc</p>',
-            'image': {'description': None,
-                      'height': None,
-                      'src': 'http://localhost:18381/media/media/course/image/6274dc4e-609c-4c70-abd3-8b691258e177-c55b1684ed32.small.png',
-                      'width': None},
-            'key': 'MITx+18.01.2x',
-            'key_for_reruns': '',
-            'learner_testimonials': None,
-            'level_type': 'level-type-1',
-            'marketing_url': None,
-            'modified': '2021-09-16T18:43:16.900032Z',
-            'original_image': {'description': None,
-                               'height': None,
-                               'src': 'http://localhost:18381/media/media/course/image/6274dc4e-609c-4c70-abd3-8b691258e177-c55b1684ed32.png',
-                               'width': None},
-            'outcome': '<p>learn</p>',
-            'owners': [{'auto_generate_course_run_keys': True,
-                              'banner_image_url': None,
-                              'certificate_logo_image_url': None,
-                              'description': '',
-                              'description_es': '',
-                              'homepage_url': None,
-                              'key': 'edX',
-                              'logo_image_url': None,
-                              'marketing_url': 'school/edx',
-                              'name': 'edx',
-                              'slug': 'edx',
-                              'tags': [],
-                              'uuid': 'da926c55-0832-4357-a98f-15727d92d7e6'}],
-            'prerequisites': [],
-            'prerequisites_raw': '<p>interest</p>',
-            'programs': [{'marketing_slug': 'demo-program',
-                          'marketing_url': 'micromasters/demo-program',
-                          'number_of_courses': 1,
-                          'title': 'edX Demonstration Program',
-                          'type': 'MicroMasters',
-                          'type_attrs': {'coaching_supported': False,
-                                         'slug': 'micromasters',
-                                         'uuid': '705629d9-c198-438c-a572-ca15213936ab'},
-                          'uuid': '61af17aa-f1d9-4915-abbc-8778a4264471'}],
-            'recent_enrollment_count': 0,
-            'short_description': '<p>desc</p>',
-            'skill_names': [],
-            'skills': [],
-            'sponsors': [],
-            'subjects': [{'banner_image_url': None,
-                          'card_image_url': None,
-                          'description': '',
-                          'name': 'subject-one',
-                          'slug': 'subject-one',
-                          'subtitle': None,
-                          'uuid': '0ea87866-3ef0-4327-a2fe-a93d78162592'}],
-            'syllabus_raw': None,
-            'title': 'Demonstration Course',
-            'topics': [],
-            'type': '480930d5-565c-4090-829e-bae76bc4fd38',
-            'url_redirects': [],
-            'url_slug': 'demonstration-course',
-            'url_slug_history': ['demonstration-course',
-                                 'demonstration-course-course-v1edxdemoxdemo_course'],
-            'uuid': '6274dc4e-609c-4c70-abd3-8b691258e177',
-            'video': None}
-    ]
     expected_result_data = 'Title,Partner Name,Start,End,Verified Upgrade Deadline,Program Type,Program Name,Pacing,' \
                            'Level,Price,Language,URL,Short Description,Subjects,Key,Short Key,Skills,Min Effort,' \
                            'Max Effort,Length,What You’ll Learn,Pre-requisites\r\nCalculus 1B: ' \
@@ -788,14 +613,12 @@ class EnterpriseCatalogCsvDataViewTests(APITestMixin):
         assert response.status_code == 400
         assert response.data == "Error: invalid facet(s): ['invalid_facet'] provided."
 
-    @mock.patch('enterprise_catalog.apps.api.v1.views.catalog_csv_data.DiscoveryApiClient')
     @mock.patch('enterprise_catalog.apps.api.v1.views.catalog_csv_data.get_initialized_algolia_client')
-    def test_valid_facet_validation(self, mock_algolia_client, mock_discovery_client):
+    def test_valid_facet_validation(self, mock_algolia_client):
         """
         Tests a successful request with facets.
         """
         mock_algolia_client.return_value.algolia_index.search.side_effect = [self.mock_algolia_hits, {'hits': []}]
-        mock_discovery_client.return_value.get_courses.return_value = self.mock_discovery_courses
         url = self._get_contains_content_base_url()
         facets = 'language=English'
         response = self.client.get(f'{url}?{facets}')
@@ -806,15 +629,13 @@ class EnterpriseCatalogCsvDataViewTests(APITestMixin):
         }
         assert response.data == expected_response
 
-    @mock.patch('enterprise_catalog.apps.api.v1.views.catalog_csv_data.DiscoveryApiClient')
     @mock.patch('enterprise_catalog.apps.api.v1.views.catalog_csv_data.get_initialized_algolia_client')
-    def test_csv_row_construction_handles_missing_values(self, mock_algolia_client, mock_discovery_client):
+    def test_csv_row_construction_handles_missing_values(self, mock_algolia_client):
         """
         Tests that the view properly handles situations where data is missing from the Algolia hit.
         """
         mock_side_effects = [self._get_mock_algolia_hits_with_missing_values(), {'hits': []}]
         mock_algolia_client.return_value.algolia_index.search.side_effect = mock_side_effects
-        mock_discovery_client.return_value.get_courses.return_value = self.mock_discovery_courses
         url = self._get_contains_content_base_url()
         facets = 'language=English'
         response = self.client.get(f'{url}?{facets}')

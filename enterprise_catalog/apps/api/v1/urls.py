@@ -5,9 +5,11 @@ from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 
 from enterprise_catalog.apps.api.v1.views.catalog_csv import CatalogCsvView
-from enterprise_catalog.apps.api.v1.views.catalog_workbook import CatalogWorkbookView
 from enterprise_catalog.apps.api.v1.views.catalog_csv_data import (
     CatalogCsvDataView,
+)
+from enterprise_catalog.apps.api.v1.views.catalog_workbook import (
+    CatalogWorkbookView,
 )
 from enterprise_catalog.apps.api.v1.views.default_catalog_results import (
     DefaultCatalogResultsView,
