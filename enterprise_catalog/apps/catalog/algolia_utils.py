@@ -9,7 +9,7 @@ from enterprise_catalog.apps.api.v1.utils import is_course_run_active
 from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
-    PATHWAY,
+    LEARNER_PATHWAY,
     PROGRAM,
     PROGRAM_TYPES_MAP,
 )
@@ -994,7 +994,7 @@ def _algolia_object_from_product(product, algolia_fields):
             'prices': get_program_prices(searchable_product),
             'banner_image_url': get_program_banner_image_url(searchable_product),
         })
-    elif searchable_product.get('content_type') == PATHWAY:
+    elif searchable_product.get('content_type') == LEARNER_PATHWAY:
         searchable_product.update({
             'course_keys': get_pathway_course_keys(searchable_product),
             'programs': get_pathway_program_uuids(searchable_product),

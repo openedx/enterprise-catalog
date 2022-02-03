@@ -15,7 +15,7 @@ from enterprise_catalog.apps.api import tasks
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
     COURSE_RUN,
-    PATHWAY,
+    LEARNER_PATHWAY,
     PROGRAM,
 )
 from enterprise_catalog.apps.catalog.models import CatalogQuery, ContentMetadata
@@ -232,6 +232,58 @@ class FetchMissingCourseMetadataTaskTests(TestCase):
         mock_update_data_from_discovery.assert_called_with(catalog_query)
 
 
+class FetchMissingPathwayMetadataTaskTests(TestCase):
+    """
+    Tests for the `fetch_missing_pathway_metadata_task`.
+    """
+    @mock.patch('enterprise_catalog.apps.api.tasks.update_contentmetadata_from_discovery')
+    def test_fetch_missing_pathway_metadata_task(self, mock_update_data_from_discovery):
+        """
+        Validate the fetch_missing_pathway_metadata_task gathers correct data of missing courses and programs and calls
+        update_contentmetadata_from_discovery with correct arguments.
+        """
+        test_course = 'course:edX+testX'
+        test_program = '02f5edeb-6604-4131-bf45-acd8df91e1f9'
+        course_content_metadata = ContentMetadataFactory.create(content_type=COURSE)
+        program_content_metadata = ContentMetadataFactory.create(content_type=PROGRAM)
+
+        ContentMetadataFactory.create(content_type=LEARNER_PATHWAY, json_metadata={
+            'steps': [{
+                'min_requirement': 1,
+                'courses': [
+                    course_content_metadata.json_metadata,
+                    {
+                        'key': test_course,
+                    },
+                ],
+                'programs': [
+                    program_content_metadata.json_metadata,
+                    {
+                        'uuid': test_program
+                    }
+                ],
+            }]
+        })
+
+        tasks.fetch_missing_pathway_metadata_task.apply()
+
+        assert CatalogQuery.objects.filter().count() == 2
+        first_catalog_query = CatalogQuery.objects.first()
+        assert first_catalog_query.content_filter['status'] == 'published'
+        assert first_catalog_query.content_filter['content_type'] == 'program'
+        assert first_catalog_query.content_filter['key'] == [test_program]
+
+        second_catalog_query = CatalogQuery.objects.all()[1]
+        assert second_catalog_query.content_filter['status'] == 'published'
+        assert second_catalog_query.content_filter['content_type'] == 'course'
+        assert second_catalog_query.content_filter['key'] == [test_course]
+
+        mock_update_data_from_discovery.assert_has_calls(
+            [mock.call(first_catalog_query), mock.call(second_catalog_query)],
+            any_order=True
+        )
+
+
 class UpdateFullContentMetadataTaskTests(TestCase):
     """
     Tests for the `update_full_content_metadata_task`.
@@ -435,8 +487,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         algolia_data = self._set_up_factory_data_for_algolia()
         course_associated_program_metadata = ContentMetadataFactory(content_type=PROGRAM, content_key='program-1')
         pathway_program_metadata = ContentMetadataFactory(content_type=PROGRAM, content_key='program-2')
-        pathway_metadata = ContentMetadataFactory(content_type=PATHWAY, content_key='pathway-1')
-        pathway_metadata2 = ContentMetadataFactory(content_type=PATHWAY, content_key='pathway-2')
+        pathway_metadata = ContentMetadataFactory(content_type=LEARNER_PATHWAY, content_key='pathway-1')
+        pathway_metadata2 = ContentMetadataFactory(content_type=LEARNER_PATHWAY, content_key='pathway-2')
         # associate program and pathway with the course
         self.course_metadata_published.associated_content_metadata.set(
             [course_associated_program_metadata, pathway_metadata]
