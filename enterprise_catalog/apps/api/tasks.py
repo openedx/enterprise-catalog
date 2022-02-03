@@ -23,6 +23,8 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     create_algolia_objects,
     get_algolia_object_id,
     get_initialized_algolia_client,
+    get_pathway_course_keys,
+    get_pathway_program_uuids,
     partition_course_keys_for_indexing,
     partition_program_keys_for_indexing,
 )
@@ -30,7 +32,7 @@ from enterprise_catalog.apps.catalog.constants import (
     COURSE,
     DISCOVERY_COURSE_KEY_BATCH_SIZE,
     DISCOVERY_PROGRAM_KEY_BATCH_SIZE,
-    PATHWAY,
+    LEARNER_PATHWAY,
     PROGRAM,
     REINDEX_TASK_BATCH_SIZE,
     TASK_BATCH_SIZE,
@@ -463,8 +465,12 @@ def index_enterprise_catalog_in_algolia_task(self, force=False):  # pylint: disa
         indexable_program_keys, nonindexable_program_keys = partition_program_keys_for_indexing(
             programs_content_metadata,
         )
-        indexable_pathways_keys = ContentMetadata.objects.filter(content_type=PATHWAY).distinct().values_list(
-            'content_key', flat=True)
+        indexable_pathways_keys = ContentMetadata.objects.filter(
+            content_type=LEARNER_PATHWAY
+        ).distinct().values_list(
+            'content_key',
+            flat=True
+        )
         indexable_content_keys = indexable_course_keys + indexable_program_keys + list(indexable_pathways_keys)
         nonindexable_content_keys = nonindexable_course_keys + nonindexable_program_keys
         _reindex_algolia(
@@ -490,7 +496,9 @@ def get_pathways_by_associated_content():
     """ Prefetch course id and program id to pathway id mapping. """
     pathway_membership_by_course_key = defaultdict(set)
     pathway_membership_by_program_key = defaultdict(set)
-    pathways = ContentMetadata.objects.filter(content_type=PATHWAY).prefetch_related('associated_content_metadata')
+    pathways = ContentMetadata.objects.filter(content_type=LEARNER_PATHWAY).prefetch_related(
+        'associated_content_metadata'
+    )
     for pathway in pathways:
         for associated_content in pathway.associated_content_metadata.all():
             if associated_content.content_type == COURSE:
@@ -627,7 +635,7 @@ def index_content_keys_in_algolia(content_keys, algolia_client):
             | Q(content_metadata__parent_content_key__in=content_keys_batch)
             | Q(
                 content_metadata__associated_content_metadata__content_key__in=content_keys_batch,
-                content_metadata__content_type__in=[PROGRAM, PATHWAY]
+                content_metadata__content_type__in=[PROGRAM, LEARNER_PATHWAY]
             )
         )
         all_memberships = ContentMetadataToQueries.objects.select_related(
@@ -638,7 +646,7 @@ def index_content_keys_in_algolia(content_keys, algolia_client):
             metadata = membership.content_metadata
             catalog_query = membership.catalog_query
 
-            if metadata.content_type in (COURSE, PROGRAM, PATHWAY):
+            if metadata.content_type in (COURSE, PROGRAM, LEARNER_PATHWAY):
                 content_key = metadata.content_key
             else:
                 content_key = metadata.parent_content_key
@@ -658,13 +666,18 @@ def index_content_keys_in_algolia(content_keys, algolia_client):
             )
 
         query = (
-            Q(content_key__in=content_keys_batch)
-            | Q(parent_content_key__in=content_keys_batch)
-            | Q(associated_content_metadata__content_key__in=content_keys_batch, content_type__in=[PROGRAM, PATHWAY])
+            Q(
+                content_key__in=content_keys_batch
+            ) | Q(
+                parent_content_key__in=content_keys_batch
+            ) | Q(
+                associated_content_metadata__content_key__in=content_keys_batch,
+                content_type__in=[PROGRAM, LEARNER_PATHWAY]
+            )
         )
         content_metadata = ContentMetadata.objects.filter(query)
         filtered_content_metadata = content_metadata.filter(
-            Q(content_type=COURSE) | Q(content_type=PROGRAM) | Q(content_type=PATHWAY)
+            Q(content_type=COURSE) | Q(content_type=PROGRAM) | Q(content_type=LEARNER_PATHWAY)
         ).all().iterator()
 
         # iterate over courses, programs and pathways and add their metadata to the list of objects to be indexed
@@ -672,7 +685,7 @@ def index_content_keys_in_algolia(content_keys, algolia_client):
             content_key = metadata.content_key
             # Check if we've indexed the course recently
             # (programs/pathways are indexed every time regardless of last indexing)
-            if _was_recently_indexed(content_key) and metadata.content_type not in [PROGRAM, PATHWAY]:
+            if _was_recently_indexed(content_key) and metadata.content_type not in [PROGRAM, LEARNER_PATHWAY]:
                 continue
 
             add_metadata_to_algolia_objects(
@@ -832,3 +845,76 @@ def fetch_missing_course_metadata_task(self):  # pylint: disable=unused-argument
     logger.info('Finished fetch_missing_course_metadata_task with {} associated content keys for catalog {}'.format(
         len(associated_content_keys), catalog_query.id
     ))
+
+
+@shared_task(base=LoggedTaskWithRetry, bind=True)
+@expiring_task_semaphore()
+def fetch_missing_pathway_metadata_task(self):  # pylint: disable=unused-argument
+    """
+    Creates a CatalogQuery for all the courses and programs that do not have ContentMetadata instance.
+
+    After creating the catalog query it calls update_contentmetadata_from_discovery to update the metadata for these
+    courses and programs.
+    """
+
+    learner_pathway_metadata_list = ContentMetadata.objects.filter(content_type=LEARNER_PATHWAY).values_list(
+        'json_metadata', flat=True,
+    )
+    program_uuids = set()
+    course_keys = set()
+    for learner_pathway_metadata in learner_pathway_metadata_list:
+        program_uuids.update(get_pathway_program_uuids(learner_pathway_metadata))
+        course_keys.update(get_pathway_course_keys(learner_pathway_metadata))
+
+    # Check which programs do not have content metadata.
+    present_program_uuids = ContentMetadata.objects.filter(
+        content_type=PROGRAM, content_key__in=program_uuids
+    ).values_list(
+        'content_key', flat=True
+    )
+
+    missing_program_uuids = program_uuids.difference(present_program_uuids)
+    if missing_program_uuids:
+        content_filter = {
+            'status': 'published',
+            'key': list(missing_program_uuids),
+            'content_type': 'program',
+        }
+        catalog_query, _ = CatalogQuery.objects.get_or_create(
+            content_filter_hash=get_content_filter_hash(content_filter),
+            defaults={'content_filter': content_filter, 'title': 'Auto-generated query to fetch_missing_pathway_metadata'},
+        )
+
+        associated_content_keys = update_contentmetadata_from_discovery(catalog_query)
+        logger.info(
+            'Finished programs fetch_missing_pathway_metadata_task with {} associated content keys for catalog {}'.format(
+                len(associated_content_keys), catalog_query.id
+            )
+        )
+
+    # Check which courses do not have content metadata.
+    present_course_keys = ContentMetadata.objects.filter(
+        content_type=COURSE, content_key__in=course_keys
+    ).values_list(
+        'content_key', flat=True
+    )
+
+    missing_course_keys = course_keys.difference(present_course_keys)
+    if missing_course_keys:
+        content_filter = {
+            'status': 'published',
+            'key': list(missing_course_keys),
+            'content_type': 'course',
+        }
+
+        catalog_query, _ = CatalogQuery.objects.get_or_create(
+            content_filter_hash=get_content_filter_hash(content_filter),
+            defaults={'content_filter': content_filter, 'title': 'Auto-generated query to fetch_missing_pathway_metadata'},
+        )
+
+        associated_content_keys = update_contentmetadata_from_discovery(catalog_query)
+        logger.info(
+            'Finished courses fetch_missing_pathway_metadata_task with {} associated content keys for catalog {}'.format(
+                len(associated_content_keys), catalog_query.id
+            )
+        )
