@@ -20,6 +20,12 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     get_course_skill_names,
     get_course_subjects,
     get_initialized_algolia_client,
+    get_pathway_availability,
+    get_pathway_banner_image_url,
+    get_pathway_course_keys,
+    get_pathway_partners,
+    get_pathway_program_uuids,
+    get_pathway_subjects,
     get_program_availability,
     get_program_banner_image_url,
     get_program_course_details,
@@ -33,7 +39,7 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     get_program_type,
     get_upcoming_course_runs,
 )
-from enterprise_catalog.apps.catalog.constants import COURSE
+from enterprise_catalog.apps.catalog.constants import COURSE, PROGRAM
 from enterprise_catalog.apps.catalog.tests.factories import (
     ContentMetadataFactory,
 )
@@ -678,7 +684,7 @@ class AlgoliaUtilsTests(TestCase):
     @ddt.unpack
     def test_get_program_banner_image(self, program_metadata, expected_type):
         """
-        Assert that the prices associated with a program is properly parsed.
+        Assert that the banner image associated with a program is properly parsed.
         """
         image_url = get_program_banner_image_url(program_metadata)
         self.assertEqual(expected_type, image_url)
@@ -898,3 +904,283 @@ class AlgoliaUtilsTests(TestCase):
             )
         program_level_type = get_program_level_type(program_metadata)
         self.assertEqual(expected_level_type, program_level_type)
+
+    @ddt.data(
+        (
+            {'steps': [
+                {'courses': [
+                    {'key': 'pathway_course_key_1'},
+                    {'key': 'pathway_course_key_2'}
+                ]},
+                {'courses': [
+                    {'key': 'pathway_course_key_3'},
+                    {'key': 'pathway_course_key_4'}
+                ]}
+            ]},
+            ['pathway_course_key_1', 'pathway_course_key_2', 'pathway_course_key_3', 'pathway_course_key_4'],
+        )
+    )
+    @ddt.unpack
+    def test_get_pathway_courses(self, pathway_metadata, expected_course_keys):
+        """
+        Assert that the courses associated with a pathway are properly parsed.
+        """
+        pathway_course_keys = get_pathway_course_keys(pathway_metadata)
+        self.assertEqual(sorted(expected_course_keys), sorted(pathway_course_keys))
+
+    @ddt.data(
+        (
+            {'steps': [
+                {'programs': [
+                    {'uuid': 'pathway_program_1'},
+                    {'uuid': 'pathway_program_2'}
+                ]},
+                {'programs': [
+                    {'uuid': 'pathway_program_3'},
+                    {'uuid': 'pathway_program_4'}
+                ]}
+            ]},
+            ['pathway_program_1', 'pathway_program_2', 'pathway_program_3', 'pathway_program_4'],
+        )
+    )
+    @ddt.unpack
+    def test_get_pathway_programs(self, pathway_metadata, expected_program_uuids):
+        """
+        Assert that the programs associated with a pathway are properly parsed.
+        """
+        pathway_program_uuids = get_pathway_program_uuids(pathway_metadata)
+        self.assertEqual(sorted(expected_program_uuids), sorted(pathway_program_uuids))
+
+    @ddt.data(
+        (
+            {'steps': [
+                {
+                    'courses': [
+                        {'key': 'pathway_course_key_1'},
+                        {'key': 'pathway_course_key_2'}
+                    ],
+                    'programs': [
+                        {'uuid': 'pathway_program_1'},
+                        {'uuid': 'pathway_program_2'}
+                    ]
+                },
+                {
+                    'courses': [
+                        {'key': 'pathway_course_key_3'},
+                        {'key': 'pathway_course_key_4'}
+                    ],
+                    'programs': [
+                        {'uuid': 'pathway_program_3'},
+                        {'uuid': 'pathway_program_4'}
+                    ]
+                }
+            ]},
+            [
+                {
+                    'course_runs': [
+                        {
+                            'status': 'published',
+                            'is_enrollable': True,
+                            'is_marketable': True,
+                            'availability': 'Current'
+                        }
+                    ]
+                },
+                {
+                    'course_runs': [
+                        {
+                            'status': 'published',
+                            'is_enrollable': True,
+                            'is_marketable': True,
+                            'availability': 'Starting Soon'
+                        }
+                    ]
+                }
+            ],
+            ['Available Now', 'Starting Soon'],
+        )
+    )
+    @ddt.unpack
+    def test_get_pathway_availability(self, pathway_metadata, json_metadata, expected_availability):
+        """
+        Assert that the pathway availability is correctly returned.
+        """
+        for i in range(2):
+            ContentMetadataFactory.create(
+                content_key=pathway_metadata['steps'][i]['courses'][i]['key'],
+                content_type=COURSE,
+                json_metadata=json_metadata[i],
+            )
+            ContentMetadataFactory.create(
+                content_key=pathway_metadata['steps'][i]['programs'][i]['uuid'],
+                content_type=PROGRAM,
+                json_metadata=json_metadata[i],
+            )
+
+        pathway_availability = get_pathway_availability(pathway_metadata)
+        self.assertEqual(sorted(pathway_availability), sorted(expected_availability))
+
+    @ddt.data(
+        (
+            {'banner_image': {'large': {'url': 'https://test'}}},
+            'https://test',
+        ),
+        (
+            {'banner_image': {}},
+            None,
+        ),
+        (
+            {'banner_image': {'large': {}}},
+            None,
+        ),
+    )
+    @ddt.unpack
+    def test_get_pathway_banner_image(self, pathway_metadata, expected_type):
+        """
+        Assert that the banner image with a program is properly parsed.
+        """
+        image_url = get_pathway_banner_image_url(pathway_metadata)
+        self.assertEqual(expected_type, image_url)
+
+    @ddt.data(
+        (
+            {'steps': [
+                {
+                    'courses': [
+                        {'key': 'pathway_course_key_1'},
+                        {'key': 'pathway_course_key_2'}
+                    ],
+                    'programs': [
+                        {'uuid': 'pathway_program_1'},
+                        {'uuid': 'pathway_program_2'}
+                    ]
+                },
+                {
+                    'courses': [
+                        {'key': 'pathway_course_key_3'},
+                        {'key': 'pathway_course_key_4'}
+                    ],
+                    'programs': [
+                        {'uuid': 'pathway_program_3'},
+                        {'uuid': 'pathway_program_4'}
+                    ]
+                }
+            ]},
+            [
+                {
+                    'owners': [
+                        {
+                            'name': 'Test Org Name',
+                            'logo_image_url': 'https://fake.image1',
+                            'ignored_attr': None,
+                        },
+                        {
+                            'name': 'Another Org Name',
+                            'logo_image_url': 'https://fake.image2',
+                            'ignored_attr': None,
+                        },
+                    ]
+                },
+                {
+                    'courses': [{
+                        'owners': [
+                            {
+                                'name': 'Test Org Name2',
+                                'logo_image_url': 'https://fake.image3',
+                                'ignored_attr': None,
+                            },
+                            {
+                                'name': 'Another Org Name2',
+                                'logo_image_url': 'https://fake.image4',
+                                'ignored_attr': None,
+                            },
+                        ]
+                    }]
+                }
+            ],
+            [
+                {'logo_image_url': 'https://fake.image1', 'name': 'Test Org Name'},
+                {'logo_image_url': 'https://fake.image2', 'name': 'Another Org Name'},
+                {'logo_image_url': 'https://fake.image3', 'name': 'Test Org Name2'},
+                {'logo_image_url': 'https://fake.image4', 'name': 'Another Org Name2'}
+            ],
+        )
+    )
+    @ddt.unpack
+    def test_get_pathway_partners(self, pathway_metadata, json_metadata, expected_partners):
+        """
+        Assert that the Partners associated with a pathway are properly parsed.
+        """
+        for i in range(2):
+            ContentMetadataFactory.create(
+                content_key=pathway_metadata['steps'][i]['courses'][i]['key'],
+                content_type=COURSE,
+                json_metadata=json_metadata[0],
+            )
+            ContentMetadataFactory.create(
+                content_key=pathway_metadata['steps'][i]['programs'][i]['uuid'],
+                content_type=PROGRAM,
+                json_metadata=json_metadata[1],
+            )
+        pathway_partners = get_pathway_partners(pathway_metadata)
+        self.assertEqual(expected_partners, pathway_partners)
+
+    @ddt.data(
+        (
+            {'steps': [
+                {
+                    'courses': [
+                        {'key': 'pathway_course_key_1'},
+                        {'key': 'pathway_course_key_2'}
+                    ],
+                    'programs': [
+                        {'uuid': 'pathway_program_1'},
+                        {'uuid': 'pathway_program_2'}
+                    ]
+                },
+                {
+                    'courses': [
+                        {'key': 'pathway_course_key_3'},
+                        {'key': 'pathway_course_key_4'}
+                    ],
+                    'programs': [
+                        {'uuid': 'pathway_program_3'},
+                        {'uuid': 'pathway_program_4'}
+                    ]
+                }
+            ]},
+            [
+                {
+                    'subjects': [
+                        {'name': 'Computer Science'},
+                        {'name': 'Communication'},
+                    ]
+                },
+                {
+                    'courses': [
+                        {'key': 'pathway_course_key_1'},
+                        {'key': 'pathway_course_key_4'}
+                    ]
+                }
+            ],
+            ['Communication', 'Computer Science'],
+        )
+    )
+    @ddt.unpack
+    def test_get_pathway_subjects(self, pathway_metadata, json_metadata, expected_subjects):
+        """
+        Assert that the Subjects associated with a pathway are properly parsed.
+        """
+        for i in range(2):
+            ContentMetadataFactory.create(
+                content_key=pathway_metadata['steps'][i]['courses'][i]['key'],
+                content_type=COURSE,
+                json_metadata=json_metadata[0],
+            )
+            ContentMetadataFactory.create(
+                content_key=pathway_metadata['steps'][i]['programs'][i]['uuid'],
+                content_type=PROGRAM,
+                json_metadata=json_metadata[1],
+            )
+        pathway_subjects = get_pathway_subjects(pathway_metadata)
+        self.assertEqual(sorted(expected_subjects), sorted(pathway_subjects))

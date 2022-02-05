@@ -30,6 +30,7 @@ from enterprise_catalog.apps.catalog.constants import (
     COURSE,
     DISCOVERY_COURSE_KEY_BATCH_SIZE,
     DISCOVERY_PROGRAM_KEY_BATCH_SIZE,
+    PATHWAY,
     PROGRAM,
     REINDEX_TASK_BATCH_SIZE,
     TASK_BATCH_SIZE,
@@ -462,7 +463,9 @@ def index_enterprise_catalog_in_algolia_task(self, force=False):  # pylint: disa
         indexable_program_keys, nonindexable_program_keys = partition_program_keys_for_indexing(
             programs_content_metadata,
         )
-        indexable_content_keys = indexable_course_keys + indexable_program_keys
+        indexable_pathways_keys = ContentMetadata.objects.filter(content_type=PATHWAY).distinct().values_list(
+            'content_key', flat=True)
+        indexable_content_keys = indexable_course_keys + indexable_program_keys + list(indexable_pathways_keys)
         nonindexable_content_keys = nonindexable_course_keys + nonindexable_program_keys
         _reindex_algolia(
             indexable_content_keys=indexable_content_keys,
@@ -481,6 +484,20 @@ def get_programs_by_course():
         for course in prog.associated_content_metadata.all():
             program_membership_by_course_key[course.content_key].add(prog)
     return program_membership_by_course_key
+
+
+def get_pathways_by_associated_content():
+    """ Prefetch course id and program id to pathway id mapping. """
+    pathway_membership_by_course_key = defaultdict(set)
+    pathway_membership_by_program_key = defaultdict(set)
+    pathways = ContentMetadata.objects.filter(content_type=PATHWAY).prefetch_related('associated_content_metadata')
+    for pathway in pathways:
+        for associated_content in pathway.associated_content_metadata.all():
+            if associated_content.content_type == COURSE:
+                pathway_membership_by_course_key[associated_content.content_key].add(pathway)
+            elif associated_content.content_type == PROGRAM:
+                pathway_membership_by_program_key[associated_content.content_key].add(pathway)
+    return pathway_membership_by_course_key, pathway_membership_by_program_key
 
 
 def get_catalogs_by_queries():
@@ -537,6 +554,44 @@ def add_metadata_to_algolia_objects(
     _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata)
 
 
+def build_content_mapping_with_enterprise_and_catalog(
+    content_key,
+    metadata,
+    catalog_query,
+    customer_uuids_by_key,
+    catalog_uuids_by_key,
+    catalog_queries_by_key,
+    course_to_program_mapping,
+    course_to_pathway_mapping,
+    program_to_pathway_mapping,
+    query_to_catalog_mapping,
+    query_to_enterprise_mapping
+):
+    """ Helper method to map content to customer and catalog information"""
+    # Use the mappings between `query -> enterprise` and `query -> catalogs` to build a mapping between
+    # `content -> enterprise` and `content -> catalog`
+    customer_uuids_by_key[content_key].update(query_to_enterprise_mapping[catalog_query.id])
+    catalog_uuids_by_key[content_key].update(query_to_catalog_mapping[catalog_query.id])
+    catalog_queries_by_key[content_key].update({(str(catalog_query.uuid), catalog_query.title)})
+
+    # Copy the mapping of course to enterprise and catalog to any programs that contain the course. ie
+    # `program -> query`, `program -> catalog` and `program -> enterprise`
+    if metadata.content_type == COURSE:
+        for program in course_to_program_mapping[content_key]:
+            catalog_queries_by_key[program.content_key].update({(str(catalog_query.uuid), catalog_query.title)})
+            catalog_uuids_by_key[program.content_key].update(query_to_catalog_mapping[catalog_query.id])
+            customer_uuids_by_key[program.content_key].update(query_to_enterprise_mapping[catalog_query.id])
+        for pathway in course_to_pathway_mapping[content_key]:
+            catalog_queries_by_key[pathway.content_key].update({(str(catalog_query.uuid), catalog_query.title)})
+            catalog_uuids_by_key[pathway.content_key].update(query_to_catalog_mapping[catalog_query.id])
+            customer_uuids_by_key[pathway.content_key].update(query_to_enterprise_mapping[catalog_query.id])
+    if metadata.content_type == PROGRAM:
+        for pathway in program_to_pathway_mapping[content_key]:
+            catalog_queries_by_key[pathway.content_key].update({(str(catalog_query.uuid), catalog_query.title)})
+            catalog_uuids_by_key[pathway.content_key].update(query_to_catalog_mapping[catalog_query.id])
+            customer_uuids_by_key[pathway.content_key].update(query_to_enterprise_mapping[catalog_query.id])
+
+
 def index_content_keys_in_algolia(content_keys, algolia_client):
     """
     Determines list of Algolia objects to include in the Algolia index based on the
@@ -556,6 +611,7 @@ def index_content_keys_in_algolia(content_keys, algolia_client):
     query_to_catalog_mapping, query_to_enterprise_mapping = get_catalogs_by_queries()
     # Prefetch a mapping of all courses to their respective programs
     course_to_program_mapping = get_programs_by_course()
+    course_to_pathway_mapping, program_to_pathway_mapping = get_pathways_by_associated_content()
     max_uuid_count = 0
     for content_keys_batch in batch(content_keys, batch_size=REINDEX_TASK_BATCH_SIZE):
         catalog_uuids_by_key = defaultdict(set)
@@ -571,7 +627,7 @@ def index_content_keys_in_algolia(content_keys, algolia_client):
             | Q(content_metadata__parent_content_key__in=content_keys_batch)
             | Q(
                 content_metadata__associated_content_metadata__content_key__in=content_keys_batch,
-                content_metadata__content_type=PROGRAM
+                content_metadata__content_type__in=[PROGRAM, PATHWAY]
             )
         )
         all_memberships = ContentMetadataToQueries.objects.select_related(
@@ -582,44 +638,41 @@ def index_content_keys_in_algolia(content_keys, algolia_client):
             metadata = membership.content_metadata
             catalog_query = membership.catalog_query
 
-            if metadata.content_type in (COURSE, PROGRAM):
+            if metadata.content_type in (COURSE, PROGRAM, PATHWAY):
                 content_key = metadata.content_key
             else:
                 content_key = metadata.parent_content_key
 
-            # Use the mappings between `query -> enterprise` and `query -> catalogs` to build a mapping between
-            # `content -> enterprise` and `content -> catalog`
-            customer_uuids_by_key[content_key].update(query_to_enterprise_mapping[catalog_query.id])
-            catalog_uuids_by_key[content_key].update(query_to_catalog_mapping[catalog_query.id])
-            catalog_queries_by_key[content_key].update({(str(catalog_query.uuid), catalog_query.title)})
-
-            # Copy the mapping of course to enterprise and catalog to any programs that contain the course. ie
-            # `program -> query`, `program -> catalog` and `program -> enterprise`
-            if metadata.content_type == COURSE:
-                for program in course_to_program_mapping[content_key]:
-                    catalog_queries_by_key[program.content_key].update({(str(catalog_query.uuid), catalog_query.title)})
-                    catalog_uuids_by_key[program.content_key].update(query_to_catalog_mapping[catalog_query.id])
-                    customer_uuids_by_key[program.content_key].update(query_to_enterprise_mapping[catalog_query.id])
+            build_content_mapping_with_enterprise_and_catalog(
+                content_key,
+                metadata,
+                catalog_query,
+                customer_uuids_by_key,
+                catalog_uuids_by_key,
+                catalog_queries_by_key,
+                course_to_program_mapping,
+                course_to_pathway_mapping,
+                program_to_pathway_mapping,
+                query_to_catalog_mapping,
+                query_to_enterprise_mapping
+            )
 
         query = (
             Q(content_key__in=content_keys_batch)
             | Q(parent_content_key__in=content_keys_batch)
-            | Q(associated_content_metadata__content_key__in=content_keys_batch, content_type=PROGRAM)
+            | Q(associated_content_metadata__content_key__in=content_keys_batch, content_type__in=[PROGRAM, PATHWAY])
         )
         content_metadata = ContentMetadata.objects.filter(query)
         filtered_content_metadata = content_metadata.filter(
-            Q(content_type=COURSE) | Q(content_type=PROGRAM)
+            Q(content_type=COURSE) | Q(content_type=PROGRAM) | Q(content_type=PATHWAY)
         ).all().iterator()
 
-        # iterate over courses and programs and add their metadata to the list of objects to be indexed
+        # iterate over courses, programs and pathways and add their metadata to the list of objects to be indexed
         for metadata in filtered_content_metadata:
-            # Skip anything that is not a course or program, ie content_type == COURSE_RUN
-            if metadata.content_type not in (COURSE, PROGRAM):
-                continue
-
             content_key = metadata.content_key
-            # Check if we've indexed the course recently (programs are indexed every time regardless of last indexing)
-            if _was_recently_indexed(content_key) and not metadata.content_type == PROGRAM:
+            # Check if we've indexed the course recently
+            # (programs/pathways are indexed every time regardless of last indexing)
+            if _was_recently_indexed(content_key) and metadata.content_type not in [PROGRAM, PATHWAY]:
                 continue
 
             add_metadata_to_algolia_objects(
@@ -655,7 +708,7 @@ def index_content_keys_in_algolia(content_keys, algolia_client):
 
 def _reindex_algolia(indexable_content_keys, nonindexable_content_keys):
     """
-    Indexes courses and programs metadata in the Algolia search index.
+    Indexes courses, programs and pathways metadata in the Algolia search index.
     """
     # NOTE: this log message is used in a Splunk alert and should remain consistent in its language
     logger.info(
