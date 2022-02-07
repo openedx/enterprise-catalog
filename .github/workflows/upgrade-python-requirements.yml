@@ -16,7 +16,7 @@ jobs:
     uses: edx/.github/.github/workflows/upgrade-python-requirements.yml@master
     with:
       branch: ${{ github.event.inputs.branch || 'master' }}
-      team_reviewers: "enterprise-online-campus"
+      team_reviewers: "enterprise-quokkas"
       email_address: "online-campus@edx.org"
     secrets:
       requirements_bot_github_token: ${{ secrets.REQUIREMENTS_BOT_GITHUB_TOKEN }}
