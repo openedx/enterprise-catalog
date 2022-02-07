@@ -11,4 +11,5 @@ edx-lint
 factory-boy
 pytest-cov
 pytest-django
-tox
+tox                       # Virtualenv management for tests
+tox-battery               # Makes tox aware of requirements file changes
