@@ -11,7 +11,7 @@
 Django>=3.2,<4.0
 
 # Common constraints for edx repos
--c common_constraints.txt
+-c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
 
 # celery 5.0 has dropped python3.5 support.
 celery<5.0
