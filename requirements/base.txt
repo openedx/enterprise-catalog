@@ -108,7 +108,7 @@ drf-jwt==1.19.2
     # via edx-drf-extensions
 drf-yasg==1.20.0
     # via edx-api-doc-tools
-edx-api-doc-tools==1.5.0
+edx-api-doc-tools==1.5.1
     # via -r requirements/base.in
 edx-auth-backends==4.1.0
     # via -r requirements/base.in
