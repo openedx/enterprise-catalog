@@ -16,6 +16,7 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
 
 logger = logging.getLogger(__name__)
 
+
 class CatalogWorkbookView(GenericAPIView):
     """
     Catalog Workbook data generation view. All query params are assumed to be facet filters used to filter indexed data
