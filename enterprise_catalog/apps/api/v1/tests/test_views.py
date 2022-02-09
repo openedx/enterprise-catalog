@@ -735,7 +735,7 @@ class EnterpriseCatalogWorkbookViewTests(APITestMixin):
     @mock.patch('enterprise_catalog.apps.api.v1.views.catalog_workbook.get_initialized_algolia_client')
     def test_success(self, mock_algolia_client):
         """
-        Tests when algolia returns no hits.
+        Tests basic, successful output.
         """
         mock_algolia_client.return_value.algolia_index.search.side_effect = [self.mock_algolia_hits, {'hits': []}]
         url = self._get_contains_content_base_url()
