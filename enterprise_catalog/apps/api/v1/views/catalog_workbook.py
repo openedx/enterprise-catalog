@@ -14,6 +14,7 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     get_initialized_algolia_client,
 )
 
+
 logger = logging.getLogger(__name__)
 
 
