@@ -9,12 +9,13 @@ from enterprise_catalog.apps.catalog.waffle import (
 COURSE = 'course'
 COURSE_RUN = 'courserun'
 PROGRAM = 'program'
-PATHWAY = 'learnerpathway'
+LEARNER_PATHWAY = 'learnerpathway'
+
 CONTENT_TYPE_CHOICES = [
     (COURSE, 'Course'),
     (COURSE_RUN, 'Course Run'),
     (PROGRAM, 'Program'),
-    (PATHWAY, 'Learner Pathway'),
+    (LEARNER_PATHWAY, 'Learner Pathway'),
 ]
 
 # ContentFilter field types for validation.

@@ -52,6 +52,8 @@ class DiscoveryApiClient(BaseOAuthClient):
             'page_size': 100,
             # Ensure paginated results are consistently ordered by `aggregation_key` and `start`
             'ordering': 'aggregation_key,start',
+            # Ensure to fetch learner pathways as part of search/all endpoint response.
+            'include_learner_pathways': True,
         }
 
         page = 1
