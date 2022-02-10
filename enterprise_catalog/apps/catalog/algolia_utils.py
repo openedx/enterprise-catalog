@@ -41,6 +41,7 @@ ALGOLIA_FIELDS = [
     'partner',
     'partners',
     'prerequisites',
+    'prerequisites_raw',
     'programs',
     'program_titles',
     'program_type',
