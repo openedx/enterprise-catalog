@@ -654,6 +654,96 @@ class EnterpriseCatalogCsvDataViewTests(APITestMixin):
         assert response.data == expected_response
 
 
+class EnterpriseCatalogWorkbookViewTests(APITestMixin):
+    """
+    Tests for the CatalogWorkbookView view.
+    """
+    mock_algolia_hits = {'hits': [{
+        'aggregation_key': 'course:MITx+18.01.2x',
+        'key': 'MITx+18.01.2x',
+        'language': 'English',
+        'level_type': 'Intermediate',
+        'content_type': 'course',
+        'partners': [
+            {'name': 'Massachusetts Institute of Technology',
+             'logo_image_url': 'https://edx.org/image.png'}
+        ],
+        'programs': ['Professional Certificate'],
+        'program_titles': ['Totally Awesome Program'],
+        'short_description': 'description',
+        'subjects': ['Math'],
+        'skills': [{
+            'name': 'Probability And Statistics',
+            'description': 'description'
+        }, {
+            'name': 'Engineering Design Process',
+            'description': 'description'
+        }],
+        'title': 'Calculus 1B: Integration',
+        'marketing_url': 'edx.org/foo-bar',
+        'first_enrollable_paid_seat_price': 100,
+        'advertised_course_run': {
+            'key': 'MITx/18.01.2x/3T2015',
+            'pacing_type': 'instructor_paced',
+            'start': '2015-09-08T00:00:00Z',
+            'end': '2015-09-08T00:00:01Z',
+            'upgrade_deadline': 32503680000.0,
+            'max_effort': 10,
+            'min_effort': 1,
+            'weeks_to_complete': 1,
+        },
+        'outcome': '<p>learn</p>',
+        'prerequisites_raw': '<p>interest</p>',
+        'objectID': 'course-3543aa4e-3c64-4d9a-a343-5d5eda1dacf8-catalog-query-uuids-0'
+    },
+        {
+        'aggregation_key': 'course:MITx+19',
+        'key': 'MITx+19',
+        'language': 'English',
+        'level_type': 'Intermediate',
+        'objectID': 'course-3543aa4e-3c64-4d9a-a343-5d5eda1dacf9-catalog-query-uuids-0'
+    },
+        {
+        'aggregation_key': 'course:MITx+20',
+        'language': 'English',
+        'level_type': 'Intermediate',
+        'objectID': 'course-3543aa4e-3c64-4d9a-a343-5d5eda1dacf7-catalog-query-uuids-0'
+    }
+    ]}
+
+    def setUp(self):
+        super().setUp()
+        self.set_up_staff_user()
+
+    def _get_contains_content_base_url(self):
+        """
+        Helper to construct the base url for the contains_content_items endpoint
+        """
+        return reverse('api:v1:catalog-workbook')
+
+    @mock.patch('enterprise_catalog.apps.api.v1.views.catalog_workbook.get_initialized_algolia_client')
+    def test_empty_results_error(self, mock_algolia_client):
+        """
+        Tests when algolia returns no hits.
+        """
+        mock_algolia_client.return_value.algolia_index.search.side_effect = [{'hits': []}]
+        url = self._get_contains_content_base_url()
+        facets = 'language=English'
+        response = self.client.get(f'{url}?{facets}')
+        assert response.status_code == 400
+
+    @mock.patch('enterprise_catalog.apps.api.v1.views.catalog_workbook.get_initialized_algolia_client')
+    def test_success(self, mock_algolia_client):
+        """
+        Tests basic, successful output.
+        """
+        mock_algolia_client.return_value.algolia_index.search.side_effect = [self.mock_algolia_hits, {'hits': []}]
+        url = self._get_contains_content_base_url()
+        facets = 'language=English'
+        response = self.client.get(f'{url}?{facets}')
+        assert response.status_code == 200
+
+
 class EnterpriseCatalogContainsContentItemsTests(APITestMixin):
     """
     Tests on the contains_content_items on enterprise catalogs endpoint

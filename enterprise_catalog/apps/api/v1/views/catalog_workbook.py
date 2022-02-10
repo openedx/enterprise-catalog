@@ -1,4 +1,5 @@
 import io
+import logging
 import time
 
 import xlsxwriter
@@ -12,6 +13,9 @@ from enterprise_catalog.apps.api.v1 import export_utils
 from enterprise_catalog.apps.catalog.algolia_utils import (
     get_initialized_algolia_client,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class CatalogWorkbookView(GenericAPIView):
@@ -32,7 +36,11 @@ class CatalogWorkbookView(GenericAPIView):
         """
         facets = export_utils.querydict_to_dict(request.query_params)
         if facets.get('query'):
-            algoliaQuery = facets.pop('query')
+            # comes out as a list, we want the first value string only
+            algoliaQuery = facets.pop('query')[0]
+        elif facets.get('q'):
+            # comes out as a list, we want the first value string only
+            algoliaQuery = facets.pop('q')[0]
         else:
             algoliaQuery = ''
 
@@ -69,6 +77,10 @@ class CatalogWorkbookView(GenericAPIView):
 
         # Algolia search will only retrieve all results if you query by empty string.
         page = algolia_client.algolia_index.search(algoliaQuery, search_options)
+
+        if len(page['hits']) == 0:
+            return Response(f'Error: invalid query: {algoliaQuery} provided.', status=HTTP_400_BAD_REQUEST)
+
         # start after header row
         course_row_num = 1
         program_row_num = 1
