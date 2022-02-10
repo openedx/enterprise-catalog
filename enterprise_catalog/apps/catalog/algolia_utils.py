@@ -61,6 +61,7 @@ ALGOLIA_FIELDS = [
     'enterprise_catalog_query_titles',
     'learning_items',
     'prices',
+    'course_details',
     'banner_image_url',
 ]
 
