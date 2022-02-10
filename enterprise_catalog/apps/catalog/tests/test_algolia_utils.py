@@ -644,6 +644,14 @@ class AlgoliaUtilsTests(TestCase):
             [{'key': 'akey', 'title': 'a_title', 'image': 'an_image', 'short_description': 'desc'}],
         ),
         (
+            {'courses': [{'key': 'akey'}]},
+            [{'key': 'akey', 'title': None, 'image': None, 'short_description': None}],
+        ),
+        (
+            {'courses': [{'title': 'only_title'}]},
+            [{'key': None, 'title': 'only_title', 'image': None, 'short_description': None}],
+        ),
+        (
             {'courses': []},
             [],
         ),
