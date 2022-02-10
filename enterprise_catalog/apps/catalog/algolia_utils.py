@@ -61,6 +61,7 @@ ALGOLIA_FIELDS = [
     'enterprise_catalog_query_titles',
     'learning_items',
     'prices',
+    'course_details',
     'banner_image_url',
 ]
 
@@ -338,6 +339,23 @@ def _get_course_program_field(course, field):
         value for program in programs
         if (value := program.get(field))
     })
+
+
+def get_program_course_details(program):
+    """
+    Returns courses for a program, with just enough detail to use in frontend clients (for now)
+    """
+    courses = program.get('courses') or []
+    course_list = []
+    for course in courses:
+        mapped_course = {
+            'key': course.get('key'),
+            'title': course.get('title'),
+            'image': course.get('image'),
+            'short_description': course.get('short_description'),
+        }
+        course_list.append(mapped_course)
+    return course_list
 
 
 def _get_program_course_field(program, field):
@@ -861,6 +879,7 @@ def _algolia_object_from_product(product, algolia_fields):
             'learning_items': get_program_learning_items(searchable_product),
             'prices': get_program_prices(searchable_product),
             'banner_image_url': get_program_banner_image_url(searchable_product),
+            'course_details': get_program_course_details(searchable_product),
         })
 
     algolia_object = {}

@@ -158,6 +158,7 @@ class DiscoveryApiClient(BaseOAuthClient):
         request_params = {
             'ordering': 'key',
             'limit': DISCOVERY_OFFSET_SIZE,
+            'extended': 'True',
         }
         request_params.update(query_params or {})
 

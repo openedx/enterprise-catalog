@@ -22,6 +22,7 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     get_initialized_algolia_client,
     get_program_availability,
     get_program_banner_image_url,
+    get_program_course_details,
     get_program_learning_items,
     get_program_level_type,
     get_program_partners,
@@ -636,6 +637,29 @@ class AlgoliaUtilsTests(TestCase):
         """
         program_prices = get_program_prices(program_metadata)
         self.assertEqual(expected_type, program_prices)
+
+    @ddt.data(
+        (
+            {'courses': [{'key': 'akey', 'title': 'a_title', 'image': 'an_image', 'short_description': 'desc'}]},
+            [{'key': 'akey', 'title': 'a_title', 'image': 'an_image', 'short_description': 'desc'}],
+        ),
+        (
+            {'courses': [{'key': 'akey'}]},
+            [{'key': 'akey', 'title': None, 'image': None, 'short_description': None}],
+        ),
+        (
+            {'courses': [{'title': 'only_title'}]},
+            [{'key': None, 'title': 'only_title', 'image': None, 'short_description': None}],
+        ),
+        (
+            {'courses': []},
+            [],
+        ),
+    )
+    @ddt.unpack
+    def test_get_program_course_details(self, program_metadata, expected_details):
+        courses_list = get_program_course_details(program_metadata)
+        self.assertEqual(courses_list, expected_details)
 
     @ddt.data(
         (
