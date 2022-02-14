@@ -35,7 +35,7 @@ cffi==1.15.0
     # via
     #   -r requirements/base.txt
     #   cryptography
-charset-normalizer==2.0.11
+charset-normalizer==2.0.12
     # via
     #   -r requirements/base.txt
     #   requests
@@ -232,7 +232,7 @@ pbr==5.8.1
     # via
     #   -r requirements/base.txt
     #   stevedore
-platformdirs==2.4.1
+platformdirs==2.5.0
     # via pylint
 psutil==5.9.0
     # via
@@ -324,16 +324,14 @@ requests-oauthlib==1.3.1
     # via
     #   -r requirements/base.txt
     #   social-auth-core
-ruamel-yaml==0.17.20
-    # via -r requirements/base.txt
-ruamel-yaml-clib==0.2.6
-    # via -r requirements/base.txt
-ruamel-yaml==0.17.20
-    # via drf-yasg
+ruamel-yaml==0.17.21
+    # via
+    #   -r requirements/base.txt
+    #   drf-yasg
 ruamel-yaml-clib==0.2.6
     # via
+    #   -r requirements/base.txt
     #   ruamel-yaml
-    #   ruamel.yaml
 rules==3.1
     # via -r requirements/base.txt
 semantic-version==2.9.0
@@ -383,7 +381,7 @@ text-unidecode==1.3
     #   python-slugify
 toml==0.10.2
     # via pylint
-typing-extensions==4.0.1
+typing-extensions==4.1.0
     # via
     #   astroid
     #   pylint
