@@ -11,10 +11,11 @@ from enterprise_catalog.apps.catalog.constants import (
     ENTERPRISE_CATALOG_LEARNER_ROLE,
     SYSTEM_ENTERPRISE_ADMIN_ROLE,
     SYSTEM_ENTERPRISE_CATALOG_ADMIN_ROLE,
-    SYSTEM_ENTERPRISE_OPERATOR_ROLE,
     SYSTEM_ENTERPRISE_LEARNER_ROLE,
+    SYSTEM_ENTERPRISE_OPERATOR_ROLE,
 )
 from enterprise_catalog.settings.utils import get_env_setting, get_logger_config
+
 
 # PATH vars
 here = lambda *x: join(abspath(dirname(__file__)), *x)
@@ -397,3 +398,6 @@ SYSTEM_TO_FEATURE_ROLE_MAPPING = {
 # (in the worse case where we're updating
 # mostly our largest records in a single query).
 UPDATE_EXISTING_CONTENT_METADATA_BATCH_SIZE = 4
+
+USE_DEPRECATED_PYTZ = True
+

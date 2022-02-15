@@ -1,7 +1,7 @@
 """
 URL definitions for enterprise catalog API version 1.
 """
-from django.conf.urls import url
+from django.urls import path, re_path
 from rest_framework.routers import DefaultRouter
 
 from enterprise_catalog.apps.api.v1.views.catalog_csv import CatalogCsvView
@@ -45,46 +45,36 @@ router.register(r'enterprise-catalogs', EnterpriseCatalogContainsContentItems, b
 router.register(r'enterprise-customer', EnterpriseCustomerViewSet, basename='enterprise-customer')
 
 urlpatterns = [
-    url(
-        r'^enterprise-catalogs/catalog_csv_data',
-        CatalogCsvDataView.as_view(),
-        name='catalog-csv-data'
-    ),
-    url(
-        r'^enterprise-catalogs/default_course_set',
-        DefaultCatalogResultsView.as_view(),
-        name='default-course-set'
-    ),
-    url(
-        r'^enterprise-catalogs/catalog_csv',
-        CatalogCsvView.as_view(),
-        name='catalog-csv'
-    ),
-    url(
-        r'^enterprise-catalogs/catalog_workbook',
-        CatalogWorkbookView.as_view(),
-        name='catalog-workbook'
-    ),
-    url(
+    path('enterprise-catalogs/catalog_csv_data', CatalogCsvDataView.as_view(),
+         name='catalog-csv-data'
+         ),
+    path('enterprise-catalogs/default_course_set', DefaultCatalogResultsView.as_view(),
+         name='default-course-set'
+         ),
+    path('enterprise-catalogs/catalog_csv', CatalogCsvView.as_view(),
+         name='catalog-csv'
+         ),
+    path('enterprise-catalogs/catalog_workbook', CatalogWorkbookView.as_view(),
+         name='catalog-workbook'
+         ),
+    re_path(
         r'^enterprise-catalogs/(?P<uuid>[\S]+)/get_content_metadata',
         EnterpriseCatalogGetContentMetadata.as_view({'get': 'get'}),
         name='get-content-metadata'
     ),
-    url(
+    re_path(
         r'^enterprise-catalogs/(?P<uuid>[\S]+)/generate_diff',
         EnterpriseCatalogDiff.as_view({'post': 'post'}),
         name='generate-catalog-diff'
     ),
-    url(
+    re_path(
         r'^enterprise-catalogs/(?P<uuid>[\S]+)/refresh_metadata',
         EnterpriseCatalogRefreshDataFromDiscovery.as_view({'post': 'post'}),
         name='update-enterprise-catalog'
     ),
-    url(
-        r'distinct-catalog-queries',
-        DistinctCatalogQueriesView.as_view(),
-        name='distinct-catalog-queries',
-    ),
+    path('distinct-catalog-queries', DistinctCatalogQueriesView.as_view(),
+         name='distinct-catalog-queries',
+         ),
 ]
 
 urlpatterns += router.urls
