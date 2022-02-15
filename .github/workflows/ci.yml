@@ -2,9 +2,8 @@ name: Django CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
 
 jobs:
   build:
@@ -12,14 +11,14 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['py38']
-        django-version: ['django32']
+        python-version: [py38]
+        django-version: [django32, django40]
 
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v2
       with:
-        python-version: "3.8"
+        python-version: '3.8'
         architecture: x64
     - name: Start container
       run: |

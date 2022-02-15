@@ -17,8 +17,8 @@ import os
 
 from auth_backends.urls import oauth2_urlpatterns
 from django.conf import settings
-from django.conf.urls import include, url
 from django.contrib import admin
+from django.urls import include, path
 from edx_api_doc_tools import make_api_info, make_docs_urls
 
 from enterprise_catalog.apps.api import urls as api_urls
@@ -33,17 +33,17 @@ api_info = make_api_info(
 )
 
 urlpatterns = [
-    url(r'', include(oauth2_urlpatterns)),
-    url(r'', include('csrf.urls')),  # Include csrf urls from edx-drf-extensions
-    url(r'^admin/', admin.site.urls),
-    url(r'^api/', include(api_urls), name='api'),
+    path('', include(oauth2_urlpatterns)),
+    path('', include('csrf.urls')),  # Include csrf urls from edx-drf-extensions
+    path('admin/', admin.site.urls),
+    path('api/', include(api_urls), name='api'),
     # Use the same auth views for all logins, including those originating from the browseable API.
-    url(r'^auto_auth/$', core_views.AutoAuth.as_view(), name='auto_auth'),
-    url(r'^health/$', core_views.health, name='health'),
+    path('auto_auth/', core_views.AutoAuth.as_view(), name='auto_auth'),
+    path('health/', core_views.health, name='health'),
 ]
 
 urlpatterns += make_docs_urls(api_info)
 
 if settings.DEBUG and os.environ.get('ENABLE_DJANGO_TOOLBAR', False):  # pragma: no cover
     import debug_toolbar
-    urlpatterns.append(url(r'^__debug__/', include(debug_toolbar.urls)))
+    urlpatterns.append(path('__debug__/', include(debug_toolbar.urls)))

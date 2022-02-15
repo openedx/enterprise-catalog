@@ -3,7 +3,7 @@ import datetime
 import logging
 import time
 
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from enterprise_catalog.apps.api.v1.utils import is_course_run_active
 from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
