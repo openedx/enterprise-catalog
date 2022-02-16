@@ -851,11 +851,33 @@ def fetch_missing_course_metadata_task(self):  # pylint: disable=unused-argument
 @expiring_task_semaphore()
 def fetch_missing_pathway_metadata_task(self):  # pylint: disable=unused-argument
     """
-    Creates a CatalogQuery for all the courses and programs that do not have ContentMetadata instance.
+    Creates ContentMetadata for Learner Pathways and all its associates.
 
-    After creating the catalog query it calls update_contentmetadata_from_discovery to update the metadata for these
-    courses and programs.
+    These steps are performed to load data for Learner Pathways:
+    1. Loads All the Learner Pathways ContentMetadata records from the discovery
+    2. Loads the missing associated programs from the discovery
+    3. Loads the missing the associated courses from the discovery
+    4. Update associations between pathways and relevant course and programs
+
+    Note: We need to load all the LEARNER_PATHWAYS here because we don't have the information about the associations
+    with learner_pathways in course or programs json_metadata. Here we are loading all of them and linking with Course
+    # ContentMetadata and Program ContentMetadata
     """
+
+    content_filter = {
+        'status': 'active',
+        'content_type': LEARNER_PATHWAY,
+    }
+    catalog_query, _ = CatalogQuery.objects.get_or_create(
+        content_filter_hash=get_content_filter_hash(content_filter),
+        defaults={'content_filter': content_filter, 'title': None},
+    )
+    associated_content_keys = update_contentmetadata_from_discovery(catalog_query)
+    logger.info(
+        'Finished Pathways fetch_missing_pathway_metadata_task with {} associated content keys for catalog {}'.format(
+            len(associated_content_keys), catalog_query.id
+        )
+    )
 
     learner_pathway_metadata_list = ContentMetadata.objects.filter(content_type=LEARNER_PATHWAY).values_list(
         'json_metadata', flat=True,
@@ -878,16 +900,16 @@ def fetch_missing_pathway_metadata_task(self):  # pylint: disable=unused-argumen
         content_filter = {
             'status': 'published',
             'key': list(missing_program_uuids),
-            'content_type': 'program',
+            'content_type': PROGRAM,
         }
         catalog_query, _ = CatalogQuery.objects.get_or_create(
             content_filter_hash=get_content_filter_hash(content_filter),
-            defaults={'content_filter': content_filter, 'title': 'Auto-generated query to fetch_missing_pathway_metadata'},
+            defaults={'content_filter': content_filter, 'title': None},
         )
 
         associated_content_keys = update_contentmetadata_from_discovery(catalog_query)
         logger.info(
-            'Finished programs fetch_missing_pathway_metadata_task with {} associated content keys for catalog {}'.format(
+            'Finished programs fetch_missing_pathway_metadata_task with {} keys for catalog {}'.format(
                 len(associated_content_keys), catalog_query.id
             )
         )
@@ -904,17 +926,26 @@ def fetch_missing_pathway_metadata_task(self):  # pylint: disable=unused-argumen
         content_filter = {
             'status': 'published',
             'key': list(missing_course_keys),
-            'content_type': 'course',
+            'content_type': COURSE,
         }
 
         catalog_query, _ = CatalogQuery.objects.get_or_create(
             content_filter_hash=get_content_filter_hash(content_filter),
-            defaults={'content_filter': content_filter, 'title': 'Auto-generated query to fetch_missing_pathway_metadata'},
+            defaults={'content_filter': content_filter, 'title': None},
         )
 
         associated_content_keys = update_contentmetadata_from_discovery(catalog_query)
         logger.info(
-            'Finished courses fetch_missing_pathway_metadata_task with {} associated content keys for catalog {}'.format(
+            'Finished courses fetch_missing_pathway_metadata_task with {} keys for catalog {}'.format(
                 len(associated_content_keys), catalog_query.id
             )
         )
+
+    # update association between pathways and its associated programs and courses.
+    for pathway_metadata in ContentMetadata.objects.filter(content_type=LEARNER_PATHWAY):
+        course_keys = get_pathway_course_keys(pathway_metadata.json_metadata)
+        program_uuids = get_pathway_program_uuids(pathway_metadata.json_metadata)
+        associated_content_metadata = ContentMetadata.objects.filter(
+            Q(content_key__in=program_uuids) | Q(content_key__in=course_keys)
+        )
+        pathway_metadata.associated_content_metadata.set(associated_content_metadata, clear=True)
