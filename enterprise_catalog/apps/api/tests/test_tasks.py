@@ -12,6 +12,9 @@ from django.test import TestCase
 from django_celery_results.models import TaskResult
 
 from enterprise_catalog.apps.api import tasks
+from enterprise_catalog.apps.api_client.discovery_cache import (
+    CatalogQueryMetadata,
+)
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
     COURSE_RUN,
@@ -236,52 +239,102 @@ class FetchMissingPathwayMetadataTaskTests(TestCase):
     """
     Tests for the `fetch_missing_pathway_metadata_task`.
     """
-    @mock.patch('enterprise_catalog.apps.api.tasks.update_contentmetadata_from_discovery')
-    def test_fetch_missing_pathway_metadata_task(self, mock_update_data_from_discovery):
+    @mock.patch.object(CatalogQueryMetadata, '_get_catalog_query_metadata')
+    def test_fetch_missing_pathway_metadata_task(self, mock_get_catalog_query_metadata):
         """
-        Validate the fetch_missing_pathway_metadata_task gathers correct data of missing courses and programs and calls
-        update_contentmetadata_from_discovery with correct arguments.
-        """
-        test_course = 'course:edX+testX'
-        test_program = '02f5edeb-6604-4131-bf45-acd8df91e1f9'
-        course_content_metadata = ContentMetadataFactory.create(content_type=COURSE)
-        program_content_metadata = ContentMetadataFactory.create(content_type=PROGRAM)
+        Validate the fetch_missing_pathway_metadata_task creates correct Data and its associations.
 
-        ContentMetadataFactory.create(content_type=LEARNER_PATHWAY, json_metadata={
-            'steps': [{
-                'min_requirement': 1,
-                'courses': [
-                    course_content_metadata.json_metadata,
+        1. Validate it creates all the Learner Pathways
+        2. Validate it creates missing course and programs associated with Pathways
+        3. Validates correct association has been build between pathways ContentMetadata and its associated Course and
+        Program ContentMetadata
+        """
+        test_pathway = 'e246705d-9044-4bc9-8c8d-ebb0c3d0a9ad'
+        test_course = 'edX+DemoX'
+        test_program = 'dcc9d1cf-a068-48c4-841d-934a0fcd2bfb'
+
+        assert ContentMetadata.objects.count() == 0
+
+        all_pathways_discovery_result = [
+            {
+                "aggregation_key": f"learnerpathway:{test_pathway}",
+                "content_type": "learnerpathway",
+                "uuid": test_pathway,
+                "name": "Full stack developer",
+                "steps": [
                     {
-                        'key': test_course,
+                        "uuid": "63d708a7-8512-427e-8ae1-6ee8fa685360",
+                        "min_requirement": 1,
+                        "courses": [],
+                        "programs": [
+                            {
+                                "uuid": test_program,
+                                "title": "edX Demonstration Program",
+                                "content_type": "program"
+                            }
+                        ]
                     },
-                ],
-                'programs': [
-                    program_content_metadata.json_metadata,
                     {
-                        'uuid': test_program
+                        "uuid": "4a169c83-46f6-4a5a-8e58-5ccb76518f3d",
+                        "min_requirement": 1,
+                        "courses": [
+                            {
+                                "key": test_course,
+                                "title": "Demonstration Course",
+                                "content_type": "course"
+                            }
+                        ],
+                        "programs": []
                     }
-                ],
-            }]
-        })
+                ]
+            }
+            ]
+        missing_programs_discovery_result = [
+            {
+                "aggregation_key": f"program:{test_program}",
+                "uuid": test_program,
+                "title": "edX Demonstration Program",
+                "content_type": "program"
+            }
+        ]
+        missing_courses_discovery_result = [
+            {
+                "aggregation_key": f"course:{test_course}",
+                "key": test_course,
+                "title": "Demonstration Course",
+                "content_type": "course"
+           }
+        ]
+        mock_get_catalog_query_metadata.side_effect = [
+            all_pathways_discovery_result,
+            missing_programs_discovery_result,
+            missing_courses_discovery_result,
+        ]
 
         tasks.fetch_missing_pathway_metadata_task.apply()
 
-        assert CatalogQuery.objects.filter().count() == 2
-        first_catalog_query = CatalogQuery.objects.first()
-        assert first_catalog_query.content_filter['status'] == 'published'
-        assert first_catalog_query.content_filter['content_type'] == 'program'
-        assert first_catalog_query.content_filter['key'] == [test_program]
+        assert ContentMetadata.objects.count() == 3
+        learner_pathway = ContentMetadata.objects.get(content_key=test_pathway)
+        program = ContentMetadata.objects.get(content_key=test_program)
+        course = ContentMetadata.objects.get(content_key=test_course)
+        learner_pathway.associated_content_metadata.all()
+        assert list(learner_pathway.associated_content_metadata.all()) == [program, course]
 
-        second_catalog_query = CatalogQuery.objects.all()[1]
-        assert second_catalog_query.content_filter['status'] == 'published'
-        assert second_catalog_query.content_filter['content_type'] == 'course'
-        assert second_catalog_query.content_filter['key'] == [test_course]
+        queries = CatalogQuery.objects.all()
+        assert queries.count() == 3
+        pathways_query = queries[0]
+        assert pathways_query.content_filter['status'] == 'active'
+        assert pathways_query.content_filter['content_type'] == LEARNER_PATHWAY
 
-        mock_update_data_from_discovery.assert_has_calls(
-            [mock.call(first_catalog_query), mock.call(second_catalog_query)],
-            any_order=True
-        )
+        program_catalog_query = queries[1]
+        assert program_catalog_query.content_filter['status'] == 'published'
+        assert program_catalog_query.content_filter['content_type'] == 'program'
+        assert program_catalog_query.content_filter['key'] == [test_program]
+
+        course_catalog_query = queries[2]
+        assert course_catalog_query.content_filter['status'] == 'published'
+        assert course_catalog_query.content_filter['content_type'] == 'course'
+        assert course_catalog_query.content_filter['key'] == [test_course]
 
 
 class UpdateFullContentMetadataTaskTests(TestCase):
