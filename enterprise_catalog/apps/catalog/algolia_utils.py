@@ -340,6 +340,8 @@ def _get_course_program_field(course, field):
         value for program in programs
         if (value := program.get(field))
     })
+
+
 def get_program_course_details(program):
     """
     Returns courses for a program, with just enough detail to use in frontend clients (for now)
@@ -355,6 +357,7 @@ def get_program_course_details(program):
         }
         course_list.append(mapped_course)
     return course_list
+
 
 def get_pathway_course_keys(pathway):
     """
