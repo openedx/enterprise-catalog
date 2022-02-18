@@ -831,21 +831,25 @@ def fetch_missing_course_metadata_task(self):  # pylint: disable=unused-argument
     )
 
     missing_course_keys = course_keys.difference(present_course_keys)
-    content_filter = {
-        'status': 'published',
-        'key': list(missing_course_keys),
-        'content_type': 'course',
-    }
+    if missing_course_keys:
+        content_filter = {
+            'status': 'published',
+            'key': list(missing_course_keys),
+            'content_type': 'course',
+        }
 
-    catalog_query, _ = CatalogQuery.objects.get_or_create(
-        content_filter_hash=get_content_filter_hash(content_filter),
-        defaults={'content_filter': content_filter, 'title': None},
-    )
+        catalog_query, _ = CatalogQuery.objects.get_or_create(
+            content_filter_hash=get_content_filter_hash(content_filter),
+            defaults={'content_filter': content_filter, 'title': None},
+        )
 
-    associated_content_keys = update_contentmetadata_from_discovery(catalog_query)
-    logger.info('Finished fetch_missing_course_metadata_task with {} associated content keys for catalog {}'.format(
-        len(associated_content_keys), catalog_query.id
-    ))
+        associated_content_keys = update_contentmetadata_from_discovery(catalog_query)
+        logger.info('Finished fetch_missing_course_metadata_task with {} associated content keys for catalog {}'.format(
+            len(associated_content_keys), catalog_query.id
+        ))
+    else:
+        logger.info('No missing key found in fetch_missing_course_metadata_task')
+
 
 
 @shared_task(base=LoggedTaskWithRetry, bind=True)
