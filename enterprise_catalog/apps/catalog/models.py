@@ -775,11 +775,12 @@ def create_course_associated_programs(programs, course_content_metadata):
         program['content_type'] = 'program'
     metadata_list = create_content_metadata(programs)
 
-    # Setting `clear=True` will remove all prior relationships between
-    # the ContentMetadata's associated ContentMetadata objects
-    # before setting all new relationships from `metadata_list`.
-    # https://docs.djangoproject.com/en/2.2/ref/models/relations/#django.db.models.fields.related.RelatedManager.set
-    course_content_metadata.associated_content_metadata.set(metadata_list, clear=True)
+    # remove existing associated_content_metadata relationship between program and courses before adding new relation
+    course_content_metadata.associated_content_metadata.remove(
+        *course_content_metadata.associated_content_metadata.filter(content_type=PROGRAM)
+    )
+    course_content_metadata.associated_content_metadata.add(*metadata_list)
+
     associated_content_keys = [metadata.content_key for metadata in metadata_list]
     return associated_content_keys
 

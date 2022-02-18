@@ -487,8 +487,9 @@ def get_programs_by_course():
     program_membership_by_course_key = defaultdict(set)
     programs = ContentMetadata.objects.filter(content_type=PROGRAM).prefetch_related('associated_content_metadata')
     for prog in programs:
-        for course in prog.associated_content_metadata.all():
-            program_membership_by_course_key[course.content_key].add(prog)
+        for associated_content in prog.associated_content_metadata.all():
+            if associated_content.content_type == COURSE:
+                program_membership_by_course_key[associated_content.content_key].add(prog)
     return program_membership_by_course_key
 
 
@@ -640,7 +641,7 @@ def index_content_keys_in_algolia(content_keys, algolia_client):
         )
         all_memberships = ContentMetadataToQueries.objects.select_related(
             'catalog_query', 'content_metadata'
-        ).filter(query).iterator()
+        ).filter(query).distinct().iterator()
 
         for membership in all_memberships:
             metadata = membership.content_metadata
@@ -946,6 +947,6 @@ def fetch_missing_pathway_metadata_task(self):  # pylint: disable=unused-argumen
         course_keys = get_pathway_course_keys(pathway_metadata.json_metadata)
         program_uuids = get_pathway_program_uuids(pathway_metadata.json_metadata)
         associated_content_metadata = ContentMetadata.objects.filter(
-            Q(content_key__in=program_uuids) | Q(content_key__in=course_keys)
+            content_key__in=program_uuids + course_keys
         )
         pathway_metadata.associated_content_metadata.set(associated_content_metadata, clear=True)
