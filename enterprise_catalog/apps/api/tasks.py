@@ -851,7 +851,6 @@ def fetch_missing_course_metadata_task(self):  # pylint: disable=unused-argument
         logger.info('No missing key found in fetch_missing_course_metadata_task')
 
 
-
 @shared_task(base=LoggedTaskWithRetry, bind=True)
 @expiring_task_semaphore()
 def fetch_missing_pathway_metadata_task(self):  # pylint: disable=unused-argument
