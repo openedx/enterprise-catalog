@@ -591,14 +591,16 @@ def build_content_mapping_with_enterprise_and_catalog(
             catalog_uuids_by_key[program.content_key].update(query_to_catalog_mapping[catalog_query.id])
             customer_uuids_by_key[program.content_key].update(query_to_enterprise_mapping[catalog_query.id])
         for pathway in course_to_pathway_mapping[content_key]:
-            catalog_queries_by_key[pathway.content_key].update({(str(catalog_query.uuid), catalog_query.title)})
-            catalog_uuids_by_key[pathway.content_key].update(query_to_catalog_mapping[catalog_query.id])
-            customer_uuids_by_key[pathway.content_key].update(query_to_enterprise_mapping[catalog_query.id])
+            if pathway.json_metadata['visible_via_association']:
+                catalog_queries_by_key[pathway.content_key].update({(str(catalog_query.uuid), catalog_query.title)})
+                catalog_uuids_by_key[pathway.content_key].update(query_to_catalog_mapping[catalog_query.id])
+                customer_uuids_by_key[pathway.content_key].update(query_to_enterprise_mapping[catalog_query.id])
     if metadata.content_type == PROGRAM:
         for pathway in program_to_pathway_mapping[content_key]:
-            catalog_queries_by_key[pathway.content_key].update({(str(catalog_query.uuid), catalog_query.title)})
-            catalog_uuids_by_key[pathway.content_key].update(query_to_catalog_mapping[catalog_query.id])
-            customer_uuids_by_key[pathway.content_key].update(query_to_enterprise_mapping[catalog_query.id])
+            if pathway.json_metadata['visible_via_association']:
+                catalog_queries_by_key[pathway.content_key].update({(str(catalog_query.uuid), catalog_query.title)})
+                catalog_uuids_by_key[pathway.content_key].update(query_to_catalog_mapping[catalog_query.id])
+                customer_uuids_by_key[pathway.content_key].update(query_to_enterprise_mapping[catalog_query.id])
 
 
 def index_content_keys_in_algolia(content_keys, algolia_client):

@@ -112,6 +112,7 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
                 'status': 'active',
                 'overview': 'Pathway for a data engineer.',
                 'published': True,
+                'visible_via_association': True,
             })
         return json_metadata
 
