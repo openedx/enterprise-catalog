@@ -71,6 +71,8 @@ CORS_ORIGIN_WHITELIST = [
     'http://localhost:18160',
     'http://localhost:18000',
     'http://localhost:18130',
+    # Enterprise admin portal MFE
+    'http://localhost:1991',
     # Enterprise explore catalog MFE
     'http://localhost:8735',
 ]
