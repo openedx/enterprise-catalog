@@ -80,6 +80,7 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
                 'status': 'published',
                 'is_enrollable': True,
                 'is_marketable': True,
+                'availability': 'current',
             }]
             json_metadata.update({
                 'content_type': COURSE,
