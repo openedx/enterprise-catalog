@@ -32,6 +32,7 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     get_program_title,
     get_program_type,
     get_upcoming_course_runs,
+    is_course_archived,
 )
 from enterprise_catalog.apps.catalog.constants import COURSE
 from enterprise_catalog.apps.catalog.tests.factories import (
@@ -57,6 +58,8 @@ class AlgoliaUtilsTests(TestCase):
         {'expected_result': False, 'advertised_course_run_status': 'unpublished'},
         {'expected_result': False, 'is_enrollable': False},
         {'expected_result': False, 'is_marketable': False},
+        {'expected_result': True, },
+        {'expected_result': False, 'course_run_availability': None},
     )
     @ddt.unpack
     def test_should_index_course(
@@ -68,6 +71,7 @@ class AlgoliaUtilsTests(TestCase):
         advertised_course_run_status='published',
         is_enrollable=True,
         is_marketable=True,
+        course_run_availability='current',
     ):
         """
         Verify that only a course that has a non-hidden advertised course run, at least one owner, and a marketing slug
@@ -85,6 +89,7 @@ class AlgoliaUtilsTests(TestCase):
                     'status': advertised_course_run_status,
                     'is_enrollable': is_enrollable,
                     'is_marketable': is_marketable,
+                    'availability': course_run_availability,
                 },
             ],
             'owners': owners,
@@ -94,6 +99,17 @@ class AlgoliaUtilsTests(TestCase):
             json_metadata=json_metadata,
         )
         assert _should_index_course(course_metadata) is expected_result
+
+    def test_is_course_archived(self):
+        """
+        Verify that a course has to have runs with proper availability.
+        """
+        course_metadata = ContentMetadataFactory.create(
+            content_type=COURSE,
+        )
+        assert is_course_archived(course_metadata.json_metadata) is False
+        course_metadata.json_metadata.get('course_runs')[0]['availability'] = ''
+        assert is_course_archived(course_metadata.json_metadata) is True
 
     @ddt.data(
         (
