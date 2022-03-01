@@ -142,9 +142,6 @@ def _should_index_course(course_metadata):
     if not is_course_run_active(advertised_course_run):
         return False
 
-    if is_course_archived(course_json_metadata):
-        return False
-
     owners = course_json_metadata.get('owners') or []
     return not advertised_course_run.get('hidden') and len(owners) > 0
 
@@ -312,7 +309,7 @@ def is_course_archived(course):
         boolean: "Archived" availability or not
     """
     availability_list = get_course_availability(course)
-    return len(availability_list) == 0 or availability_list[0] == 'Archived'
+    return len(availability_list) == 0 or 'Archived' in availability_list
 
 
 def get_course_partners(course):
