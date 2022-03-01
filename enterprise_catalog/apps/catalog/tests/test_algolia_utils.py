@@ -59,7 +59,7 @@ class AlgoliaUtilsTests(TestCase):
         {'expected_result': False, 'is_enrollable': False},
         {'expected_result': False, 'is_marketable': False},
         {'expected_result': True, },
-        {'expected_result': False, 'course_run_availability': None},
+        {'expected_result': True, 'course_run_availability': None},
     )
     @ddt.unpack
     def test_should_index_course(
