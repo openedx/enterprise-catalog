@@ -5,6 +5,7 @@ import factory
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
     COURSE_RUN,
+    LEARNER_PATHWAY,
     PROGRAM,
     json_serialized_course_modes,
 )
@@ -58,7 +59,7 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
         model = ContentMetadata
 
     content_key = factory.Sequence(lambda n: f'metadata_item_{n}')
-    content_type = factory.Iterator([COURSE_RUN, COURSE, PROGRAM])
+    content_type = factory.Iterator([COURSE_RUN, COURSE, PROGRAM, LEARNER_PATHWAY])
     parent_content_key = None   # Default to None
 
     @factory.lazy_attribute
@@ -99,10 +100,20 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
             })
         elif self.content_type == PROGRAM:
             json_metadata.update({
+                'uuid': self.content_key,
                 'content_type': PROGRAM,
                 'type': 'MicroMasters',
                 'hidden': True,
                 'marketing_url': f'https://marketing.url/{self.content_key}',
+            })
+        elif self.content_type == LEARNER_PATHWAY:
+            json_metadata.update({
+                'content_type': LEARNER_PATHWAY,
+                'name': 'Data Engineer',
+                'status': 'active',
+                'overview': 'Pathway for a data engineer.',
+                'published': True,
+                'visible_via_association': True,
             })
         return json_metadata
 

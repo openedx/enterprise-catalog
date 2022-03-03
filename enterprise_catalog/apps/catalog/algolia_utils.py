@@ -9,6 +9,7 @@ from enterprise_catalog.apps.api.v1.utils import is_course_run_active
 from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
+    LEARNER_PATHWAY,
     PROGRAM,
     PROGRAM_TYPES_MAP,
 )
@@ -370,6 +371,139 @@ def get_program_course_details(program):
         }
         course_list.append(mapped_course)
     return course_list
+
+
+def get_pathway_course_keys(pathway):
+    """
+    Gets list of course keys associated with the pathway.
+
+    Arguments:
+       pathway (dict): a dictionary representing a pathway.
+
+    Returns:
+       list: a list of course keys associated with the pathway.
+    """
+    course_keys = set()
+    steps = pathway.get('steps') or []
+    for step in steps:
+        courses = step.get('courses') or []
+        for course in courses:
+            course_keys.add(course['key'])
+    return list(course_keys)
+
+
+def get_pathway_program_uuids(pathway):
+    """
+    Gets list of program uuids associated with the pathway.
+
+    Arguments:
+       pathway (dict): a dictionary representing a pathway.
+
+    Returns:
+       list: a list of program uuids associated with the pathway.
+    """
+    program_uuids = set()
+    steps = pathway.get('steps') or []
+    for step in steps:
+        programs = step.get('programs') or []
+        for program in programs:
+            program_uuids.add(program['uuid'])
+    return list(program_uuids)
+
+
+def get_pathway_availability(pathway):
+    """
+    Gets the availability for a pathway. Used for the "availability" facet in Algolia.
+
+    Arguments:
+        pathway (dict): a dictionary representing a pathway.
+
+    Returns:
+        list: a union of pathway programs and courses availability.
+    """
+    availability = set()
+    pathway_course_keys = get_pathway_course_keys(pathway)
+    courses_metadata = ContentMetadata.objects.filter(content_key__in=pathway_course_keys)
+    for course_metadata in courses_metadata:
+        course_status = get_course_availability(course_metadata.json_metadata)
+        availability.update(course_status)
+    pathway_program_uuids = get_pathway_program_uuids(pathway)
+    programs_metadata = ContentMetadata.objects.filter(content_key__in=pathway_program_uuids)
+    for program_metadata in programs_metadata:
+        program_status = get_program_availability(program_metadata.json_metadata)
+        availability.update(program_status)
+    return list(availability)
+
+
+def get_pathway_banner_image_url(pathway):
+    """
+    Gets the banner_image_url (only large is fetched), rest of urls can be deduced
+
+    Arguments:
+        pathway (dict): a dictionary representing a pathway.
+
+    Returns:
+        str: url to large size image
+    """
+    images = pathway.get('banner_image', {})
+    try:
+        return images.get('large').get('url')
+    except (KeyError, AttributeError):
+        return None
+
+
+def get_pathway_partners(pathway):
+    """
+    Gets the partners for a pathway. Used for the "partners.name" facet in Algolia.
+
+    Arguments:
+        pathway (dict): a dictionary representing a pathway.
+
+    Returns:
+        list: a list of partners associated with the pathway.
+    """
+    partners = []
+    pathway_course_keys = get_pathway_course_keys(pathway)
+    courses_metadata = ContentMetadata.objects.filter(content_key__in=pathway_course_keys)
+    for course in courses_metadata:
+        course_partners = get_course_partners(course.json_metadata)
+        for partner in course_partners:
+            partner_name = partner.get('name')
+            if partner_name not in [item.get('name') for item in partners]:
+                partners.append(partner)
+    pathway_program_uuids = get_pathway_program_uuids(pathway)
+    programs_metadata = ContentMetadata.objects.filter(content_key__in=pathway_program_uuids)
+    for program in programs_metadata:
+        program_partners = get_program_partners(program.json_metadata)
+        for partner in program_partners:
+            partner_name = partner.get('name')
+            if partner_name not in [item.get('name') for item in partners]:
+                partners.append(partner)
+    return partners
+
+
+def get_pathway_subjects(pathway):
+    """
+    Gets the subjects for a pathway. Used for the "subjects" facet in Algolia.
+
+    Arguments:
+        pathway (dict): a dictionary representing a pathway.
+
+    Returns:
+        list: a list of subjects associated with the pathway.
+    """
+    subjects = set()
+    pathway_course_keys = get_pathway_course_keys(pathway)
+    courses_metadata = ContentMetadata.objects.filter(content_key__in=pathway_course_keys)
+    for course in courses_metadata:
+        course_subjects = get_course_subjects(course.json_metadata)
+        subjects.update(course_subjects)
+    pathway_program_uuids = get_pathway_program_uuids(pathway)
+    programs_metadata = ContentMetadata.objects.filter(content_key__in=pathway_program_uuids)
+    for program in programs_metadata:
+        program_subjects = get_program_subjects(program.json_metadata)
+        subjects.update(program_subjects)
+    return list(subjects)
 
 
 def _get_program_course_field(program, field):
@@ -894,6 +1028,15 @@ def _algolia_object_from_product(product, algolia_fields):
             'prices': get_program_prices(searchable_product),
             'banner_image_url': get_program_banner_image_url(searchable_product),
             'course_details': get_program_course_details(searchable_product),
+        })
+    elif searchable_product.get('content_type') == LEARNER_PATHWAY:
+        searchable_product.update({
+            'course_keys': get_pathway_course_keys(searchable_product),
+            'programs': get_pathway_program_uuids(searchable_product),
+            'availability': get_pathway_availability(searchable_product),
+            'banner_image_url': get_pathway_banner_image_url(searchable_product),
+            'partners': get_pathway_partners(searchable_product),
+            'subjects': get_pathway_subjects(searchable_product),
         })
 
     algolia_object = {}
