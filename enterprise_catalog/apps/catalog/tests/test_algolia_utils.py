@@ -662,11 +662,25 @@ class AlgoliaUtilsTests(TestCase):
 
     @ddt.data(
         (
-            {'courses': [{'key': 'akey', 'title': 'a_title', 'image': {'src': 'an_image'}, 'short_description': 'desc'}]},
+            {
+                'courses': [{
+                    'key': 'akey',
+                    'title': 'a_title',
+                    'image': {'src': 'an_image'},
+                    'short_description': 'desc'
+                }],
+            },
             [{'key': 'akey', 'title': 'a_title', 'image': 'an_image', 'short_description': 'desc'}],
         ),
         (
-            {'courses': [{'key': 'akey', 'title': 'a_title', 'image': {'invalid': 'an_image'}, 'short_description': 'desc'}]},
+            {
+                'courses': [{
+                    'key': 'akey',
+                    'title': 'a_title',
+                    'image': {'invalid': 'an_image'},
+                    'short_description': 'desc',
+                }],
+            },
             [{'key': 'akey', 'title': 'a_title', 'image': None, 'short_description': 'desc'}],
         ),
         (
