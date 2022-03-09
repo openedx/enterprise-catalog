@@ -695,6 +695,10 @@ class AlgoliaUtilsTests(TestCase):
             {'courses': []},
             [],
         ),
+        (
+            {'courses': [{'image': None, 'key': 'akey'}]},
+            [{'key': 'akey', 'image': None, 'short_description': None, 'title': None}],
+        )
     )
     @ddt.unpack
     def test_get_program_course_details(self, program_metadata, expected_details):
