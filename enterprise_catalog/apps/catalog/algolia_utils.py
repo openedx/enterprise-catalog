@@ -366,7 +366,7 @@ def get_program_course_details(program):
         mapped_course = {
             'key': course.get('key'),
             'title': course.get('title'),
-            'image': course.get('image', {}).get('src'),
+            'image': course.get('image').get('src') if course.get('image') else None,
             'short_description': course.get('short_description'),
         }
         course_list.append(mapped_course)
