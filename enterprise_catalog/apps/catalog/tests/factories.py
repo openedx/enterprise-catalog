@@ -12,6 +12,7 @@ from enterprise_catalog.apps.catalog.constants import (
 from enterprise_catalog.apps.catalog.models import (
     CatalogQuery,
     ContentMetadata,
+    ContentMetadataToQueries,
     EnterpriseCatalog,
     EnterpriseCatalogFeatureRole,
     EnterpriseCatalogRoleAssignment,
@@ -116,6 +117,17 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
                 'visible_via_association': True,
             })
         return json_metadata
+
+
+class ContentMetadataToQueriesFactory(factory.django.DjangoModelFactory):
+    """
+    Test factory for the `ContentMetadata` model
+    """
+    catalog_query = factory.SubFactory(CatalogQueryFactory)
+    content_metadata = factory.SubFactory(ContentMetadataFactory)
+
+    class Meta:
+        model = ContentMetadataToQueries
 
 
 class UserFactory(factory.django.DjangoModelFactory):

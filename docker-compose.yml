@@ -60,7 +60,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && celery -A enterprise_catalog worker -l DEBUG'
+    command: bash -c 'while true; do cd /edx/app/enterprise_catalog/enterprise_catalog && celery -A enterprise_catalog worker -l DEBUG; sleep 2; done'
     container_name: enterprise.catalog.worker
     depends_on:
       - mysql
