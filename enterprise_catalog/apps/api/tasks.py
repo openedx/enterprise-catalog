@@ -805,9 +805,9 @@ def update_catalog_metadata_task(self, catalog_query_id, force=False):  # pylint
     try:
         associated_content_keys = update_contentmetadata_from_discovery(catalog_query)
     except Exception as e:
-        logger.error(
-            f'Something went wrong while updating content metadata from discovery using catalog: {catalog_query_id}. '
-            f'Task failed with exception: {e}'
+        logger.exception(
+            f'Something went wrong while updating content metadata from discovery using catalog: {catalog_query_id}. ',
+            exc_info=e,
         )
         raise e
     logger.info('Finished update_catalog_metadata_task with {} associated content keys for catalog {}'.format(
