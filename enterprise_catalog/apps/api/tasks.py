@@ -802,7 +802,14 @@ def update_catalog_metadata_task(self, catalog_query_id, force=False):  # pylint
     except CatalogQuery.DoesNotExist:
         logger.error('Could not find a CatalogQuery with id %s', catalog_query_id)
 
-    associated_content_keys = update_contentmetadata_from_discovery(catalog_query)
+    try:
+        associated_content_keys = update_contentmetadata_from_discovery(catalog_query)
+    except Exception as e:
+        logger.error(
+            f'Something went wrong while updating content metadata from discovery using catalog: {catalog_query_id}. '
+            f'Task failed with exception: {e}'
+        )
+        raise e
     logger.info('Finished update_catalog_metadata_task with {} associated content keys for catalog {}'.format(
         len(associated_content_keys), catalog_query_id
     ))
