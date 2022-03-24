@@ -729,7 +729,12 @@ def generate_content_metadata_diff(metadata):
         existing_metadata_by_key = {metadata.content_key: metadata for metadata in existing_metadata}
 
         for key in existing_metadata_by_key.keys():
-            potential_items_to_delete.pop(key)
+            try:
+                del potential_items_to_delete[key]
+            except KeyError as e:
+                LOGGER.warning(
+                    f'Found existing piece of content: {e} that was not contained by the list of items to delete'
+                )
 
         existing_metadata_defaults, nonexisting_metadata_defaults = _partition_content_metadata_defaults(
             batched_metadata, existing_metadata_by_key
