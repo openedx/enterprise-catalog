@@ -16,7 +16,7 @@ asgiref==3.5.0
     # via
     #   -r requirements/test.txt
     #   django
-astroid==2.9.3
+astroid==2.11.2
     # via
     #   -r requirements/test.txt
     #   pylint
@@ -46,17 +46,17 @@ cffi==1.15.0
     # via
     #   -r requirements/test.txt
     #   cryptography
-charset-normalizer==2.0.11
+charset-normalizer==2.0.12
     # via
     #   -r requirements/test.txt
     #   requests
-click==8.0.3
+click==8.0.4
     # via
     #   -r requirements/test.txt
     #   click-log
     #   code-annotations
     #   edx-lint
-click-log==0.3.2
+click-log==0.4.0
     # via
     #   -r requirements/test.txt
     #   edx-lint
@@ -74,11 +74,11 @@ coreschema==0.0.4
     #   -r requirements/test.txt
     #   coreapi
     #   drf-yasg
-coverage[toml]==6.3.1
+coverage[toml]==6.3.2
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==36.0.1
+cryptography==36.0.2
     # via
     #   -r requirements/test.txt
     #   pyjwt
@@ -91,6 +91,10 @@ defusedxml==0.7.1
     #   djangorestframework-xml
     #   python3-openid
     #   social-auth-core
+dill==0.3.4
+    # via
+    #   -r requirements/test.txt
+    #   pylint
 distlib==0.3.4
     # via
     #   -r requirements/test.txt
@@ -171,15 +175,15 @@ drf-yasg==1.20.0
     # via
     #   -r requirements/test.txt
     #   edx-api-doc-tools
-edx-api-doc-tools==1.5.1
+edx-api-doc-tools==1.6.0
     # via -r requirements/test.txt
 edx-auth-backends==4.1.0
     # via -r requirements/test.txt
 edx-celeryutils==1.2.1
     # via -r requirements/test.txt
-edx-django-release-util==1.1.1
+edx-django-release-util==1.2.0
     # via -r requirements/test.txt
-edx-django-utils==4.5.0
+edx-django-utils==4.6.0
     # via
     #   -r requirements/test.txt
     #   django-config-models
@@ -190,7 +194,7 @@ edx-drf-extensions==8.0.1
     # via
     #   -r requirements/test.txt
     #   edx-rbac
-edx-lint==5.2.1
+edx-lint==5.2.2
     # via -r requirements/test.txt
 edx-opaque-keys==2.3.0
     # via
@@ -206,11 +210,11 @@ edx-toggles==4.3.1
     # via -r requirements/test.txt
 factory-boy==3.2.1
     # via -r requirements/test.txt
-faker==12.1.0
+faker==13.3.3
     # via
     #   -r requirements/test.txt
     #   factory-boy
-filelock==3.4.2
+filelock==3.6.0
     # via
     #   -r requirements/test.txt
     #   tox
@@ -226,7 +230,7 @@ idna==3.3
     #   requests
 imagesize==1.3.0
     # via sphinx
-importlib-metadata==4.10.1
+importlib-metadata==4.11.3
     # via sphinx
 inflection==0.5.1
     # via
@@ -244,7 +248,7 @@ itypes==1.2.0
     # via
     #   -r requirements/test.txt
     #   coreapi
-jinja2==3.0.3
+jinja2==3.1.1
     # via
     #   -r requirements/test.txt
     #   code-annotations
@@ -264,17 +268,17 @@ lazy-object-proxy==1.7.1
     # via
     #   -r requirements/test.txt
     #   astroid
-markupsafe==2.0.1
+markupsafe==2.1.1
     # via
     #   -r requirements/test.txt
     #   jinja2
-mccabe==0.6.1
+mccabe==0.7.0
     # via
     #   -r requirements/test.txt
     #   pylint
 mysqlclient==2.1.0
     # via -r requirements/test.txt
-newrelic==7.4.0.172
+newrelic==7.6.0.173
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
@@ -295,7 +299,7 @@ pbr==5.8.1
     # via
     #   -r requirements/test.txt
     #   stevedore
-platformdirs==2.4.1
+platformdirs==2.5.1
     # via
     #   -r requirements/test.txt
     #   pylint
@@ -339,7 +343,7 @@ pyjwt[crypto]==2.3.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
-pylint==2.12.2
+pylint==2.13.2
     # via
     #   -r requirements/test.txt
     #   edx-lint
@@ -350,7 +354,7 @@ pylint-celery==0.3
     # via
     #   -r requirements/test.txt
     #   edx-lint
-pylint-django==2.5.0
+pylint-django==2.5.3
     # via
     #   -r requirements/test.txt
     #   edx-lint
@@ -367,7 +371,7 @@ pyparsing==3.0.7
     # via
     #   -r requirements/test.txt
     #   packaging
-pytest==7.0.0
+pytest==7.1.1
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -381,7 +385,7 @@ python-dateutil==2.8.2
     #   -r requirements/test.txt
     #   edx-drf-extensions
     #   faker
-python-slugify==5.0.2
+python-slugify==6.1.1
     # via
     #   -r requirements/test.txt
     #   code-annotations
@@ -389,7 +393,7 @@ python3-openid==3.2.0
     # via
     #   -r requirements/test.txt
     #   social-auth-core
-pytz==2021.3
+pytz==2022.1
     # via
     #   -r requirements/test.txt
     #   babel
@@ -401,7 +405,7 @@ pyyaml==5.4.1
     #   -r requirements/test.txt
     #   code-annotations
     #   edx-django-release-util
-readme-renderer==32.0
+readme-renderer==34.0
     # via -r requirements/doc.in
 redis==3.5.3
     # via -r requirements/test.txt
@@ -421,19 +425,17 @@ requests-oauthlib==1.3.1
     # via
     #   -r requirements/test.txt
     #   social-auth-core
-restructuredtext-lint==1.3.2
+restructuredtext-lint==1.4.0
     # via doc8
-ruamel-yaml==0.17.20
-    # via -r requirements/test.txt
-ruamel-yaml-clib==0.2.6
-    # via -r requirements/test.txt
-ruamel-yaml==0.17.20
-    # via drf-yasg
+ruamel-yaml==0.17.21
+    # via
+    #   -r requirements/test.txt
+    #   drf-yasg
 ruamel-yaml-clib==0.2.6
     # via
+    #   -r requirements/test.txt
     #   ruamel-yaml
-    #   ruamel.yaml
-rules==3.1
+rules==3.3
     # via -r requirements/test.txt
 semantic-version==2.9.0
     # via
@@ -471,7 +473,7 @@ social-auth-core==4.2.0
     #   -r requirements/test.txt
     #   edx-auth-backends
     #   social-auth-app-django
-sphinx==4.4.0
+sphinx==4.5.0
     # via
     #   -r requirements/doc.in
     #   edx-sphinx-theme
@@ -505,12 +507,12 @@ text-unidecode==1.3
 toml==0.10.2
     # via
     #   -r requirements/test.txt
-    #   pylint
     #   tox
 tomli==2.0.1
     # via
     #   -r requirements/test.txt
     #   coverage
+    #   pylint
     #   pytest
 tox==3.24.5
     # via
@@ -518,7 +520,7 @@ tox==3.24.5
     #   tox-battery
 tox-battery==0.6.1
     # via -r requirements/test.txt
-typing-extensions==4.0.1
+typing-extensions==4.1.1
     # via
     #   -r requirements/test.txt
     #   astroid
@@ -528,7 +530,7 @@ uritemplate==4.1.1
     #   -r requirements/test.txt
     #   coreapi
     #   drf-yasg
-urllib3==1.26.8
+urllib3==1.26.9
     # via
     #   -r requirements/test.txt
     #   requests
@@ -537,17 +539,17 @@ vine==1.3.0
     #   -r requirements/test.txt
     #   amqp
     #   celery
-virtualenv==20.13.1
+virtualenv==20.14.0
     # via
     #   -r requirements/test.txt
     #   tox
 webencodings==0.5.1
     # via bleach
-wrapt==1.13.3
+wrapt==1.14.0
     # via
     #   -r requirements/test.txt
     #   astroid
-xlsxwriter==3.0.2
+xlsxwriter==3.0.3
     # via -r requirements/test.txt
 zipp==1.2.0
     # via
