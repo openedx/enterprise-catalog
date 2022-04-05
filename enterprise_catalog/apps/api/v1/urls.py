@@ -11,6 +11,12 @@ from enterprise_catalog.apps.api.v1.views.catalog_csv_data import (
 from enterprise_catalog.apps.api.v1.views.catalog_workbook import (
     CatalogWorkbookView,
 )
+from enterprise_catalog.apps.api.v1.views.curation.highlights import (
+    EnterpriseCurationConfigReadOnlyViewSet,
+    EnterpriseCurationConfigViewSet,
+    HighlightSetReadOnlyViewSet,
+    HighlightSetViewSet,
+)
 from enterprise_catalog.apps.api.v1.views.default_catalog_results import (
     DefaultCatalogResultsView,
 )
@@ -43,6 +49,10 @@ router = DefaultRouter()
 router.register(r'enterprise-catalogs', EnterpriseCatalogCRUDViewSet, basename='enterprise-catalog')
 router.register(r'enterprise-catalogs', EnterpriseCatalogContainsContentItems, basename='enterprise-catalog')
 router.register(r'enterprise-customer', EnterpriseCustomerViewSet, basename='enterprise-customer')
+router.register(r'enterprise-curations', EnterpriseCurationConfigReadOnlyViewSet, basename='enterprise-curations')
+router.register(r'enterprise-curations-admin', EnterpriseCurationConfigViewSet, basename='enterprise-curations-admin')
+router.register(r'highlight-sets', HighlightSetReadOnlyViewSet, basename='highlight-sets')
+router.register(r'highlight-sets-admin', HighlightSetViewSet, basename='highlight-sets-admin')
 
 urlpatterns = [
     path('enterprise-catalogs/catalog_csv_data', CatalogCsvDataView.as_view(),
