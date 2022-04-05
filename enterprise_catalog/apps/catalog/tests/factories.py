@@ -24,6 +24,8 @@ from enterprise_catalog.apps.core.models import User
 USER_PASSWORD = 'password'
 FAKE_IMAGE_URL = 'https://fake.url/image.jpg'
 FAKE_ADVERTISED_COURSE_RUN_UUID = uuid4()
+FAKE_CONTENT_AUTHOR_NAME = 'Partner Name'
+FAKE_CONTENT_AUTHOR_UUID = uuid4()
 
 
 class CatalogQueryFactory(factory.django.DjangoModelFactory):
@@ -73,7 +75,8 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
         }
         if self.content_type == COURSE:
             owners = [{
-                'name': 'Partner Name',
+                'uuid': str(FAKE_CONTENT_AUTHOR_UUID),
+                'name': FAKE_CONTENT_AUTHOR_NAME,
                 'logo_image_url': FAKE_IMAGE_URL,
             }]
             course_runs = [{
@@ -105,12 +108,18 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
         elif self.content_type == PROGRAM:
             # programs in the wild do not have a key
             json_metadata.pop('key')
+            authoring_organizations = [{
+                'uuid': str(FAKE_CONTENT_AUTHOR_UUID),
+                'name': FAKE_CONTENT_AUTHOR_NAME,
+                'logo_image_url': FAKE_IMAGE_URL,
+            }]
             json_metadata.update({
                 'uuid': self.content_key,
                 'content_type': PROGRAM,
                 'type': 'MicroMasters',
                 'hidden': True,
                 'marketing_url': f'https://marketing.url/{self.content_key}',
+                'authoring_organizations': authoring_organizations,
             })
         elif self.content_type == LEARNER_PATHWAY:
             json_metadata.update({

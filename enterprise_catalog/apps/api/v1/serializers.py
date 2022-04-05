@@ -21,6 +21,11 @@ from enterprise_catalog.apps.catalog.models import (
     EnterpriseCatalog,
 )
 from enterprise_catalog.apps.catalog.utils import get_content_filter_hash
+from enterprise_catalog.apps.curation.models import (
+    EnterpriseCurationConfig,
+    HighlightedContent,
+    HighlightSet,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -272,3 +277,83 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
 
         for serialized_run in serialized_course_runs:
             serialized_run['enrollment_url'] = urls_by_course_run_key.get(serialized_run['key'])
+
+
+class HighlightedContentSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the `HighlightedContent` model.
+    """
+    class Meta:
+        model = HighlightedContent
+        fields = [
+            'uuid',
+            'content_type',
+            'content_key',
+            'title',
+            'card_image_url',
+            'authoring_organizations',
+        ]
+
+
+class HighlightSetSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the `HighlightSet` model.
+    """
+    title = serializers.CharField()
+    is_published = serializers.BooleanField(required=False)
+    highlighted_content = serializers.SerializerMethodField()
+
+    class Meta:
+        model = HighlightSet
+        fields = [
+            'uuid',
+            'title',
+            'is_published',
+            'enterprise_curation',
+            'highlighted_content',
+        ]
+
+    def get_highlighted_content(self, obj):
+        """
+        Returns the data for the associated content included in this HighlightSet object.
+        """
+        qs = obj.highlighted_content.all()
+        return HighlightedContentSerializer(qs, many=True).data
+
+
+class EnterpriseCurationConfigSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the `EnterpriseCurationConfig` model.
+    """
+    enterprise_customer = serializers.UUIDField(source='enterprise_uuid')
+    title = serializers.CharField()
+    is_highlight_feature_active = serializers.BooleanField(required=False)
+    highlight_sets = serializers.SerializerMethodField()
+
+    class Meta:
+        model = EnterpriseCurationConfig
+        fields = [
+            'uuid',
+            'created',
+            'modified',
+            'enterprise_customer',
+            'title',
+            'is_highlight_feature_active',
+            'highlight_sets',
+        ]
+
+    def get_highlight_sets(self, obj):
+        """
+        Returns minimal information around the HighlightSets that
+        exist for the EnterpriseCurationConfig.
+        """
+        catalog_highlight_sets = obj.catalog_highlights.all()
+        return [
+            {
+                'uuid': highlight_set.uuid,
+                'is_published': highlight_set.is_published,
+                'title': highlight_set.title,
+                'highlighted_content_uuids': [item.uuid for item in highlight_set.highlighted_content.all()],
+            }
+            for highlight_set in catalog_highlight_sets
+        ]
