@@ -705,49 +705,6 @@ def _create_new_content_metadata(nonexisting_metadata_defaults):
     return metadata_list
 
 
-def generate_content_metadata_diff(metadata):
-    """
-    Creates, updates and differentiates content metadata objects.
-
-    Generates two lists of content metadata items, items to delete and items to create, based on a provided list of
-    metadata by comparing provided records with existing ones.
-
-    Arguments:
-        metadata (list): List of content metadata dictionaries.
-
-    Returns:
-        metadata_to_create_list: The list of ContentMetaData that have been created
-        metadata_to_delete_list: The list of ContentMetaData that need to be deleted
-        associated_metadata: Subset list of all existing records out of the metadata items provided
-    """
-    metadata_to_create_list = []
-    associated_metadata = []
-    potential_items_to_delete = {item.content_key: item for item in ContentMetadata.objects.all()}
-    for batched_metadata in batch(metadata, batch_size=100):
-        content_keys = [get_content_key(entry) for entry in batched_metadata]
-        existing_metadata = ContentMetadata.objects.filter(content_key__in=content_keys)
-        existing_metadata_by_key = {metadata.content_key: metadata for metadata in existing_metadata}
-
-        for key in existing_metadata_by_key.keys():
-            potential_items_to_delete.pop(key)
-
-        existing_metadata_defaults, nonexisting_metadata_defaults = _partition_content_metadata_defaults(
-            batched_metadata, existing_metadata_by_key
-        )
-
-        # Update existing ContentMetadata records
-        updated_metadata = _update_existing_content_metadata(existing_metadata_defaults, existing_metadata_by_key)
-        associated_metadata.extend(updated_metadata)
-
-        # Create new ContentMetadata records
-        created_metadata = _create_new_content_metadata(nonexisting_metadata_defaults)
-        metadata_to_create_list.extend(created_metadata)
-        associated_metadata.extend(created_metadata)
-
-    metadata_to_delete_list = list(potential_items_to_delete.values())
-    return metadata_to_create_list, metadata_to_delete_list, associated_metadata
-
-
 def create_content_metadata(metadata):
     """
     Creates or updates a ContentMetadata object.
@@ -790,13 +747,14 @@ def associate_content_metadata_with_query(metadata, catalog_query):
     Returns:
         list: The list of content_keys for the metadata associated with the query.
     """
-    metadata_to_create_list, metadata_to_delete_list, associated_metadata = generate_content_metadata_diff(metadata)
+    metadata_list = create_content_metadata(metadata)
 
-    for item in metadata_to_delete_list:
-        catalog_query.contentmetadata_set.remove(item)
-    for item in metadata_to_create_list:
-        catalog_query.contentmetadata_set.add(item)
-    associated_content_keys = [metadata.content_key for metadata in associated_metadata]
+    # Setting `clear=True` will remove all prior relationships between
+    # the CatalogQuery's associated ContentMetadata objects
+    # before setting all new relationships from `metadata_list`.
+    # https://docs.djangoproject.com/en/2.2/ref/models/relations/#django.db.models.fields.related.RelatedManager.set
+    catalog_query.contentmetadata_set.set(metadata_list, clear=True)
+    associated_content_keys = [metadata.content_key for metadata in metadata_list]
     return associated_content_keys
 
 

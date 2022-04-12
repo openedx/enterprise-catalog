@@ -8,7 +8,6 @@ from unittest import mock
 
 import ddt
 from celery import states
-from django.core.cache import cache
 from django.test import TestCase
 from django_celery_results.models import TaskResult
 
@@ -22,15 +21,10 @@ from enterprise_catalog.apps.catalog.constants import (
     LEARNER_PATHWAY,
     PROGRAM,
 )
-from enterprise_catalog.apps.catalog.models import (
-    CatalogQuery,
-    ContentMetadata,
-    ContentMetadataToQueries,
-)
+from enterprise_catalog.apps.catalog.models import CatalogQuery, ContentMetadata
 from enterprise_catalog.apps.catalog.tests.factories import (
     CatalogQueryFactory,
     ContentMetadataFactory,
-    ContentMetadataToQueriesFactory,
     EnterpriseCatalogFactory,
 )
 from enterprise_catalog.apps.catalog.utils import localized_utcnow
@@ -186,19 +180,10 @@ class UpdateCatalogMetadataTaskTests(TestCase):
     Tests for the `update_catalog_metadata_task`.
     """
 
-    def setUp(self):
-        self.catalog_query = CatalogQueryFactory()
-        super().setUp()
-
-    def tearDown(self):
-        self.catalog_query = None
-        ContentMetadataToQueries.all_objects.all().hard_delete()
-        CatalogQuery.objects.all().delete()
-        ContentMetadata.objects.all().delete()
-
-        # Discovery client may cache results, which will override mocked responses of subsequent tests
-        cache.clear()
-        super().tearDown()
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.catalog_query = CatalogQueryFactory()
 
     @mock.patch('enterprise_catalog.apps.api.tasks.update_contentmetadata_from_discovery')
     def test_update_catalog_metadata(self, mock_update_data_from_discovery):
@@ -216,68 +201,6 @@ class UpdateCatalogMetadataTaskTests(TestCase):
         bad_id = 412
         tasks.update_catalog_metadata_task.apply(args=(bad_id,))
         mock_update_data_from_discovery.assert_not_called()
-
-    @mock.patch('enterprise_catalog.apps.api_client.discovery_cache.DiscoveryApiClient.get_metadata_by_query')
-    def test_update_catalog_metadata_creates_new_records(self, mock_discovery_metadata_by_query):
-        """
-        Assert that when discovery returns a new content record for a particular query, the task will create a new
-        content metadata/query relationship by means of the through table
-        """
-        assert len(ContentMetadataToQueries.all_objects.all()) == 0
-
-        mock_discovery_metadata_by_query.return_value = [
-            {
-                'key': 'test_update_catalog_metadata_creates_new_records',
-                'title': 'idk something new',
-                'content_type': 'courserun',
-            },
-        ]
-
-        tasks.update_catalog_metadata_task.apply(args=(self.catalog_query.id,))
-        assert len(ContentMetadataToQueries.all_objects.all()) == 1
-        assert len(ContentMetadataToQueries.objects.all()) == 1
-
-    @mock.patch('enterprise_catalog.apps.api_client.discovery_cache.DiscoveryApiClient.get_metadata_by_query')
-    def test_update_catalog_metadata_deletes_old_records(self, mock_discovery_metadata_by_query):
-        """
-        Assert that when discovery indicates a content record removal for a particular query, the task will remove the
-        content metadata/query relationship by means of the through table
-        """
-
-        assert len(ContentMetadataToQueries.all_objects.all()) == 0
-
-        existing_metadata_query_relationship = ContentMetadataToQueriesFactory(catalog_query=self.catalog_query)
-        mock_discovery_metadata_by_query.return_value = [
-            existing_metadata_query_relationship.content_metadata.json_metadata
-        ]
-        ContentMetadataToQueriesFactory(catalog_query=self.catalog_query)
-
-        assert len(ContentMetadataToQueries.all_objects.all()) == 2
-        assert len(ContentMetadataToQueries.objects.all()) == 2
-
-        tasks.update_catalog_metadata_task.apply(args=(self.catalog_query.id,))
-
-        assert len(ContentMetadataToQueries.all_objects.all()) == 2
-        assert len(ContentMetadataToQueries.objects.all()) == 1
-
-    @mock.patch('enterprise_catalog.apps.api_client.discovery_cache.DiscoveryApiClient.get_metadata_by_query')
-    def test_update_catalog_metadata_does_not_recreate_existing_records(self, mock_discovery_metadata_by_query):
-        """
-        Assert that when discovery indicates a content record still exists for a particular query, the task will not
-        remove the content metadata/query relationship
-        """
-        existing_metadata_query_relationship = ContentMetadataToQueriesFactory(catalog_query=self.catalog_query)
-        # The task will remove the extra query not indicated to still exist
-        ContentMetadataToQueriesFactory(catalog_query=self.catalog_query)
-        assert len(ContentMetadataToQueries.all_objects.all()) == 2
-
-        mock_discovery_metadata_by_query.return_value = [
-            existing_metadata_query_relationship.content_metadata.json_metadata
-        ]
-
-        tasks.update_catalog_metadata_task.apply(args=(self.catalog_query.id,))
-        assert len(ContentMetadataToQueries.all_objects.all()) == 2
-        assert len(ContentMetadataToQueries.objects.all()) == 1
 
 
 class FetchMissingCourseMetadataTaskTests(TestCase):
