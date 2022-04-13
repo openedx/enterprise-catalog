@@ -16,7 +16,7 @@ from enterprise_catalog.apps.api.v1.views.base import BaseViewSet
 from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
 
 
-class EnterpriseCatalogContainsContentItems(BaseViewSet, viewsets.ModelViewSet):
+class EnterpriseCatalogContainsContentItems(BaseViewSet, viewsets.ReadOnlyModelViewSet):
     """
     View to determine if an enterprise catalog contains certain content
     """
