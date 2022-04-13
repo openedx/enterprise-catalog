@@ -24,6 +24,7 @@ class EnterpriseCatalogDiff(BaseViewSet, viewsets.ModelViewSet):
     queryset = EnterpriseCatalog.objects.all().order_by('created')
     renderer_classes = [JSONRenderer, XMLRenderer]
     serializer_class = EnterpriseCatalogSerializer
+    http_method_names = ['get', 'post']
     permission_required = 'catalog.has_learner_access'
     lookup_field = 'uuid'
     MAX_GET_CONTENT_KEYS = 100
