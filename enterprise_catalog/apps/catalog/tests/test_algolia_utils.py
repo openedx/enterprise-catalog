@@ -21,7 +21,7 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     get_course_subjects,
     get_initialized_algolia_client,
     get_pathway_availability,
-    get_pathway_banner_image_url,
+    get_pathway_card_image_url,
     get_pathway_course_keys,
     get_pathway_partners,
     get_pathway_program_uuids,
@@ -1060,24 +1060,24 @@ class AlgoliaUtilsTests(TestCase):
 
     @ddt.data(
         (
-            {'banner_image': {'large': {'url': 'https://test'}}},
+            {'card_image': {'card': {'url': 'https://test'}}},
             'https://test',
         ),
         (
-            {'banner_image': {}},
+            {'card_image': {}},
             None,
         ),
         (
-            {'banner_image': {'large': {}}},
+            {'card_image': {'large': {}}},
             None,
         ),
     )
     @ddt.unpack
-    def test_get_pathway_banner_image(self, pathway_metadata, expected_type):
+    def test_get_pathway_card_image(self, pathway_metadata, expected_type):
         """
-        Assert that the banner image with a program is properly parsed.
+        Assert that the banner image with a pathway is properly parsed.
         """
-        image_url = get_pathway_banner_image_url(pathway_metadata)
+        image_url = get_pathway_card_image_url(pathway_metadata)
         self.assertEqual(expected_type, image_url)
 
     @ddt.data(

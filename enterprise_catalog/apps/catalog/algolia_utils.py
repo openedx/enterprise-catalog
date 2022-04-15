@@ -435,7 +435,7 @@ def get_pathway_availability(pathway):
     return list(availability)
 
 
-def get_pathway_banner_image_url(pathway):
+def get_pathway_card_image_url(pathway):
     """
     Gets the banner_image_url (only large is fetched), rest of urls can be deduced
 
@@ -445,9 +445,9 @@ def get_pathway_banner_image_url(pathway):
     Returns:
         str: url to large size image
     """
-    images = pathway.get('banner_image', {})
+    images = pathway.get('card_image', {})
     try:
-        return images.get('large').get('url')
+        return images.get('card').get('url')
     except (KeyError, AttributeError):
         return None
 
@@ -1034,7 +1034,7 @@ def _algolia_object_from_product(product, algolia_fields):
             'course_keys': get_pathway_course_keys(searchable_product),
             'programs': get_pathway_program_uuids(searchable_product),
             'availability': get_pathway_availability(searchable_product),
-            'banner_image_url': get_pathway_banner_image_url(searchable_product),
+            'card_image_url': get_pathway_card_image_url(searchable_product),
             'partners': get_pathway_partners(searchable_product),
             'subjects': get_pathway_subjects(searchable_product),
         })
