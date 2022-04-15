@@ -27,11 +27,11 @@ class UnchangeableMixin(admin.ModelAdmin):
     We're disabling changing models in this admin while we transition over from the LMS
     """
     @classmethod
-    def has_add_permission(cls, request):
+    def has_add_permission(cls, request):  # pylint: disable=arguments-differ
         return admin_model_changes_allowed()
 
     @classmethod
-    def has_delete_permission(cls, request, obj=None):
+    def has_delete_permission(cls, request, obj=None):  # pylint: disable=arguments-differ
         return admin_model_changes_allowed()
 
     def changeform_view(self, request, object_id=None, form_url='', extra_context=None):

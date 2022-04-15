@@ -13,11 +13,12 @@ Django>=3.2,<4.0
 # Common constraints for edx repos
 -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
 
-# celery 5.0 has dropped python3.5 support.
-celery<5.0
+# As it is not clarified what exact breaking changes will be introduced as per
+# the next major release, ensure the installed version is within boundaries.
+celery>=5.2.2,<6.0.0
 
-# django celesry results wants celery >=5
-django-celery-results<2.1
+# Hard dependency on psycopg2 in version 2.3.0
+django-celery-results<2.3.0
 
 # Inflect 4.0.0 requires python>=3.6
 inflect<4.0.0
