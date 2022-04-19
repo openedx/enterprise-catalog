@@ -1065,7 +1065,7 @@ class AlgoliaUtilsTests(TestCase):
         ),
         (
             {'card_image_url': {}},
-            None,
+            {},
         ),
     )
     @ddt.unpack
