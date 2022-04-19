@@ -1060,15 +1060,11 @@ class AlgoliaUtilsTests(TestCase):
 
     @ddt.data(
         (
-            {'card_image': {'card': {'url': 'https://test'}}},
+            {'card_image_url': 'https://test'},
             'https://test',
         ),
         (
-            {'card_image': {}},
-            None,
-        ),
-        (
-            {'card_image': {'large': {}}},
+            {'card_image_url': {}},
             None,
         ),
     )

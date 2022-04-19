@@ -437,19 +437,15 @@ def get_pathway_availability(pathway):
 
 def get_pathway_card_image_url(pathway):
     """
-    Gets the banner_image_url (only large is fetched), rest of urls can be deduced
+    Gets the card_image_url
 
     Arguments:
         pathway (dict): a dictionary representing a pathway.
 
     Returns:
-        str: url to large size image
+        str: url to image
     """
-    images = pathway.get('card_image', {})
-    try:
-        return images.get('card').get('url')
-    except (KeyError, AttributeError):
-        return None
+    return pathway.get('card_image_url', {})
 
 
 def get_pathway_partners(pathway):
