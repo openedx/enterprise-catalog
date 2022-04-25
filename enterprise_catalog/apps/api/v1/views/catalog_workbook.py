@@ -96,15 +96,15 @@ class CatalogWorkbookView(GenericAPIView):
                         for col_num, cell_data in enumerate(export_utils.CSV_COURSE_HEADERS):
                             course_worksheet.set_column(0, col_num, 30)
                             course_worksheet.write(0, col_num, cell_data, cell_format)
-                    
+
                     if not course_run_worksheet:
                         course_run_worksheet = workbook.add_worksheet('Course Runs')
                         # write headers
                         cell_format = workbook.add_format({'bold': True})
                         for col_num, cell_data in enumerate(export_utils.CSV_COURSE_RUN_HEADERS):
                             course_run_worksheet.set_column(0, col_num, 30)
-                            course_run_worksheet.write(0, col_num, cell_data, cell_format) 
-                    
+                            course_run_worksheet.write(0, col_num, cell_data, cell_format)
+
                     course_row = export_utils.course_hit_to_row(hit)
                     # Write row data.
                     for col_num, cell_data in enumerate(course_row):
