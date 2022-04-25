@@ -58,6 +58,7 @@ class CatalogWorkbookView(GenericAPIView):
         workbook = xlsxwriter.Workbook(output)
         course_worksheet = None
         program_worksheet = None
+        course_run_worksheet = None
 
         algolia_client = get_initialized_algolia_client()
 
@@ -84,6 +85,7 @@ class CatalogWorkbookView(GenericAPIView):
         # start after header row
         course_row_num = 1
         program_row_num = 1
+        course_run_row_num = 1
         while len(page['hits']) > 0:
             for hit in page.get('hits', []):
                 if hit.get('content_type') == 'course':
@@ -94,11 +96,27 @@ class CatalogWorkbookView(GenericAPIView):
                         for col_num, cell_data in enumerate(export_utils.CSV_COURSE_HEADERS):
                             course_worksheet.set_column(0, col_num, 30)
                             course_worksheet.write(0, col_num, cell_data, cell_format)
-                    row = export_utils.course_hit_to_row(hit)
+                    
+                    if not course_run_worksheet:
+                        course_run_worksheet = workbook.add_worksheet('Course Runs')
+                        # write headers
+                        cell_format = workbook.add_format({'bold': True})
+                        for col_num, cell_data in enumerate(export_utils.CSV_COURSE_RUN_HEADERS):
+                            course_run_worksheet.set_column(0, col_num, 30)
+                            course_run_worksheet.write(0, col_num, cell_data, cell_format) 
+                    
+                    course_row = export_utils.course_hit_to_row(hit)
                     # Write row data.
-                    for col_num, cell_data in enumerate(row):
+                    for col_num, cell_data in enumerate(course_row):
                         course_worksheet.write(course_row_num, col_num, cell_data)
                     course_row_num = course_row_num + 1
+
+                    for course_run in export_utils.course_hit_runs(hit):
+                        course_run_row = export_utils.course_run_to_row(course_run)
+                        # Write row data.
+                        for col_num, cell_data in enumerate(course_run_row):
+                            course_run_worksheet.write(course_row_num, col_num, cell_data)
+                        course_run_row_num = course_run_row_num + 1
                 if hit.get('content_type') == 'program':
                     if not program_worksheet:
                         program_worksheet = workbook.add_worksheet('Programs')

@@ -42,6 +42,18 @@ CSV_PROGRAM_HEADERS = [
     'Number of courses',
 ]
 
+CSV_COURSE_RUN_HEADERS = [
+    'Course Run Key',
+    'Pacing',
+    'Availability',
+    'Start Date',
+    'End Date',
+    'Verified Upgrade Deadline',
+    'Min Effort',
+    'Max Effort',
+    'Length',
+]
+
 ALGOLIA_ATTRIBUTES_TO_RETRIEVE = [
     'title',
     'key',
@@ -63,6 +75,7 @@ ALGOLIA_ATTRIBUTES_TO_RETRIEVE = [
     'program_type',
     'subtitle',
     'course_keys',
+    'course_runs',
 ]
 
 
@@ -157,6 +170,50 @@ def course_hit_to_row(hit):
 
     # Pre-requisites -> prerequisites_raw
     csv_row.append(strip_tags(hit.get('prerequisites_raw', '')))
+
+    return csv_row
+
+
+def course_hit_runs(hit):
+    """
+    Helper function to extract the course runs (list) or return empty list
+    """
+    return hit.get('course_runs', [])
+
+
+def course_run_to_row(course_run):
+    """
+    Helper function to construct a CSV row according for a single course_run.
+    """
+    csv_row = []
+    csv_row.append(course_run.get('key'))
+    csv_row.append(course_run.get('pacing_type'))
+    csv_row.append(course_run.get('availability'))
+
+    start_date = None
+    if course_run.get('start'):
+        start_date = parser.parse(course_run.get('start')).strftime("%Y-%m-%d")
+    csv_row.append(start_date)
+
+    end_date = None
+    if course_run.get('end'):
+        end_date = parser.parse(course_run.get('end')).strftime("%Y-%m-%d")
+    csv_row.append(end_date)
+
+    upgrade_deadline = None
+    if course_run.get('upgrade_deadline'):
+        raw_deadline = course_run.get('upgrade_deadline')
+        upgrade_deadline = datetime.datetime.fromtimestamp(raw_deadline).strftime("%Y-%m-%d")
+    csv_row.append(upgrade_deadline)
+
+    # Min Effort
+    csv_row.append(course_run.get('min_effort'))
+
+    # Max Effort
+    csv_row.append(course_run.get('max_effort'))
+
+    # Length
+    csv_row.append(course_run.get('weeks_to_complete'))
 
     return csv_row
 
