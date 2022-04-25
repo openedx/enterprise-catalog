@@ -3,6 +3,7 @@ import datetime
 import logging
 import time
 
+from dateutil import parser
 from django.utils.translation import gettext as _
 
 from enterprise_catalog.apps.api.v1.utils import is_course_run_active
@@ -55,6 +56,7 @@ ALGOLIA_FIELDS = [
     'title',
     'type',
     'advertised_course_run',  # a part of the advertised course run
+    'course_runs',
     'upcoming_course_runs',
     'first_enrollable_paid_seat_price',
     'original_image_url',
@@ -870,6 +872,33 @@ def get_course_prerequisites(course):
     return prerequisites
 
 
+def _get_course_run(full_course_run):
+    """
+    Transform a full course run into what we'll index.
+
+    Arguments:
+        full_course_run (dict): a dictionary representing a course run
+
+    Returns:
+        dict: a subseted and transformed dictionary from full_course_run
+    """
+    if full_course_run is None:
+        return None
+    # upgrade_deadline is recorded in EPOCH time
+    course_run = {
+        'key': full_course_run.get('key'),
+        'pacing_type': full_course_run.get('pacing_type'),
+        'availability': full_course_run.get('availability'),
+        'start': full_course_run.get('start'),
+        'end': full_course_run.get('end'),
+        'min_effort': full_course_run.get('min_effort'),
+        'max_effort': full_course_run.get('max_effort'),
+        'weeks_to_complete': full_course_run.get('weeks_to_complete'),
+        'upgrade_deadline': _get_verified_upgrade_deadline(full_course_run),
+    }
+    return course_run
+
+
 def get_advertised_course_run(course):
     """
     Get part of the advertised course_run as per advertised_course_run_uuid
@@ -884,18 +913,30 @@ def get_advertised_course_run(course):
     full_course_run = _get_course_run_by_uuid(course, course.get('advertised_course_run_uuid'))
     if full_course_run is None:
         return None
-    # upgrade_deadline is recorded in EPOCH time
-    course_run = {
-        'key': full_course_run.get('key'),
-        'pacing_type': full_course_run.get('pacing_type'),
-        'start': full_course_run.get('start'),
-        'end': full_course_run.get('end'),
-        'min_effort': full_course_run.get('min_effort'),
-        'max_effort': full_course_run.get('max_effort'),
-        'weeks_to_complete': full_course_run.get('weeks_to_complete'),
-        'upgrade_deadline': _get_verified_upgrade_deadline(full_course_run),
-    }
-    return course_run
+    return _get_course_run(full_course_run)
+
+
+def get_course_runs(course):
+    """
+    Extract and transform a list of course runs into what we'll index.
+
+    Arguments:
+        course (dict): a dictionary representing a course
+
+    Returns:
+        list(dict): a list of subseted and transformed course_runs
+    """
+    output = []
+    course_runs = course.get('course_runs') or []
+    for full_course_run in course_runs:
+        this_course_run = _get_course_run(full_course_run)
+        if this_course_run.get('end'):
+            course_run_end = parser.parse(this_course_run.get('end'))
+            if course_run_end.timestamp() < datetime.datetime.now().timestamp():
+                # skip old course runs
+                continue
+        output.append(_get_course_run(full_course_run))
+    return output
 
 
 def get_upcoming_course_runs(course):
@@ -1004,6 +1045,7 @@ def _algolia_object_from_product(product, algolia_fields):
             'subjects': get_course_subjects(searchable_product),
             'card_image_url': get_course_card_image_url(searchable_product),
             'advertised_course_run': get_advertised_course_run(searchable_product),
+            'course_runs': get_course_runs(searchable_product),
             'upcoming_course_runs': get_upcoming_course_runs(searchable_product),
             'skill_names': get_course_skill_names(searchable_product),
             'skills': get_course_skills(searchable_product),
