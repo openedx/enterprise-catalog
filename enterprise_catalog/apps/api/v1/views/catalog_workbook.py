@@ -58,7 +58,7 @@ class CatalogWorkbookView(GenericAPIView):
         export_utils.write_headers_to_sheet(program_worksheet, export_utils.CSV_PROGRAM_HEADERS, header_format)
 
         course_run_worksheet = workbook.add_worksheet('Course Runs')
-        export_utils.write_headers_to_sheet(course_run_worksheet, export_utils.CSV_COURSE_RUN_HEADERS,header_format)
+        export_utils.write_headers_to_sheet(course_run_worksheet, export_utils.CSV_COURSE_RUN_HEADERS, header_format)
 
         algolia_client = get_initialized_algolia_client()
 
