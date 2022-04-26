@@ -43,7 +43,9 @@ CSV_PROGRAM_HEADERS = [
 ]
 
 CSV_COURSE_RUN_HEADERS = [
-    'Course Run Key',
+    'Title',
+    'Key',
+    'Course Short Key',
     'Pacing',
     'Availability',
     'Start Date',
@@ -181,12 +183,14 @@ def course_hit_runs(hit):
     return hit.get('course_runs', [])
 
 
-def course_run_to_row(course_run):
+def course_run_to_row(course_key, course_title, course_run):
     """
     Helper function to construct a CSV row according for a single course_run.
     """
     csv_row = []
+    csv_row.append(course_title)
     csv_row.append(course_run.get('key'))
+    csv_row.append(course_key)
     csv_row.append(course_run.get('pacing_type'))
     csv_row.append(course_run.get('availability'))
 
