@@ -207,7 +207,7 @@ def course_run_to_row(course_key, course_title, course_run):
 
     start_date = None
     if course_run.get('start'):
-        start_date = parser.parse(course_run.get('start')).strftime()
+        start_date = parser.parse(course_run.get('start')).strftime(DATE_FORMAT)
     csv_row.append(start_date)
 
     end_date = None
