@@ -42,6 +42,20 @@ CSV_PROGRAM_HEADERS = [
     'Number of courses',
 ]
 
+CSV_COURSE_RUN_HEADERS = [
+    'Title',
+    'Key',
+    'Course Short Key',
+    'Pacing',
+    'Availability',
+    'Start Date',
+    'End Date',
+    'Verified Upgrade Deadline',
+    'Min Effort',
+    'Max Effort',
+    'Length',
+]
+
 ALGOLIA_ATTRIBUTES_TO_RETRIEVE = [
     'title',
     'key',
@@ -63,7 +77,19 @@ ALGOLIA_ATTRIBUTES_TO_RETRIEVE = [
     'program_type',
     'subtitle',
     'course_keys',
+    'course_runs',
 ]
+
+DATE_FORMAT = "%Y-%m-%d"
+
+
+def write_headers_to_sheet(worksheet, headers, cell_format):
+    """
+    Helper function to write a given list of strings as a header row in a given worksheet.
+    """
+    for col_num, cell_data in enumerate(headers):
+        worksheet.set_column(0, col_num, 30)
+        worksheet.write(0, col_num, cell_data, cell_format)
 
 
 def program_hit_to_row(hit):
@@ -99,18 +125,18 @@ def course_hit_to_row(hit):
     if hit.get('advertised_course_run'):
         start_date = None
         if hit['advertised_course_run'].get('start'):
-            start_date = parser.parse(hit['advertised_course_run']['start']).strftime("%Y-%m-%d")
+            start_date = parser.parse(hit['advertised_course_run']['start']).strftime(DATE_FORMAT)
         csv_row.append(start_date)
 
         end_date = None
         if hit['advertised_course_run'].get('end'):
-            end_date = parser.parse(hit['advertised_course_run']['end']).strftime("%Y-%m-%d")
+            end_date = parser.parse(hit['advertised_course_run']['end']).strftime(DATE_FORMAT)
         csv_row.append(end_date)
 
         upgrade_deadline = None
         if hit['advertised_course_run'].get('upgrade_deadline'):
             raw_deadline = hit['advertised_course_run']['upgrade_deadline']
-            upgrade_deadline = datetime.datetime.fromtimestamp(raw_deadline).strftime("%Y-%m-%d")
+            upgrade_deadline = datetime.datetime.fromtimestamp(raw_deadline).strftime(DATE_FORMAT)
         csv_row.append(upgrade_deadline)
 
         pacing_type = hit['advertised_course_run']['pacing_type']
@@ -161,6 +187,52 @@ def course_hit_to_row(hit):
     return csv_row
 
 
+def course_hit_runs(hit):
+    """
+    Helper function to extract the course runs (list) or return empty list
+    """
+    return hit.get('course_runs', [])
+
+
+def course_run_to_row(course_key, course_title, course_run):
+    """
+    Helper function to construct a CSV row corresponding to a single course_run.
+    """
+    csv_row = []
+    csv_row.append(course_title)
+    csv_row.append(course_run.get('key'))
+    csv_row.append(course_key)
+    csv_row.append(course_run.get('pacing_type'))
+    csv_row.append(course_run.get('availability'))
+
+    start_date = None
+    if course_run.get('start'):
+        start_date = parser.parse(course_run.get('start')).strftime(DATE_FORMAT)
+    csv_row.append(start_date)
+
+    end_date = None
+    if course_run.get('end'):
+        end_date = parser.parse(course_run.get('end')).strftime(DATE_FORMAT)
+    csv_row.append(end_date)
+
+    upgrade_deadline = None
+    if course_run.get('upgrade_deadline'):
+        raw_deadline = course_run.get('upgrade_deadline')
+        upgrade_deadline = datetime.datetime.fromtimestamp(raw_deadline).strftime(DATE_FORMAT)
+    csv_row.append(upgrade_deadline)
+
+    # Min Effort
+    csv_row.append(course_run.get('min_effort'))
+
+    # Max Effort
+    csv_row.append(course_run.get('max_effort'))
+
+    # Length
+    csv_row.append(course_run.get('weeks_to_complete'))
+
+    return csv_row
+
+
 def hit_to_row(hit):
     """
     Maintain the legacy API for now.
@@ -177,6 +249,20 @@ def querydict_to_dict(query_dict):
         v = query_dict.getlist(key)
         data[key] = v
     return data
+
+
+def facets_to_query(facets):
+    """
+    Helper function to extract the search query out of a given set of facet params.
+    """
+    if facets.get('query'):
+        # comes out as a list, we want the first value string only
+        return facets.pop('query')[0]
+    elif facets.get('q'):
+        # comes out as a list, we want the first value string only
+        return facets.pop('q')[0]
+    else:
+        return ''
 
 
 def get_valid_facets():

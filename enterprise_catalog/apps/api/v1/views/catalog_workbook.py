@@ -35,14 +35,7 @@ class CatalogWorkbookView(GenericAPIView):
         GET entry point for the `CatalogWorkbookView`
         """
         facets = export_utils.querydict_to_dict(request.query_params)
-        if facets.get('query'):
-            # comes out as a list, we want the first value string only
-            algoliaQuery = facets.pop('query')[0]
-        elif facets.get('q'):
-            # comes out as a list, we want the first value string only
-            algoliaQuery = facets.pop('q')[0]
-        else:
-            algoliaQuery = ''
+        algoliaQuery = export_utils.facets_to_query(facets)
 
         invalid_facets = export_utils.validate_query_facets(facets)
         if invalid_facets:
@@ -56,8 +49,16 @@ class CatalogWorkbookView(GenericAPIView):
         # don't allow temp files, for example the Google APP Engine, set the
         # 'in_memory' Workbook() constructor option as shown in the docs.
         workbook = xlsxwriter.Workbook(output)
-        course_worksheet = None
-        program_worksheet = None
+        header_format = workbook.add_format({'bold': True})
+
+        course_worksheet = workbook.add_worksheet('Courses')
+        export_utils.write_headers_to_sheet(course_worksheet, export_utils.CSV_COURSE_HEADERS, header_format)
+
+        program_worksheet = workbook.add_worksheet('Programs')
+        export_utils.write_headers_to_sheet(program_worksheet, export_utils.CSV_PROGRAM_HEADERS, header_format)
+
+        course_run_worksheet = workbook.add_worksheet('Course Runs')
+        export_utils.write_headers_to_sheet(course_run_worksheet, export_utils.CSV_COURSE_RUN_HEADERS, header_format)
 
         algolia_client = get_initialized_algolia_client()
 
@@ -81,35 +82,31 @@ class CatalogWorkbookView(GenericAPIView):
         if len(page['hits']) == 0:
             return Response(f'Error: invalid query: {algoliaQuery} provided.', status=HTTP_400_BAD_REQUEST)
 
-        # start after header row
+        # content row index, starting at 1 which is after header row
         course_row_num = 1
         program_row_num = 1
+        course_run_row_num = 1
         while len(page['hits']) > 0:
             for hit in page.get('hits', []):
                 if hit.get('content_type') == 'course':
-                    if not course_worksheet:
-                        course_worksheet = workbook.add_worksheet('Courses')
-                        # write headers
-                        cell_format = workbook.add_format({'bold': True})
-                        for col_num, cell_data in enumerate(export_utils.CSV_COURSE_HEADERS):
-                            course_worksheet.set_column(0, col_num, 30)
-                            course_worksheet.write(0, col_num, cell_data, cell_format)
-                    row = export_utils.course_hit_to_row(hit)
-                    # Write row data.
-                    for col_num, cell_data in enumerate(row):
+                    course_row = export_utils.course_hit_to_row(hit)
+                    # Write course row data.
+                    for col_num, cell_data in enumerate(course_row):
                         course_worksheet.write(course_row_num, col_num, cell_data)
                     course_row_num = course_row_num + 1
+                    # extract the course title and key for the course_run tab
+                    course_title = hit.get('title')
+                    course_key = hit.get('aggregation_key')
+                    for course_run in export_utils.course_hit_runs(hit):
+                        course_run_row = export_utils.course_run_to_row(course_key, course_title, course_run)
+                        # Write course_run row data.
+                        for col_num, cell_data in enumerate(course_run_row):
+                            course_run_worksheet.write(course_run_row_num, col_num, cell_data)
+                        course_run_row_num = course_run_row_num + 1
                 if hit.get('content_type') == 'program':
-                    if not program_worksheet:
-                        program_worksheet = workbook.add_worksheet('Programs')
-                        # write headers
-                        cell_format = workbook.add_format({'bold': True})
-                        for col_num, cell_data in enumerate(export_utils.CSV_PROGRAM_HEADERS):
-                            program_worksheet.set_column(0, col_num, 30)
-                            program_worksheet.write(0, col_num, cell_data, cell_format)
-                    row = export_utils.program_hit_to_row(hit)
-                    # Write row data.
-                    for col_num, cell_data in enumerate(row):
+                    program_row = export_utils.program_hit_to_row(hit)
+                    # Write program row data.
+                    for col_num, cell_data in enumerate(program_row):
                         program_worksheet.write(program_row_num, col_num, cell_data)
                     program_row_num = program_row_num + 1
             search_options['page'] = search_options['page'] + 1

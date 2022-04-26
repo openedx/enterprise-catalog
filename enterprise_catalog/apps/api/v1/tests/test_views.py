@@ -692,6 +692,18 @@ class EnterpriseCatalogWorkbookViewTests(APITestMixin):
             'min_effort': 1,
             'weeks_to_complete': 1,
         },
+        'course_runs': [
+            {
+                'key': 'MITx/18.01.2x/3T2015',
+                'pacing_type': 'instructor_paced',
+                'start': '2015-09-08T00:00:00Z',
+                'end': '2015-09-08T00:00:01Z',
+                'upgrade_deadline': 32503680000.0,
+                'max_effort': 10,
+                'min_effort': 1,
+                'weeks_to_complete': 1,
+            }
+        ],
         'outcome': '<p>learn</p>',
         'prerequisites_raw': '<p>interest</p>',
         'objectID': 'course-3543aa4e-3c64-4d9a-a343-5d5eda1dacf8-catalog-query-uuids-0'
