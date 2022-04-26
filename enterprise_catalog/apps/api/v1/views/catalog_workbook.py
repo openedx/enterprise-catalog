@@ -35,14 +35,7 @@ class CatalogWorkbookView(GenericAPIView):
         GET entry point for the `CatalogWorkbookView`
         """
         facets = export_utils.querydict_to_dict(request.query_params)
-        if facets.get('query'):
-            # comes out as a list, we want the first value string only
-            algoliaQuery = facets.pop('query')[0]
-        elif facets.get('q'):
-            # comes out as a list, we want the first value string only
-            algoliaQuery = facets.pop('q')[0]
-        else:
-            algoliaQuery = ''
+        algoliaQuery = export_utils.facets_to_query(facets)
 
         invalid_facets = export_utils.validate_query_facets(facets)
         if invalid_facets:
@@ -56,25 +49,16 @@ class CatalogWorkbookView(GenericAPIView):
         # don't allow temp files, for example the Google APP Engine, set the
         # 'in_memory' Workbook() constructor option as shown in the docs.
         workbook = xlsxwriter.Workbook(output)
-        header_cell_format = workbook.add_format({'bold': True})
+        header_format = workbook.add_format({'bold': True})
 
         course_worksheet = workbook.add_worksheet('Courses')
-        # write headers
-        for col_num, cell_data in enumerate(export_utils.CSV_COURSE_HEADERS):
-            course_worksheet.set_column(0, col_num, 30)
-            course_worksheet.write(0, col_num, cell_data, header_cell_format)
+        export_utils.write_headers_to_sheet(course_worksheet, export_utils.CSV_COURSE_HEADERS, header_format)
 
         program_worksheet = workbook.add_worksheet('Programs')
-        # write headers
-        for col_num, cell_data in enumerate(export_utils.CSV_PROGRAM_HEADERS):
-            program_worksheet.set_column(0, col_num, 30)
-            program_worksheet.write(0, col_num, cell_data, header_cell_format)
+        export_utils.write_headers_to_sheet(program_worksheet, export_utils.CSV_PROGRAM_HEADERS, header_format)
 
         course_run_worksheet = workbook.add_worksheet('Course Runs')
-        # write headers
-        for col_num, cell_data in enumerate(export_utils.CSV_COURSE_RUN_HEADERS):
-            course_run_worksheet.set_column(0, col_num, 30)
-            course_run_worksheet.write(0, col_num, cell_data, header_cell_format)
+        export_utils.write_headers_to_sheet(course_run_worksheet, export_utils.CSV_COURSE_RUN_HEADERS,header_format)
 
         algolia_client = get_initialized_algolia_client()
 

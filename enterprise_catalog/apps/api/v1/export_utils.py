@@ -81,6 +81,12 @@ ALGOLIA_ATTRIBUTES_TO_RETRIEVE = [
 ]
 
 
+def write_headers_to_sheet(worksheet, headers, cell_format):
+    for col_num, cell_data in enumerate(headers):
+        worksheet.set_column(0, col_num, 30)
+        worksheet.write(0, col_num, cell_data, cell_format)
+
+
 def program_hit_to_row(hit):
     """
     Helper function to construct a CSV row according to a single Algolia result program hit.
@@ -238,6 +244,17 @@ def querydict_to_dict(query_dict):
         v = query_dict.getlist(key)
         data[key] = v
     return data
+
+
+def facets_to_query(facets):
+    if facets.get('query'):
+        # comes out as a list, we want the first value string only
+        return facets.pop('query')[0]
+    elif facets.get('q'):
+        # comes out as a list, we want the first value string only
+        return facets.pop('q')[0]
+    else:
+        return ''
 
 
 def get_valid_facets():
