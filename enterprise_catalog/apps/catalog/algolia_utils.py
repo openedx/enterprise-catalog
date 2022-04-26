@@ -15,6 +15,7 @@ from enterprise_catalog.apps.catalog.constants import (
     PROGRAM_TYPES_MAP,
 )
 from enterprise_catalog.apps.catalog.models import ContentMetadata
+from enterprise_catalog.apps.catalog.utils import localized_utcnow
 
 
 logger = logging.getLogger(__name__)
@@ -932,7 +933,7 @@ def get_course_runs(course):
         this_course_run = _get_course_run(full_course_run)
         if this_course_run.get('end'):
             course_run_end = parser.parse(this_course_run.get('end'))
-            if course_run_end.timestamp() < datetime.datetime.now().timestamp():
+            if course_run_end < localized_utcnow():
                 # skip old course runs
                 continue
         output.append(_get_course_run(full_course_run))

@@ -80,8 +80,13 @@ ALGOLIA_ATTRIBUTES_TO_RETRIEVE = [
     'course_runs',
 ]
 
+DATE_FORMAT = "%Y-%m-%d"
+
 
 def write_headers_to_sheet(worksheet, headers, cell_format):
+    """
+    Helper function to write a given list of strings as a header row in a given worksheet.
+    """
     for col_num, cell_data in enumerate(headers):
         worksheet.set_column(0, col_num, 30)
         worksheet.write(0, col_num, cell_data, cell_format)
@@ -120,18 +125,18 @@ def course_hit_to_row(hit):
     if hit.get('advertised_course_run'):
         start_date = None
         if hit['advertised_course_run'].get('start'):
-            start_date = parser.parse(hit['advertised_course_run']['start']).strftime("%Y-%m-%d")
+            start_date = parser.parse(hit['advertised_course_run']['start']).strftime(DATE_FORMAT)
         csv_row.append(start_date)
 
         end_date = None
         if hit['advertised_course_run'].get('end'):
-            end_date = parser.parse(hit['advertised_course_run']['end']).strftime("%Y-%m-%d")
+            end_date = parser.parse(hit['advertised_course_run']['end']).strftime(DATE_FORMAT)
         csv_row.append(end_date)
 
         upgrade_deadline = None
         if hit['advertised_course_run'].get('upgrade_deadline'):
             raw_deadline = hit['advertised_course_run']['upgrade_deadline']
-            upgrade_deadline = datetime.datetime.fromtimestamp(raw_deadline).strftime("%Y-%m-%d")
+            upgrade_deadline = datetime.datetime.fromtimestamp(raw_deadline).strftime(DATE_FORMAT)
         csv_row.append(upgrade_deadline)
 
         pacing_type = hit['advertised_course_run']['pacing_type']
@@ -191,7 +196,7 @@ def course_hit_runs(hit):
 
 def course_run_to_row(course_key, course_title, course_run):
     """
-    Helper function to construct a CSV row according for a single course_run.
+    Helper function to construct a CSV row corresponding to a single course_run.
     """
     csv_row = []
     csv_row.append(course_title)
@@ -202,18 +207,18 @@ def course_run_to_row(course_key, course_title, course_run):
 
     start_date = None
     if course_run.get('start'):
-        start_date = parser.parse(course_run.get('start')).strftime("%Y-%m-%d")
+        start_date = parser.parse(course_run.get('start')).strftime()
     csv_row.append(start_date)
 
     end_date = None
     if course_run.get('end'):
-        end_date = parser.parse(course_run.get('end')).strftime("%Y-%m-%d")
+        end_date = parser.parse(course_run.get('end')).strftime(DATE_FORMAT)
     csv_row.append(end_date)
 
     upgrade_deadline = None
     if course_run.get('upgrade_deadline'):
         raw_deadline = course_run.get('upgrade_deadline')
-        upgrade_deadline = datetime.datetime.fromtimestamp(raw_deadline).strftime("%Y-%m-%d")
+        upgrade_deadline = datetime.datetime.fromtimestamp(raw_deadline).strftime(DATE_FORMAT)
     csv_row.append(upgrade_deadline)
 
     # Min Effort
@@ -247,6 +252,9 @@ def querydict_to_dict(query_dict):
 
 
 def facets_to_query(facets):
+    """
+    Helper function to extract the search query out of a given set of facet params.
+    """
     if facets.get('query'):
         # comes out as a list, we want the first value string only
         return facets.pop('query')[0]
