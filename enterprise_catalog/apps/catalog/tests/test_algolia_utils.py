@@ -17,6 +17,7 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     get_course_prerequisites,
     get_course_program_titles,
     get_course_program_types,
+    get_course_runs,
     get_course_skill_names,
     get_course_subjects,
     get_initialized_algolia_client,
@@ -49,6 +50,7 @@ from enterprise_catalog.apps.catalog.tests.factories import (
 ADVERTISED_COURSE_RUN_UUID = uuid4()
 FUTURE_COURSE_RUN_UUID_1 = uuid4()
 FUTURE_COURSE_RUN_UUID_2 = uuid4()
+PAST_COURSE_RUN_UUID_1 = uuid4()
 
 
 @ddt.ddt
@@ -266,6 +268,7 @@ class AlgoliaUtilsTests(TestCase):
                     'pacing_type': 'instructor_paced',
                     'start': '2013-10-16T14:00:00Z',
                     'end': '2014-10-16T14:00:00Z',
+                    'availability': 'Current',
                     'min_effort': 10,
                     'max_effort': 14,
                     'weeks_to_complete': 13,
@@ -277,6 +280,7 @@ class AlgoliaUtilsTests(TestCase):
                 'pacing_type': 'instructor_paced',
                 'start': '2013-10-16T14:00:00Z',
                 'end': '2014-10-16T14:00:00Z',
+                'availability': 'Current',
                 'min_effort': 10,
                 'max_effort': 14,
                 'weeks_to_complete': 13,
@@ -300,6 +304,7 @@ class AlgoliaUtilsTests(TestCase):
                     'pacing_type': 'instructor_paced',
                     'start': '2013-10-16T14:00:00Z',
                     'end': '2014-10-16T14:00:00Z',
+                    'availability': 'Current',
                     'min_effort': 10,
                     'max_effort': 14,
                     'weeks_to_complete': 13,
@@ -318,6 +323,7 @@ class AlgoliaUtilsTests(TestCase):
                 'pacing_type': 'instructor_paced',
                 'start': '2013-10-16T14:00:00Z',
                 'end': '2014-10-16T14:00:00Z',
+                'availability': 'Current',
                 'min_effort': 10,
                 'max_effort': 14,
                 'weeks_to_complete': 13,
@@ -332,6 +338,7 @@ class AlgoliaUtilsTests(TestCase):
                     'pacing_type': 'instructor_paced',
                     'start': '2013-10-16T14:00:00Z',
                     'end': '2014-10-16T14:00:00Z',
+                    'availability': 'Current',
                     'min_effort': 10,
                     'max_effort': 14,
                     'weeks_to_complete': 13,
@@ -347,6 +354,7 @@ class AlgoliaUtilsTests(TestCase):
                 'pacing_type': 'instructor_paced',
                 'start': '2013-10-16T14:00:00Z',
                 'end': '2014-10-16T14:00:00Z',
+                'availability': 'Current',
                 'min_effort': 10,
                 'max_effort': 14,
                 'weeks_to_complete': 13,
@@ -405,6 +413,114 @@ class AlgoliaUtilsTests(TestCase):
         Assert get_advertised_course_runs fetches just enough info about advertised course run
         """
         upcoming_course_runs = get_upcoming_course_runs(searchable_course)
+        assert upcoming_course_runs == expected_course_runs
+
+    @ddt.data(
+        (
+            {
+                'course_runs': [
+                    {
+                        'key': 'course-v1:org+course+1T2000',
+                        'uuid': PAST_COURSE_RUN_UUID_1,
+                        'pacing_type': 'instructor_paced',
+                        'status': 'published',
+                        'is_enrollable': False,
+                        'is_marketable': False,
+                        'availability': 'Archived',
+                        'start': "2000-01-04T00:00:00Z",
+                        'end': "2001-12-31T23:59:00Z",
+                        'min_effort': 2,
+                        'max_effort': 6,
+                        'weeks_to_complete': 6,
+                    },
+                    {
+                        'key': 'course-v1:org+course+1T2021',
+                        'uuid': ADVERTISED_COURSE_RUN_UUID,
+                        'pacing_type': 'instructor_paced',
+                        'status': 'published',
+                        'is_enrollable': True,
+                        'is_marketable': True,
+                        'availability': 'Current',
+                        'start': "2018-01-04T00:00:00Z",
+                        'end': "3022-12-31T23:59:00Z",
+                        'min_effort': 2,
+                        'max_effort': 6,
+                        'weeks_to_complete': 6,
+                    },
+                    {
+                        'key': 'course-v1:org+course+1T3000',
+                        'uuid': FUTURE_COURSE_RUN_UUID_1,
+                        'pacing_type': 'instructor_paced',
+                        'status': 'published',
+                        'is_enrollable': True,
+                        'is_marketable': True,
+                        'availability': 'Upcoming',
+                        'start': "3000-01-04T00:00:00Z",
+                        'end': "3022-12-31T23:59:00Z",
+                        'min_effort': 2,
+                        'max_effort': 6,
+                        'weeks_to_complete': 6,
+                    },
+                    {
+                        'key': 'course-v1:org+course+1T3022',
+                        'uuid': FUTURE_COURSE_RUN_UUID_1,
+                        'pacing_type': 'instructor_paced',
+                        'status': 'unpublished',
+                        'is_enrollable': True,
+                        'is_marketable': True,
+                        'availability': 'Starting Soon',
+                        'start': "3000-01-04T00:00:00Z",
+                        'end': "3022-12-31T23:59:00Z",
+                        'min_effort': 2,
+                        'max_effort': 6,
+                        'weeks_to_complete': 6,
+                    }
+                ],
+                'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID
+            },
+            [
+                {
+                    'key': 'course-v1:org+course+1T2021',
+                    'pacing_type': 'instructor_paced',
+                    'availability': 'Current',
+                    'start': "2018-01-04T00:00:00Z",
+                    'end': "3022-12-31T23:59:00Z",
+                    'min_effort': 2,
+                    'max_effort': 6,
+                    'weeks_to_complete': 6,
+                    'upgrade_deadline': 32503680000.0
+                },
+                {
+                    'key': 'course-v1:org+course+1T3000',
+                    'pacing_type': 'instructor_paced',
+                    'availability': 'Upcoming',
+                    'start': "3000-01-04T00:00:00Z",
+                    'end': "3022-12-31T23:59:00Z",
+                    'min_effort': 2,
+                    'max_effort': 6,
+                    'weeks_to_complete': 6,
+                    'upgrade_deadline': 32503680000.0
+                },
+                {
+                    'key': 'course-v1:org+course+1T3022',
+                    'pacing_type': 'instructor_paced',
+                    'availability': 'Starting Soon',
+                    'start': "3000-01-04T00:00:00Z",
+                    'end': "3022-12-31T23:59:00Z",
+                    'min_effort': 2,
+                    'max_effort': 6,
+                    'weeks_to_complete': 6,
+                    'upgrade_deadline': 32503680000.0
+                }
+            ],
+        ),
+    )
+    @ddt.unpack
+    def test_get_course_runs(self, searchable_course, expected_course_runs):
+        """
+        Assert get_advertised_course_runs fetches just enough info about advertised course run
+        """
+        upcoming_course_runs = get_course_runs(searchable_course)
         assert upcoming_course_runs == expected_course_runs
 
     @ddt.data(
