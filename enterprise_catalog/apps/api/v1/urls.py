@@ -72,8 +72,8 @@ urlpatterns = [
         EnterpriseCatalogRefreshDataFromDiscovery.as_view({'post': 'post'}),
         name='update-enterprise-catalog'
     ),
-    path('distinct-catalog-queries', DistinctCatalogQueriesView.as_view(),
-         name='distinct-catalog-queries',
+    path('distinct-catalog-queries/', DistinctCatalogQueriesView.as_view(),
+         name='distinct-catalog-queries'
          ),
 ]
 
