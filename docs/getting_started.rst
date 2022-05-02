@@ -56,7 +56,8 @@ management command that will copy those existing catalogs and their metadata int
 
    #. ``make dev.up.lms+redis``
    #. ``make lms-shell``
-   #. ``./manage.py lms migrate_enterprise_catalogs --api_user enterprise_catalog_worker``
+   #. ``./manage.py lms migrate_enterprise_catalogs --api_user enterprise_worker``
+   #.. If you get a 403 error, see the "Permissions" section below to update enterprise_worker user's JWT role
 
 Running Management Commands Locally
 -----------------------------------
