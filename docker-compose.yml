@@ -10,7 +10,7 @@ services:
     networks:
       - devstack_default
     volumes:
-      - enterprise_catalog_mysql:/var/lib/mysql
+      - enterprise_catalog_mysql8:/var/lib/mysql
     # Uncomment these lines to access the database from localhost
     # ports:
     #  - "3307:3306"
@@ -89,4 +89,4 @@ networks:
     external: true
 
 volumes:
-  enterprise_catalog_mysql:
+  enterprise_catalog_mysql8:
