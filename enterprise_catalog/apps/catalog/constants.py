@@ -18,6 +18,28 @@ CONTENT_TYPE_CHOICES = [
     (LEARNER_PATHWAY, 'Learner Pathway'),
 ]
 
+# ContentMetadata allow/block lists
+
+# deliberate omissions:
+# 'executive-education'
+# 'executive-education-2u'
+# 'bootcamp-2u'
+# 'empty'
+
+CONTENT_COURSE_TYPE_ALLOW_LIST = [
+    'audit',
+    'professional',
+    'verified-audit',
+    'credit-verified-audit',
+    'masters',
+    'masters-verified-audit',
+    'verified',
+    'spoc-verified-audit',
+    'honor',
+    'verified-honor',
+    'credit-verified-honor',
+]
+
 # ContentFilter field types for validation.
 CONTENT_FILTER_FIELD_TYPES = {
     'key': {'type': list, 'subtype': str},
