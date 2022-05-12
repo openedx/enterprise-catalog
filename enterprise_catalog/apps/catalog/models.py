@@ -29,6 +29,7 @@ from enterprise_catalog.apps.api_client.enterprise_cache import (
 )
 from enterprise_catalog.apps.catalog.constants import (
     ACCESS_TO_ALL_ENTERPRISES_TOKEN,
+    CONTENT_COURSE_TYPE_ALLOW_LIST,
     CONTENT_TYPE_CHOICES,
     COURSE,
     PROGRAM,
@@ -705,6 +706,26 @@ def _create_new_content_metadata(nonexisting_metadata_defaults):
     return metadata_list
 
 
+def _should_allow_metadata(metadata_entry):
+    """
+    Determines if an object from Discovery meets our criteria for indexing
+
+    Arguments:
+        metadata_entry: A single content metadata dictionary.
+
+    Returns:
+        bool: If we should save the metadata as a ContentMetaData object
+    """
+    entry_content_key = get_content_key(metadata_entry)
+    if get_content_type(metadata_entry) != 'course':
+        return True
+    entry_course_type = metadata_entry.get('course_type')
+    # allowing None here accounts for pre-existing tests, dirty prod data
+    if entry_course_type is None or entry_course_type in CONTENT_COURSE_TYPE_ALLOW_LIST:
+        return True
+    return False
+
+
 def create_content_metadata(metadata):
     """
     Creates or updates a ContentMetadata object.
@@ -717,11 +738,16 @@ def create_content_metadata(metadata):
     """
     metadata_list = []
     for batched_metadata in batch(metadata, batch_size=100):
-        content_keys = [get_content_key(entry) for entry in batched_metadata]
+        content_keys = []
+        filtered_batched_metadata = []
+        for entry in batched_metadata:
+            if _should_allow_metadata(entry):
+                content_keys.append(get_content_key(entry))
+                filtered_batched_metadata.append(entry)
         existing_metadata = ContentMetadata.objects.filter(content_key__in=content_keys)
         existing_metadata_by_key = {metadata.content_key: metadata for metadata in existing_metadata}
         existing_metadata_defaults, nonexisting_metadata_defaults = _partition_content_metadata_defaults(
-            batched_metadata, existing_metadata_by_key
+            filtered_batched_metadata, existing_metadata_by_key
         )
 
         # Update existing ContentMetadata records
