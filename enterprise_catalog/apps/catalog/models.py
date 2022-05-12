@@ -716,7 +716,6 @@ def _should_allow_metadata(metadata_entry):
     Returns:
         bool: If we should save the metadata as a ContentMetaData object
     """
-    entry_content_key = get_content_key(metadata_entry)
     if get_content_type(metadata_entry) != 'course':
         return True
     entry_course_type = metadata_entry.get('course_type')
