@@ -26,7 +26,7 @@ CONTENT_TYPE_CHOICES = [
 # 'bootcamp-2u'
 # 'empty'
 
-CONTENT_COURSE_TYPE_ALLOW_LIST = [
+CONTENT_COURSE_TYPE_ALLOW_LIST = {
     'audit',
     'professional',
     'verified-audit',
@@ -38,7 +38,7 @@ CONTENT_COURSE_TYPE_ALLOW_LIST = [
     'honor',
     'verified-honor',
     'credit-verified-honor',
-]
+}
 
 # ContentFilter field types for validation.
 CONTENT_FILTER_FIELD_TYPES = {
