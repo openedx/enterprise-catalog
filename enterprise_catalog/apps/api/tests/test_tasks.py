@@ -383,11 +383,11 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         mock_partition_course_keys.return_value = ([], [],)
 
         metadata_1 = ContentMetadataFactory(content_type=COURSE, content_key=course_key_1)
-        metadata_1.catalog_query_mapping.set([self.catalog_query])
+        metadata_1.catalog_queries.set([self.catalog_query])
         metadata_2 = ContentMetadataFactory(content_type=COURSE, content_key=course_key_2)
-        metadata_2.catalog_query_mapping.set([self.catalog_query])
+        metadata_2.catalog_queries.set([self.catalog_query])
         non_course_metadata = ContentMetadataFactory(content_type=COURSE_RUN, content_key=non_course_key)
-        non_course_metadata.catalog_query_mapping.set([self.catalog_query])
+        non_course_metadata.catalog_queries.set([self.catalog_query])
 
         assert metadata_1.json_metadata != course_data_1
         assert metadata_2.json_metadata != course_data_2
@@ -435,9 +435,9 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         mock_partition_program_keys.return_value = ([], [],)
 
         metadata_1 = ContentMetadataFactory(content_type=PROGRAM, content_key=program_key_1)
-        metadata_1.catalog_query_mapping.set([self.catalog_query])
+        metadata_1.catalog_queries.set([self.catalog_query])
         metadata_2 = ContentMetadataFactory(content_type=PROGRAM, content_key=program_key_2)
-        metadata_2.catalog_query_mapping.set([self.catalog_query])
+        metadata_2.catalog_queries.set([self.catalog_query])
 
         assert metadata_1.json_metadata != program_data_1
         assert metadata_2.json_metadata != program_data_2
@@ -482,15 +482,15 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         cls.enterprise_catalog_query = CatalogQueryFactory(uuid=SORTED_QUERY_UUID_LIST[0])
         cls.enterprise_catalog_courses = EnterpriseCatalogFactory(catalog_query=cls.enterprise_catalog_query)
         cls.course_metadata_published = ContentMetadataFactory(content_type=COURSE, content_key='fakeX')
-        cls.course_metadata_published.catalog_query_mapping.set([cls.enterprise_catalog_query])
+        cls.course_metadata_published.catalog_queries.set([cls.enterprise_catalog_query])
         cls.course_metadata_unpublished = ContentMetadataFactory(content_type=COURSE, content_key='testX')
         cls.course_metadata_unpublished.json_metadata.get('course_runs')[0].update({
             'status': 'unpublished',
         })
-        cls.course_metadata_unpublished.catalog_query_mapping.set([cls.enterprise_catalog_query])
+        cls.course_metadata_unpublished.catalog_queries.set([cls.enterprise_catalog_query])
         cls.course_metadata_unpublished.save()
 
-        # Set up new catalog, query, and metadata for a course run
+        # Set up new catalog, query, and metadata for a course run]
         # Testing indexing catalog queries when titles aren't present
         cls.course_run_catalog_query = CatalogQueryFactory(uuid=SORTED_QUERY_UUID_LIST[1], title=None)
         cls.enterprise_catalog_course_runs = EnterpriseCatalogFactory(catalog_query=cls.course_run_catalog_query)
@@ -498,12 +498,12 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         course_runs_catalog_query = cls.enterprise_catalog_course_runs.catalog_query
         course_run_metadata_published = ContentMetadataFactory(content_type=COURSE_RUN, parent_content_key='fakeX')
-        course_run_metadata_published.catalog_query_mapping.set([course_runs_catalog_query])
+        course_run_metadata_published.catalog_queries.set([course_runs_catalog_query])
         course_run_metadata_unpublished = ContentMetadataFactory(content_type=COURSE_RUN, parent_content_key='testX')
         course_run_metadata_unpublished.json_metadata.update({
             'status': 'unpublished',
         })
-        course_run_metadata_unpublished.catalog_query_mapping.set([course_runs_catalog_query])
+        course_run_metadata_unpublished.catalog_queries.set([course_runs_catalog_query])
         course_run_metadata_unpublished.save()
 
     def _set_up_factory_data_for_algolia(self):
@@ -560,7 +560,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         pathway_program_metadata.associated_content_metadata.set(
             [pathway_metadata2]
         )
-        pathway_program_metadata.catalog_query_mapping.set([self.enterprise_catalog_query])
+        pathway_program_metadata.catalog_queries.set([self.enterprise_catalog_query])
 
         with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
             tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
@@ -670,30 +670,34 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         # verify replace_all_objects is called with the correct Algolia object data
         # on the first invocation and with programs/pathways only on the second invocation.
-        mock_search_client().replace_all_objects.assert_has_calls([
-            mock.call(expected_algolia_objects_to_index),
-            mock.call(
-                expected_algolia_program_objects + expected_algolia_pathway_objects
-                + expected_algolia_program_objects2 + expected_algolia_pathway_objects2
-            ),
-        ])
+        expected_first_call_args = sorted(expected_algolia_objects_to_index, key=lambda d: d['key'])
+        actual_first_call_args = sorted(
+            mock_search_client().replace_all_objects.mock_calls[0].args[0], key=lambda d: d['key']
+        )
+
+        unsorted_expected_calls_args = expected_algolia_program_objects + expected_algolia_pathway_objects + \
+            expected_algolia_program_objects2 + expected_algolia_pathway_objects2
+        expected_second_call_args = sorted(unsorted_expected_calls_args, key=lambda d: d['key'])
+        actual_second_call_args = sorted(
+            mock_search_client().replace_all_objects.mock_calls[1].args[0], key=lambda d: d['key']
+        )
+        assert expected_first_call_args == actual_first_call_args
+        assert expected_second_call_args == actual_second_call_args
 
         # Verify that we checked the cache twice, though
         mock_was_recently_indexed.assert_has_calls([
             mock.call(self.course_metadata_published.content_key),
             mock.call(self.course_metadata_published.content_key),
             mock.call(course_associated_program_metadata.content_key),
-            mock.call(pathway_metadata.content_key),
-            mock.call(pathway_metadata.content_key),
             mock.call(pathway_program_metadata.content_key),
+            mock.call(pathway_metadata.content_key),
             mock.call(pathway_metadata2.content_key),
             mock.call(pathway_metadata2.content_key),
             mock.call(self.course_metadata_published.content_key),
             mock.call(self.course_metadata_published.content_key),
             mock.call(course_associated_program_metadata.content_key),
-            mock.call(pathway_metadata.content_key),
-            mock.call(pathway_metadata.content_key),
             mock.call(pathway_program_metadata.content_key),
+            mock.call(pathway_metadata.content_key),
             mock.call(pathway_metadata2.content_key),
             mock.call(pathway_metadata2.content_key),
         ])

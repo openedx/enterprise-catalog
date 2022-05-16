@@ -15,7 +15,6 @@ from enterprise_catalog.apps.catalog.models import (
     CatalogQuery,
     CatalogUpdateCommandConfig,
     ContentMetadata,
-    ContentMetadataToQueries,
     EnterpriseCatalog,
     EnterpriseCatalogRoleAssignment,
 )
@@ -135,32 +134,6 @@ class EnterpriseCatalogRoleAssignmentAdmin(UserRoleAssignmentAdmin):
     form = EnterpriseCatalogRoleAssignmentAdminForm
 
     get_username.short_description = 'User'
-
-
-@admin.register(ContentMetadataToQueries)
-class ContentMetadataToQueriesAdmin(UnchangeableMixin):
-    list_display = (
-        'id',
-        'catalog_query_id',
-        'content_metadata',
-        'record_exists',
-    )
-
-    list_filter = (
-        'content_metadata',
-        'catalog_query',
-    )
-
-    def catalog_query_id(self, obj):
-        return obj.catalog_query.id
-
-    @admin.display(boolean=True)
-    def record_exists(self, obj):
-        """Return True is deleted time exists"""
-        return not bool(obj.deleted_at)
-
-    def get_queryset(self, request):
-        return self.model.all_objects.all()
 
 
 admin.site.register(CatalogUpdateCommandConfig, ConfigurationModelAdmin)

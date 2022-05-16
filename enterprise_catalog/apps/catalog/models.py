@@ -7,7 +7,6 @@ from config_models.models import ConfigurationModel
 from django.conf import settings
 from django.db import IntegrityError, OperationalError, models, transaction
 from django.db.models import Q
-from django.db.models.query import QuerySet
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 from edx_rbac.models import UserRole, UserRoleAssignment
@@ -119,14 +118,6 @@ class CatalogQuery(TimeStampedModel):
             )
         )
 
-    @property
-    def content_metadata(self):
-        # Join catalog queries on content metadata through the through table where deleted at is null
-        return ContentMetadata.objects.filter(
-            Q(contentmetadatatoqueries__catalog_query_id=self.id)
-            & Q(contentmetadatatoqueries__deleted_at__isnull=True)
-        )
-
 
 class EnterpriseCatalog(TimeStampedModel):
     """
@@ -204,7 +195,7 @@ class EnterpriseCatalog(TimeStampedModel):
         """
         if not self.catalog_query:
             return ContentMetadata.objects.none()
-        return self.catalog_query.content_metadata
+        return self.catalog_query.contentmetadata_set.all()
 
     @cached_property
     def enterprise_customer(self):
@@ -483,7 +474,7 @@ class ContentMetadata(TimeStampedModel):
             "endpoint results, specified as a JSON object."
         )
     )
-    catalog_query_mapping = models.ManyToManyField(CatalogQuery, through='ContentMetadataToQueries')
+    catalog_queries = models.ManyToManyField(CatalogQuery)
 
     history = HistoricalRecords()
 
@@ -503,14 +494,6 @@ class ContentMetadata(TimeStampedModel):
             modified__range=(range_start, range_end),
         )
 
-    @property
-    def catalog_queries(self):
-        # Join content metadata on catalog queries through the through table where deleted at is null
-        return CatalogQuery.objects.filter(
-            Q(contentmetadatatoqueries__content_metadata_id=self.id)
-            & Q(contentmetadatatoqueries__deleted_at__isnull=True)
-        )
-
     def __str__(self):
         """
         Return human-readable string representation.
@@ -519,87 +502,6 @@ class ContentMetadata(TimeStampedModel):
             "<ContentMetadata for '{content_key}'>".format(
                 content_key=self.content_key
             )
-        )
-
-
-class SoftDeletionQuerySet(QuerySet):
-
-    def clear(self):
-        return super().update(deleted_at=localized_utcnow())
-
-    def delete(self):
-        return super().update(deleted_at=localized_utcnow())
-
-    def remove(self):
-        return super().update(deleted_at=localized_utcnow())
-
-    def hard_delete(self):
-        return super().delete()
-
-    def alive(self):
-        return self.filter(deleted_at=None)
-
-    def dead(self):
-        return self.exclude(deleted_at=None)
-
-
-class SoftDeletionManager(models.Manager):
-    """
-    Soft deletion manager overriding a model's query set in order to soft delete.
-    """
-    use_for_related_fields = True
-
-    def __init__(self, *args, **kwargs):
-        self.alive_only = kwargs.pop('alive_only', True)
-        super().__init__(*args, **kwargs)
-
-    def get_queryset(self):
-        if self.alive_only:
-            return SoftDeletionQuerySet(self.model, using=self._db, hints=self._hints).filter(deleted_at=None)
-        return SoftDeletionQuerySet(self.model)
-
-    def hard_delete(self):
-        return self.get_queryset().hard_delete()
-
-
-class SoftDeletionModel(TimeStampedModel):
-    """
-    Soft deletion model that sets a particular entries `deleted_at` field instead of removing the entry.
-    """
-    deleted_at = models.DateTimeField(blank=True, null=True)
-
-    objects = SoftDeletionManager()
-    all_objects = SoftDeletionManager(alive_only=False)
-
-    class Meta:
-        abstract = True
-
-    def hard_delete(self):
-        super().delete()
-
-
-class ContentMetadataToQueries(SoftDeletionModel):
-    """
-    Through model for the many to many relationship between content metadata and catalog queries. Subclasses the soft
-    deletion model such that when a relation between two the models is removed, we will record the time and maintain the
-    record.
-    .. no_pii:
-    """
-    catalog_query = models.ForeignKey(
-        CatalogQuery,
-        on_delete=models.deletion.DO_NOTHING,
-    )
-    content_metadata = models.ForeignKey(
-        ContentMetadata,
-        on_delete=models.deletion.DO_NOTHING,
-    )
-
-    class Meta:
-        app_label = 'catalog'
-        unique_together = ('content_metadata_id', 'catalog_query_id', 'deleted_at')
-        index_together = (
-            ('catalog_query_id', 'deleted_at'),
-            ('content_metadata_id', 'deleted_at'),
         )
 
 
