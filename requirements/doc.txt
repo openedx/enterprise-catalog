@@ -6,17 +6,17 @@
 #
 alabaster==0.7.12
     # via sphinx
-algoliasearch==2.6.1
+algoliasearch==2.6.2
     # via -r requirements/test.txt
-amqp==5.1.0
+amqp==5.1.1
     # via
     #   -r requirements/test.txt
     #   kombu
-asgiref==3.5.0
+asgiref==3.5.1
     # via
     #   -r requirements/test.txt
     #   django
-astroid==2.11.2
+astroid==2.11.5
     # via
     #   -r requirements/test.txt
     #   pylint
@@ -25,7 +25,7 @@ attrs==21.4.0
     # via
     #   -r requirements/test.txt
     #   pytest
-babel==2.9.1
+babel==2.10.1
     # via sphinx
 billiard==3.6.4.0
     # via
@@ -46,11 +46,12 @@ cffi==1.15.0
     # via
     #   -r requirements/test.txt
     #   cryptography
+    #   pynacl
 charset-normalizer==2.0.12
     # via
     #   -r requirements/test.txt
     #   requests
-click==8.1.2
+click==8.1.3
     # via
     #   -r requirements/test.txt
     #   celery
@@ -59,6 +60,7 @@ click==8.1.2
     #   click-plugins
     #   click-repl
     #   code-annotations
+    #   edx-django-utils
     #   edx-lint
 click-didyoumean==0.3.0
     # via
@@ -90,11 +92,11 @@ coreschema==0.0.4
     #   -r requirements/test.txt
     #   coreapi
     #   drf-yasg
-coverage[toml]==6.3.2
+coverage[toml]==6.3.3
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==36.0.2
+cryptography==37.0.2
     # via
     #   -r requirements/test.txt
     #   pyjwt
@@ -140,7 +142,7 @@ django-celery-results==2.2.0
     # via -r requirements/test.txt
 django-config-models==2.3.0
     # via -r requirements/test.txt
-django-cors-headers==3.11.0
+django-cors-headers==3.12.0
     # via -r requirements/test.txt
 django-crum==0.7.9
     # via
@@ -199,7 +201,7 @@ edx-celeryutils==1.2.1
     # via -r requirements/test.txt
 edx-django-release-util==1.2.0
     # via -r requirements/test.txt
-edx-django-utils==4.6.0
+edx-django-utils==4.8.1
     # via
     #   -r requirements/test.txt
     #   django-config-models
@@ -222,15 +224,15 @@ edx-rest-api-client==5.5.0
     # via -r requirements/test.txt
 edx-sphinx-theme==3.0.0
     # via -r requirements/doc.in
-edx-toggles==4.3.1
+edx-toggles==5.0.0
     # via -r requirements/test.txt
 factory-boy==3.2.1
     # via -r requirements/test.txt
-faker==13.3.4
+faker==13.11.1
     # via
     #   -r requirements/test.txt
     #   factory-boy
-filelock==3.6.0
+filelock==3.7.0
     # via
     #   -r requirements/test.txt
     #   tox
@@ -264,7 +266,7 @@ itypes==1.2.0
     # via
     #   -r requirements/test.txt
     #   coreapi
-jinja2==3.1.1
+jinja2==3.1.2
     # via
     #   -r requirements/test.txt
     #   code-annotations
@@ -310,11 +312,11 @@ packaging==21.3
     #   pytest
     #   sphinx
     #   tox
-pbr==5.8.1
+pbr==5.9.0
     # via
     #   -r requirements/test.txt
     #   stevedore
-platformdirs==2.5.1
+platformdirs==2.5.2
     # via
     #   -r requirements/test.txt
     #   pylint
@@ -345,7 +347,7 @@ pycryptodomex==3.14.1
     # via
     #   -r requirements/test.txt
     #   pyjwkest
-pygments==2.11.2
+pygments==2.12.0
     # via
     #   doc8
     #   readme-renderer
@@ -354,7 +356,7 @@ pyjwkest==1.4.2
     # via
     #   -r requirements/test.txt
     #   edx-drf-extensions
-pyjwt[crypto]==2.3.0
+pyjwt[crypto]==2.4.0
     # via
     #   -r requirements/test.txt
     #   drf-jwt
@@ -362,7 +364,7 @@ pyjwt[crypto]==2.3.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
-pylint==2.13.5
+pylint==2.13.9
     # via
     #   -r requirements/test.txt
     #   edx-lint
@@ -386,11 +388,15 @@ pymongo==3.12.3
     # via
     #   -r requirements/test.txt
     #   edx-opaque-keys
-pyparsing==3.0.8
+pynacl==1.5.0
+    # via
+    #   -r requirements/test.txt
+    #   edx-django-utils
+pyparsing==3.0.9
     # via
     #   -r requirements/test.txt
     #   packaging
-pytest==7.1.1
+pytest==7.1.2
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -404,7 +410,7 @@ python-dateutil==2.8.2
     #   -r requirements/test.txt
     #   edx-drf-extensions
     #   faker
-python-slugify==6.1.1
+python-slugify==6.1.2
     # via
     #   -r requirements/test.txt
     #   code-annotations
@@ -424,7 +430,7 @@ pyyaml==5.4.1
     #   -r requirements/test.txt
     #   code-annotations
     #   edx-django-release-util
-readme-renderer==34.0
+readme-renderer==35.0
     # via -r requirements/doc.in
 redis==3.5.3
     # via -r requirements/test.txt
@@ -540,7 +546,7 @@ tox==3.25.0
     #   tox-battery
 tox-battery==0.6.1
     # via -r requirements/test.txt
-typing-extensions==4.1.1
+typing-extensions==4.2.0
     # via
     #   -r requirements/test.txt
     #   astroid
@@ -570,7 +576,7 @@ wcwidth==0.2.5
     #   prompt-toolkit
 webencodings==0.5.1
     # via bleach
-wrapt==1.14.0
+wrapt==1.14.1
     # via
     #   -r requirements/test.txt
     #   astroid
