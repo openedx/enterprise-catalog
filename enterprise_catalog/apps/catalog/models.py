@@ -309,6 +309,43 @@ class EnterpriseCatalog(TimeStampedModel):
         # if the filtered content metadata exists, the specified content_keys exist in the catalog
         return self.content_metadata.filter(query).exists()
 
+    def filter_content_keys(self, content_keys):
+        """
+        Determines whether content_keys are part of the catalog.
+
+        Arguments:
+            content_keys: (set) A set of string content keys to be filtered based on the catalog.
+
+        Returns:
+            items_included: (set) A filtered set of content keys contained in the catalog.
+
+        This method handles the following scenarios:
+          - associated metadata contains the specified content key.
+          - associated metadata contains the specified content key as a parent (when a catalog only contains
+           course runs but a course id is searched).
+        """
+        # cannot determine if specified content keys are part of catalog when catalog
+        # query doesn't exist or no content keys are provided.
+        if not self.catalog_query or not content_keys:
+            return set()
+
+        content_keys = set(content_keys)
+
+        # construct a query on the associated catalog's content metadata to return metadata
+        # where content_key and parent_content_key matches the specified content_keys to
+        # handle the following cases where the catalog:
+        #   - contains courses and the specified content_keys are course ids
+        #   - contains course runs and the specified content_keys are course ids
+        query = Q(content_key__in=content_keys) | Q(parent_content_key__in=content_keys)
+
+        items_included = set()
+        for content in self.content_metadata.filter(query).all():
+            if content.content_key in content_keys:
+                items_included.add(content.content_key)
+            elif content.parent_content_key in content_keys:
+                items_included.add(content.parent_content_key)
+        return items_included
+
     def get_content_enrollment_url(self, content_resource, content_key, parent_content_key):
         """
         Return enterprise content enrollment page url with the catalog information for the given content key.
