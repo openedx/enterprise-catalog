@@ -102,3 +102,27 @@ class EnterpriseCustomerViewSet(BaseViewSet):
         if (get_catalogs_containing_specified_content_ids or get_catalog_list):
             response_data['catalog_list'] = catalogs_that_contain_course
         return Response(response_data)
+
+    @action(detail=True, methods=['post'])
+    def filter_content_items(self, request, enterprise_uuid, **kwargs):
+        """
+        Filters the content items based on catalogs passed or all catalogs belonging to an enterprise.
+        """
+        customer_catalogs = request.data.get('catalog_uuids', [])
+        content_keys = set(request.data.get('content_keys', []))
+        if customer_catalogs:
+            customer_catalogs = EnterpriseCatalog.objects.filter(uuid__in=customer_catalogs)
+        else:
+            customer_catalogs = EnterpriseCatalog.objects.filter(enterprise_uuid=enterprise_uuid)
+
+        filtered_content_keys = set()
+        for catalog in customer_catalogs:
+            items_included = catalog.filter_content_keys(content_keys)
+            if items_included:
+                filtered_content_keys = filtered_content_keys.union(items_included)
+
+        response_data = {
+            'filtered_content_keys': list(filtered_content_keys),
+        }
+
+        return Response(response_data)

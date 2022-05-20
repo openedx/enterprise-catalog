@@ -1270,6 +1270,15 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
             kwargs={'enterprise_uuid': enterprise_uuid or self.enterprise_uuid},
         )
 
+    def _get_filter_content_base_url(self, enterprise_uuid=None):
+        """
+        Helper to construct the base url for the filter_content_items endpoint
+        """
+        return reverse(
+            'api:v1:enterprise-customer-filter-content-items',
+            kwargs={'enterprise_uuid': enterprise_uuid or self.enterprise_uuid},
+        )
+
     def _get_generate_diff_base_url(self, enterprise_catalog_uuid=None):
         """
         Helper to construct the base url for the catalog `generate_diff` endpoint
@@ -1644,6 +1653,163 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         response = self.client.get(url)
         catalog_list = response.json()['catalog_list']
         assert catalog_list == []
+
+    def test_filter_content_items_unauthorized_non_catalog_learner(self):
+        """
+        Verify the filter_content_items endpoint rejects users that are not catalog learners
+        """
+        self.set_up_invalid_jwt_role()
+        self.remove_role_assignments()
+        url = self._get_filter_content_base_url()
+        request_json = {
+            "content_keys": []
+        }
+        response = self.client.post(
+            url,
+            data=json.dumps(request_json),
+            content_type='application/json',
+        ).json()
+        detail = response.get('detail')
+        self.assertEqual(detail, 'MISSING: catalog.has_learner_access')
+
+    def test_filter_content_items_unauthorized_incorrect_jwt_context(self):
+        """
+        Verify the filter_content_items endpoint rejects users that are catalog learners
+        with an incorrect JWT context (i.e., enterprise uuid)
+        """
+        self.remove_role_assignments()
+        url = self._get_filter_content_base_url(enterprise_uuid=uuid.uuid4())
+        request_json = {
+            "content_keys": []
+        }
+        response = self.client.post(
+            url,
+            data=json.dumps(request_json),
+            content_type='application/json',
+        ).json()
+        detail = response.get('detail')
+        self.assertEqual(detail, 'MISSING: catalog.has_learner_access')
+
+    def test_filter_content_items_implicit_access(self):
+        """
+        Verify the filter_content_items endpoint responds with 200 OK for
+        user with implicit JWT access
+        """
+        self.remove_role_assignments()
+        url = self._get_filter_content_base_url()
+        request_json = {
+            "content_keys": []
+        }
+        response = self.client.post(
+            url,
+            data=json.dumps(request_json),
+            content_type='application/json',
+        ).json()
+        self.assertEqual(response.get('filtered_content_keys'), [])
+
+    def test_filter_content_items_not_in_catalogs(self):
+        """
+        Verify the filter_content_items endpoint returns empty list if the keys are not in any
+        associated catalogs. Also the keys that are not included in the request but are part of
+        catalog are also not returned.
+        """
+        self.add_metadata_to_catalog(
+            self.enterprise_catalog, [ContentMetadataFactory(content_key='some-random-course')]
+        )
+        url = self._get_filter_content_base_url()
+        request_json = {
+            "content_keys": ['key-not-part-of-catalog']
+        }
+        response = self.client.post(
+            url,
+            data=json.dumps(request_json),
+            content_type='application/json',
+        ).json()
+        self.assertEqual(response.get('filtered_content_keys'), [])
+
+    def test_filter_content_items_in_catalogs(self):
+        """
+        Verify the filter_content_items endpoint returns the keys if the content is in any associated catalogs.
+        """
+        content_metadata = ContentMetadataFactory()
+        self.add_metadata_to_catalog(self.enterprise_catalog, [content_metadata])
+
+        # Create a second catalog that has the content we're looking for
+        relevent_content_key = 'relevant-key'
+        second_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
+        relevant_content = ContentMetadataFactory(content_key=relevent_content_key)
+        self.add_metadata_to_catalog(second_catalog, [relevant_content])
+
+        url = self._get_filter_content_base_url()
+        request_json = {
+            "content_keys": [relevent_content_key],
+        }
+        response = self.client.post(
+            url,
+            data=json.dumps(request_json),
+            content_type='application/json',
+        ).json()
+        self.assertEqual(response.get('filtered_content_keys'), [relevent_content_key])
+
+    def test_filter_content_items_parent_key(self):
+        """
+        Verify the filter_content_items endpoint returns content keys even when they are found as
+        parent_content_key in multiple catalogs and verify it appears only once in the response.
+        """
+        content_metadata = ContentMetadataFactory()
+        self.add_metadata_to_catalog(self.enterprise_catalog, [content_metadata])
+
+        # Create a two catalogs that have the content we're looking for
+        parent_content_key = 'fake-parent-key+105x'
+        content_key = 'fake-key+101x'
+        second_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
+        relevant_content = ContentMetadataFactory(content_key=content_key, parent_content_key=parent_content_key)
+        self.add_metadata_to_catalog(second_catalog, [relevant_content])
+        content_key_2 = 'fake-key+102x'
+        third_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
+        relevant_content = ContentMetadataFactory(content_key=content_key_2, parent_content_key=parent_content_key)
+        self.add_metadata_to_catalog(third_catalog, [relevant_content])
+
+        url = self._get_filter_content_base_url()
+        request_json = {
+            "content_keys": [parent_content_key],
+        }
+        response = self.client.post(
+            url,
+            data=json.dumps(request_json),
+            content_type='application/json',
+        ).json()
+        self.assertEqual(response.get('filtered_content_keys'), [parent_content_key])
+
+    def test_filter_content_items_specified_catalogs(self):
+        """
+        Verify the filter_content_items endpoint only looks into the specified catalogs when they are passed.
+        """
+        content_key_outside_specified_catalog = 'some-random-course'
+        content_metadata = ContentMetadataFactory(content_key=content_key_outside_specified_catalog)
+        self.add_metadata_to_catalog(self.enterprise_catalog, [content_metadata])
+
+        # Create a second catalog that has the content we're looking for
+        relevant_content_key = 'relevant-key'
+        second_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
+        relevant_content = ContentMetadataFactory(content_key=relevant_content_key)
+        self.add_metadata_to_catalog(second_catalog, [relevant_content])
+
+        url = self._get_filter_content_base_url()
+
+        # request payload containt one key outside specified catalog
+        request_json = {
+            "content_keys": [relevant_content_key, content_key_outside_specified_catalog],
+            "catalog_uuids": [str(second_catalog.uuid)]
+        }
+        response = self.client.post(
+            url,
+            data=json.dumps(request_json),
+            content_type='application/json',
+        ).json()
+
+        # response should only contain content keys found in the "second_catalog"
+        self.assertEqual(response.get('filtered_content_keys'), [relevant_content_key])
 
 
 @ddt.ddt
