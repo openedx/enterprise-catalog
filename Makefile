@@ -204,3 +204,7 @@ docker_push: docker_tag docker_auth ## push to docker hub
 
 check_keywords: ## Scan the Django models in all installed apps in this project for restricted field names
 	python manage.py check_reserved_keywords --override_file db_keyword_overrides.yml
+
+install_transifex_client: ## Install the Transifex client
+	curl -o- https://raw.githubusercontent.com/transifex/cli/master/install.sh | bash
+	git checkout -- LICENSE README.md
