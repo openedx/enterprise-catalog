@@ -9,7 +9,7 @@ TOX = ''
         detect_changed_source_translations validate_translations \
         dev.provision dev.init dev.makemigrations dev.migrate dev.up \
         dev.up.build dev.down dev.destroy dev.stop docker_build \
-        shellcheck check_keywords
+        shellcheck check_keywords install_transifex_client
 
 
 define BROWSER_PYSCRIPT
