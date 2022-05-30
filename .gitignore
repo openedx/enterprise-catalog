@@ -90,3 +90,6 @@ docs/_build/
 
 # emacs
 *~
+
+# transifex exe
+tx
