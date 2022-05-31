@@ -961,4 +961,11 @@ def fetch_missing_pathway_metadata_task(self):  # pylint: disable=unused-argumen
         associated_content_metadata = ContentMetadata.objects.filter(
             content_key__in=program_uuids + course_keys
         )
-        pathway_metadata.associated_content_metadata.set(associated_content_metadata, clear=True)
+        pathway_metadata.associated_content_metadata.set(associated_content_metadata)
+        logger.info(
+            'Learner Pathway associated created for Pathway: {}, No. of associations: {}, content: {}'.format(
+                pathway_metadata.content_key,
+                pathway_metadata.associated_content_metadata.count(),
+                associated_content_metadata
+            )
+        )
