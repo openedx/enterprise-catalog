@@ -44,25 +44,39 @@ class UpdateContentMetadataCommandTests(TestCase):
 
         self.command_config_mock.stop()
 
+    @mock.patch(
+        'enterprise_catalog.apps.catalog.management.commands.update_content_metadata.fetch_missing_course_metadata_task')
+    @mock.patch(
+        'enterprise_catalog.apps.catalog.management.commands.update_content_metadata.fetch_missing_pathway_metadata_task')
     @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.group')
     @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.update_catalog_metadata_task')
     @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.update_full_content_metadata_task')
-    def test_update_content_metadata_for_all_queries(self, mock_full_metadata_task, mock_catalog_task, mock_group):
+    def test_update_content_metadata_for_all_queries(
+        self, mock_full_metadata_task, mock_catalog_task, mock_group, mock_fetch_missing_pathway, mock_fetch_missing_course
+    ):
         """
         Verify that the job creates an update task for every catalog query
         """
         call_command(self.command_name)
 
+        mock_fetch_missing_pathway.si.assert_called()
+        mock_fetch_missing_course.si.assert_called()
         mock_group.assert_called_once_with([
             mock_catalog_task.s(catalog_query_id=self.catalog_query_a, force=False),
             mock_catalog_task.s(catalog_query_id=self.catalog_query_b, force=False),
         ])
         mock_full_metadata_task.si.assert_called_once_with(force=False)
 
+    @mock.patch(
+        'enterprise_catalog.apps.catalog.management.commands.update_content_metadata.fetch_missing_course_metadata_task')
+    @mock.patch(
+        'enterprise_catalog.apps.catalog.management.commands.update_content_metadata.fetch_missing_pathway_metadata_task')
     @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.group')
     @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.update_catalog_metadata_task')
     @mock.patch('enterprise_catalog.apps.catalog.management.commands.update_content_metadata.update_full_content_metadata_task')
-    def test_update_content_metadata_for_filtered_queries(self, mock_full_metadata_task, mock_catalog_task, mock_group):
+    def test_update_content_metadata_for_filtered_queries(
+        self, mock_full_metadata_task, mock_catalog_task, mock_group, mock_fetch_missing_pathway, mock_fetch_missing_course
+    ):
         """
         Verify that the job creates an update task for every catalog query that is used by
         at least one enterprise catalog.
@@ -72,6 +86,8 @@ class UpdateContentMetadataCommandTests(TestCase):
 
         call_command(self.command_name)
 
+        mock_fetch_missing_pathway.si.assert_called()
+        mock_fetch_missing_course.si.assert_called()
         mock_group.assert_called_once_with([
             mock_catalog_task.s(catalog_query_id=self.catalog_query_a, force=False),
             mock_catalog_task.s(catalog_query_id=self.catalog_query_b, force=False),
