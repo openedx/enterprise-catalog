@@ -37,14 +37,14 @@ class Command(BaseCommand):
             'Spinning off fetch_missing_course_metadata_task from update_content_metadata command'
             ' to update content_metadata of missing courses.'
         )
-        return fetch_missing_course_metadata_task.s()
+        return fetch_missing_course_metadata_task.si()
 
     def _fetch_missing_pathway_metadata_task(self):
         logger.info(
             'Spinning off fetch_missing_pathway_metadata_task from update_content_metadata command'
             ' to update content_metadata of missing pathways.'
         )
-        return fetch_missing_pathway_metadata_task.s()
+        return fetch_missing_pathway_metadata_task.si()
 
     def _update_full_content_metadata_task(self, *args, **kwargs):
         """
@@ -83,10 +83,16 @@ class Command(BaseCommand):
         options.update(CatalogUpdateCommandConfig.current_options())
 
         # Fetch program metadata for the programs that are missing.
-        self._fetch_missing_pathway_metadata_task()
+        self._fetch_missing_pathway_metadata_task().apply_async().get(
+            timeout=TASK_TIMEOUT,
+            propagate=True,
+        )
 
         # Fetch course metadata for the courses that are missing.
-        self._fetch_missing_course_metadata_task()
+        self._fetch_missing_course_metadata_task().apply_async().get(
+            timeout=TASK_TIMEOUT,
+            propagate=True,
+        )
 
         # find all CatalogQuery records used by at least one EnterpriseCatalog to avoid
         # calling /search/all/ for a CatalogQuery that is not currently used by any catalogs.
