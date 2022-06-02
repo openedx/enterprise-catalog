@@ -825,7 +825,7 @@ def fetch_missing_course_metadata_task(self):  # pylint: disable=unused-argument
     courses. Course metadata is only missing for program courses so the initial query only looks for course metadata
     that are embedded inside a program.
     """
-
+    logger.info('[FETCH_MISSING_METADATA] fetch_missing_course_metadata_task task started.')
     program_metadata_list = ContentMetadata.objects.filter(content_type=PROGRAM).values_list('json_metadata', flat=True)
     course_keys = set()
     for program_metadata in program_metadata_list:
@@ -853,11 +853,10 @@ def fetch_missing_course_metadata_task(self):  # pylint: disable=unused-argument
         )
 
         associated_content_keys = update_contentmetadata_from_discovery(catalog_query)
-        logger.info('Finished fetch_missing_course_metadata_task with {} associated content keys for catalog {}'.format(
-            len(associated_content_keys), catalog_query.id
-        ))
+        logger.info('[FETCH_MISSING_METADATA] Finished fetch_missing_course_metadata_task with {} associated content '
+                    'keys for catalog {}'.format(len(associated_content_keys), catalog_query.id))
     else:
-        logger.info('No missing key found in fetch_missing_course_metadata_task')
+        logger.info('[FETCH_MISSING_METADATA] No missing key found in fetch_missing_course_metadata_task')
 
 
 @shared_task(base=LoggedTaskWithRetry, bind=True)
@@ -876,7 +875,7 @@ def fetch_missing_pathway_metadata_task(self):  # pylint: disable=unused-argumen
     with learner_pathways in course or programs json_metadata. Here we are loading all of them and linking with Course
     # ContentMetadata and Program ContentMetadata
     """
-
+    logger.info('[FETCH_MISSING_METADATA] fetch_missing_pathway_metadata_task task started.')
     content_filter = {
         'status': 'active',
         'content_type': LEARNER_PATHWAY,
@@ -887,7 +886,8 @@ def fetch_missing_pathway_metadata_task(self):  # pylint: disable=unused-argumen
     )
     associated_content_keys = update_contentmetadata_from_discovery(catalog_query)
     logger.info(
-        'Finished Pathways fetch_missing_pathway_metadata_task with {} associated content keys for catalog {}'.format(
+        '[FETCH_MISSING_METADATA] Finished Pathways fetch_missing_pathway_metadata_task with {} associated content '
+        'keys for catalog {}'.format(
             len(associated_content_keys), catalog_query.id
         )
     )
@@ -922,7 +922,8 @@ def fetch_missing_pathway_metadata_task(self):  # pylint: disable=unused-argumen
 
         associated_content_keys = update_contentmetadata_from_discovery(catalog_query)
         logger.info(
-            'Finished programs fetch_missing_pathway_metadata_task with {} keys for catalog {}'.format(
+            '[FETCH_MISSING_METADATA] Finished programs fetch_missing_pathway_metadata_task with {} keys for '
+            'catalog {}'.format(
                 len(associated_content_keys), catalog_query.id
             )
         )
@@ -949,7 +950,8 @@ def fetch_missing_pathway_metadata_task(self):  # pylint: disable=unused-argumen
 
         associated_content_keys = update_contentmetadata_from_discovery(catalog_query)
         logger.info(
-            'Finished courses fetch_missing_pathway_metadata_task with {} keys for catalog {}'.format(
+            '[FETCH_MISSING_METADATA] Finished courses fetch_missing_pathway_metadata_task with {} keys for '
+            'catalog {}'.format(
                 len(associated_content_keys), catalog_query.id
             )
         )
@@ -963,9 +965,10 @@ def fetch_missing_pathway_metadata_task(self):  # pylint: disable=unused-argumen
         )
         pathway_metadata.associated_content_metadata.set(associated_content_metadata)
         logger.info(
-            'Learner Pathway associated created for Pathway: {}, No. of associations: {}, content: {}'.format(
+            '[FETCH_MISSING_METADATA] Learner Pathway {} associated created. No. of associations: {}'.format(
                 pathway_metadata.content_key,
                 pathway_metadata.associated_content_metadata.count(),
-                associated_content_metadata
             )
         )
+
+    logger.info('[FETCH_MISSING_METADATA] fetch_missing_pathway_metadata_task execution completed.')
