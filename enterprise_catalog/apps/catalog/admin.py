@@ -90,10 +90,7 @@ class EnterpriseCatalogAdmin(UnchangeableMixin):
         'title',
         'get_catalog_query',
     )
-    list_filter = (
-        'enterprise_name',
-        'catalog_query',
-    )
+
     search_fields = (
         'uuid',
         'enterprise_uuid',
