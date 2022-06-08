@@ -58,6 +58,9 @@ class ContentMetadataAdmin(UnchangeableMixin):
         'content_key',
         'parent_content_key',
     )
+    filter_horizontal = (
+        'associated_content_metadata',
+    )
 
 
 @admin.register(CatalogQuery)
