@@ -235,12 +235,14 @@ class FetchMissingCourseMetadataTaskTests(TestCase):
         mock_update_data_from_discovery.assert_called_with(catalog_query)
 
 
+@ddt.ddt
 class FetchMissingPathwayMetadataTaskTests(TestCase):
     """
     Tests for the `fetch_missing_pathway_metadata_task`.
     """
+    @ddt.data(True, False)
     @mock.patch.object(CatalogQueryMetadata, '_get_catalog_query_metadata')
-    def test_fetch_missing_pathway_metadata_task(self, mock_get_catalog_query_metadata):
+    def test_fetch_missing_pathway_metadata_task(self, visible_via_association, mock_get_catalog_query_metadata):
         """
         Validate the fetch_missing_pathway_metadata_task creates correct Data and its associations.
 
@@ -261,6 +263,8 @@ class FetchMissingPathwayMetadataTaskTests(TestCase):
                 "content_type": "learnerpathway",
                 "uuid": test_pathway,
                 "name": "Full stack developer",
+                "visible_via_association": visible_via_association,
+                "status": "active",
                 "steps": [
                     {
                         "uuid": "63d708a7-8512-427e-8ae1-6ee8fa685360",
@@ -317,13 +321,15 @@ class FetchMissingPathwayMetadataTaskTests(TestCase):
         learner_pathway = ContentMetadata.objects.get(content_key=test_pathway)
         program = ContentMetadata.objects.get(content_key=test_program)
         course = ContentMetadata.objects.get(content_key=test_course)
-        learner_pathway.associated_content_metadata.all()
-        assert list(learner_pathway.associated_content_metadata.all()) == [program, course]
+        associated_content_metadata = learner_pathway.associated_content_metadata.all()
+        if visible_via_association:
+            assert list(associated_content_metadata) == [program, course]
+        else:
+            assert not associated_content_metadata
 
         queries = CatalogQuery.objects.all()
         assert queries.count() == 3
         pathways_query = queries[0]
-        assert pathways_query.content_filter['status'] == 'active'
         assert pathways_query.content_filter['content_type'] == LEARNER_PATHWAY
 
         program_catalog_query = queries[1]
