@@ -452,7 +452,7 @@ class ContentMetadata(TimeStampedModel):
     )
 
     # one course can be associated with many programs and one program can contain many courses.
-    associated_content_metadata = models.ManyToManyField('self')
+    associated_content_metadata = models.ManyToManyField('self', blank=True)
 
     json_metadata = JSONField(
         default={},

@@ -591,16 +591,14 @@ def build_content_mapping_with_enterprise_and_catalog(
             catalog_uuids_by_key[program.content_key].update(query_to_catalog_mapping[catalog_query.id])
             customer_uuids_by_key[program.content_key].update(query_to_enterprise_mapping[catalog_query.id])
         for pathway in course_to_pathway_mapping[content_key]:
-            if pathway.json_metadata['visible_via_association']:
-                catalog_queries_by_key[pathway.content_key].update({(str(catalog_query.uuid), catalog_query.title)})
-                catalog_uuids_by_key[pathway.content_key].update(query_to_catalog_mapping[catalog_query.id])
-                customer_uuids_by_key[pathway.content_key].update(query_to_enterprise_mapping[catalog_query.id])
+            catalog_queries_by_key[pathway.content_key].update({(str(catalog_query.uuid), catalog_query.title)})
+            catalog_uuids_by_key[pathway.content_key].update(query_to_catalog_mapping[catalog_query.id])
+            customer_uuids_by_key[pathway.content_key].update(query_to_enterprise_mapping[catalog_query.id])
     if metadata.content_type == PROGRAM:
         for pathway in program_to_pathway_mapping[content_key]:
-            if pathway.json_metadata['visible_via_association']:
-                catalog_queries_by_key[pathway.content_key].update({(str(catalog_query.uuid), catalog_query.title)})
-                catalog_uuids_by_key[pathway.content_key].update(query_to_catalog_mapping[catalog_query.id])
-                customer_uuids_by_key[pathway.content_key].update(query_to_enterprise_mapping[catalog_query.id])
+            catalog_queries_by_key[pathway.content_key].update({(str(catalog_query.uuid), catalog_query.title)})
+            catalog_uuids_by_key[pathway.content_key].update(query_to_catalog_mapping[catalog_query.id])
+            customer_uuids_by_key[pathway.content_key].update(query_to_enterprise_mapping[catalog_query.id])
 
 
 def index_content_keys_in_algolia(content_keys, algolia_client):
@@ -877,7 +875,6 @@ def fetch_missing_pathway_metadata_task(self):  # pylint: disable=unused-argumen
     """
     logger.info('[FETCH_MISSING_METADATA] fetch_missing_pathway_metadata_task task started.')
     content_filter = {
-        'status': 'active',
         'content_type': LEARNER_PATHWAY,
     }
     catalog_query, _ = CatalogQuery.objects.get_or_create(
@@ -957,18 +954,21 @@ def fetch_missing_pathway_metadata_task(self):  # pylint: disable=unused-argumen
         )
 
     # update association between pathways and its associated programs and courses.
-    for pathway_metadata in ContentMetadata.objects.filter(content_type=LEARNER_PATHWAY):
-        course_keys = get_pathway_course_keys(pathway_metadata.json_metadata)
-        program_uuids = get_pathway_program_uuids(pathway_metadata.json_metadata)
-        associated_content_metadata = ContentMetadata.objects.filter(
-            content_key__in=program_uuids + course_keys
-        )
-        pathway_metadata.associated_content_metadata.set(associated_content_metadata)
-        logger.info(
-            '[FETCH_MISSING_METADATA] Learner Pathway {} associated created. No. of associations: {}'.format(
-                pathway_metadata.content_key,
-                pathway_metadata.associated_content_metadata.count(),
+    for pathway in ContentMetadata.objects.filter(content_type=LEARNER_PATHWAY):
+        if pathway.json_metadata['visible_via_association'] and pathway.json_metadata['status'] == 'active':
+            course_keys = get_pathway_course_keys(pathway.json_metadata)
+            program_uuids = get_pathway_program_uuids(pathway.json_metadata)
+            associated_content_metadata = ContentMetadata.objects.filter(
+                content_key__in=program_uuids + course_keys
             )
-        )
+            pathway.associated_content_metadata.set(associated_content_metadata)
+            logger.info(
+                '[FETCH_MISSING_METADATA] Learner Pathway {} associated created. No. of associations: {}'.format(
+                    pathway.content_key,
+                    pathway.associated_content_metadata.count(),
+                )
+            )
+        else:
+            pathway.associated_content_metadata.clear()
 
     logger.info('[FETCH_MISSING_METADATA] fetch_missing_pathway_metadata_task execution completed.')
