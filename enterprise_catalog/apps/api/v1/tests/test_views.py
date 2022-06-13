@@ -5,6 +5,7 @@ from collections import OrderedDict
 from datetime import datetime, timedelta
 from operator import itemgetter
 from unittest import mock
+from urllib.parse import urljoin
 
 import ddt
 import pytz
@@ -508,6 +509,30 @@ class EnterpriseCatalogCRUDViewSetListTests(APITestMixin):
         self.assertEqual(uuid.UUID(results[0]['uuid']), self.enterprise_catalog.uuid)
         self.assertEqual(uuid.UUID(results[1]['uuid']), catalog_b.uuid)
         self.assertEqual(uuid.UUID(results[2]['uuid']), catalog_c.uuid)
+
+    @ddt.data(
+        False,
+        True,
+    )
+    def test_catalog_list_for_catalog_admins_with_enterprise_param(self, is_role_assigned_via_jwt):
+        """
+        Verify the viewset returns a single catalog (when multiple exist) with GET params will provided.
+        """
+        if is_role_assigned_via_jwt:
+            self.assign_catalog_admin_jwt_role()
+        else:
+            self.assign_catalog_admin_feature_role()
+
+        # create an additional catalog from a different enterprise,
+        # make it so that the filter of GET params is applied and sure we don't see it in the response results.
+        EnterpriseCatalogFactory(enterprise_uuid=uuid.uuid4())
+
+        url = urljoin(reverse('api:v1:enterprise-catalog-list'), f'?enterprise_customer={str(self.enterprise_uuid)}')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        catalog_list = response.json()['results']
+        self.assertEqual(len(catalog_list), 1)
+        self.assertEqual(uuid.UUID(catalog_list[0]['uuid']), self.enterprise_catalog.uuid)
 
     def test_list_unauthorized_catalog_learner(self):
         """
