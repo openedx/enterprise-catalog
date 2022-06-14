@@ -33,7 +33,7 @@ billiard==3.6.4.0
     #   celery
 bleach==5.0.0
     # via readme-renderer
-celery==5.2.6
+celery==5.2.7
     # via
     #   -r requirements/test.txt
     #   django-celery-results
@@ -92,7 +92,7 @@ coreschema==0.0.4
     #   -r requirements/test.txt
     #   coreapi
     #   drf-yasg
-coverage[toml]==6.4
+coverage[toml]==6.4.1
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -142,7 +142,7 @@ django-celery-results==2.2.0
     # via -r requirements/test.txt
 django-config-models==2.3.0
     # via -r requirements/test.txt
-django-cors-headers==3.12.0
+django-cors-headers==3.13.0
     # via -r requirements/test.txt
 django-crum==0.7.9
     # via
@@ -161,7 +161,7 @@ django-model-utils==4.2.0
     #   edx-rbac
 django-simple-history==3.0.0
     # via -r requirements/test.txt
-django-waffle==2.4.1
+django-waffle==2.5.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
@@ -179,7 +179,7 @@ djangorestframework-xml==2.0.0
     # via -r requirements/test.txt
 doc8==0.11.2
     # via -r requirements/doc.in
-docutils==0.17.1
+docutils==0.18.1
     # via
     #   doc8
     #   readme-renderer
@@ -228,11 +228,11 @@ edx-toggles==5.0.0
     # via -r requirements/test.txt
 factory-boy==3.2.1
     # via -r requirements/test.txt
-faker==13.11.1
+faker==13.12.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
-filelock==3.7.0
+filelock==3.7.1
     # via
     #   -r requirements/test.txt
     #   tox
@@ -364,7 +364,7 @@ pyjwt[crypto]==2.4.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
-pylint==2.13.9
+pylint==2.14.0
     # via
     #   -r requirements/test.txt
     #   edx-lint
@@ -462,7 +462,7 @@ ruamel-yaml-clib==0.2.6
     #   ruamel-yaml
 rules==3.3
     # via -r requirements/test.txt
-semantic-version==2.9.0
+semantic-version==2.10.0
     # via
     #   -r requirements/test.txt
     #   edx-drf-extensions
@@ -499,7 +499,7 @@ social-auth-core==4.2.0
     #   -r requirements/test.txt
     #   edx-auth-backends
     #   social-auth-app-django
-sphinx==4.5.0
+sphinx==5.0.1
     # via
     #   -r requirements/doc.in
     #   edx-sphinx-theme
@@ -540,6 +540,10 @@ tomli==2.0.1
     #   coverage
     #   pylint
     #   pytest
+tomlkit==0.11.0
+    # via
+    #   -r requirements/test.txt
+    #   pylint
 tox==3.25.0
     # via
     #   -r requirements/test.txt
