@@ -93,3 +93,5 @@ docs/_build/
 
 # transifex exe
 tx
+
+.dev/
