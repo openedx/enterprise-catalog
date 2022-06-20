@@ -18,7 +18,7 @@ asgiref==3.5.2
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   django
-astroid==2.11.5
+astroid==2.11.6
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -39,7 +39,7 @@ celery==5.2.7
     #   -r requirements/test.txt
     #   django-celery-results
     #   edx-celeryutils
-certifi==2022.5.18.1
+certifi==2022.6.15
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -248,7 +248,7 @@ edx-drf-extensions==8.0.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-rbac
-edx-lint==5.2.2
+edx-lint==5.2.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -271,7 +271,7 @@ edx-toggles==5.0.0
     #   -r requirements/test.txt
 factory-boy==3.2.1
     # via -r requirements/test.txt
-faker==13.12.0
+faker==13.13.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -349,7 +349,7 @@ mysqlclient==2.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-newrelic==7.10.0.175
+newrelic==7.12.0.176
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -426,7 +426,7 @@ pyjwt[crypto]==2.4.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
-pylint==2.14.0
+pylint==2.14.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -507,7 +507,7 @@ redis==3.5.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-requests==2.27.1
+requests==2.28.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -576,7 +576,7 @@ social-auth-app-django==5.0.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-auth-backends
-social-auth-core==4.2.0
+social-auth-core==4.3.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
