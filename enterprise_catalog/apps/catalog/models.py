@@ -368,7 +368,25 @@ class EnterpriseCatalog(TimeStampedModel):
         if self.publish_audit_enrollment_urls:
             params['audit'] = 'true'
 
-        if self.enterprise_customer.learner_portal_enabled and content_resource is not PROGRAM:
+        # (ENT-5968) These changes are temporary until offers are implemented in the learner portal
+        is_integrated_customer_with_subsidies_and_offers = str(self.enterprise_uuid) in \
+            settings.INTEGRATED_CUSTOMERS_WITH_SUBSIDIES_AND_OFFERS
+        # defaults to True for any customers not in a special list
+        can_enroll_via_learner_portal = not is_integrated_customer_with_subsidies_and_offers
+        # customers in the list must have the course in an active catalog for can_enroll_via_learner_portal to be True
+        if is_integrated_customer_with_subsidies_and_offers:
+            active_catalogs = EnterpriseCatalog.objects.filter(
+                uuid__in=self.enterprise_customer.active_catalogs
+            )
+
+            for catalog in active_catalogs:
+                contains_content_items = catalog.contains_content_keys([content_key])
+                if contains_content_items:
+                    can_enroll_via_learner_portal = True
+                    break
+
+        if self.enterprise_customer.learner_portal_enabled and content_resource is not PROGRAM \
+                and can_enroll_via_learner_portal:
             # parent_content_key is our way of telling if this is a course run
             # since this function is never called with COURSE_RUN as content_resource
             if parent_content_key:

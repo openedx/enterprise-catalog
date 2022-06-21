@@ -3,7 +3,10 @@
 import json
 from collections import OrderedDict
 from unittest import mock
+from uuid import uuid4
 
+import ddt
+from django.conf import settings
 from django.test import TestCase, override_settings
 
 from enterprise_catalog.apps.catalog.constants import (
@@ -19,6 +22,7 @@ from enterprise_catalog.apps.catalog.models import (
 from enterprise_catalog.apps.catalog.tests import factories
 
 
+@ddt.ddt
 class TestModels(TestCase):
     """ Models tests. """
 
@@ -311,3 +315,92 @@ class TestModels(TestCase):
         assert course_cm not in associated_metadata
         assert course_run_cm not in associated_metadata
         assert program_cm in associated_metadata
+
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.LicenseManagerApiClient')
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EcommerceApiClient')
+    @ddt.data(
+        {
+            'is_integrated_customer_with_subsidies_and_offer': False,
+            'is_course_in_subscriptions_catalog': True,
+            'is_course_in_coupons_catalog': True,
+            'should_direct_to_lp': True,
+        },
+        {
+            'is_integrated_customer_with_subsidies_and_offer': True,
+            'is_course_in_subscriptions_catalog': False,
+            'is_course_in_coupons_catalog': False,
+            'should_direct_to_lp': False,
+        },
+        {
+            'is_integrated_customer_with_subsidies_and_offer': True,
+            'is_course_in_subscriptions_catalog': True,
+            'is_course_in_coupons_catalog': False,
+            'should_direct_to_lp': True,
+        },
+        {
+            'is_integrated_customer_with_subsidies_and_offer': True,
+            'is_course_in_subscriptions_catalog': False,
+            'is_course_in_coupons_catalog': True,
+            'should_direct_to_lp': True,
+        }
+    )
+    @ddt.unpack
+    def test_get_content_enrollment_url(
+        self,
+        mock_ecommerce_client,
+        mock_license_manager_client,
+        mock_enterprise_api_client,
+        is_integrated_customer_with_subsidies_and_offer,
+        is_course_in_subscriptions_catalog,
+        is_course_in_coupons_catalog,
+        should_direct_to_lp
+    ):
+        enterprise_uuid = uuid4()
+        enterprise_slug = 'sluggy'
+        content_key = 'course-key'
+
+        INTEGRATED_CUSTOMERS_WITH_SUBSIDIES_AND_OFFERS = []
+        if is_integrated_customer_with_subsidies_and_offer:
+            INTEGRATED_CUSTOMERS_WITH_SUBSIDIES_AND_OFFERS.append(str(enterprise_uuid))
+
+        with self.settings(
+            INTEGRATED_CUSTOMERS_WITH_SUBSIDIES_AND_OFFERS=INTEGRATED_CUSTOMERS_WITH_SUBSIDIES_AND_OFFERS
+        ):
+            enterprise_catalog = factories.EnterpriseCatalogFactory(enterprise_uuid=enterprise_uuid)
+            content_metadata = factories.ContentMetadataFactory(content_key=content_key)
+            enterprise_catalog.catalog_query.contentmetadata_set.add(*[content_metadata])
+
+            mock_enterprise_api_client.return_value.get_enterprise_customer.return_value = {
+                'slug': enterprise_slug,
+                'enable_learner_portal': True,
+            }
+
+            if is_course_in_coupons_catalog:
+                mock_ecommerce_client().get_coupons_overview.return_value = [
+                    {
+                        'enterprise_catalog_uuid': enterprise_catalog.uuid
+                    }
+                ]
+            else:
+                mock_ecommerce_client().get_coupons_overview.return_value = []
+
+            if is_course_in_subscriptions_catalog:
+                mock_license_manager_client().get_customer_agreement.return_value = {
+                    'subscriptions': [{
+                        'enterprise_catalog_uuid': enterprise_catalog.uuid
+                    }]
+                }
+            else:
+                mock_license_manager_client().get_customer_agreement.return_value = None
+
+            content_enrollment_url = enterprise_catalog.get_content_enrollment_url(
+                content_resource=COURSE,
+                content_key=content_key,
+                parent_content_key=None,
+            )
+
+            if should_direct_to_lp:
+                assert settings.ENTERPRISE_LEARNER_PORTAL_BASE_URL in content_enrollment_url
+            else:
+                assert settings.LMS_BASE_URL in content_enrollment_url
