@@ -877,6 +877,20 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         # Set up catalog.has_learner_access permissions
         self.set_up_catalog_learner()
         self.enterprise_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
+
+        self.ecommerce_patcher = mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EcommerceApiClient')
+        self.mock_ecommerce_client = self.ecommerce_patcher.start()
+        self.mock_ecommerce_client().get_coupons_overview.return_value = []
+
+        self.license_manager_patcher = mock.patch(
+            'enterprise_catalog.apps.api_client.enterprise_cache.LicenseManagerApiClient'
+        )
+        self.license_manager_client = self.license_manager_patcher.start()
+        self.license_manager_client().get_customer_agreement.return_value = None
+
+        self.addCleanup(self.ecommerce_patcher.stop)
+        self.addCleanup(self.license_manager_patcher.stop)
+
         # Delete any existing ContentMetadata records.
         ContentMetadata.objects.all().delete()
 
@@ -1249,6 +1263,19 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         EnterpriseCatalog.objects.all().delete()
 
         self.enterprise_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
+
+        self.ecommerce_patcher = mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EcommerceApiClient')
+        self.mock_ecommerce_client = self.ecommerce_patcher.start()
+        self.mock_ecommerce_client().get_coupons_overview.return_value = []
+
+        self.license_manager_patcher = mock.patch(
+            'enterprise_catalog.apps.api_client.enterprise_cache.LicenseManagerApiClient'
+        )
+        self.mock_license_manager_client = self.license_manager_patcher.start()
+        self.mock_license_manager_client().get_customer_agreement.return_value = None
+
+        self.addCleanup(self.ecommerce_patcher.stop)
+        self.addCleanup(self.license_manager_patcher.stop)
 
         # Set up catalog.has_learner_access permissions
         self.set_up_catalog_learner()
