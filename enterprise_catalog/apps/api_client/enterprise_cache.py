@@ -115,7 +115,7 @@ def _get_enterprise_customer_data(uuid):
                 subscriptions_catalogs = []
         except requests.exceptions.HTTPError as exc:
             logger.error(
-                'Failed to fetch coupons overview for %r because %r',
+                'Failed to fetch customer agreement for %r because %r',
                 uuid,
                 exc,
             )
