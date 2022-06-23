@@ -80,6 +80,10 @@ class EnterpriseCatalogCRUDViewSet(BaseViewSet, viewsets.ModelViewSet):
         Returns the queryset corresponding to all catalogs the requesting user has access to.
         """
         all_catalogs = EnterpriseCatalog.objects.all().order_by('created')
+        enterprise_customer = self.request.GET.get('enterprise_customer', False)
+        if enterprise_customer:
+            all_catalogs = all_catalogs.filter(enterprise_uuid=enterprise_customer)
+
         if self.request_action == 'list':
             if not self.admin_accessible_enterprises:
                 return EnterpriseCatalog.objects.none()
