@@ -23,7 +23,7 @@ celery==5.2.7
     #   -r requirements/base.txt
     #   django-celery-results
     #   edx-celeryutils
-certifi==2022.5.18.1
+certifi==2022.6.15
     # via
     #   -r requirements/base.txt
     #   requests
@@ -218,9 +218,9 @@ markupsafe==2.1.1
     # via
     #   -r requirements/base.txt
     #   jinja2
-mysqlclient==2.1.0
+mysqlclient==2.1.1
     # via -r requirements/base.txt
-newrelic==7.10.0.175
+newrelic==7.12.0.176
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -249,7 +249,7 @@ pycparser==2.21
     # via
     #   -r requirements/base.txt
     #   cffi
-pycryptodomex==3.14.1
+pycryptodomex==3.15.0
     # via
     #   -r requirements/base.txt
     #   pyjwkest
@@ -305,7 +305,7 @@ pyyaml==5.4.1
     #   edx-django-release-util
 redis==3.5.3
     # via -r requirements/base.txt
-requests==2.27.1
+requests==2.28.0
     # via
     #   -r requirements/base.txt
     #   algoliasearch
@@ -355,7 +355,7 @@ social-auth-app-django==5.0.0
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends
-social-auth-core==4.2.0
+social-auth-core==4.3.0
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends
