@@ -16,7 +16,6 @@ from enterprise_catalog.apps.catalog.constants import (
 )
 from enterprise_catalog.apps.catalog.models import (
     ContentMetadata,
-    ContentMetadataToQueries,
     update_contentmetadata_from_discovery,
 )
 from enterprise_catalog.apps.catalog.tests import factories
@@ -25,112 +24,6 @@ from enterprise_catalog.apps.catalog.tests import factories
 @ddt.ddt
 class TestModels(TestCase):
     """ Models tests. """
-
-    def test_soft_deletion_model(self):
-        metadata = factories.ContentMetadataFactory()
-        query = factories.CatalogQueryFactory()
-        assert len(ContentMetadataToQueries.objects.all()) == 0
-        ContentMetadataToQueries.objects.get_or_create(catalog_query=query, content_metadata=metadata)
-        assert len(ContentMetadataToQueries.objects.all()) == 1
-
-        ContentMetadataToQueries.objects.get_queryset().clear()
-        assert len(ContentMetadataToQueries.objects.all()) == 0
-        assert len(ContentMetadataToQueries.all_objects.all()) == 1
-        assert len(ContentMetadataToQueries.all_objects.get_queryset().dead()) == 1
-        # Reset to test other customer query set functions
-        ContentMetadataToQueries.all_objects.filter().update(deleted_at=None)
-
-        assert len(ContentMetadataToQueries.objects.get_queryset().alive()) == 1
-
-        ContentMetadataToQueries.objects.get_queryset().remove()
-        assert len(ContentMetadataToQueries.objects.all()) == 0
-        assert len(ContentMetadataToQueries.all_objects.all()) == 1
-
-        ContentMetadataToQueries.all_objects.hard_delete()
-        assert len(ContentMetadataToQueries.all_objects.all()) == 0
-
-        ContentMetadataToQueries.objects.get_or_create(catalog_query=query, content_metadata=metadata)
-        ContentMetadataToQueries.hard_delete(ContentMetadataToQueries.objects.first())
-        assert len(ContentMetadataToQueries.objects.all()) == 0
-        assert len(ContentMetadataToQueries.all_objects.all()) == 0
-
-    @override_settings(DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT=0)
-    def test_soft_deletion_manager(self):
-        # Setup
-        content_metadata = factories.ContentMetadataFactory()
-        first_query = factories.CatalogQueryFactory()
-        second_query = factories.CatalogQueryFactory()
-        content_metadata.catalog_query_mapping.set([first_query, second_query])
-
-        # an extra content metadata and query items to make sure they aren't caught up in selects
-        extra_content = factories.ContentMetadataFactory()
-        extra_query = factories.CatalogQueryFactory()
-        extra_content.catalog_query_mapping.set([extra_query])
-
-        # Assert that we have two entries in the through table
-        assert content_metadata.catalog_query_mapping.count() == 2
-        assert content_metadata.catalog_queries.count() == 2
-
-        # Remove one of the entries
-        content_metadata.catalog_query_mapping.remove(first_query)
-
-        # Check the through table and make sure we've soft deleted
-        assert content_metadata.catalog_queries.count() == 1
-        # We can access the deleted objects through all_objects
-        assert content_metadata.catalog_query_mapping.through.all_objects.filter(
-            content_metadata_id=content_metadata.id
-        ).count() == 2
-
-        # Re-add a removed query to test that we don't throw an integrity error. (there will be two entries in the
-        # mapping for the first query, one deleted and one not)
-        content_metadata.catalog_query_mapping.add(first_query)
-
-        # Create another entry to play with
-        third_query = factories.CatalogQueryFactory()
-        # Set([], clear=True) should soft delete all other records besides the ones being set with a clear() method call
-        content_metadata.catalog_query_mapping.set([third_query], clear=True)
-
-        # This is an asymmetric relationship (content_metadata.catalog_query_mapping will associate with all FKs in the
-        # through table) so the catalog_query_mapping will still hold the soft deleted records
-        assert content_metadata.catalog_query_mapping.count() == 4
-
-        # Check that all other entries have been soft deleted
-        assert content_metadata.catalog_queries.count() == 1
-        assert content_metadata.catalog_queries.first().id == third_query.id
-
-        # Check that we can go in reverse and get the non-deleted content metadata belonging to a particular query
-        assert not first_query.content_metadata.first() == content_metadata
-        # Check that we still have access to the soft deleted records
-        assert first_query.contentmetadata_set.count() == 2
-
-        # Check that we are still able to hard delete if we really want
-        assert content_metadata.catalog_queries.first()
-        assert content_metadata.catalog_query_mapping.through.all_objects.filter(
-            content_metadata_id=content_metadata.id
-        ).count() == 4
-        content_metadata.catalog_query_mapping.through.objects.filter(
-            content_metadata_id=content_metadata.id
-        ).hard_delete()
-        assert not content_metadata.catalog_queries.first()
-        assert content_metadata.catalog_query_mapping.through.all_objects.count() == 4
-
-    def test_content_metadata_catalog_query_through_table(self):
-        content_metadata = factories.ContentMetadataFactory()
-        catalog_query = factories.CatalogQueryFactory()
-        content_metadata.catalog_query_mapping.set([catalog_query])
-        assert ContentMetadataToQueries.objects.all().count() == 1
-
-        # soft delete
-        ContentMetadataToQueries.objects.all().delete()
-        assert ContentMetadataToQueries.all_objects.all().count() == 1
-        assert ContentMetadataToQueries.all_objects.first().deleted_at
-
-        # Make sure we don't throw integrity errors
-        assert not ContentMetadataToQueries.objects.first()
-        content_metadata.catalog_query_mapping.add(catalog_query)
-
-        assert ContentMetadataToQueries.all_objects.all().count() == 2
-        assert ContentMetadataToQueries.objects.all().count() == 1
 
     @override_settings(DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT=0)
     @mock.patch('enterprise_catalog.apps.api_client.discovery_cache.DiscoveryApiClient')
