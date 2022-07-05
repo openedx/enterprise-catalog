@@ -110,8 +110,8 @@ ALGOLIA_INDEX_SETTINGS = {
         'enterprise_customer_uuids',
     ],
     'customRanking': [
-        'desc(recent_enrollment_count)',
         'asc(visible_via_association)',
+        'desc(recent_enrollment_count)',
     ],
 }
 
@@ -456,6 +456,7 @@ def get_pathway_card_image_url(pathway):
     except (KeyError, AttributeError):
         return None
 
+
 def get_pathway_association(pathway):
     """
     Gets the pathway association
@@ -467,6 +468,7 @@ def get_pathway_association(pathway):
         bool: True if available via association else False
     """
     return bool(pathway.get('visible_via_association', False))
+
 
 def get_pathway_partners(pathway):
     """

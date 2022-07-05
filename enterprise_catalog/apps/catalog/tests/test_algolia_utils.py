@@ -21,6 +21,7 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     get_course_skill_names,
     get_course_subjects,
     get_initialized_algolia_client,
+    get_pathway_association,
     get_pathway_availability,
     get_pathway_card_image_url,
     get_pathway_course_keys,
@@ -1195,6 +1196,28 @@ class AlgoliaUtilsTests(TestCase):
         """
         image_url = get_pathway_card_image_url(pathway_metadata)
         self.assertEqual(expected_type, image_url)
+
+    @ddt.data(
+        (
+            {'visible_via_association': False},
+            False,
+        ),
+        (
+            {'visible_via_association': True},
+            True,
+        ),
+        (
+            {'visible_via_association': None},
+            False,
+        ),
+    )
+    @ddt.unpack
+    def test_get_pathway_association(self, pathway_metadata, expected_value):
+        """
+        Assert that the visible via association is properly parsed.
+        """
+        pathway_association = get_pathway_association(pathway_metadata)
+        self.assertEqual(expected_value, pathway_association
 
     @ddt.data(
         (
