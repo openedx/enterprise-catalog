@@ -1217,7 +1217,7 @@ class AlgoliaUtilsTests(TestCase):
         Assert that the visible via association is properly parsed.
         """
         pathway_association = get_pathway_association(pathway_metadata)
-        self.assertEqual(expected_value, pathway_association
+        self.assertEqual(expected_value, pathway_association)
 
     @ddt.data(
         (
