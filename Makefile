@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 TOX = ''
 .PHONY: help clean piptools requirements dev_requirements \
-        doc_requirementsprod_requirements static shell test coverage \
+        doc_requirements prod_requirements static shell test coverage \
         isort_check isort style lint quality pii_check validate \
         migrate html_coverage upgrade extract_translation dummy_translations \
         compile_translations fake_translations  pull_translations \
