@@ -23,16 +23,16 @@ celery==5.2.7
     #   -r requirements/base.txt
     #   django-celery-results
     #   edx-celeryutils
-certifi==2022.5.18.1
+certifi==2022.6.15
     # via
     #   -r requirements/base.txt
     #   requests
-cffi==1.15.0
+cffi==1.15.1
     # via
     #   -r requirements/base.txt
     #   cryptography
     #   pynacl
-charset-normalizer==2.0.12
+charset-normalizer==2.1.0
     # via
     #   -r requirements/base.txt
     #   requests
@@ -70,7 +70,7 @@ coreschema==0.0.4
     #   -r requirements/base.txt
     #   coreapi
     #   drf-yasg
-cryptography==37.0.2
+cryptography==37.0.4
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -81,7 +81,7 @@ defusedxml==0.7.1
     #   djangorestframework-xml
     #   python3-openid
     #   social-auth-core
-django==3.2.13
+django==3.2.14
     # via
     #   -r requirements/base.txt
     #   django-config-models
@@ -114,7 +114,7 @@ django-crum==0.7.9
     #   edx-django-utils
     #   edx-rbac
     #   edx-toggles
-django-extensions==3.1.5
+django-extensions==3.2.0
     # via -r requirements/base.txt
 django-model-utils==4.2.0
     # via
@@ -123,7 +123,7 @@ django-model-utils==4.2.0
     #   edx-rbac
 django-simple-history==3.0.0
     # via -r requirements/base.txt
-django-waffle==2.5.0
+django-waffle==2.6.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -143,7 +143,7 @@ drf-jwt==1.19.2
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-drf-yasg==1.20.0
+drf-yasg==1.21.3
     # via
     #   -r requirements/base.txt
     #   edx-api-doc-tools
@@ -218,9 +218,9 @@ markupsafe==2.1.1
     # via
     #   -r requirements/base.txt
     #   jinja2
-mysqlclient==2.1.0
+mysqlclient==2.1.1
     # via -r requirements/base.txt
-newrelic==7.10.0.175
+newrelic==7.16.0.178
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -237,7 +237,7 @@ pbr==5.9.0
     # via
     #   -r requirements/base.txt
     #   stevedore
-prompt-toolkit==3.0.29
+prompt-toolkit==3.0.30
     # via
     #   -r requirements/base.txt
     #   click-repl
@@ -249,7 +249,7 @@ pycparser==2.21
     # via
     #   -r requirements/base.txt
     #   cffi
-pycryptodomex==3.14.1
+pycryptodomex==3.15.0
     # via
     #   -r requirements/base.txt
     #   pyjwkest
@@ -297,6 +297,7 @@ pytz==2022.1
     #   celery
     #   django
     #   djangorestframework
+    #   drf-yasg
 pyyaml==5.4.1
     # via
     #   -r requirements/base.txt
@@ -305,7 +306,7 @@ pyyaml==5.4.1
     #   edx-django-release-util
 redis==3.5.3
     # via -r requirements/base.txt
-requests==2.27.1
+requests==2.28.1
     # via
     #   -r requirements/base.txt
     #   algoliasearch
@@ -355,7 +356,7 @@ social-auth-app-django==5.0.0
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends
-social-auth-core==4.2.0
+social-auth-core==4.3.0
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends
@@ -364,7 +365,7 @@ sqlparse==0.4.2
     # via
     #   -r requirements/base.txt
     #   django
-stevedore==3.5.0
+stevedore==4.0.0
     # via
     #   -r requirements/base.txt
     #   code-annotations
@@ -379,7 +380,7 @@ uritemplate==4.1.1
     #   -r requirements/base.txt
     #   coreapi
     #   drf-yasg
-urllib3==1.26.9
+urllib3==1.26.10
     # via
     #   -r requirements/base.txt
     #   requests
