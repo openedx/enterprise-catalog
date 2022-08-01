@@ -126,10 +126,8 @@ distlib==0.3.5
     #   edx-toggles
     #   jsonfield
     #   jsonfield2
-django-celery-results==2.2.0
-    # via
-    #   -c requirements/constraints.txt
-    #   -r requirements/base.txt
+django-celery-results==2.4.0
+    # via -r requirements/base.txt
 django-config-models==2.3.0
     # via -r requirements/base.txt
 django-cors-headers==3.13.0
