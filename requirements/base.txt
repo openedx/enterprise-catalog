@@ -80,10 +80,8 @@ django==3.2.14
     #   edx-toggles
     #   jsonfield
     #   jsonfield2
-django-celery-results==2.2.0
-    # via
-    #   -c requirements/constraints.txt
-    #   -r requirements/base.in
+django-celery-results==2.4.0
+    # via -r requirements/base.in
 django-config-models==2.3.0
     # via -r requirements/base.in
 django-cors-headers==3.13.0
