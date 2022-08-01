@@ -17,9 +17,6 @@ Django>=3.2,<4.0
 # the next major release, ensure the installed version is within boundaries.
 celery>=5.2.2,<6.0.0
 
-# Hard dependency on psycopg2 in version 2.3.0
-django-celery-results<2.3.0
-
 # Inflect 4.0.0 requires python>=3.6
 inflect<4.0.0
 
