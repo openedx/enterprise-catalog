@@ -117,7 +117,7 @@ distlib==0.3.5
     # via
     #   -r requirements/test.txt
     #   virtualenv
-django==3.2.14
+django==3.2.15
     # via
     #   -r requirements/test.txt
     #   django-config-models
