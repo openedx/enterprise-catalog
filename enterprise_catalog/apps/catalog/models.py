@@ -31,6 +31,7 @@ from enterprise_catalog.apps.catalog.constants import (
     CONTENT_COURSE_TYPE_ALLOW_LIST,
     CONTENT_TYPE_CHOICES,
     COURSE,
+    EXEC_ED_2U_COURSE_TYPE,
     PROGRAM,
     json_serialized_course_modes,
 )
@@ -82,6 +83,13 @@ class CatalogQuery(TimeStampedModel):
         null=True,
         unique=True,
         max_length=100
+    )
+
+    include_exec_ed_2u_courses = models.BooleanField(
+        default=False,
+        help_text=_(
+            "Specifies whether the catalog should include exec ed courses."
+        ),
     )
 
     class Meta:
@@ -663,7 +671,7 @@ def _create_new_content_metadata(nonexisting_metadata_defaults):
     return metadata_list
 
 
-def _should_allow_metadata(metadata_entry):
+def _should_allow_metadata(metadata_entry, catalog_query=None):
     """
     Determines if an object from Discovery meets our criteria for indexing
 
@@ -679,15 +687,19 @@ def _should_allow_metadata(metadata_entry):
     # allowing None here accounts for pre-existing tests, dirty prod data
     if entry_course_type is None or entry_course_type in CONTENT_COURSE_TYPE_ALLOW_LIST:
         return True
+    # check if the content is allowed by the customer's query preferences
+    if catalog_query and catalog_query.include_exec_ed_2u_courses and entry_course_type == EXEC_ED_2U_COURSE_TYPE:
+        return True
     return False
 
 
-def create_content_metadata(metadata):
+def create_content_metadata(metadata, catalog_query=None):
     """
     Creates or updates a ContentMetadata object.
 
     Arguments:
         metadata (list): List of content metadata dictionaries.
+        catalog_query (CatalogQuery): Catalog Query object.
 
     Returns:
         list: The list of ContentMetaData.
@@ -697,7 +709,8 @@ def create_content_metadata(metadata):
         content_keys = []
         filtered_batched_metadata = []
         for entry in batched_metadata:
-            if _should_allow_metadata(entry):
+            # Exclude exec ed courses from being ingested unless the query specifies that they are allowed
+            if _should_allow_metadata(entry, catalog_query):
                 content_keys.append(get_content_key(entry))
                 filtered_batched_metadata.append(entry)
         existing_metadata = ContentMetadata.objects.filter(content_key__in=content_keys)
@@ -729,7 +742,7 @@ def associate_content_metadata_with_query(metadata, catalog_query):
     Returns:
         list: The list of content_keys for the metadata associated with the query.
     """
-    metadata_list = create_content_metadata(metadata)
+    metadata_list = create_content_metadata(metadata, catalog_query)
 
     # Setting `clear=True` will remove all prior relationships between
     # the CatalogQuery's associated ContentMetadata objects

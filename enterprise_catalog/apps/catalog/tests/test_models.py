@@ -27,6 +27,40 @@ class TestModels(TestCase):
 
     @override_settings(DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT=0)
     @mock.patch('enterprise_catalog.apps.api_client.discovery_cache.DiscoveryApiClient')
+    def test_2U_exec_ed_content_inclusion_logic(self, mock_client):
+        """
+        Test that we exclude 2u exec ed courses from the create content metadata task unless the query provided allows
+        for it
+        """
+        exec_ed_2u_course_metadata = OrderedDict([
+            ('aggregation_key', 'course:edX+testX'),
+            ('key', 'edX+testX'),
+            ('title', 'test course'),
+            ('course_type', 'executive-education-2u'),
+        ])
+        edx_course_metadata = OrderedDict([
+            ('aggregation_key', 'course:edX+testX2'),
+            ('key', 'edX+testX2'),
+            ('title', 'ayylmao'),
+            ('course_type', 'professional'),
+        ])
+        mock_client.return_value.get_metadata_by_query.return_value = [
+            exec_ed_2u_course_metadata,
+            edx_course_metadata,
+        ]
+        catalog = factories.EnterpriseCatalogFactory()
+        self.assertEqual(ContentMetadata.objects.count(), 0)
+        update_contentmetadata_from_discovery(catalog.catalog_query)
+        mock_client.assert_called_once()
+        self.assertEqual(ContentMetadata.objects.count(), 1)
+
+        catalog.catalog_query.include_exec_ed_2u_courses = True
+        catalog.catalog_query.save()
+        update_contentmetadata_from_discovery(catalog.catalog_query)
+        self.assertEqual(ContentMetadata.objects.count(), 2)
+
+    @override_settings(DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT=0)
+    @mock.patch('enterprise_catalog.apps.api_client.discovery_cache.DiscoveryApiClient')
     def test_contentmetadata_update_from_discovery(self, mock_client):
         """
         update_contentmetadata_from_discovery should update or create ContentMetadata
