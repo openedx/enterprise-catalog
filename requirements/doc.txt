@@ -92,7 +92,7 @@ coreschema==0.0.4
     #   -r requirements/test.txt
     #   coreapi
     #   drf-yasg
-coverage[toml]==6.4.2
+coverage[toml]==6.4.3
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -431,7 +431,7 @@ pyyaml==5.4.1
     #   -r requirements/test.txt
     #   code-annotations
     #   edx-django-release-util
-readme-renderer==35.0
+readme-renderer==36.0
     # via -r requirements/doc.in
 redis==3.5.3
     # via -r requirements/test.txt
@@ -571,7 +571,7 @@ vine==5.0.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.16.2
+virtualenv==20.16.3
     # via
     #   -r requirements/test.txt
     #   tox
