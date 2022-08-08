@@ -21,7 +21,7 @@ class CatalogQueryForm(forms.ModelForm):
 
     class Meta:
         model = CatalogQuery
-        fields = ('content_filter',)
+        fields = ('content_filter', 'include_exec_ed_2u_courses')
 
     def validate_content_filter_fields(self, content_filter):
         for key, value in cftypes.items():

@@ -18,6 +18,8 @@ CONTENT_TYPE_CHOICES = [
     (LEARNER_PATHWAY, 'Learner Pathway'),
 ]
 
+EXEC_ED_2U_COURSE_TYPE = 'executive-education-2u'
+
 # ContentMetadata allow/block lists
 
 # deliberate omissions:
