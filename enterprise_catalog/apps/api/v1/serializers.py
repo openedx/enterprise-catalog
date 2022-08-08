@@ -17,12 +17,10 @@ from enterprise_catalog.apps.catalog.constants import (
 )
 from enterprise_catalog.apps.catalog.models import (
     CatalogQuery,
+    ContentMetadata,
     EnterpriseCatalog,
 )
-from enterprise_catalog.apps.catalog.utils import (
-    get_content_filter_hash,
-    get_parent_content_key,
-)
+from enterprise_catalog.apps.catalog.utils import get_content_filter_hash
 
 
 logger = logging.getLogger(__name__)
@@ -190,7 +188,6 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
         json_metadata = instance.json_metadata.copy()
         marketing_url = json_metadata.get('marketing_url')
         content_key = json_metadata.get('key')
-        parent_content_key = get_parent_content_key(json_metadata)
 
         # The enrollment URL field of content metadata is generated on request and is determined by the status of the
         # enterprise customer as well as the catalog. So, in order to detect when content metadata has last been
@@ -211,30 +208,32 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
             json_metadata['marketing_url'] = marketing_url
 
         if content_type in (COURSE, COURSE_RUN):
-            json_metadata['enrollment_url'] = enterprise_catalog.get_content_enrollment_url(
-                content_resource=COURSE,
-                content_key=content_key,
-                parent_content_key=parent_content_key,
-            )
+            json_metadata['enrollment_url'] = enterprise_catalog.get_content_enrollment_url(instance)
             json_metadata['xapi_activity_id'] = enterprise_catalog.get_xapi_activity_id(
                 content_resource=content_type,
                 content_key=content_key,
             )
             if content_type == COURSE:
-                course_runs = json_metadata.get('course_runs', [])
-                json_metadata['active'] = is_any_course_run_active(course_runs)
-                for course_run in course_runs:
-                    course_run['enrollment_url'] = enterprise_catalog.get_content_enrollment_url(
-                        content_resource=COURSE,
-                        content_key=course_run.get('key'),
-                        parent_content_key=content_key,
-                    )
+                serialized_course_runs = json_metadata.get('course_runs', [])
+                json_metadata['active'] = is_any_course_run_active(serialized_course_runs)
+                self._add_course_run_enrollment_urls(instance, serialized_course_runs)
         elif content_type == PROGRAM:
-            # This URL will always be blank because json_metadata['key'] doesn't exist for programs
-            json_metadata['enrollment_url'] = enterprise_catalog.get_content_enrollment_url(
-                content_resource=PROGRAM,
-                content_key=content_key,
-                parent_content_key=parent_content_key,
-            )
+            # We want this to be null, because we have no notion
+            # of directly enrolling in a program.
+            json_metadata['enrollment_url'] = None
 
         return json_metadata
+
+    def _add_course_run_enrollment_urls(self, course_instance, serialized_course_runs):
+        """
+        For the given `course_instance`, computes the enrollment url for each
+        child course run and adds it to the serialized representation of the
+        course run record in `serialized_course_runs`.
+        """
+        urls_by_course_run_key = {}
+        for course_run in ContentMetadata.get_child_records(course_instance):
+            urls_by_course_run_key[course_run.content_key] = \
+                self.context['enterprise_catalog'].get_content_enrollment_url(course_run)
+
+        for serialized_run in serialized_course_runs:
+            serialized_run['enrollment_url'] = urls_by_course_run_key.get(serialized_run['key'])

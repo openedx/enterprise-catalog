@@ -31,6 +31,7 @@ from enterprise_catalog.apps.catalog.constants import (
     CONTENT_COURSE_TYPE_ALLOW_LIST,
     CONTENT_TYPE_CHOICES,
     COURSE,
+    COURSE_RUN,
     EXEC_ED_2U_COURSE_TYPE,
     PROGRAM,
     json_serialized_course_modes,
@@ -345,72 +346,82 @@ class EnterpriseCatalog(TimeStampedModel):
                 items_included.add(content.parent_content_key)
         return items_included
 
-    def get_content_enrollment_url(self, content_resource, content_key, parent_content_key):
+    def get_content_enrollment_url(self, content_metadata):
         """
-        Return enterprise content enrollment page url with the catalog information for the given content key.
+        Return an enrollment page url based on the catalog information for the given content metadata record.
 
         If the enterprise customer's Learner Portal (LP) is enabled, the LP course page URL is returned.
 
         Arguments:
-            content_resource (str): The content resource to use in the URL (i.e., "course", "program")
-            content_key (str): The content key for the course to be displayed.
-            parent_content_key (str): The content key for the course that is parent of the given course run key.
-                                      This argument will be None if a course or program key is passed.
-
+            content_metadata (ContentMetadata): The record for which an enrollment URL is returned.
         Returns:
             (str): Enterprise landing page URL OR Enterprise Learner Portal course page URL.
         """
-        if not (content_key and content_resource):
+        if content_metadata.content_type not in (COURSE, COURSE_RUN):
+            return None
+
+        content_key = content_metadata.content_key
+        parent_content_key = content_metadata.parent_content_key
+
+        if not content_key:
             return None
 
         params = get_enterprise_utm_context(self.enterprise_name)
         if self.publish_audit_enrollment_urls:
             params['audit'] = 'true'
 
-        # (ENT-5968) These changes are temporary until offers are implemented in the learner portal
-        is_integrated_customer_with_subsidies_and_offers = str(self.enterprise_uuid) in \
-            settings.INTEGRATED_CUSTOMERS_WITH_SUBSIDIES_AND_OFFERS
-        # defaults to True for any customers not in a special list
-        can_enroll_via_learner_portal = not is_integrated_customer_with_subsidies_and_offers
-        # customers in the list must have the course in an active catalog for can_enroll_via_learner_portal to be True
-        if is_integrated_customer_with_subsidies_and_offers:
-            active_catalogs = EnterpriseCatalog.objects.filter(
-                uuid__in=self.enterprise_customer.active_catalogs
-            )
-
-            for catalog in active_catalogs:
-                contains_content_items = catalog.contains_content_keys([content_key])
-                if contains_content_items:
-                    can_enroll_via_learner_portal = True
-                    break
-
-        if self.enterprise_customer.learner_portal_enabled and content_resource is not PROGRAM \
-                and can_enroll_via_learner_portal:
-            # parent_content_key is our way of telling if this is a course run
-            # since this function is never called with COURSE_RUN as content_resource
+        if self._can_enroll_via_learner_portal(content_key):
+            course_key = content_key
             if parent_content_key:
+                # If parent_content_key is truthy, we know this is a course run.
+                # We must add a `course_run_key` value to the query params,
+                # so that we can render the correct info in the learner portal course page,
+                # and so that the learner is enrolled
+                # in the intended course run.
                 course_key = parent_content_key
-                # adding course_run_key to the params for rendering the correct info
-                # on the LP course page and enrolling in the intended course run
                 params['course_run_key'] = content_key
-            else:
-                course_key = content_key
             url = '{}/{}/course/{}'.format(
                 settings.ENTERPRISE_LEARNER_PORTAL_BASE_URL,
                 self.enterprise_customer.slug,
                 course_key
             )
         else:
-            # Catalog param only needed for legacy (non-LP) enrollment URL
+            # Catalog param only needed for legacy (non-learner-portal) enrollment URLs
             params['catalog'] = self.uuid
-            url = '{}/enterprise/{}/{}/{}/enroll/'.format(
+            url = '{}/enterprise/{}/course/{}/enroll/'.format(
                 settings.LMS_BASE_URL,
                 self.enterprise_uuid,
-                content_resource,
                 content_key,
             )
 
         return update_query_parameters(url, params)
+
+    def _can_enroll_via_learner_portal(self, content_key):
+        """
+        These changes are temporary until offers are implemented in the learner portal.
+        See ENT-5968
+        """
+        if not self.enterprise_customer.learner_portal_enabled:
+            return False
+
+        is_integrated_customer_with_subsidies_and_offers = (
+            str(self.enterprise_uuid) in
+            settings.INTEGRATED_CUSTOMERS_WITH_SUBSIDIES_AND_OFFERS
+        )
+        if not is_integrated_customer_with_subsidies_and_offers:
+            return True
+
+        # Customers in the special `INTEGRATED_CUSTOMERS_WITH_SUBSIDIES_AND_OFFERS` list
+        # must have the content_key contained in an active catalog for this method to return True.
+        active_catalogs = EnterpriseCatalog.objects.filter(
+            uuid__in=self.enterprise_customer.active_catalogs
+        )
+        for catalog in active_catalogs:
+            contains_content_items = catalog.contains_content_keys([content_key])
+            if contains_content_items:
+                return True
+
+        return False
 
     def get_xapi_activity_id(self, content_resource, content_key):
         """
@@ -501,6 +512,13 @@ class ContentMetadata(TimeStampedModel):
         return cls.objects.filter(
             modified__range=(range_start, range_end),
         )
+
+    @classmethod
+    def get_child_records(cls, content_metadata):
+        """
+        Returns all child records of the given ContentMetadata instance.
+        """
+        return cls.objects.filter(parent_content_key=content_metadata.content_key)
 
     def __str__(self):
         """
