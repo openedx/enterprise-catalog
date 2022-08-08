@@ -4,6 +4,7 @@ Tests for the enterprise_catalog API celery tasks
 import json
 import uuid
 from datetime import timedelta
+from operator import itemgetter
 from unittest import mock
 
 import ddt
@@ -590,17 +591,14 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         expected_algolia_program_objects = []
         program_uuid = course_associated_program_metadata.json_metadata.get('uuid')
         expected_algolia_program_objects.append({
-            'key': course_associated_program_metadata.content_key,
             'objectID': f'program-{program_uuid}-catalog-uuids-0',
             'enterprise_catalog_uuids': [str(self.enterprise_catalog_courses.uuid)],
         })
         expected_algolia_program_objects.append({
-            'key': course_associated_program_metadata.content_key,
             'objectID': f'program-{program_uuid}-customer-uuids-0',
             'enterprise_customer_uuids': [str(self.enterprise_catalog_courses.enterprise_uuid)],
         })
         expected_algolia_program_objects.append({
-            'key': course_associated_program_metadata.content_key,
             'objectID': f'program-{program_uuid}-catalog-query-uuids-0',
             'enterprise_catalog_query_uuids': [str(self.enterprise_catalog_courses.catalog_query.uuid)],
             'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
@@ -609,17 +607,14 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         expected_algolia_program_objects2 = []
         program_uuid = pathway_program_metadata.json_metadata.get('uuid')
         expected_algolia_program_objects2.append({
-            'key': pathway_program_metadata.content_key,
             'objectID': f'program-{program_uuid}-catalog-uuids-0',
             'enterprise_catalog_uuids': [str(self.enterprise_catalog_courses.uuid)],
         })
         expected_algolia_program_objects2.append({
-            'key': pathway_program_metadata.content_key,
             'objectID': f'program-{program_uuid}-customer-uuids-0',
             'enterprise_customer_uuids': [str(self.enterprise_catalog_courses.enterprise_uuid)],
         })
         expected_algolia_program_objects2.append({
-            'key': pathway_program_metadata.content_key,
             'objectID': f'program-{program_uuid}-catalog-query-uuids-0',
             'enterprise_catalog_query_uuids': [str(self.enterprise_catalog_courses.catalog_query.uuid)],
             'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
@@ -670,19 +665,19 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         # verify replace_all_objects is called with the correct Algolia object data
         # on the first invocation and with programs/pathways only on the second invocation.
-        expected_first_call_args = sorted(expected_algolia_objects_to_index, key=lambda d: d['key'])
+        expected_first_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
         actual_first_call_args = sorted(
-            mock_search_client().replace_all_objects.mock_calls[0].args[0], key=lambda d: d['key']
+            mock_search_client().replace_all_objects.mock_calls[0].args[0], key=itemgetter('objectID')
         )
 
         unsorted_expected_calls_args = expected_algolia_program_objects + expected_algolia_pathway_objects + \
             expected_algolia_program_objects2 + expected_algolia_pathway_objects2
-        expected_second_call_args = sorted(unsorted_expected_calls_args, key=lambda d: d['key'])
+        expected_second_call_args = sorted(unsorted_expected_calls_args, key=itemgetter('objectID'))
         actual_second_call_args = sorted(
-            mock_search_client().replace_all_objects.mock_calls[1].args[0], key=lambda d: d['key']
+            mock_search_client().replace_all_objects.mock_calls[1].args[0], key=itemgetter('objectID')
         )
-        assert expected_first_call_args == actual_first_call_args
-        assert expected_second_call_args == actual_second_call_args
+        self.assertEqual(expected_first_call_args, actual_first_call_args)
+        self.assertEqual(expected_second_call_args, actual_second_call_args)
 
         # Verify that we checked the cache twice, though
         mock_was_recently_indexed.assert_has_calls([

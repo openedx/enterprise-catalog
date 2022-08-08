@@ -295,7 +295,10 @@ class TestModels(TestCase):
             INTEGRATED_CUSTOMERS_WITH_SUBSIDIES_AND_OFFERS=INTEGRATED_CUSTOMERS_WITH_SUBSIDIES_AND_OFFERS
         ):
             enterprise_catalog = factories.EnterpriseCatalogFactory(enterprise_uuid=enterprise_uuid)
-            content_metadata = factories.ContentMetadataFactory(content_key=content_key)
+            content_metadata = factories.ContentMetadataFactory(
+                content_key=content_key,
+                content_type=COURSE,
+            )
             enterprise_catalog.catalog_query.contentmetadata_set.add(*[content_metadata])
 
             mock_enterprise_api_client.return_value.get_enterprise_customer.return_value = {
@@ -321,11 +324,7 @@ class TestModels(TestCase):
             else:
                 mock_license_manager_client().get_customer_agreement.return_value = None
 
-            content_enrollment_url = enterprise_catalog.get_content_enrollment_url(
-                content_resource=COURSE,
-                content_key=content_key,
-                parent_content_key=None,
-            )
+            content_enrollment_url = enterprise_catalog.get_content_enrollment_url(content_metadata)
 
             if should_direct_to_lp:
                 assert settings.ENTERPRISE_LEARNER_PORTAL_BASE_URL in content_enrollment_url

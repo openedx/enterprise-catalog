@@ -3,7 +3,6 @@ import json
 import uuid
 from collections import OrderedDict
 from datetime import datetime, timedelta
-from operator import itemgetter
 from unittest import mock
 from urllib.parse import urljoin
 
@@ -22,6 +21,7 @@ from enterprise_catalog.apps.api.v1.utils import is_any_course_run_active
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
     COURSE_RUN,
+    LEARNER_PATHWAY,
     PROGRAM,
 )
 from enterprise_catalog.apps.catalog.models import (
@@ -34,7 +34,10 @@ from enterprise_catalog.apps.catalog.tests.factories import (
     ContentMetadataFactory,
     EnterpriseCatalogFactory,
 )
-from enterprise_catalog.apps.catalog.utils import get_parent_content_key
+from enterprise_catalog.apps.catalog.utils import (
+    get_content_key,
+    get_parent_content_key,
+)
 
 
 @ddt.ddt
@@ -867,6 +870,7 @@ class EnterpriseCatalogContainsContentItemsTests(APITestMixin):
         course_run_content_key = 'course-run-content-key'
         associated_course_metadata = ContentMetadataFactory(
             content_key=content_key,
+            content_type=COURSE,
             json_metadata={
                 'key': content_key,
                 'course_runs': [{'key': course_run_content_key}],
@@ -1006,7 +1010,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         # course run
         if content_type == COURSE_RUN:
             if learner_portal_enabled:
-                course_key = get_parent_content_key(json_metadata)
+                course_key = content_metadata.parent_content_key or get_parent_content_key(json_metadata)
                 course_run_key = quote_plus(json_metadata.get('key'))
                 course_run_key_param = f'course_run_key={course_run_key}&'
                 course_run_enrollment_url = enrollment_url.format(
@@ -1030,15 +1034,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
 
         # program
         if content_type == PROGRAM:
-            program_enrollment_url = enrollment_url.format(
-                settings.LMS_BASE_URL,
-                self.enterprise_catalog.enterprise_uuid,
-                PROGRAM,
-                json_metadata.get('key'),
-                self.enterprise_catalog.uuid,
-                slugify(self.enterprise_catalog.enterprise_name),
-            )
-            json_metadata['enrollment_url'] = program_enrollment_url
+            json_metadata['enrollment_url'] = None
 
         return json_metadata
 
@@ -1115,7 +1111,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         )
         assert response.data.get('count') == int(api_settings.PAGE_SIZE / 2)
         for result in response.data.get('results'):
-            assert result.get('key') in filtered_content_keys
+            assert get_content_key(result) in filtered_content_keys
 
     @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
     @ddt.data(
@@ -1131,20 +1127,26 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
             'enable_learner_portal': learner_portal_enabled,
             'modified': str(datetime.now().replace(tzinfo=pytz.UTC)),
         }
-        # The ContentMetadataFactory creates content with keys that are generated using a string builder with a
-        # factory sequence (index is appended onto each content key). The results are sorted by key which creates
-        # an unexpected sorting of [key0, key1, key10, key2, ...] so the test fails on
-        # self.assertEqual(actual_metadata, expected_metadata[:-1]). By resetting the factory sequence to start at
-        # 10 we avoid that sorting issue.
-        ContentMetadataFactory.reset_sequence(10)
         # Create enough metadata to force pagination
-        metadata = ContentMetadataFactory.create_batch(api_settings.PAGE_SIZE + 1)
+        course = ContentMetadataFactory.create(content_type=COURSE)
+        program = ContentMetadataFactory.create(content_type=PROGRAM)
+        pathway = ContentMetadataFactory.create(content_type=LEARNER_PATHWAY)
+        # important to actually link the course runs to the parent course
+        course_runs = ContentMetadataFactory.create_batch(
+            api_settings.PAGE_SIZE,
+            content_type=COURSE_RUN,
+            parent_content_key=course.content_key,
+        )
+        course.json_metadata['course_runs'] = [run.json_metadata for run in course_runs]
+        course.save()
+
+        metadata = course_runs + [course, program, pathway]
         self.add_metadata_to_catalog(self.enterprise_catalog, metadata)
         url = self._get_content_metadata_url(self.enterprise_catalog)
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.json()
-        self.assertEqual((response_data['count']), api_settings.PAGE_SIZE + 1)
+        self.assertEqual((response_data['count']), len(metadata))
         self.assertEqual(uuid.UUID(response_data['uuid']), self.enterprise_catalog.uuid)
         self.assertEqual(response_data['title'], self.enterprise_catalog.title)
         self.assertEqual(uuid.UUID(response_data['enterprise_customer']), self.enterprise_catalog.enterprise_uuid)
@@ -1155,15 +1157,21 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         self.assertIsNone(second_response_data['next'])
 
         # Check that the union of both pages' data is equal to the whole set of metadata
-        expected_metadata = sorted([
-            self._get_expected_json_metadata(item, learner_portal_enabled)
-            for item in metadata
-        ], key=itemgetter('key'))
+        expected_metadata = sorted(
+            [
+                self._get_expected_json_metadata(item, learner_portal_enabled)
+                for item in metadata
+            ],
+            key=get_content_key,
+        )
         actual_metadata = sorted(
             response_data['results'] + second_response_data['results'],
-            key=itemgetter('key')
+            key=get_content_key,
         )
 
+        # for exp, act in zip(expected_metadata, actual_metadata):
+        #     if exp != act:
+        #         import pdb; pdb.set_trace()
         self.assertEqual(
             json.dumps(actual_metadata, sort_keys=True),
             json.dumps(expected_metadata, sort_keys=True),
@@ -1184,8 +1192,18 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
             'enable_learner_portal': learner_portal_enabled,
             'modified': str(datetime.now().replace(tzinfo=pytz.UTC)),
         }
-        # Create enough metadata to force pagination (if the query parameter wasn't sent)
-        metadata = ContentMetadataFactory.create_batch(api_settings.PAGE_SIZE + 1)
+        # Create enough metadata to force pagination
+        course = ContentMetadataFactory.create(content_type=COURSE)
+        # important to actually link the course runs to the parent course
+        course_runs = ContentMetadataFactory.create_batch(
+            api_settings.PAGE_SIZE,
+            content_type=COURSE_RUN,
+            parent_content_key=course.content_key,
+        )
+        course.json_metadata['course_runs'] = [run.json_metadata for run in course_runs]
+        course.save()
+
+        metadata = course_runs + [course]
         self.add_metadata_to_catalog(self.enterprise_catalog, metadata)
         url = self._get_content_metadata_url(self.enterprise_catalog) + '?traverse_pagination=1'
         response = self.client.get(url)
@@ -1197,9 +1215,22 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         self.assertEqual(uuid.UUID(response_data['enterprise_customer']), self.enterprise_catalog.enterprise_uuid)
 
         # Check that the page contains all the metadata
-        expected_metadata = [self._get_expected_json_metadata(item, learner_portal_enabled) for item in metadata]
-        actual_metadata = response_data['results']
-        self.assertCountEqual(actual_metadata, expected_metadata)
+        expected_metadata = sorted(
+            [
+                self._get_expected_json_metadata(item, learner_portal_enabled)
+                for item in metadata
+            ],
+            key=get_content_key,
+        )
+        actual_metadata = sorted(
+            response_data['results'],
+            key=get_content_key,
+        )
+
+        self.assertEqual(
+            json.dumps(actual_metadata, sort_keys=True),
+            json.dumps(expected_metadata, sort_keys=True),
+        )
 
 
 class EnterpriseCatalogRefreshDataFromDiscoveryTests(APITestMixin):
