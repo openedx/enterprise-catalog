@@ -65,7 +65,9 @@ class EnterpriseCustomerDetails:
         """
         Return Enterprise Customer last modified datetime or None if unavailable.
         """
-        return parser.parse(self.customer_data.get('modified', None))
+        if modified_value := self.customer_data.get('modified', None):
+            return parser.parse(modified_value)
+        return None
 
 
 def _get_enterprise_customer_data(uuid):

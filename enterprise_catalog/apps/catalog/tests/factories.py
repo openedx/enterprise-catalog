@@ -58,9 +58,9 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = ContentMetadata
 
-    content_key = factory.Sequence(lambda n: f'metadata_item_{n}')
+    content_key = factory.Sequence(lambda n: f'{str(n).zfill(5)}_metadata_item')
     content_type = factory.Iterator([COURSE_RUN, COURSE, PROGRAM, LEARNER_PATHWAY])
-    parent_content_key = None   # Default to None
+    parent_content_key = None
 
     @factory.lazy_attribute
     def json_metadata(self):
@@ -94,11 +94,15 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
         elif self.content_type == COURSE_RUN:
             json_metadata.update({
                 'content_type': COURSE_RUN,
+                'content_language': 'en-us',
                 'status': 'published',
                 'is_enrollable': True,
                 'is_marketable': True,
+                'availability': 'current',
             })
         elif self.content_type == PROGRAM:
+            # programs in the wild do not have a key
+            json_metadata.pop('key')
             json_metadata.update({
                 'uuid': self.content_key,
                 'content_type': PROGRAM,
