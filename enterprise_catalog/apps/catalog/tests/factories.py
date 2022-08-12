@@ -32,7 +32,7 @@ class CatalogQueryFactory(factory.django.DjangoModelFactory):
         model = CatalogQuery
 
     content_filter = factory.Dict({'content_type': factory.Faker('words', nb=3)})
-    title = factory.Faker('word')
+    title = factory.Faker('text')
 
 
 class EnterpriseCatalogFactory(factory.django.DjangoModelFactory):
@@ -43,9 +43,9 @@ class EnterpriseCatalogFactory(factory.django.DjangoModelFactory):
         model = EnterpriseCatalog
 
     uuid = factory.LazyFunction(uuid4)
-    title = factory.Faker('word')
+    title = factory.Faker('text')
     enterprise_uuid = factory.LazyFunction(uuid4)
-    enterprise_name = factory.Faker('word')
+    enterprise_name = factory.Faker('company')
     catalog_query = factory.SubFactory(CatalogQueryFactory)
     enabled_course_modes = json_serialized_course_modes()
     publish_audit_enrollment_urls = False   # Default to False
@@ -140,7 +140,7 @@ class EnterpriseCatalogFeatureRoleFactory(factory.django.DjangoModelFactory):
     """
     Test factory for the `EnterpriseCatalogFeatureRole` model.
     """
-    name = factory.Faker('word')
+    name = factory.Faker('text')
 
     class Meta:
         model = EnterpriseCatalogFeatureRole

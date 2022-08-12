@@ -2,6 +2,7 @@
 
 import json
 from collections import OrderedDict
+from contextlib import contextmanager
 from unittest import mock
 from uuid import uuid4
 
@@ -12,6 +13,8 @@ from django.test import TestCase, override_settings
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
     COURSE_RUN,
+    EXEC_ED_2U_COURSE_TYPE,
+    EXEC_ED_2U_ENTITLEMENT_MODE,
     PROGRAM,
 )
 from enterprise_catalog.apps.catalog.models import (
@@ -24,6 +27,21 @@ from enterprise_catalog.apps.catalog.tests import factories
 @ddt.ddt
 class TestModels(TestCase):
     """ Models tests. """
+
+    @ddt.data(
+        {'content_type': COURSE_RUN, 'course_type': EXEC_ED_2U_COURSE_TYPE, 'expected_value': False},
+        {'content_type': PROGRAM, 'course_type': EXEC_ED_2U_COURSE_TYPE, 'expected_value': False},
+        {'content_type': COURSE, 'course_type': 'SOME-OTHER-TYPE', 'expected_value': False},
+        {'content_type': COURSE, 'course_type': EXEC_ED_2U_COURSE_TYPE, 'expected_value': True},
+    )
+    @ddt.unpack
+    def test_is_exec_ed_2u_course(self, content_type, course_type, expected_value):
+        content_metadata = factories.ContentMetadataFactory(
+            content_key='edX+testX',
+            content_type=content_type,
+        )
+        content_metadata.json_metadata['course_type'] = course_type
+        self.assertEqual(content_metadata.is_exec_ed_2u_course, expected_value)
 
     @override_settings(DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT=0)
     @mock.patch('enterprise_catalog.apps.api_client.discovery_cache.DiscoveryApiClient')
@@ -243,9 +261,29 @@ class TestModels(TestCase):
         assert course_run_cm not in associated_metadata
         assert program_cm in associated_metadata
 
-    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
-    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.LicenseManagerApiClient')
-    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EcommerceApiClient')
+    @contextmanager
+    def _mock_enterprise_customer_cache(
+        self,
+        mock_enterprise_customer_return_value,
+        mock_customer_agreement_return_value,
+        mock_coupon_overview_return_value,
+    ):
+        """
+        Helper to mock out all API client calls that would normally occur
+        when ``EnterpriseCatalog.enterprise_customer`` is accessed.
+        """
+        path = 'enterprise_catalog.apps.api_client.enterprise_cache.'
+        with mock.patch(path + 'EnterpriseApiClient') as mock_enterprise_api_client, \
+             mock.patch(path + 'LicenseManagerApiClient') as mock_license_manager_client, \
+             mock.patch(path + 'EcommerceApiClient') as mock_ecommerce_client:
+            mock_enterprise_api_client.return_value.get_enterprise_customer.return_value = \
+                mock_enterprise_customer_return_value
+            mock_ecommerce_client.return_value.get_coupons_overview.return_value = \
+                mock_coupon_overview_return_value
+            mock_license_manager_client.return_value.get_customer_agreement.return_value = \
+                mock_customer_agreement_return_value
+            yield
+
     @ddt.data(
         {
             'is_integrated_customer_with_subsidies_and_offer': False,
@@ -275,9 +313,6 @@ class TestModels(TestCase):
     @ddt.unpack
     def test_get_content_enrollment_url(
         self,
-        mock_ecommerce_client,
-        mock_license_manager_client,
-        mock_enterprise_api_client,
         is_integrated_customer_with_subsidies_and_offer,
         is_course_in_subscriptions_catalog,
         is_course_in_coupons_catalog,
@@ -301,32 +336,82 @@ class TestModels(TestCase):
             )
             enterprise_catalog.catalog_query.contentmetadata_set.add(*[content_metadata])
 
-            mock_enterprise_api_client.return_value.get_enterprise_customer.return_value = {
+            mock_enterprise_customer_return_value = {
                 'slug': enterprise_slug,
                 'enable_learner_portal': True,
             }
+            mock_customer_agreement_return_value = {
+                'subscriptions': [{'enterprise_catalog_uuid': enterprise_catalog.uuid}],
+            } if is_course_in_subscriptions_catalog else None
+            mock_coupon_overview_return_value = [
+                {'enterprise_catalog_uuid': enterprise_catalog.uuid},
+            ] if is_course_in_coupons_catalog else []
 
-            if is_course_in_coupons_catalog:
-                mock_ecommerce_client().get_coupons_overview.return_value = [
-                    {
-                        'enterprise_catalog_uuid': enterprise_catalog.uuid
-                    }
-                ]
-            else:
-                mock_ecommerce_client().get_coupons_overview.return_value = []
-
-            if is_course_in_subscriptions_catalog:
-                mock_license_manager_client().get_customer_agreement.return_value = {
-                    'subscriptions': [{
-                        'enterprise_catalog_uuid': enterprise_catalog.uuid
-                    }]
-                }
-            else:
-                mock_license_manager_client().get_customer_agreement.return_value = None
-
-            content_enrollment_url = enterprise_catalog.get_content_enrollment_url(content_metadata)
+            with self._mock_enterprise_customer_cache(
+                mock_enterprise_customer_return_value,
+                mock_customer_agreement_return_value,
+                mock_coupon_overview_return_value,
+            ):
+                content_enrollment_url = enterprise_catalog.get_content_enrollment_url(content_metadata)
 
             if should_direct_to_lp:
                 assert settings.ENTERPRISE_LEARNER_PORTAL_BASE_URL in content_enrollment_url
             else:
                 assert settings.LMS_BASE_URL in content_enrollment_url
+
+    def test_enrollment_url_exec_ed(self):
+        """
+        Test that a correct enrollment URL is returned for exec ed. 2U courses.
+        """
+        enterprise_catalog = factories.EnterpriseCatalogFactory()
+        content_metadata = factories.ContentMetadataFactory(
+            content_key='the-content-key',
+            content_type=COURSE,
+        )
+        content_metadata.json_metadata.update({
+            'course_type': EXEC_ED_2U_COURSE_TYPE,
+            'entitlements': [{
+                'mode': EXEC_ED_2U_ENTITLEMENT_MODE,
+                'sku': 'happy-little-sku',
+            }],
+        })
+        enterprise_catalog.catalog_query.contentmetadata_set.add(*[content_metadata])
+        enterprise_catalog.catalog_query.include_exec_ed_2u_courses = True
+        actual_enrollment_url = enterprise_catalog.get_content_enrollment_url(content_metadata)
+        assert 'happy-little-sku' in actual_enrollment_url
+
+    @ddt.data(
+        {'content_type': COURSE, 'course_type': EXEC_ED_2U_COURSE_TYPE, 'course_mode': 'honor',
+         'sku': None, 'query_includes_ee_courses': True},
+        {'content_type': COURSE, 'course_type': EXEC_ED_2U_COURSE_TYPE, 'course_mode': 'honor',
+         'sku': '123456', 'query_includes_ee_courses': True},
+        {'content_type': COURSE, 'course_type': EXEC_ED_2U_COURSE_TYPE, 'course_mode': EXEC_ED_2U_ENTITLEMENT_MODE,
+         'sku': None, 'query_includes_ee_courses': True},
+        {'content_type': COURSE, 'course_type': EXEC_ED_2U_COURSE_TYPE, 'course_mode': EXEC_ED_2U_ENTITLEMENT_MODE,
+         'sku': '123456', 'query_includes_ee_courses': False},
+    )
+    @ddt.unpack
+    def test_enrollment_url_exec_ed_is_null(
+        self, content_type, course_type, course_mode, sku, query_includes_ee_courses
+    ):
+        """
+        Tests for all scenarios when a null value should be
+        returned as the enrollment URL for exec ed 2U courses.
+        The content_metadata object below is always an exec ed 2U course,
+        because the content_type is always "course" and the course_type is always
+        the exec ed 2U course type.
+        """
+        enterprise_catalog = factories.EnterpriseCatalogFactory()
+        content_metadata = factories.ContentMetadataFactory(
+            content_key='the-content-key',
+            content_type=content_type
+        )
+        content_metadata.json_metadata['course_type'] = course_type
+        if course_mode:
+            content_metadata.json_metadata['entitlements'] = [{'mode': course_mode}]
+        if sku:
+            content_metadata.json_metadata['entitlements'][0]['sku'] = sku
+
+        enterprise_catalog.catalog_query.contentmetadata_set.add(*[content_metadata])
+        enterprise_catalog.catalog_query.include_exec_ed_2u_courses = query_includes_ee_courses
+        self.assertIsNone(enterprise_catalog.get_content_enrollment_url(content_metadata))
