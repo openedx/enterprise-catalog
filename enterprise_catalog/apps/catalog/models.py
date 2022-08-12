@@ -33,6 +33,7 @@ from enterprise_catalog.apps.catalog.constants import (
     COURSE,
     COURSE_RUN,
     EXEC_ED_2U_COURSE_TYPE,
+    EXEC_ED_2U_ENTITLEMENT_MODE,
     PROGRAM,
     json_serialized_course_modes,
 )
@@ -370,7 +371,16 @@ class EnterpriseCatalog(TimeStampedModel):
         if self.publish_audit_enrollment_urls:
             params['audit'] = 'true'
 
-        if self._can_enroll_via_learner_portal(content_key):
+        if content_metadata.is_exec_ed_2u_course:
+            if not self.catalog_query.include_exec_ed_2u_courses:
+                return None
+            url, entitlement_sku = self._get_exec_ed_2u_enrollment_url(content_metadata)
+            if not entitlement_sku:
+                warning = 'No sku found for exec ed 2u course: %s in catalog %s'
+                LOGGER.warning(warning, content_metadata.content_key, self.uuid)
+                return None
+            params['sku'] = entitlement_sku
+        elif self._can_enroll_via_learner_portal(content_key):
             course_key = content_key
             if parent_content_key:
                 # If parent_content_key is truthy, we know this is a course run.
@@ -395,6 +405,16 @@ class EnterpriseCatalog(TimeStampedModel):
             )
 
         return update_query_parameters(url, params)
+
+    def _get_exec_ed_2u_enrollment_url(self, content_metadata):
+        entitlement_sku = None
+        for entitlement in content_metadata.json_metadata.get('entitlements', []):
+            if entitlement['mode'] == EXEC_ED_2U_ENTITLEMENT_MODE:
+                entitlement_sku = entitlement.get('sku')
+        return (
+            '{}/executive-education-2u/'.format(settings.ECOMMERCE_BASE_URL),
+            entitlement_sku,
+        )
 
     def _can_enroll_via_learner_portal(self, content_key):
         """
@@ -501,6 +521,11 @@ class ContentMetadata(TimeStampedModel):
         verbose_name = _("Content Metadata")
         verbose_name_plural = _("Content Metadata")
         app_label = 'catalog'
+
+    @property
+    def is_exec_ed_2u_course(self):
+        # pylint: disable=no-member
+        return self.content_type == COURSE and self.json_metadata.get('course_type') == EXEC_ED_2U_COURSE_TYPE
 
     @classmethod
     def recently_modified_records(cls, time_delta):
