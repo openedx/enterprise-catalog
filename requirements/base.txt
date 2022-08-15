@@ -180,7 +180,7 @@ oauthlib==3.2.0
     #   social-auth-core
 packaging==21.3
     # via drf-yasg
-pbr==5.9.0
+pbr==5.10.0
     # via stevedore
 prompt-toolkit==3.0.30
     # via click-repl
@@ -211,7 +211,7 @@ python-slugify==6.1.2
     # via code-annotations
 python3-openid==3.2.0
     # via social-auth-core
-pytz==2022.1
+pytz==2022.2.1
     # via
     #   -r requirements/base.in
     #   celery

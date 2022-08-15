@@ -126,7 +126,7 @@ cryptography==37.0.4
     #   paramiko
     #   pyjwt
     #   social-auth-core
-ddt==1.5.0
+ddt==1.6.0
     # via
     #   -r requirements/dev.in
     #   -r requirements/test.txt
@@ -308,11 +308,11 @@ edx-toggles==5.0.0
     #   -r requirements/test.txt
 factory-boy==3.2.1
     # via -r requirements/test.txt
-faker==13.15.1
+faker==14.0.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
-filelock==3.7.1
+filelock==3.8.0
     # via
     #   -r requirements/test.txt
     #   tox
@@ -425,7 +425,7 @@ paramiko==2.11.0
     # via docker
 path==16.4.0
     # via edx-i18n-tools
-pbr==5.9.0
+pbr==5.10.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -567,7 +567,7 @@ python3-openid==3.2.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   social-auth-core
-pytz==2022.1
+pytz==2022.2.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -704,7 +704,7 @@ tomli==2.0.1
     #   pep517
     #   pylint
     #   pytest
-tomlkit==0.11.1
+tomlkit==0.11.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
