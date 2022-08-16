@@ -2,6 +2,7 @@ import ddt
 from django.test import TestCase
 
 from enterprise_catalog.apps.catalog.forms import CatalogQueryForm
+from enterprise_catalog.apps.catalog.tests import factories
 
 
 @ddt.ddt
@@ -30,3 +31,19 @@ class TestCatalogQueryAdmin(TestCase):
     def test_catalog_query_form_success(self, cfdata):
         form = CatalogQueryForm(data=cfdata)
         self.assertTrue(form.is_valid())
+
+    def test_clean_content_filter(self):
+        # Test the create case, where the form instance has no PK
+        content_filter = {'key': ['coursev1:course1', 'coursev1:course2']}
+        factories.CatalogQueryFactory.create(
+            content_filter=content_filter,
+        )
+        form = CatalogQueryForm(data={'content_filter': content_filter})
+        self.assertFalse(form.is_valid())
+
+        # Test the update case, where the form instance will have a PK
+        other_query = factories.CatalogQueryFactory.create(
+            content_filter={'key': ['coursev1:course1', 'coursev1:cours55']}
+        )
+        form = CatalogQueryForm(instance=other_query, data={'content_filter': content_filter})
+        self.assertFalse(form.is_valid())
