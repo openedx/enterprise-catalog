@@ -43,8 +43,21 @@ class CatalogQueryForm(forms.ModelForm):
         self.validate_content_filter_fields(content_filter)
 
         content_filter_hash = get_content_filter_hash(content_filter)
-        if CatalogQuery.objects.filter(content_filter_hash=content_filter_hash).exists():
-            raise ValidationError('Catalog Query with this Content filter already exists.')
+        existing_queries = CatalogQuery.objects.filter(content_filter_hash=content_filter_hash)
+        # Does the model instance already have a primary key?
+        # If so, this is an update and not a create.
+        if self.instance.pk:
+            if other_query := existing_queries.exclude(pk=self.instance.pk).first():
+                raise ValidationError(
+                    'Catalog Query [%(other_pk)s] with this Content filter already exists.',
+                    params={'other_pk': other_query.pk},
+                )
+        else:  # it's a create
+            if other_query := existing_queries.first():
+                raise ValidationError(
+                    'Catalog Query [%(other_pk)s] with this Content filter already exists.',
+                    params={'other_pk': other_query.pk},
+                )
         return content_filter
 
 
