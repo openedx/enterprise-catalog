@@ -457,6 +457,19 @@ def get_pathway_card_image_url(pathway):
         return None
 
 
+def get_pathway_association(pathway):
+    """
+    Gets the pathway association
+
+    Arguments:
+        pathway (dict): a dictionary representing a pathway.
+
+    Returns:
+        bool: True if available via association else False
+    """
+    return bool(pathway.get('visible_via_association', False))
+
+
 def get_pathway_partners(pathway):
     """
     Gets the partners for a pathway. Used for the "partners.name" facet in Algolia.
@@ -1082,6 +1095,7 @@ def _algolia_object_from_product(product, algolia_fields):
             'card_image_url': get_pathway_card_image_url(searchable_product),
             'partners': get_pathway_partners(searchable_product),
             'subjects': get_pathway_subjects(searchable_product),
+            'visible_via_association': get_pathway_association(searchable_product),
         })
 
     algolia_object = {}
