@@ -116,6 +116,38 @@ class CatalogQuery(TimeStampedModel):
         except cls.DoesNotExist:
             return None
 
+    def is_course_run_content_valid(self, course_run_content):
+        """
+        Check if a piece of course run content (JSON blob) adheres to a query's filter for availability and status
+        """
+        if self.content_filter.get('availability'):
+            if not course_run_content.get('availability') or \
+            course_run_content.get('availability') not in self.content_filter.get('availability'):
+                return False
+
+        if self.content_filter.get('status'):
+            if not course_run_content.get('status') or \
+            course_run_content.get('status') != self.content_filter.get('status'):
+                return False
+
+        return True
+
+    def is_course_content_valid(self, course_content):
+        """
+        Check if a piece of course content (JSON blob) has course runs that adheres to a query's filter for availability
+        and status
+        """
+        course_runs = course_content.get('course_runs')
+        # A course can only be valid if it has course runs
+        if not course_runs:
+            return False
+
+        course_content_valid = False
+        for course_run in course_runs:
+            if self.is_course_run_content_valid(course_run):
+                course_content_valid = True
+        return course_content_valid
+
     def __str__(self):
         """
         Return human-readable string representation.
@@ -899,6 +931,19 @@ def update_contentmetadata_from_discovery(catalog_query):
 
     # metadata will be an empty dict if unavailable from cache or API.
     metadata = CatalogQueryMetadata(catalog_query).metadata
+
+    # The discovery service has handled query filters inclusively where groups of content (such as course runs under a
+    # course) match query filters but the individual pieces of content might not be a valid match to the filter. We
+    # don't want to allow any individual course or course run to be ingested if it does not match the query that
+    # requested the content. As such, we need to filter those invalid pieces out.
+    for index, content_item in enumerate(metadata):
+        if get_content_type(content_item) == 'course':
+            if not catalog_query.is_course_content_valid(content_item):
+                metadata.pop(index)
+
+        elif get_content_type(content_item) == 'courserun':
+            if not catalog_query.is_course_run_content_valid(content_item):
+                metadata.pop(index)
 
     # associate content metadata with a catalog query only when we get valid results
     # back from the discovery service. if metadata is `None`, an error occurred while
