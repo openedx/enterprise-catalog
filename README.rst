@@ -10,7 +10,7 @@ A Django-based microservice for handling Enterprise catalogs, associating enterp
 Getting Started
 ---------------
 
-Check out the `initial steps <docs/getting_started.rst>`_ for getting started with the Enterprise catalog service.
+Check out the `initial steps <docs/getting_started.rst>`_ for getting started with the Enterprise Catalog service.
 
 License
 -------
