@@ -32,7 +32,7 @@ cffi==1.15.1
     #   -r requirements/base.txt
     #   cryptography
     #   pynacl
-charset-normalizer==2.1.0
+charset-normalizer==2.1.1
     # via
     #   -r requirements/base.txt
     #   requests
@@ -220,7 +220,7 @@ markupsafe==2.1.1
     #   jinja2
 mysqlclient==2.1.1
     # via -r requirements/base.txt
-newrelic==7.16.0.178
+newrelic==8.0.0.179
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -233,7 +233,7 @@ packaging==21.3
     # via
     #   -r requirements/base.txt
     #   drf-yasg
-pbr==5.9.0
+pbr==5.10.0
     # via
     #   -r requirements/base.txt
     #   stevedore
@@ -291,7 +291,7 @@ python3-openid==3.2.0
     # via
     #   -r requirements/base.txt
     #   social-auth-core
-pytz==2022.1
+pytz==2022.2.1
     # via
     #   -r requirements/base.txt
     #   celery

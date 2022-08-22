@@ -39,7 +39,7 @@ cffi==1.15.1
     #   -r requirements/base.txt
     #   cryptography
     #   pynacl
-charset-normalizer==2.1.0
+charset-normalizer==2.1.1
     # via
     #   -r requirements/base.txt
     #   requests
@@ -83,7 +83,7 @@ coreschema==0.0.4
     #   -r requirements/base.txt
     #   coreapi
     #   drf-yasg
-coverage[toml]==6.4.3
+coverage[toml]==6.4.4
     # via
     #   -r requirements/test.in
     #   pytest-cov
@@ -92,7 +92,7 @@ cryptography==37.0.4
     #   -r requirements/base.txt
     #   pyjwt
     #   social-auth-core
-ddt==1.5.0
+ddt==1.6.0
     # via -r requirements/test.in
 defusedxml==0.7.1
     # via
@@ -208,9 +208,9 @@ edx-toggles==5.0.0
     # via -r requirements/base.txt
 factory-boy==3.2.1
     # via -r requirements/test.in
-faker==13.15.1
+faker==14.1.0
     # via factory-boy
-filelock==3.7.1
+filelock==3.8.0
     # via
     #   tox
     #   virtualenv
@@ -260,7 +260,7 @@ mccabe==0.7.0
     # via pylint
 mysqlclient==2.1.1
     # via -r requirements/base.txt
-newrelic==7.16.0.178
+newrelic==8.0.0.179
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -275,7 +275,7 @@ packaging==21.3
     #   drf-yasg
     #   pytest
     #   tox
-pbr==5.9.0
+pbr==5.10.0
     # via
     #   -r requirements/base.txt
     #   stevedore
@@ -366,7 +366,7 @@ python3-openid==3.2.0
     # via
     #   -r requirements/base.txt
     #   social-auth-core
-pytz==2022.1
+pytz==2022.2.1
     # via
     #   -r requirements/base.txt
     #   celery
@@ -461,7 +461,7 @@ tomli==2.0.1
     #   coverage
     #   pylint
     #   pytest
-tomlkit==0.11.1
+tomlkit==0.11.4
     # via pylint
 tox==3.25.1
     # via

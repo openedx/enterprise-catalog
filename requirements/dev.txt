@@ -59,7 +59,7 @@ cffi==1.15.1
     #   bcrypt
     #   cryptography
     #   pynacl
-charset-normalizer==2.1.0
+charset-normalizer==2.1.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -115,7 +115,7 @@ coreschema==0.0.4
     #   -r requirements/test.txt
     #   coreapi
     #   drf-yasg
-coverage[toml]==6.4.3
+coverage[toml]==6.4.4
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -126,7 +126,7 @@ cryptography==37.0.4
     #   paramiko
     #   pyjwt
     #   social-auth-core
-ddt==1.5.0
+ddt==1.6.0
     # via
     #   -r requirements/dev.in
     #   -r requirements/test.txt
@@ -197,7 +197,7 @@ django-crum==0.7.9
     #   edx-django-utils
     #   edx-rbac
     #   edx-toggles
-django-debug-toolbar==3.5.0
+django-debug-toolbar==3.6.0
     # via -r requirements/dev.in
 django-dynamic-fixture==3.1.2
     # via -r requirements/test.txt
@@ -236,7 +236,7 @@ djangorestframework-xml==2.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-docker[ssh]==5.0.3
+docker[ssh]==6.0.0
     # via docker-compose
 docker-compose==1.29.2
     # via -r requirements/dev.in
@@ -308,11 +308,11 @@ edx-toggles==5.0.0
     #   -r requirements/test.txt
 factory-boy==3.2.1
     # via -r requirements/test.txt
-faker==13.15.1
+faker==14.1.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
-filelock==3.7.1
+filelock==3.8.0
     # via
     #   -r requirements/test.txt
     #   tox
@@ -401,7 +401,7 @@ mysqlclient==2.1.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-newrelic==7.16.0.178
+newrelic==8.0.0.179
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -418,6 +418,7 @@ packaging==21.3
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   build
+    #   docker
     #   drf-yasg
     #   pytest
     #   tox
@@ -425,7 +426,7 @@ paramiko==2.11.0
     # via docker
 path==16.4.0
     # via edx-i18n-tools
-pbr==5.9.0
+pbr==5.10.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -479,7 +480,7 @@ pycryptodomex==3.15.0
     #   pyjwkest
 pydocstyle==6.1.1
     # via -r requirements/quality.txt
-pygments==2.12.0
+pygments==2.13.0
     # via diff-cover
 pyjwkest==1.4.2
     # via
@@ -567,7 +568,7 @@ python3-openid==3.2.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   social-auth-core
-pytz==2022.1
+pytz==2022.2.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -704,7 +705,7 @@ tomli==2.0.1
     #   pep517
     #   pylint
     #   pytest
-tomlkit==0.11.1
+tomlkit==0.11.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -731,6 +732,7 @@ urllib3==1.26.11
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+    #   docker
     #   requests
 vine==5.0.0
     # via
