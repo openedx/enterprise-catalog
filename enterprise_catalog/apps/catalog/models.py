@@ -412,7 +412,7 @@ class EnterpriseCatalog(TimeStampedModel):
             if entitlement['mode'] == EXEC_ED_2U_ENTITLEMENT_MODE:
                 entitlement_sku = entitlement.get('sku')
         return (
-            '{}/executive-education-2u/'.format(settings.ECOMMERCE_BASE_URL),
+            '{}/executive-education-2u/checkout'.format(settings.ECOMMERCE_BASE_URL),
             entitlement_sku,
         )
 
