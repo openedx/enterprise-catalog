@@ -24,6 +24,7 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     get_pathway_availability,
     get_pathway_card_image_url,
     get_pathway_course_keys,
+    get_pathway_created_date,
     get_pathway_partners,
     get_pathway_program_uuids,
     get_pathway_subjects,
@@ -1338,3 +1339,21 @@ class AlgoliaUtilsTests(TestCase):
             )
         pathway_subjects = get_pathway_subjects(pathway_metadata)
         self.assertEqual(sorted(expected_subjects), sorted(pathway_subjects))
+
+    @ddt.data(
+        (
+            {'created': '2022-08-22T11:49:21Z'},
+            1661168961.0,
+        ),
+        (
+            {'created': ''},
+            None,
+        ),
+    )
+    @ddt.unpack
+    def test_get_pathway_created_date(self, pathway_metadata, expected_date):
+        """
+        Assert that the creatd date of pathway is properly parsed.
+        """
+        created_date = get_pathway_created_date(pathway_metadata)
+        self.assertEqual(expected_date, created_date)

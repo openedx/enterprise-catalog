@@ -1,3 +1,4 @@
+import datetime
 from uuid import uuid4
 
 import factory
@@ -118,6 +119,7 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
                 'overview': 'Pathway for a data engineer.',
                 'published': True,
                 'visible_via_association': True,
+                'created': datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
             })
         return json_metadata
 
