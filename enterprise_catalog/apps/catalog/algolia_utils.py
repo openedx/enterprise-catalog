@@ -68,6 +68,7 @@ ALGOLIA_FIELDS = [
     'course_details',
     'banner_image_url',
     'visible_via_association',
+    'created',
 ]
 
 # default configuration for the index
@@ -110,6 +111,7 @@ ALGOLIA_INDEX_SETTINGS = {
         'enterprise_customer_uuids',
     ],
     'customRanking': [
+        'asc(created)',
         'asc(visible_via_association)',
         'desc(recent_enrollment_count)',
     ],
@@ -509,6 +511,23 @@ def get_pathway_subjects(pathway):
         program_subjects = get_program_subjects(program.json_metadata)
         subjects.update(program_subjects)
     return list(subjects)
+
+
+def get_pathway_created_date(pathway):
+    """
+    Gets the created date for a pathway. Used for the sorting pathways based on created date in Algolia.
+
+    Arguments:
+        pathway (dict): a dictionary representing a pathway.
+
+    Returns:
+        str: Pathway created date as Unix timestamp or default date that lies way ahead in the future.
+    """
+    created = pathway.get('created')
+    if created:
+        created_datetime = datetime.datetime.strptime(created, '%Y-%m-%dT%H:%M:%SZ')
+        return time.mktime(created_datetime.timetuple())
+    return None
 
 
 def _get_program_course_field(program, field):
@@ -1082,6 +1101,7 @@ def _algolia_object_from_product(product, algolia_fields):
             'card_image_url': get_pathway_card_image_url(searchable_product),
             'partners': get_pathway_partners(searchable_product),
             'subjects': get_pathway_subjects(searchable_product),
+            'created': get_pathway_created_date(searchable_product),
         })
 
     algolia_object = {}
