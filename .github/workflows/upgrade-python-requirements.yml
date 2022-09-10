@@ -13,7 +13,7 @@ on:
 
 jobs:
   call-upgrade-python-requirements-workflow:
-    uses: edx/.github/.github/workflows/upgrade-python-requirements.yml@master
+    uses: openedx/.github/.github/workflows/upgrade-python-requirements.yml@master
     with:
       branch: ${{ github.event.inputs.branch || 'master' }}
       team_reviewers: "enterprise-quokkas"
