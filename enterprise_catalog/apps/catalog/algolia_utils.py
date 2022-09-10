@@ -143,7 +143,7 @@ def _should_index_course(course_metadata):
     The discovery check that the course has an availability level was decided to be a duplicate check that the
     website team plans on removing.
     Original code:
-    https://github.com/edx/course-discovery/blob/c6ac5329225e2f32cdf1d1da855d7c9d905b2576/course_discovery/apps/course_metadata/algolia_models.py#L218-L227
+    https://github.com/openedx/course-discovery/blob/c6ac5329225e2f32cdf1d1da855d7c9d905b2576/course_discovery/apps/course_metadata/algolia_models.py#L218-L227
 
     Args:
         course (ContentMetadata): The ContentMetadata representing a course object.
@@ -203,7 +203,7 @@ def _should_index_program(program_metadata):
     The discovery check that the course has an availability level is a duplicate check that the website team
     plans on removing.
     Original code:
-    https://github.com/edx/course-discovery/blob/e0ece69ce8363eb765c524cd4eccb4b5cda35181/course_discovery/apps/course_metadata/algolia_models.py#L353
+    https://github.com/openedx/course-discovery/blob/e0ece69ce8363eb765c524cd4eccb4b5cda35181/course_discovery/apps/course_metadata/algolia_models.py#L353
 
     Args:
         program (ContentMetadata): The ContentMetadata representing a program object.
