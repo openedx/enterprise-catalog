@@ -9,7 +9,7 @@ below is executed within the virtualenv.
 
 Initialize and Provision
 ------------------------
-    1. Start and provision the edX `devstack <https://github.com/edx/devstack>`_, as enterprise-catalog currently relies on devstack
+    1. Start and provision the edX `devstack <https://github.com/openedx/devstack>`_, as enterprise-catalog currently relies on devstack
     2. Verify that your virtual environment is active before proceeding
     3. Clone the enterprise-catalog repo and **cd into that directory**
     4. Run *make dev.provision* to provision a new enterprise catalog environment
@@ -51,7 +51,7 @@ Open the logs in the enterprise catalog container
 Migrating Catalog Data from LMS to the Catalog Service
 ------------------------------------------------------
 You may already have enterprise catalog data persisted in your local LMS (edx-platform) database.  The edx-enterprise
-library provides a `migrate_enterprise_catalogs <https://github.com/edx/edx-enterprise/blob/master/enterprise/management/commands/migrate_enterprise_catalogs.py>`_
+library provides a `migrate_enterprise_catalogs <https://github.com/openedx/edx-enterprise/blob/master/enterprise/management/commands/migrate_enterprise_catalogs.py>`_
 management command that will copy those existing catalogs and their metadata into your local catalog service.  From your **devstack** directory, do the following:
 
    #. ``make dev.up.lms+redis``

@@ -23,5 +23,5 @@ Consequences
 
 All files/changes related to implementation of Decentralized Devstack will be removed from enterprise-catalog.
 
-.. _Devstack: https://github.com/edx/devstack
-.. _decision 0001: https://github.com/edx/enterprise-catalog/blob/master/docs/decisions/0001-adding-lms-data-dump.rst
+.. _Devstack: https://github.com/openedx/devstack
+.. _decision 0001: https://github.com/openedx/enterprise-catalog/blob/master/docs/decisions/0001-adding-lms-data-dump.rst
