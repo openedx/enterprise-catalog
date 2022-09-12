@@ -16,7 +16,7 @@ asgiref==3.5.2
     # via
     #   -r requirements/test.txt
     #   django
-astroid==2.11.7
+astroid==2.12.9
     # via
     #   -r requirements/test.txt
     #   pylint
@@ -38,7 +38,7 @@ celery==5.2.7
     #   -r requirements/test.txt
     #   django-celery-results
     #   edx-celeryutils
-certifi==2022.6.15
+certifi==2022.6.15.1
     # via
     #   -r requirements/test.txt
     #   requests
@@ -47,7 +47,7 @@ cffi==1.15.1
     #   -r requirements/test.txt
     #   cryptography
     #   pynacl
-charset-normalizer==2.1.0
+charset-normalizer==2.1.1
     # via
     #   -r requirements/test.txt
     #   requests
@@ -92,16 +92,16 @@ coreschema==0.0.4
     #   -r requirements/test.txt
     #   coreapi
     #   drf-yasg
-coverage[toml]==6.4.3
+coverage[toml]==6.4.4
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==37.0.4
+cryptography==38.0.1
     # via
     #   -r requirements/test.txt
     #   pyjwt
     #   social-auth-core
-ddt==1.5.0
+ddt==1.6.0
     # via -r requirements/test.txt
 defusedxml==0.7.1
     # via
@@ -113,7 +113,7 @@ dill==0.3.5.1
     # via
     #   -r requirements/test.txt
     #   pylint
-distlib==0.3.5
+distlib==0.3.6
     # via
     #   -r requirements/test.txt
     #   virtualenv
@@ -152,7 +152,7 @@ django-crum==0.7.9
     #   edx-toggles
 django-dynamic-fixture==3.1.2
     # via -r requirements/test.txt
-django-extensions==3.2.0
+django-extensions==3.2.1
     # via -r requirements/test.txt
 django-model-utils==4.2.0
     # via
@@ -161,7 +161,7 @@ django-model-utils==4.2.0
     #   edx-rbac
 django-simple-history==3.0.0
     # via -r requirements/test.txt
-django-waffle==2.6.0
+django-waffle==3.0.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
@@ -201,18 +201,18 @@ edx-celeryutils==1.2.1
     # via -r requirements/test.txt
 edx-django-release-util==1.2.0
     # via -r requirements/test.txt
-edx-django-utils==5.0.0
+edx-django-utils==5.0.1
     # via
     #   -r requirements/test.txt
     #   django-config-models
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==8.0.1
+edx-drf-extensions==8.3.1
     # via
     #   -r requirements/test.txt
     #   edx-rbac
-edx-lint==5.2.4
+edx-lint==5.2.5
     # via -r requirements/test.txt
 edx-opaque-keys==2.3.0
     # via
@@ -228,11 +228,11 @@ edx-toggles==5.0.0
     # via -r requirements/test.txt
 factory-boy==3.2.1
     # via -r requirements/test.txt
-faker==13.15.1
+faker==14.2.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
-filelock==3.7.1
+filelock==3.8.0
     # via
     #   -r requirements/test.txt
     #   tox
@@ -296,11 +296,11 @@ mccabe==0.7.0
     #   pylint
 mysqlclient==2.1.1
     # via -r requirements/test.txt
-newrelic==7.16.0.178
+newrelic==8.0.0.179
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
-oauthlib==3.2.0
+oauthlib==3.2.1
     # via
     #   -r requirements/test.txt
     #   requests-oauthlib
@@ -312,7 +312,7 @@ packaging==21.3
     #   pytest
     #   sphinx
     #   tox
-pbr==5.9.0
+pbr==5.10.0
     # via
     #   -r requirements/test.txt
     #   stevedore
@@ -326,11 +326,11 @@ pluggy==1.0.0
     #   -r requirements/test.txt
     #   pytest
     #   tox
-prompt-toolkit==3.0.30
+prompt-toolkit==3.0.31
     # via
     #   -r requirements/test.txt
     #   click-repl
-psutil==5.9.1
+psutil==5.9.2
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
@@ -347,7 +347,7 @@ pycryptodomex==3.15.0
     # via
     #   -r requirements/test.txt
     #   pyjwkest
-pygments==2.12.0
+pygments==2.13.0
     # via
     #   doc8
     #   readme-renderer
@@ -364,7 +364,7 @@ pyjwt[crypto]==2.4.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
-pylint==2.14.5
+pylint==2.15.2
     # via
     #   -r requirements/test.txt
     #   edx-lint
@@ -396,7 +396,7 @@ pyparsing==3.0.9
     # via
     #   -r requirements/test.txt
     #   packaging
-pytest==7.1.2
+pytest==7.1.3
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -418,7 +418,7 @@ python3-openid==3.2.0
     # via
     #   -r requirements/test.txt
     #   social-auth-core
-pytz==2022.1
+pytz==2022.2.1
     # via
     #   -r requirements/test.txt
     #   babel
@@ -431,7 +431,7 @@ pyyaml==5.4.1
     #   -r requirements/test.txt
     #   code-annotations
     #   edx-django-release-util
-readme-renderer==36.0
+readme-renderer==37.1
     # via -r requirements/doc.in
 redis==3.5.3
     # via -r requirements/test.txt
@@ -530,10 +530,6 @@ text-unidecode==1.3
     # via
     #   -r requirements/test.txt
     #   python-slugify
-toml==0.10.2
-    # via
-    #   -r requirements/test.txt
-    #   tox
 tomli==2.0.1
     # via
     #   -r requirements/test.txt
@@ -541,11 +537,12 @@ tomli==2.0.1
     #   doc8
     #   pylint
     #   pytest
-tomlkit==0.11.1
+    #   tox
+tomlkit==0.11.4
     # via
     #   -r requirements/test.txt
     #   pylint
-tox==3.25.1
+tox==3.26.0
     # via
     #   -r requirements/test.txt
     #   tox-battery
@@ -561,7 +558,7 @@ uritemplate==4.1.1
     #   -r requirements/test.txt
     #   coreapi
     #   drf-yasg
-urllib3==1.26.11
+urllib3==1.26.12
     # via
     #   -r requirements/test.txt
     #   requests
@@ -571,7 +568,7 @@ vine==5.0.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.16.3
+virtualenv==20.16.5
     # via
     #   -r requirements/test.txt
     #   tox
@@ -591,6 +588,3 @@ zipp==1.2.0
     # via
     #   -r requirements/test.txt
     #   importlib-metadata
-
-# The following packages are considered to be unsafe in a requirements file:
-# setuptools
