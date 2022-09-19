@@ -2,6 +2,7 @@ import datetime
 from uuid import uuid4
 
 import factory
+from factory.fuzzy import FuzzyText
 
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
@@ -33,7 +34,7 @@ class CatalogQueryFactory(factory.django.DjangoModelFactory):
         model = CatalogQuery
 
     content_filter = factory.Dict({'content_type': factory.Faker('words', nb=3)})
-    title = factory.Faker('text')
+    title = FuzzyText(length=100)
 
 
 class EnterpriseCatalogFactory(factory.django.DjangoModelFactory):
@@ -44,7 +45,7 @@ class EnterpriseCatalogFactory(factory.django.DjangoModelFactory):
         model = EnterpriseCatalog
 
     uuid = factory.LazyFunction(uuid4)
-    title = factory.Faker('text')
+    title = FuzzyText(length=255)
     enterprise_uuid = factory.LazyFunction(uuid4)
     enterprise_name = factory.Faker('company')
     catalog_query = factory.SubFactory(CatalogQueryFactory)
@@ -142,7 +143,7 @@ class EnterpriseCatalogFeatureRoleFactory(factory.django.DjangoModelFactory):
     """
     Test factory for the `EnterpriseCatalogFeatureRole` model.
     """
-    name = factory.Faker('text')
+    name = FuzzyText(length=32)
 
     class Meta:
         model = EnterpriseCatalogFeatureRole
