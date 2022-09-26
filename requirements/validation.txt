@@ -41,7 +41,7 @@ celery==5.2.7
     #   -r requirements/test.txt
     #   django-celery-results
     #   edx-celeryutils
-certifi==2022.9.14
+certifi==2022.9.24
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -201,7 +201,7 @@ django-waffle==3.0.0
     #   edx-django-utils
     #   edx-drf-extensions
     #   edx-toggles
-djangorestframework==3.13.1
+djangorestframework==3.14.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -240,7 +240,7 @@ edx-django-release-util==1.2.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-edx-django-utils==5.0.1
+edx-django-utils==5.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -277,7 +277,7 @@ edx-toggles==5.0.0
     #   -r requirements/test.txt
 factory-boy==3.2.1
     # via -r requirements/test.txt
-faker==14.2.0
+faker==14.2.1
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -591,7 +591,7 @@ social-auth-core==4.3.0
     #   -r requirements/test.txt
     #   edx-auth-backends
     #   social-auth-app-django
-sqlparse==0.4.2
+sqlparse==0.4.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
