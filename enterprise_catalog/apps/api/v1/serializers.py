@@ -216,7 +216,12 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
             if content_type == COURSE:
                 serialized_course_runs = json_metadata.get('course_runs', [])
                 json_metadata['active'] = is_any_course_run_active(serialized_course_runs)
-                self._add_course_run_enrollment_urls(instance, serialized_course_runs)
+                # We don't include enrollment_url values for the nested course runs in a course
+                # for exec-ed-2u content, because enrollment fulfillment for such content
+                # is controlled via Entitlements, which are tied directly to Courses
+                # (as opposed to Seats, which are tied to Course Runs).
+                if not instance.is_exec_ed_2u_course:
+                    self._add_course_run_enrollment_urls(instance, serialized_course_runs)
         elif content_type == PROGRAM:
             # We want this to be null, because we have no notion
             # of directly enrolling in a program.

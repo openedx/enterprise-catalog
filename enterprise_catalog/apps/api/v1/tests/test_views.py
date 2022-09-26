@@ -21,6 +21,8 @@ from enterprise_catalog.apps.api.v1.utils import is_any_course_run_active
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
     COURSE_RUN,
+    EXEC_ED_2U_COURSE_TYPE,
+    EXEC_ED_2U_ENTITLEMENT_MODE,
     LEARNER_PATHWAY,
     PROGRAM,
 )
@@ -945,6 +947,8 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         # Set up catalog.has_learner_access permissions
         self.set_up_catalog_learner()
         self.enterprise_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
+        self.enterprise_catalog.catalog_query.include_exec_ed_2u_courses = True
+        self.enterprise_catalog.catalog_query.save()
 
         self.ecommerce_patcher = mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EcommerceApiClient')
         self.mock_ecommerce_client = self.ecommerce_patcher.start()
@@ -976,7 +980,14 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         json_metadata = content_metadata.json_metadata.copy()
 
         json_metadata['content_last_modified'] = content_metadata.modified.isoformat()[:-6] + 'Z'
-        if learner_portal_enabled and content_type in (COURSE, COURSE_RUN):
+        if content_metadata.is_exec_ed_2u_course:
+            if sku := json_metadata.get('entitlements', [{}])[0].get('sku'):
+                enrollment_url = '{}/executive-education-2u/checkout?sku={}&utm_medium=enterprise&utm_source={}'.format(
+                    settings.ECOMMERCE_BASE_URL,
+                    sku,
+                    slugify(self.enterprise_catalog.enterprise_name),
+                )
+        elif learner_portal_enabled and content_type in (COURSE, COURSE_RUN):
             enrollment_url = '{}/{}/course/{}?{}utm_medium=enterprise&utm_source={}'
         else:
             enrollment_url = '{}/enterprise/{}/{}/{}/enroll/?catalog={}&utm_medium=enterprise&utm_source={}'
@@ -1012,17 +1023,18 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
                     slugify(self.enterprise_catalog.enterprise_name),
                 )
                 json_metadata['enrollment_url'] = course_enrollment_url
-                for course_run in course_runs:
-                    course_run_key = quote_plus(course_run.get('key'))
-                    course_run_key_param = f'course_run_key={course_run_key}&'
-                    course_run_enrollment_url = enrollment_url.format(
-                        settings.ENTERPRISE_LEARNER_PORTAL_BASE_URL,
-                        self.enterprise_slug,
-                        course_key,
-                        course_run_key_param,
-                        slugify(self.enterprise_catalog.enterprise_name),
-                    )
-                    course_run.update({'enrollment_url': course_run_enrollment_url})
+                if json_metadata.get('course_type') != EXEC_ED_2U_COURSE_TYPE:
+                    for course_run in course_runs:
+                        course_run_key = quote_plus(course_run.get('key'))
+                        course_run_key_param = f'course_run_key={course_run_key}&'
+                        course_run_enrollment_url = enrollment_url.format(
+                            settings.ENTERPRISE_LEARNER_PORTAL_BASE_URL,
+                            self.enterprise_slug,
+                            course_key,
+                            course_run_key_param,
+                            slugify(self.enterprise_catalog.enterprise_name),
+                        )
+                        course_run.update({'enrollment_url': course_run_enrollment_url})
             else:
                 course_enrollment_url = enrollment_url.format(
                     settings.LMS_BASE_URL,
@@ -1033,16 +1045,17 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
                     slugify(self.enterprise_catalog.enterprise_name),
                 )
                 json_metadata['enrollment_url'] = course_enrollment_url
-                for course_run in course_runs:
-                    course_run_enrollment_url = enrollment_url.format(
-                        settings.LMS_BASE_URL,
-                        self.enterprise_catalog.enterprise_uuid,
-                        COURSE,
-                        course_run.get('key'),
-                        self.enterprise_catalog.uuid,
-                        slugify(self.enterprise_catalog.enterprise_name),
-                    )
-                    course_run.update({'enrollment_url': course_run_enrollment_url})
+                if json_metadata.get('course_type') != EXEC_ED_2U_COURSE_TYPE:
+                    for course_run in course_runs:
+                        course_run_enrollment_url = enrollment_url.format(
+                            settings.LMS_BASE_URL,
+                            self.enterprise_catalog.enterprise_uuid,
+                            COURSE,
+                            course_run.get('key'),
+                            self.enterprise_catalog.uuid,
+                            slugify(self.enterprise_catalog.enterprise_name),
+                        )
+                        course_run.update({'enrollment_url': course_run_enrollment_url})
 
             json_metadata['course_runs'] = course_runs
             json_metadata['active'] = is_any_course_run_active(course_runs)
@@ -1209,9 +1222,6 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
             key=get_content_key,
         )
 
-        # for exp, act in zip(expected_metadata, actual_metadata):
-        #     if exp != act:
-        #         import pdb; pdb.set_trace()
         self.assertEqual(
             json.dumps(actual_metadata, sort_keys=True),
             json.dumps(expected_metadata, sort_keys=True),
@@ -1267,6 +1277,62 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
             key=get_content_key,
         )
 
+        self.assertEqual(
+            json.dumps(actual_metadata, sort_keys=True),
+            json.dumps(expected_metadata, sort_keys=True),
+        )
+
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
+    @ddt.data(
+        False,
+        True
+    )
+    def test_get_content_metadata_no_nested_enrollment_urls_exec_ed_2u(self, learner_portal_enabled, mock_api_client):
+        """
+        Verify the get_content_metadata endpoint returns
+        all the metadata associated with a particular catalog, and that
+        no course run enrollment_urls are included for exec-ed-2u course types.
+        """
+        mock_api_client.return_value.get_enterprise_customer.return_value = {
+            'slug': self.enterprise_slug,
+            'enable_learner_portal': learner_portal_enabled,
+            'modified': str(datetime.now().replace(tzinfo=pytz.UTC)),
+        }
+        # Create enough metadata to force pagination
+        course = ContentMetadataFactory.create(content_type=COURSE)
+        # important to actually link the course runs to the parent course
+        course_runs = ContentMetadataFactory.create_batch(
+            2,
+            content_type=COURSE_RUN,
+            parent_content_key=course.content_key,
+        )
+        course.json_metadata['course_runs'] = [run.json_metadata for run in course_runs]
+        course.json_metadata['course_type'] = EXEC_ED_2U_COURSE_TYPE
+        course.json_metadata['entitlements'] = [
+            {
+                'mode': EXEC_ED_2U_ENTITLEMENT_MODE,
+                'sku': '123456FW',
+            },
+        ]
+        course.save()
+
+        metadata = course_runs + [course]
+        self.add_metadata_to_catalog(self.enterprise_catalog, metadata)
+
+        response = self.client.get(self._get_content_metadata_url(self.enterprise_catalog))
+
+        self.maxDiff = None
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Check that the union of both pages' data is equal to the whole set of metadata
+        response_data = response.json()
+        expected_metadata = sorted(
+            [
+                self._get_expected_json_metadata(item, learner_portal_enabled)
+                for item in metadata
+            ],
+            key=get_content_key,
+        )
+        actual_metadata = sorted(response_data['results'], key=get_content_key)
         self.assertEqual(
             json.dumps(actual_metadata, sort_keys=True),
             json.dumps(expected_metadata, sort_keys=True),
