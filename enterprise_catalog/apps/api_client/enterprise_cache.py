@@ -94,21 +94,22 @@ def _get_enterprise_customer_data(uuid):
             logger.warning('Received unexpected customer_data for enterprise customer %s', uuid)
             customer_data = {}
 
-        try:
-            ecommerce_client = EcommerceApiClient()
-            coupons_overview = ecommerce_client.get_coupons_overview(uuid)
-            coupons_catalogs = [coupon['enterprise_catalog_uuid'] for coupon in coupons_overview]
-        except requests.exceptions.HTTPError as exc:
-            logger.error(
-                'Failed to fetch coupons overview for %r because %r',
-                uuid,
-                exc,
-            )
-            coupons_catalogs = []
+        # try:
+        #     ecommerce_client = EcommerceApiClient()
+        #     coupons_overview = ecommerce_client.get_coupons_overview(uuid)
+        #     coupons_catalogs = [coupon['enterprise_catalog_uuid'] for coupon in coupons_overview]
+        # except requests.exceptions.HTTPError as exc:
+        #     logger.error(
+        #         'Failed to fetch coupons overview for %r because %r',
+        #         uuid,
+        #         exc,
+        #     )
+        coupons_catalogs = []
 
         try:
             license_manager_client = LicenseManagerApiClient()
-            customer_agreement = license_manager_client.get_customer_agreement(uuid)
+            # customer_agreement = license_manager_client.get_customer_agreement(uuid)
+            customer_agreement = False
             if customer_agreement:
                 subscriptions_catalogs = [
                     subscription['enterprise_catalog_uuid'] for subscription in customer_agreement['subscriptions']
