@@ -69,6 +69,7 @@ ALGOLIA_FIELDS = [
     'banner_image_url',
     'visible_via_association',
     'created',
+    'course_type',
 ]
 
 # default configuration for the index
@@ -105,6 +106,7 @@ ALGOLIA_INDEX_SETTINGS = {
         'original_image_url',
         'marketing_url',
         'enterprise_catalog_query_titles',
+        'course_type',
     ],
     'unretrievableAttributes': [
         'enterprise_catalog_uuids',
