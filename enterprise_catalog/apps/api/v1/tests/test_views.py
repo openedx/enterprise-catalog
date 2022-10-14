@@ -138,6 +138,21 @@ class EnterpriseCatalogDefaultCatalogResultsTests(APITestMixin):
             'You must provide at least one of the following query parameters: enterprise_catalog_query_titles.'
         ]
 
+    @mock.patch('enterprise_catalog.apps.api.v1.views.default_catalog_results.get_initialized_algolia_client')
+    def test_default_catalog_results_view_works_with_one_and_many_course_types(self, mock_algolia_client):
+        """
+        Test that the default catalog results view rejects requests where the query param course_type is not a list
+        """
+        mock_algolia_client.return_value.algolia_index.search.side_effect = [self.mock_algolia_hits, {'hits': []}]
+        url = self._get_contains_content_base_url()
+        facets = 'enterprise_catalog_query_titles=foo&course_type=course'
+        response = self.client.get(f'{url}?{facets}')
+        assert response.status_code == 200
+
+        facets = 'enterprise_catalog_query_titles=foo&course_type=course&course_type=notcourse'
+        response = self.client.get(f'{url}?{facets}')
+        assert response.status_code == 200
+
 
 @ddt.ddt
 class EnterpriseCatalogCRUDViewSetTests(APITestMixin):
