@@ -113,8 +113,8 @@ ALGOLIA_INDEX_SETTINGS = {
         'enterprise_customer_uuids',
     ],
     'customRanking': [
-        'asc(created)',
         'asc(visible_via_association)',
+        'asc(created)',
         'desc(recent_enrollment_count)',
     ],
 }
