@@ -40,7 +40,7 @@ celery==5.2.7
     #   -r requirements/test.txt
     #   django-celery-results
     #   edx-celeryutils
-certifi==2022.9.14
+certifi==2022.9.24
     # via
     #   -r requirements/test.txt
     #   requests
@@ -94,7 +94,7 @@ coreschema==0.0.4
     #   -r requirements/test.txt
     #   coreapi
     #   drf-yasg
-coverage[toml]==6.4.4
+coverage[toml]==6.5.0
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -119,7 +119,7 @@ distlib==0.3.6
     # via
     #   -r requirements/test.txt
     #   virtualenv
-django==3.2.15
+django==3.2.16
     # via
     #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -c requirements/constraints.txt
@@ -173,7 +173,7 @@ django-waffle==3.0.0
     #   edx-django-utils
     #   edx-drf-extensions
     #   edx-toggles
-djangorestframework==3.13.1
+djangorestframework==3.14.0
     # via
     #   -r requirements/test.txt
     #   django-config-models
@@ -195,7 +195,7 @@ drf-jwt==1.19.2
     # via
     #   -r requirements/test.txt
     #   edx-drf-extensions
-drf-yasg==1.21.3
+drf-yasg==1.21.4
     # via
     #   -r requirements/test.txt
     #   edx-api-doc-tools
@@ -207,7 +207,7 @@ edx-celeryutils==1.2.1
     # via -r requirements/test.txt
 edx-django-release-util==1.2.0
     # via -r requirements/test.txt
-edx-django-utils==5.0.1
+edx-django-utils==5.2.0
     # via
     #   -r requirements/test.txt
     #   django-config-models
@@ -236,7 +236,7 @@ edx-toggles==5.0.0
     # via -r requirements/test.txt
 factory-boy==3.2.1
     # via -r requirements/test.txt
-faker==14.2.0
+faker==15.1.1
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -256,7 +256,7 @@ idna==3.4
     #   requests
 imagesize==1.4.1
     # via sphinx
-importlib-metadata==4.12.0
+importlib-metadata==5.0.0
     # via sphinx
 inflection==0.5.1
     # via
@@ -304,7 +304,7 @@ mccabe==0.7.0
     #   pylint
 mysqlclient==2.1.1
     # via -r requirements/test.txt
-newrelic==8.1.0.180
+newrelic==8.2.1
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
@@ -410,7 +410,7 @@ pytest==7.1.3
     #   -r requirements/test.txt
     #   pytest-cov
     #   pytest-django
-pytest-cov==3.0.0
+pytest-cov==4.0.0
     # via -r requirements/test.txt
 pytest-django==4.5.2
     # via -r requirements/test.txt
@@ -427,7 +427,7 @@ python3-openid==3.2.0
     # via
     #   -r requirements/test.txt
     #   social-auth-core
-pytz==2022.2.1
+pytz==2022.4
     # via
     #   -r requirements/test.txt
     #   babel
@@ -441,7 +441,7 @@ pyyaml==5.4.1
     #   -r requirements/test.txt
     #   code-annotations
     #   edx-django-release-util
-readme-renderer==37.1
+readme-renderer==37.2
     # via -r requirements/doc.in
 redis==3.5.3
     # via
@@ -511,7 +511,7 @@ social-auth-core==4.3.0
     #   -r requirements/test.txt
     #   edx-auth-backends
     #   social-auth-app-django
-sphinx==5.1.1
+sphinx==5.3.0
     # via
     #   -r requirements/doc.in
     #   edx-sphinx-theme
@@ -527,11 +527,11 @@ sphinxcontrib-qthelp==1.0.3
     # via sphinx
 sphinxcontrib-serializinghtml==1.1.5
     # via sphinx
-sqlparse==0.4.2
+sqlparse==0.4.3
     # via
     #   -r requirements/test.txt
     #   django
-stevedore==4.0.0
+stevedore==4.0.1
     # via
     #   -r requirements/test.txt
     #   code-annotations
@@ -550,7 +550,7 @@ tomli==2.0.1
     #   pylint
     #   pytest
     #   tox
-tomlkit==0.11.4
+tomlkit==0.11.5
     # via
     #   -r requirements/test.txt
     #   pylint
@@ -560,11 +560,11 @@ tox==3.26.0
     #   tox-battery
 tox-battery==0.6.1
     # via -r requirements/test.txt
-types-cryptography==3.3.23
+types-cryptography==3.3.23.1
     # via
     #   -r requirements/test.txt
     #   pyjwt
-typing-extensions==4.3.0
+typing-extensions==4.4.0
     # via
     #   -r requirements/test.txt
     #   astroid
