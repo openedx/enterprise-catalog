@@ -57,11 +57,15 @@ class DefaultCatalogResultsView(GenericAPIView):
         'authoring_organizations',
     ]
 
+    def get_queryset(self, **kwargs):
+        # Since this view does not hit any models, override the queryset
+        pass
+
     @method_decorator(require_at_least_one_query_parameter('enterprise_catalog_query_titles'))
     @action(detail=True)
     def get(self, request, **kwargs):
         """
-        GET entry point for the `CatalogCsvDataView`
+        GET entry point for the `DefaultCatalogResultsView`
         """
         facets = querydict_to_dict(request.query_params)
         invalid_facets = validate_query_facets(facets)
@@ -74,6 +78,10 @@ class DefaultCatalogResultsView(GenericAPIView):
             f'enterprise_catalog_query_titles:{facets.get("enterprise_catalog_query_titles")[0]}',
             f'content_type:{content_type}'
         ]
+
+        if content_type == 'course':
+            if course_types := facets.get("course_type"):
+                catalog_filter.append([f'course_type:{type}' in course_types])
 
         search_options = {
             'facetFilters': catalog_filter,
