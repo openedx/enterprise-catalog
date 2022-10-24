@@ -125,7 +125,7 @@ defusedxml==0.7.1
     #   djangorestframework-xml
     #   python3-openid
     #   social-auth-core
-dill==0.3.5.1
+dill==0.3.6
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -360,7 +360,7 @@ newrelic==8.2.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-django-utils
-oauthlib==3.2.1
+oauthlib==3.2.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -373,7 +373,7 @@ packaging==21.3
     #   drf-yasg
     #   pytest
     #   tox
-pbr==5.10.0
+pbr==5.11.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -394,7 +394,7 @@ prompt-toolkit==3.0.31
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   click-repl
-psutil==5.9.2
+psutil==5.9.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -423,7 +423,7 @@ pyjwkest==1.4.2
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-drf-extensions
-pyjwt[crypto]==2.5.0
+pyjwt[crypto]==2.6.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -497,7 +497,7 @@ python3-openid==3.2.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   social-auth-core
-pytz==2022.4
+pytz==2022.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -539,7 +539,7 @@ ruamel-yaml==0.17.21
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   drf-yasg
-ruamel-yaml-clib==0.2.6
+ruamel-yaml-clib==0.2.7
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -596,7 +596,7 @@ sqlparse==0.4.3
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   django
-stevedore==4.0.1
+stevedore==4.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -627,11 +627,6 @@ tox==3.26.0
     #   tox-battery
 tox-battery==0.6.1
     # via -r requirements/test.txt
-types-cryptography==3.3.23.1
-    # via
-    #   -r requirements/quality.txt
-    #   -r requirements/test.txt
-    #   pyjwt
 typing-extensions==4.4.0
     # via
     #   -r requirements/quality.txt
