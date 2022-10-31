@@ -37,7 +37,7 @@ billiard==3.6.4.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   celery
-build==0.8.0
+build==0.9.0
     # via
     #   -r requirements/pip-tools.txt
     #   pip-tools
@@ -141,7 +141,7 @@ diff-cover==4.0.0
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/dev.in
-dill==0.3.5.1
+dill==0.3.6
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -283,7 +283,7 @@ edx-drf-extensions==8.3.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-rbac
-edx-i18n-tools==0.9.1
+edx-i18n-tools==0.9.2
     # via -r requirements/dev.in
 edx-lint==5.2.5
     # via
@@ -307,6 +307,10 @@ edx-toggles==5.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+exceptiongroup==1.0.0
+    # via
+    #   -r requirements/test.txt
+    #   pytest
 factory-boy==3.2.1
     # via -r requirements/test.txt
 faker==15.1.1
@@ -383,7 +387,7 @@ kombu==5.2.4
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   celery
-lazy-object-proxy==1.7.1
+lazy-object-proxy==1.8.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -402,12 +406,12 @@ mysqlclient==2.1.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-newrelic==8.2.1
+newrelic==8.4.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-django-utils
-oauthlib==3.2.1
+oauthlib==3.2.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -427,7 +431,7 @@ paramiko==2.11.0
     # via docker
 path==16.5.0
     # via edx-i18n-tools
-pbr==5.10.0
+pbr==5.11.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -457,7 +461,7 @@ prompt-toolkit==3.0.31
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   click-repl
-psutil==5.9.2
+psutil==5.9.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -465,7 +469,6 @@ psutil==5.9.2
 py==1.11.0
     # via
     #   -r requirements/test.txt
-    #   pytest
     #   tox
 pycodestyle==2.9.1
     # via -r requirements/quality.txt
@@ -488,7 +491,7 @@ pyjwkest==1.4.2
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-drf-extensions
-pyjwt[crypto]==2.5.0
+pyjwt[crypto]==2.6.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -539,9 +542,9 @@ pyparsing==3.0.9
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   packaging
-pyrsistent==0.18.1
+pyrsistent==0.19.1
     # via jsonschema
-pytest==7.1.3
+pytest==7.2.0
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -570,7 +573,7 @@ python3-openid==3.2.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   social-auth-core
-pytz==2022.4
+pytz==2022.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -616,7 +619,7 @@ ruamel-yaml==0.17.21
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   drf-yasg
-ruamel-yaml-clib==0.2.6
+ruamel-yaml-clib==0.2.7
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -679,7 +682,7 @@ sqlparse==0.4.3
     #   -r requirements/test.txt
     #   django
     #   django-debug-toolbar
-stevedore==4.0.1
+stevedore==4.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -704,22 +707,17 @@ tomli==2.0.1
     #   pylint
     #   pytest
     #   tox
-tomlkit==0.11.5
+tomlkit==0.11.6
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pylint
-tox==3.26.0
+tox==3.27.0
     # via
     #   -r requirements/test.txt
     #   tox-battery
 tox-battery==0.6.1
     # via -r requirements/test.txt
-types-cryptography==3.3.23.1
-    # via
-    #   -r requirements/quality.txt
-    #   -r requirements/test.txt
-    #   pyjwt
 typing-extensions==4.4.0
     # via
     #   -r requirements/quality.txt
@@ -745,7 +743,7 @@ vine==5.0.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.16.5
+virtualenv==20.16.6
     # via
     #   -r requirements/test.txt
     #   tox
