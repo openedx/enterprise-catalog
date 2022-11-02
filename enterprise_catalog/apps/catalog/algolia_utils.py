@@ -70,6 +70,7 @@ ALGOLIA_FIELDS = [
     'visible_via_association',
     'created',
     'course_type',
+    'course_length',
 ]
 
 # default configuration for the index
