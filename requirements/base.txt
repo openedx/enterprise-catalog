@@ -48,7 +48,7 @@ coreschema==0.0.4
     # via
     #   coreapi
     #   drf-yasg
-cryptography==38.0.1
+cryptography==38.0.3
     # via
     #   pyjwt
     #   social-auth-core
@@ -182,7 +182,7 @@ packaging==21.3
     # via drf-yasg
 pbr==5.11.0
     # via stevedore
-prompt-toolkit==3.0.31
+prompt-toolkit==3.0.32
     # via click-repl
 psutil==5.9.3
     # via edx-django-utils
@@ -199,7 +199,7 @@ pyjwt[crypto]==2.6.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
-pymongo==3.12.3
+pymongo==3.13.0
     # via edx-opaque-keys
 pynacl==1.5.0
     # via edx-django-utils
@@ -211,7 +211,7 @@ python-slugify==6.1.2
     # via code-annotations
 python3-openid==3.2.0
     # via social-auth-core
-pytz==2022.5
+pytz==2022.6
     # via
     #   -r requirements/base.in
     #   celery
