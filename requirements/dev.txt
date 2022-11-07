@@ -119,7 +119,7 @@ coverage[toml]==6.5.0
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==38.0.1
+cryptography==38.0.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -236,7 +236,7 @@ djangorestframework-xml==2.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-docker[ssh]==6.0.0
+docker[ssh]==6.0.1
     # via docker-compose
 docker-compose==1.29.2
     # via -r requirements/dev.in
@@ -307,13 +307,13 @@ edx-toggles==5.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-exceptiongroup==1.0.0
+exceptiongroup==1.0.1
     # via
     #   -r requirements/test.txt
     #   pytest
 factory-boy==3.2.1
     # via -r requirements/test.txt
-faker==15.1.1
+faker==15.2.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -427,7 +427,7 @@ packaging==21.3
     #   drf-yasg
     #   pytest
     #   tox
-paramiko==2.11.0
+paramiko==2.12.0
     # via docker
 path==16.5.0
     # via edx-i18n-tools
@@ -442,7 +442,7 @@ pep517==0.13.0
     #   build
 pip-tools==6.9.0
     # via -r requirements/pip-tools.txt
-platformdirs==2.5.2
+platformdirs==2.5.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -456,7 +456,7 @@ pluggy==1.0.0
     #   tox
 polib==1.1.1
     # via edx-i18n-tools
-prompt-toolkit==3.0.31
+prompt-toolkit==3.0.32
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -525,7 +525,7 @@ pylint-plugin-utils==0.7
     #   -r requirements/test.txt
     #   pylint-celery
     #   pylint-django
-pymongo==3.12.3
+pymongo==3.13.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -542,7 +542,7 @@ pyparsing==3.0.9
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   packaging
-pyrsistent==0.19.1
+pyrsistent==0.19.2
     # via jsonschema
 pytest==7.2.0
     # via
@@ -573,7 +573,7 @@ python3-openid==3.2.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   social-auth-core
-pytz==2022.5
+pytz==2022.6
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -756,7 +756,7 @@ websocket-client==0.59.0
     # via
     #   docker
     #   docker-compose
-wheel==0.37.1
+wheel==0.38.2
     # via
     #   -r requirements/pip-tools.txt
     #   pip-tools
