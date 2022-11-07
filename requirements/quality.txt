@@ -81,7 +81,7 @@ coreschema==0.0.4
     #   -r requirements/base.txt
     #   coreapi
     #   drf-yasg
-cryptography==38.0.1
+cryptography==38.0.3
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -260,9 +260,9 @@ pbr==5.11.0
     # via
     #   -r requirements/base.txt
     #   stevedore
-platformdirs==2.5.2
+platformdirs==2.5.3
     # via pylint
-prompt-toolkit==3.0.31
+prompt-toolkit==3.0.32
     # via
     #   -r requirements/base.txt
     #   click-repl
@@ -309,7 +309,7 @@ pylint-plugin-utils==0.7
     # via
     #   pylint-celery
     #   pylint-django
-pymongo==3.12.3
+pymongo==3.13.0
     # via
     #   -r requirements/base.txt
     #   edx-opaque-keys
@@ -333,7 +333,7 @@ python3-openid==3.2.0
     # via
     #   -r requirements/base.txt
     #   social-auth-core
-pytz==2022.5
+pytz==2022.6
     # via
     #   -r requirements/base.txt
     #   celery
