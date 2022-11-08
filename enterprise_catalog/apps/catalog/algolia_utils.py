@@ -108,6 +108,7 @@ ALGOLIA_INDEX_SETTINGS = {
         'marketing_url',
         'enterprise_catalog_query_titles',
         'course_type',
+        'course_length',
     ],
     'unretrievableAttributes': [
         'enterprise_catalog_uuids',
