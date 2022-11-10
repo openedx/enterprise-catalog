@@ -34,6 +34,16 @@ def get_enterprise_uuid_from_request_data(request):
 def get_content_keys_from_request_data(request):
     """
     Extracts content keys from the request payload.
+
+    The order of keys are preserved, while duplicates are removed.
+
+    Args:
+        - request (rest_framework.request.Request): The request object containing the request payload.
+
+    Returns:
+        list of str: content keys.
     """
-    content_keys = request.data.get('content_keys', [])
-    return content_keys
+    content_keys_raw = request.data.get('content_keys', [])
+    # set() removes duplicates but does not preserve order, so we must synchronize the order again with the original
+    # list based on the FIRST occurrence of each element in the original list.
+    return sorted(set(content_keys_raw), key=lambda x: content_keys_raw.index(x))
