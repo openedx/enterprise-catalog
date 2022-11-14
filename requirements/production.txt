@@ -183,7 +183,7 @@ future==0.18.2
     #   pyjwkest
 gevent==22.10.2
     # via -r requirements/production.in
-greenlet==2.0.0.post0
+greenlet==2.0.1
     # via gevent
 gunicorn==20.1.0
     # via -r requirements/production.in
@@ -241,7 +241,7 @@ prompt-toolkit==3.0.32
     # via
     #   -r requirements/base.txt
     #   click-repl
-psutil==5.9.3
+psutil==5.9.4
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -365,7 +365,7 @@ sqlparse==0.4.3
     # via
     #   -r requirements/base.txt
     #   django
-stevedore==4.1.0
+stevedore==4.1.1
     # via
     #   -r requirements/base.txt
     #   code-annotations

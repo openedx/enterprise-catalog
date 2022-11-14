@@ -307,13 +307,13 @@ edx-toggles==5.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-exceptiongroup==1.0.1
+exceptiongroup==1.0.2
     # via
     #   -r requirements/test.txt
     #   pytest
 factory-boy==3.2.1
     # via -r requirements/test.txt
-faker==15.2.0
+faker==15.3.1
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -442,7 +442,7 @@ pep517==0.13.0
     #   build
 pip-tools==6.9.0
     # via -r requirements/pip-tools.txt
-platformdirs==2.5.3
+platformdirs==2.5.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -461,7 +461,7 @@ prompt-toolkit==3.0.32
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   click-repl
-psutil==5.9.3
+psutil==5.9.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -682,7 +682,7 @@ sqlparse==0.4.3
     #   -r requirements/test.txt
     #   django
     #   django-debug-toolbar
-stevedore==4.1.0
+stevedore==4.1.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -743,7 +743,7 @@ vine==5.0.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.16.6
+virtualenv==20.16.7
     # via
     #   -r requirements/test.txt
     #   tox
@@ -756,7 +756,7 @@ websocket-client==0.59.0
     # via
     #   docker
     #   docker-compose
-wheel==0.38.2
+wheel==0.38.4
     # via
     #   -r requirements/pip-tools.txt
     #   pip-tools

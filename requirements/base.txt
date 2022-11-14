@@ -184,7 +184,7 @@ pbr==5.11.0
     # via stevedore
 prompt-toolkit==3.0.32
     # via click-repl
-psutil==5.9.3
+psutil==5.9.4
     # via edx-django-utils
 pycparser==2.21
     # via cffi
@@ -270,7 +270,7 @@ social-auth-core==4.3.0
     #   social-auth-app-django
 sqlparse==0.4.3
     # via django
-stevedore==4.1.0
+stevedore==4.1.1
     # via
     #   code-annotations
     #   edx-django-utils
