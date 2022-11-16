@@ -33,11 +33,14 @@ class TestCatalogAdminRBACPermissions(APITestMixin):
 
     @mock.patch('enterprise_catalog.apps.catalog.rules.crum.get_current_request')
     @ddt.data(
-        ('catalog.has_admin_access', SYSTEM_ENTERPRISE_ADMIN_ROLE, TEST_ENTERPRISE_UUID),
-        ('catalog.has_admin_access', SYSTEM_ENTERPRISE_ADMIN_ROLE, ALL_ACCESS_CONTEXT),
+        ('catalog.has_admin_access', SYSTEM_ENTERPRISE_LEARNER_ROLE, TEST_ENTERPRISE_UUID),
+        ('catalog.has_admin_access', SYSTEM_ENTERPRISE_LEARNER_ROLE, ALL_ACCESS_CONTEXT),
     )
     @ddt.unpack
     def test_has_no_implicit_access(self, permission, system_wide_role, context, get_current_request_mock):
+        """
+        Verify that admin access on a specific object is not implicitly provided even if it matches the JWT context.
+        """
         get_current_request_mock.return_value = self.get_request_with_jwt_cookie(system_wide_role, context)
         assert not self.user.has_perm(permission, TEST_ENTERPRISE_UUID)
 
@@ -61,7 +64,7 @@ class TestCatalogAdminRBACPermissions(APITestMixin):
         ('catalog.has_admin_access', SYSTEM_ENTERPRISE_LEARNER_ROLE),
     )
     @ddt.unpack
-    def test_has_implicit_access_no_context(self, permission, system_wide_role, get_current_request_mock):
+    def test_has_no_implicit_access_no_context(self, permission, system_wide_role, get_current_request_mock):
         get_current_request_mock.return_value = self.get_request_with_jwt_cookie(system_wide_role)
         assert not self.user.has_perm(permission, TEST_ENTERPRISE_UUID)
 
@@ -73,7 +76,7 @@ class TestCatalogAdminRBACPermissions(APITestMixin):
         ('catalog.has_admin_access', SYSTEM_ENTERPRISE_LEARNER_ROLE),
     )
     @ddt.unpack
-    def test_has_implicit_access_incorrect_context(self, permission, system_wide_role, get_current_request_mock):
+    def test_has_no_implicit_access_incorrect_context(self, permission, system_wide_role, get_current_request_mock):
         """
         Verify the implicit permissions check fails when the JWT context (i.e., enterprise uuid) does not match
         the context provided to `self.user.has_perm`.
