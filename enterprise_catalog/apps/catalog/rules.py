@@ -16,6 +16,8 @@ from enterprise_catalog.apps.catalog.constants import (
     ACCESS_TO_ALL_ENTERPRISES_TOKEN,
     ENTERPRISE_CATALOG_ADMIN_ROLE,
     ENTERPRISE_CATALOG_LEARNER_ROLE,
+    PERMISSION_HAS_ADMIN_ACCESS,
+    PERMISSION_HAS_LEARNER_ACCESS,
 )
 from enterprise_catalog.apps.catalog.models import (
     EnterpriseCatalogRoleAssignment,
@@ -56,7 +58,7 @@ def has_explicit_access_to_catalog_admin(user, context):
 
 
 rules.add_perm(
-    'catalog.has_admin_access',
+    PERMISSION_HAS_ADMIN_ACCESS,
     has_implicit_access_to_catalog_admin | has_explicit_access_to_catalog_admin
 )
 
@@ -94,7 +96,7 @@ def has_explicit_access_to_catalog_learner(user, context):
 
 
 rules.add_perm(
-    'catalog.has_learner_access',
+    PERMISSION_HAS_LEARNER_ACCESS,
     (has_implicit_access_to_catalog_learner | has_explicit_access_to_catalog_learner
      | has_implicit_access_to_catalog_admin | has_explicit_access_to_catalog_admin)
 )
