@@ -71,6 +71,7 @@ ALGOLIA_FIELDS = [
     'created',
     'course_type',
     'course_length',
+    'entitlements',
 ]
 
 # default configuration for the index
