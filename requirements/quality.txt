@@ -81,7 +81,7 @@ coreschema==0.0.4
     #   -r requirements/base.txt
     #   coreapi
     #   drf-yasg
-cryptography==38.0.3
+cryptography==38.0.4
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -131,7 +131,7 @@ django-crum==0.7.9
     #   edx-toggles
 django-extensions==3.2.1
     # via -r requirements/base.txt
-django-model-utils==4.2.0
+django-model-utils==4.3.1
     # via
     #   -r requirements/base.txt
     #   edx-celeryutils
@@ -146,6 +146,8 @@ django-waffle==3.0.0
     #   edx-django-utils
     #   edx-drf-extensions
     #   edx-toggles
+djangoql==0.17.1
+    # via -r requirements/base.txt
 djangorestframework==3.14.0
     # via
     #   -r requirements/base.txt
@@ -260,23 +262,27 @@ pbr==5.11.0
     # via
     #   -r requirements/base.txt
     #   stevedore
-platformdirs==2.5.3
+platformdirs==2.5.4
     # via pylint
-prompt-toolkit==3.0.32
+ply==3.11
+    # via
+    #   -r requirements/base.txt
+    #   djangoql
+prompt-toolkit==3.0.33
     # via
     #   -r requirements/base.txt
     #   click-repl
-psutil==5.9.3
+psutil==5.9.4
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
-pycodestyle==2.9.1
+pycodestyle==2.10.0
     # via -r requirements/quality.in
 pycparser==2.21
     # via
     #   -r requirements/base.txt
     #   cffi
-pycryptodomex==3.15.0
+pycryptodomex==3.16.0
     # via
     #   -r requirements/base.txt
     #   pyjwkest
@@ -325,7 +331,7 @@ python-dateutil==2.8.2
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-python-slugify==6.1.2
+python-slugify==7.0.0
     # via
     #   -r requirements/base.txt
     #   code-annotations
@@ -379,7 +385,7 @@ semantic-version==2.10.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-simplejson==3.17.6
+simplejson==3.18.0
     # via -r requirements/base.txt
 six==1.16.0
     # via
@@ -411,7 +417,7 @@ sqlparse==0.4.3
     # via
     #   -r requirements/base.txt
     #   django
-stevedore==4.1.0
+stevedore==4.1.1
     # via
     #   -r requirements/base.txt
     #   code-annotations
@@ -434,7 +440,7 @@ uritemplate==4.1.1
     #   -r requirements/base.txt
     #   coreapi
     #   drf-yasg
-urllib3==1.26.12
+urllib3==1.26.13
     # via
     #   -r requirements/base.txt
     #   requests
