@@ -173,9 +173,9 @@ class EnterpriseCatalogCRUDViewSetTests(APITestMixin):
             'title': 'Test Title',
             'enterprise_customer': self.enterprise_uuid,
             'enterprise_customer_name': self.enterprise_name,
-            'enabled_course_modes': '["verified"]',
+            'enabled_course_modes': ['verified'],
             'publish_audit_enrollment_urls': True,
-            'content_filter': '{"content_type":"course"}',
+            'content_filter': {'content_type': 'course'},
         }
 
     def _assert_correct_new_catalog_data(self, catalog_uuid):
@@ -390,7 +390,7 @@ class EnterpriseCatalogCRUDViewSetTests(APITestMixin):
             'enterprise_customer_name': enterprise_catalog_2.enterprise_name,
             'enabled_course_modes': enterprise_catalog_2.enabled_course_modes,
             'publish_audit_enrollment_urls': enterprise_catalog_2.publish_audit_enrollment_urls,
-            'content_filter': '{"a": "b"}',
+            'content_filter': {"a": "b"},
         }
 
         url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': enterprise_catalog_2.uuid})
@@ -1497,7 +1497,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         self.set_up_invalid_jwt_role()
         self.remove_role_assignments()
         url = self._get_generate_diff_base_url()
-        response = self.client.post(url, content_type='application/json',)
+        response = self.client.post(url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_generate_diff_get_supports_up_to_max_content_keys(self):
@@ -1534,11 +1534,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
 
         self.add_metadata_to_catalog(self.enterprise_catalog, [content])
         url = self._get_generate_diff_base_url()
-        response = self.client.post(
-            url,
-            data=json.dumps({"content_keys": [content.content_key]}),
-            content_type='application/json',
-        )
+        response = self.client.post(url, {"content_keys": [content.content_key]})
         assert response.data.get('items_found')[0].get('date_updated') == content_modified
 
     @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
@@ -1559,11 +1555,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
 
         self.add_metadata_to_catalog(self.enterprise_catalog, [content])
         url = self._get_generate_diff_base_url()
-        response = self.client.post(
-            url,
-            data=json.dumps({"content_keys": [content.content_key]}),
-            content_type='application/json',
-        )
+        response = self.client.post(url, {"content_keys": [content.content_key]})
         assert response.data.get('items_found')[0].get('date_updated') == customer_modified
 
     @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
@@ -1583,11 +1575,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         self.add_metadata_to_catalog(self.enterprise_catalog, [content])
         url = self._get_generate_diff_base_url()
 
-        response = self.client.post(
-            url,
-            data=json.dumps({"content_keys": [content.content_key]}),
-            content_type='application/json',
-        )
+        response = self.client.post(url, {"content_keys": [content.content_key]})
         assert response.data.get('items_found')[0].get('date_updated') == now
 
     @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
@@ -1609,8 +1597,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         url = self._get_generate_diff_base_url()
         response = self.client.post(
             url,
-            data=json.dumps({"content_keys": [content.content_key, content2.content_key, "bad+key", "bad+key2"]}),
-            content_type='application/json',
+            {"content_keys": [content.content_key, content2.content_key, "bad+key", "bad+key2"]},
         )
         assert response.status_code == 200
         response_data = response.data
@@ -1641,7 +1628,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         content = ContentMetadataFactory()
         self.add_metadata_to_catalog(self.enterprise_catalog, [content])
         url = self._get_generate_diff_base_url()
-        response = self.client.post(url, content_type='application/json')
+        response = self.client.post(url)
         assert response.data.get('items_not_included') == [{'content_key': content.content_key}]
         assert not response.data.get('items_not_found')
         assert not response.data.get('items_found')
@@ -1662,11 +1649,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         self.add_metadata_to_catalog(self.enterprise_catalog, [content, content2])
 
         url = self._get_generate_diff_base_url()
-        response = self.client.post(
-            url,
-            data=json.dumps({'content_keys': [content.content_key, content2.content_key]}),
-            content_type='application/json'
-        )
+        response = self.client.post(url, {'content_keys': [content.content_key, content2.content_key]})
         for item in response.data.get('items_found'):
             assert item.get('content_key') in [content.content_key, content2.content_key]
         assert not response.data.get('items_not_found')
@@ -1686,11 +1669,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         key = 'bad+key'
         key2 = 'bad+key2'
         url = self._get_generate_diff_base_url()
-        response = self.client.post(
-            url,
-            data=json.dumps({'content_keys': [key, key2]}),
-            content_type='application/json'
-        )
+        response = self.client.post(url, {'content_keys': [key, key2]})
         for item in response.data.get('items_not_found'):
             assert item in [{'content_key': key}, {'content_key': key2}]
         assert not response.data.get('items_found')
@@ -1866,11 +1845,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         request_json = {
             "content_keys": []
         }
-        response = self.client.post(
-            url,
-            data=json.dumps(request_json),
-            content_type='application/json',
-        ).json()
+        response = self.client.post(url, request_json).json()
         detail = response.get('detail')
         self.assertEqual(detail, 'MISSING: catalog.has_learner_access')
 
@@ -1884,11 +1859,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         request_json = {
             "content_keys": []
         }
-        response = self.client.post(
-            url,
-            data=json.dumps(request_json),
-            content_type='application/json',
-        ).json()
+        response = self.client.post(url, request_json).json()
         detail = response.get('detail')
         self.assertEqual(detail, 'MISSING: catalog.has_learner_access')
 
@@ -1902,11 +1873,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         request_json = {
             "content_keys": []
         }
-        response = self.client.post(
-            url,
-            data=json.dumps(request_json),
-            content_type='application/json',
-        ).json()
+        response = self.client.post(url, request_json).json()
         self.assertEqual(response.get('filtered_content_keys'), [])
 
     def test_filter_content_items_not_in_catalogs(self):
@@ -1922,11 +1889,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         request_json = {
             "content_keys": ['key-not-part-of-catalog']
         }
-        response = self.client.post(
-            url,
-            data=json.dumps(request_json),
-            content_type='application/json',
-        ).json()
+        response = self.client.post(url, request_json).json()
         self.assertEqual(response.get('filtered_content_keys'), [])
 
     def test_filter_content_items_in_catalogs(self):
@@ -1946,11 +1909,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         request_json = {
             "content_keys": [relevent_content_key],
         }
-        response = self.client.post(
-            url,
-            data=json.dumps(request_json),
-            content_type='application/json',
-        ).json()
+        response = self.client.post(url, request_json).json()
         self.assertEqual(response.get('filtered_content_keys'), [relevent_content_key])
 
     def test_filter_content_items_parent_key(self):
@@ -1976,11 +1935,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         request_json = {
             "content_keys": [parent_content_key],
         }
-        response = self.client.post(
-            url,
-            data=json.dumps(request_json),
-            content_type='application/json',
-        ).json()
+        response = self.client.post(url, request_json).json()
         self.assertEqual(response.get('filtered_content_keys'), [parent_content_key])
 
     def test_filter_content_items_specified_catalogs(self):
@@ -2004,11 +1959,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
             "content_keys": [relevant_content_key, content_key_outside_specified_catalog],
             "catalog_uuids": [str(second_catalog.uuid)]
         }
-        response = self.client.post(
-            url,
-            data=json.dumps(request_json),
-            content_type='application/json',
-        ).json()
+        response = self.client.post(url, request_json).json()
 
         # response should only contain content keys found in the "second_catalog"
         self.assertEqual(response.get('filtered_content_keys'), [relevant_content_key])
@@ -2054,11 +2005,7 @@ class DistinctCatalogQueriesViewTests(APITestMixin):
                 str(enterprise_catalog_two.uuid),
             ]
         }
-        response = self.client.post(
-            self.url,
-            data=json.dumps(request_json),
-            content_type='application/json',
-        ).json()
+        response = self.client.post(self.url, request_json).json()
 
         if use_different_query:
             assert response['num_distinct_query_ids'] == 2
