@@ -50,7 +50,9 @@ logger = logging.getLogger(__name__)
 
 
 class EnterpriseCurationConfigBaseViewSet(PermissionRequiredForListingMixin, BaseViewSet):
-    """ Base viewset for common behavior for listing and retrieving EnterpriseCurationConfigs """
+    """
+    Base viewset for common behavior for listing and retrieving EnterpriseCurationConfigs
+    """
     renderer_classes = [JSONRenderer, XMLRenderer]
     serializer_class = EnterpriseCurationConfigSerializer
     lookup_field = 'uuid'
@@ -80,7 +82,9 @@ class EnterpriseCurationConfigBaseViewSet(PermissionRequiredForListingMixin, Bas
             return str(self.requested_enterprise_uuid)
 
         try:
-            enterprise_curation_config = EnterpriseCurationConfig.objects.get(uuid=self.requested_enterprise_curation_config_uuid)
+            enterprise_curation_config = EnterpriseCurationConfig.objects.get(
+                uuid=self.requested_enterprise_curation_config_uuid
+            )
             return str(enterprise_curation_config.enterprise_uuid)
         except EnterpriseCurationConfig.DoesNotExist:
             return None
@@ -104,7 +108,9 @@ class EnterpriseCurationConfigBaseViewSet(PermissionRequiredForListingMixin, Bas
 
 
 class EnterpriseCurationConfigReadOnlyViewSet(EnterpriseCurationConfigBaseViewSet, viewsets.ReadOnlyModelViewSet):
-    """ Viewset for listing and retrieving EnterpriseCurationConfigs. """
+    """
+    Viewset for listing and retrieving EnterpriseCurationConfigs.
+    """
     permission_required = PERMISSION_HAS_LEARNER_ACCESS
 
     # Fields required for controlling access in the `list()` action
@@ -112,14 +118,18 @@ class EnterpriseCurationConfigReadOnlyViewSet(EnterpriseCurationConfigBaseViewSe
 
 
 class EnterpriseCurationConfigViewSet(EnterpriseCurationConfigBaseViewSet, viewsets.ModelViewSet):
-    """ Viewset for listing, retrieving, creating, and updating EnterpriseCurationConfigs. """
+    """
+    Viewset for listing, retrieving, creating, and updating EnterpriseCurationConfigs.
+    """
     permission_required = PERMISSION_HAS_ADMIN_ACCESS
 
     # Fields required for controlling access in the `list()` action
     allowed_roles = [ENTERPRISE_CATALOG_ADMIN_ROLE]
 
     def create(self, request, *args, **kwargs):
-        """ Create a new EnterpriseCurationConfig """
+        """
+        Create a new EnterpriseCurationConfig
+        """
         if not self.requested_enterprise_uuid:
             return Response(
                 f'An enterprise UUID was not specified.',
@@ -127,7 +137,9 @@ class EnterpriseCurationConfigViewSet(EnterpriseCurationConfigBaseViewSet, views
             )
 
         try:
-            existing_curation_config_for_enterprise = EnterpriseCurationConfig.objects.get(enterprise_uuid=self.requested_enterprise_uuid)
+            existing_curation_config_for_enterprise = EnterpriseCurationConfig.objects.get(
+                enterprise_uuid=self.requested_enterprise_uuid
+            )
         except EnterpriseCurationConfig.DoesNotExist:
             existing_curation_config_for_enterprise = None
 
@@ -141,7 +153,9 @@ class EnterpriseCurationConfigViewSet(EnterpriseCurationConfigBaseViewSet, views
 
 
 class HighlightSetBaseViewSet(PermissionRequiredForListingMixin, BaseViewSet):
-    """ Base viewset for listing, retrieving, creating, and updating HighlightSets """
+    """
+    Base viewset for listing, retrieving, creating, and updating HighlightSets
+    """
     renderer_classes = [JSONRenderer, XMLRenderer]
     serializer_class = HighlightSetSerializer
     lookup_field = 'uuid'
@@ -199,7 +213,9 @@ class HighlightSetBaseViewSet(PermissionRequiredForListingMixin, BaseViewSet):
 
 
 class HighlightSetReadOnlyViewSet(HighlightSetBaseViewSet, viewsets.ReadOnlyModelViewSet):
-    """ Viewset for listing and retrieving HighlightSets. """
+    """
+    Viewset for listing and retrieving HighlightSets.
+    """
     permission_required = PERMISSION_HAS_LEARNER_ACCESS
 
     # Fields required for controlling access in the `list()` action
@@ -228,7 +244,9 @@ class HighlightSetViewSet(HighlightSetBaseViewSet, viewsets.ModelViewSet):
         return existing_curation_config_for_enterprise
 
     def create(self, request, *args, **kwargs):
-        """ Create a new HighlightSet """
+        """
+        Create a new HighlightSet
+        """
         if not self.requested_enterprise_uuid:
             return Response(
                 f'An enterprise UUID was not specified.',
@@ -248,20 +266,25 @@ class HighlightSetViewSet(HighlightSetBaseViewSet, viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], url_path='add-content')
     def add_content(self, request, uuid, *args, **kwargs):
-        """ Add content to an existing HighlightSet """
-        content_keys = set(utils.get_content_keys_from_request_data(request))
+        """
+        Add content to an existing HighlightSet
+
+        Arguments:
+        - `uuid` (str): UUID of the HighlightSet to add content to.
+        - `request.data["content_keys"]` (list of str): A list of content keys to add.
+        """
         highlighted_content = []
         ignored_content_keys = []
         added_content_keys = []
         existing_content_keys = []
-        for content_key in content_keys:
+        for content_key in self.requested_content_keys:
             try:
                 content_metadata = ContentMetadata.objects.get(content_key=content_key)
             except ContentMetadata.DoesNotExist:
                 logger.warning('content_key not found: %s', str(content_key))
                 ignored_content_keys.append(content_key)
-                continue
-            highlighted_content.append(content_metadata)
+            else:
+                highlighted_content.append(content_metadata)
 
         highlight_set = HighlightSet.objects.get(uuid=uuid)
 
@@ -287,13 +310,19 @@ class HighlightSetViewSet(HighlightSetBaseViewSet, viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], url_path='remove-content')
     def remove_content(self, request, uuid, *args, **kwargs):
-        """ Remove existing content from an existing HighlightSet """
-        content_keys = set(utils.get_content_keys_from_request_data(request))
+        """
+        Remove existing content from an existing HighlightSet
+
+        Arguments:
+        - `uuid` (str): UUID of the HighlightSet to remove content from.
+        - `request.data["content_keys"]` (str): A list of content keys to remove.
+        """
+        content_keys = self.requested_content_keys
         removed_content_keys = set()
 
         highlight_set = HighlightSet.objects.get(uuid=uuid)
         existing_content = highlight_set.highlighted_content
-        existing_content_to_remove = existing_content.filter(content_metadata__content_key__in=list(content_keys))
+        existing_content_to_remove = existing_content.filter(content_metadata__content_key__in=content_keys)
         if existing_content_to_remove:
             removed_content_keys.update([
                 content_item.content_metadata.content_key
@@ -304,7 +333,7 @@ class HighlightSetViewSet(HighlightSetBaseViewSet, viewsets.ModelViewSet):
         return Response(
             {
                 'removed_content_keys': removed_content_keys,
-                'ignored_content_keys': list(content_keys.difference(removed_content_keys)),
+                'ignored_content_keys': list(set(content_keys).difference(removed_content_keys)),
                 'highlight_set': HighlightSetSerializer(highlight_set).data,
             },
             status=HTTP_201_CREATED,
