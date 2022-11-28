@@ -48,7 +48,7 @@ coreschema==0.0.4
     # via
     #   coreapi
     #   drf-yasg
-cryptography==38.0.3
+cryptography==38.0.4
     # via
     #   pyjwt
     #   social-auth-core
@@ -94,7 +94,7 @@ django-crum==0.7.9
     #   edx-toggles
 django-extensions==3.2.1
     # via -r requirements/base.in
-django-model-utils==4.2.0
+django-model-utils==4.3.1
     # via
     #   -r requirements/base.in
     #   edx-celeryutils
@@ -182,13 +182,13 @@ packaging==21.3
     # via drf-yasg
 pbr==5.11.0
     # via stevedore
-prompt-toolkit==3.0.32
+prompt-toolkit==3.0.33
     # via click-repl
-psutil==5.9.3
+psutil==5.9.4
     # via edx-django-utils
 pycparser==2.21
     # via cffi
-pycryptodomex==3.15.0
+pycryptodomex==3.16.0
     # via pyjwkest
 pyjwkest==1.4.2
     # via edx-drf-extensions
@@ -207,7 +207,7 @@ pyparsing==3.0.9
     # via packaging
 python-dateutil==2.8.2
     # via edx-drf-extensions
-python-slugify==6.1.2
+python-slugify==7.0.0
     # via code-annotations
 python3-openid==3.2.0
     # via social-auth-core
@@ -247,7 +247,7 @@ rules==3.3
     # via -r requirements/base.in
 semantic-version==2.10.0
     # via edx-drf-extensions
-simplejson==3.17.6
+simplejson==3.18.0
     # via -r requirements/base.in
 six==1.16.0
     # via
@@ -270,7 +270,7 @@ social-auth-core==4.3.0
     #   social-auth-app-django
 sqlparse==0.4.3
     # via django
-stevedore==4.1.0
+stevedore==4.1.1
     # via
     #   code-annotations
     #   edx-django-utils
@@ -281,7 +281,7 @@ uritemplate==4.1.1
     # via
     #   coreapi
     #   drf-yasg
-urllib3==1.26.12
+urllib3==1.26.13
     # via requests
 vine==5.0.0
     # via
