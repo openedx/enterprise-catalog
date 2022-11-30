@@ -351,7 +351,7 @@ class EnterpriseCurationConfigSerializer(serializers.ModelSerializer):
         * Highlighted content UUIDs are sorted by the order in which they were added by the enterprise admin.
           This may help inform frontend code determine which order to display content.
         """
-        catalog_highlight_sets = obj.catalog_highlights.all()
+        catalog_highlight_sets = obj.catalog_highlights.all().order_by('-created')
         return [
             {
                 'uuid': highlight_set.uuid,
