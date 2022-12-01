@@ -59,8 +59,9 @@ class ContentMetadataAdmin(UnchangeableMixin):
         'content_key',
         'parent_content_key',
     )
-    filter_horizontal = (
+    readonly_fields = (
         'associated_content_metadata',
+        'catalog_queries'
     )
 
 
