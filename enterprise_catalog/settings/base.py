@@ -54,7 +54,9 @@ THIRD_PARTY_APPS = (
     'corsheaders',
     'csrf.apps.CsrfAppConfig',  # Enables frontend apps to retrieve CSRF tokens
     'django_celery_results',  # Enables a Django model as the celery result backend
+    'djangoql',
     'rest_framework',
+    'simple_history',
     'social_django',
     'waffle',
     'release_util',
@@ -87,6 +89,10 @@ MIDDLEWARE = (
     'social_django.middleware.SocialAuthExceptionMiddleware',
     'crum.CurrentRequestUserMiddleware',
     'waffle.middleware.WaffleMiddleware',
+
+    # Lets simple history track which user made changes via API.  Manual changes via django admin already have the user
+    # tracked via SimpleHistoryAdmin.
+    'simple_history.middleware.HistoryRequestMiddleware',
 )
 
 # Enable CORS
