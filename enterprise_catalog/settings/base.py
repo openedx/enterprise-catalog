@@ -89,10 +89,10 @@ MIDDLEWARE = (
     'social_django.middleware.SocialAuthExceptionMiddleware',
     'crum.CurrentRequestUserMiddleware',
     'waffle.middleware.WaffleMiddleware',
-
     # Lets simple history track which user made changes via API.  Manual changes via django admin already have the user
     # tracked via SimpleHistoryAdmin.
     'simple_history.middleware.HistoryRequestMiddleware',
+    'edx_django_utils.cache.middleware.RequestCacheMiddleware',
 )
 
 # Enable CORS
