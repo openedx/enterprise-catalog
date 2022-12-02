@@ -4,45 +4,13 @@ from uuid import uuid4
 import ddt
 from django.test import TestCase
 
-from enterprise_catalog.apps.catalog.algolia_utils import (
-    ALGOLIA_INDEX_SETTINGS,
-    _should_index_course,
-    configure_algolia_index,
-    get_advertised_course_run,
-    get_course_availability,
-    get_course_card_image_url,
-    get_course_language,
-    get_course_outcome,
-    get_course_partners,
-    get_course_prerequisites,
-    get_course_program_titles,
-    get_course_program_types,
-    get_course_runs,
-    get_course_skill_names,
-    get_course_subjects,
-    get_initialized_algolia_client,
-    get_pathway_availability,
-    get_pathway_card_image_url,
-    get_pathway_course_keys,
-    get_pathway_created_date,
-    get_pathway_partners,
-    get_pathway_program_uuids,
-    get_pathway_subjects,
-    get_program_availability,
-    get_program_banner_image_url,
-    get_program_course_details,
-    get_program_learning_items,
-    get_program_level_type,
-    get_program_partners,
-    get_program_prices,
-    get_program_skill_names,
-    get_program_subjects,
-    get_program_title,
-    get_program_type,
-    get_upcoming_course_runs,
-    is_course_archived,
+from enterprise_catalog.apps.catalog import algolia_utils as utils
+from enterprise_catalog.apps.catalog.constants import (
+    COURSE,
+    EXEC_ED_2U_COURSE_TYPE,
+    LEARNER_PATHWAY,
+    PROGRAM,
 )
-from enterprise_catalog.apps.catalog.constants import COURSE, PROGRAM
 from enterprise_catalog.apps.catalog.tests.factories import (
     ContentMetadataFactory,
 )
@@ -107,7 +75,8 @@ class AlgoliaUtilsTests(TestCase):
             content_type=COURSE,
             json_metadata=json_metadata,
         )
-        assert _should_index_course(course_metadata) is expected_result
+        # pylint: disable=protected-access
+        assert utils._should_index_course(course_metadata) is expected_result
 
     def test_is_course_archived(self):
         """
@@ -116,9 +85,9 @@ class AlgoliaUtilsTests(TestCase):
         course_metadata = ContentMetadataFactory.create(
             content_type=COURSE,
         )
-        assert is_course_archived(course_metadata.json_metadata) is False
+        assert utils.is_course_archived(course_metadata.json_metadata) is False
         course_metadata.json_metadata.get('course_runs')[0]['availability'] = ''
-        assert is_course_archived(course_metadata.json_metadata) is True
+        assert utils.is_course_archived(course_metadata.json_metadata) is True
 
     @ddt.data(
         (
@@ -163,7 +132,7 @@ class AlgoliaUtilsTests(TestCase):
         """
         Assert correct parsing of ``content_language`` for a given course run.
         """
-        course_language = get_course_language(course_metadata)
+        course_language = utils.get_course_language(course_metadata)
         assert course_language == expected_course_language
 
     @ddt.data(
@@ -181,7 +150,7 @@ class AlgoliaUtilsTests(TestCase):
         """
         Assert get_course_card_image_url returns the expected course card image url.
         """
-        card_image_url = get_course_card_image_url(course_metadata)
+        card_image_url = utils.get_course_card_image_url(course_metadata)
         assert card_image_url == expected_image_url
 
     @ddt.data(
@@ -225,7 +194,7 @@ class AlgoliaUtilsTests(TestCase):
         """
         Assert get_course_partners returns the expected partner metadata for various inputs.
         """
-        course_partners = get_course_partners(course_metadata)
+        course_partners = utils.get_course_partners(course_metadata)
         assert course_partners == expected_partners
 
     @ddt.data(
@@ -257,7 +226,7 @@ class AlgoliaUtilsTests(TestCase):
         Assert get_course_subjects is flexible enough to support both a list of strings
         and a list of dictionaries.
         """
-        course_subjects = get_course_subjects(course_metadata)
+        course_subjects = utils.get_course_subjects(course_metadata)
         assert sorted(course_subjects) == sorted(expected_subjects)
 
     @ddt.data(
@@ -368,7 +337,7 @@ class AlgoliaUtilsTests(TestCase):
         """
         Assert get_advertised_course_runs fetches just enough info about advertised course run
         """
-        advertised_course_run = get_advertised_course_run(searchable_course)
+        advertised_course_run = utils.get_advertised_course_run(searchable_course)
         assert advertised_course_run == expected_course_run
 
     @ddt.data(
@@ -413,7 +382,7 @@ class AlgoliaUtilsTests(TestCase):
         """
         Assert get_advertised_course_runs fetches just enough info about advertised course run
         """
-        upcoming_course_runs = get_upcoming_course_runs(searchable_course)
+        upcoming_course_runs = utils.get_upcoming_course_runs(searchable_course)
         assert upcoming_course_runs == expected_course_runs
 
     @ddt.data(
@@ -521,7 +490,7 @@ class AlgoliaUtilsTests(TestCase):
         """
         Assert get_advertised_course_runs fetches just enough info about advertised course run
         """
-        upcoming_course_runs = get_course_runs(searchable_course)
+        upcoming_course_runs = utils.get_course_runs(searchable_course)
         assert upcoming_course_runs == expected_course_runs
 
     @ddt.data(
@@ -585,7 +554,7 @@ class AlgoliaUtilsTests(TestCase):
         """
         Assert the course availability is parsed and formatted correctly.
         """
-        availability = get_course_availability(course_metadata)
+        availability = utils.get_course_availability(course_metadata)
         assert availability == expected_availability
 
     @ddt.data(
@@ -607,7 +576,7 @@ class AlgoliaUtilsTests(TestCase):
         """
         Assert that the list of program types associated with a course is properly parsed and formatted.
         """
-        program_types = get_course_program_types(course_metadata)
+        program_types = utils.get_course_program_types(course_metadata)
         assert program_types == expected_program_types
 
     @ddt.data(
@@ -625,7 +594,7 @@ class AlgoliaUtilsTests(TestCase):
         """
         Assert that the list of program types associated with a course is properly parsed and formatted.
         """
-        learning_items = get_program_learning_items(program_metadata)
+        learning_items = utils.get_program_learning_items(program_metadata)
         assert learning_items == expected_program_types
 
     @ddt.data(
@@ -647,7 +616,7 @@ class AlgoliaUtilsTests(TestCase):
         """
         Assert that the list of program titles associated with a course is properly parsed and formatted.
         """
-        program_titles = get_course_program_titles(course_metadata)
+        program_titles = utils.get_course_program_titles(course_metadata)
         assert program_titles == expected_program_titles
 
     @ddt.data(
@@ -669,7 +638,7 @@ class AlgoliaUtilsTests(TestCase):
         """
         Assert that the course outcome is properly parsed and formatted.
         """
-        outcome = get_course_outcome(course_metadata)
+        outcome = utils.get_course_outcome(course_metadata)
         assert outcome == expected_course_outcome
 
     @ddt.data(
@@ -691,7 +660,7 @@ class AlgoliaUtilsTests(TestCase):
         """
         Assert that the course prerequisites is properly parsed and formatted.
         """
-        prerequisites = get_course_prerequisites(course_metadata)
+        prerequisites = utils.get_course_prerequisites(course_metadata)
         assert prerequisites == expected_course_prerequisites
 
     @ddt.data(
@@ -705,7 +674,7 @@ class AlgoliaUtilsTests(TestCase):
         """
         Assert the list of skill names associated with a course is properly parsed.
         """
-        skill_names = get_course_skill_names(course_metadata)
+        skill_names = utils.get_course_skill_names(course_metadata)
         assert sorted(skill_names) == sorted(expected_skill_names)
 
     @mock.patch('enterprise_catalog.apps.catalog.algolia_utils.AlgoliaSearchClient')
@@ -713,7 +682,7 @@ class AlgoliaUtilsTests(TestCase):
         """
         Verify that `get_initialized_algolia_client` makes calls to initialize the index and configure index settings.
         """
-        get_initialized_algolia_client()
+        utils.get_initialized_algolia_client()
         mock_search_client.return_value.init_index.assert_called_once()
 
     @mock.patch('enterprise_catalog.apps.catalog.algolia_utils.AlgoliaSearchClient')
@@ -721,9 +690,9 @@ class AlgoliaUtilsTests(TestCase):
         """
         Verify that `configure_algolia_index_settings` makes call to configure index settings.
         """
-        algolia_client = get_initialized_algolia_client()
-        configure_algolia_index(algolia_client)
-        mock_search_client.return_value.set_index_settings.assert_called_once_with(ALGOLIA_INDEX_SETTINGS)
+        algolia_client = utils.get_initialized_algolia_client()
+        utils.configure_algolia_index(algolia_client)
+        mock_search_client.return_value.set_index_settings.assert_called_once_with(utils.ALGOLIA_INDEX_SETTINGS)
 
     @ddt.data(
         (
@@ -742,7 +711,7 @@ class AlgoliaUtilsTests(TestCase):
             content_type=COURSE,
             json_metadata=course_metadata,
         )
-        skill_names = get_program_skill_names(program_metadata)
+        skill_names = utils.get_program_skill_names(program_metadata)
         self.assertEqual(sorted(skill_names), sorted(expected_skill_names))
 
     @ddt.data(
@@ -756,7 +725,7 @@ class AlgoliaUtilsTests(TestCase):
         """
         Assert that the type associated with a program is properly parsed.
         """
-        program_type = get_program_type(program_metadata)
+        program_type = utils.get_program_type(program_metadata)
         self.assertEqual(expected_type, program_type)
 
     @ddt.data(
@@ -774,7 +743,7 @@ class AlgoliaUtilsTests(TestCase):
         """
         Assert that the prices associated with a program is properly parsed.
         """
-        program_prices = get_program_prices(program_metadata)
+        program_prices = utils.get_program_prices(program_metadata)
         self.assertEqual(expected_type, program_prices)
 
     @ddt.data(
@@ -819,7 +788,7 @@ class AlgoliaUtilsTests(TestCase):
     )
     @ddt.unpack
     def test_get_program_course_details(self, program_metadata, expected_details):
-        courses_list = get_program_course_details(program_metadata)
+        courses_list = utils.get_program_course_details(program_metadata)
         self.assertEqual(courses_list, expected_details)
 
     @ddt.data(
@@ -841,7 +810,7 @@ class AlgoliaUtilsTests(TestCase):
         """
         Assert that the banner image associated with a program is properly parsed.
         """
-        image_url = get_program_banner_image_url(program_metadata)
+        image_url = utils.get_program_banner_image_url(program_metadata)
         self.assertEqual(expected_type, image_url)
 
     @ddt.data(
@@ -855,7 +824,7 @@ class AlgoliaUtilsTests(TestCase):
         """
         Assert that the title associated with a program is properly parsed.
         """
-        program_title = get_program_title(program_metadata)
+        program_title = utils.get_program_title(program_metadata)
         self.assertEqual(expected_title, program_title)
 
     @ddt.data(
@@ -933,7 +902,7 @@ class AlgoliaUtilsTests(TestCase):
         """
         Assert that the Availability associated with a program is properly parsed.
         """
-        program_availability = get_program_availability(program_metadata)
+        program_availability = utils.get_program_availability(program_metadata)
         self.assertEqual(expected_availability, program_availability)
 
     @ddt.data(
@@ -977,7 +946,7 @@ class AlgoliaUtilsTests(TestCase):
         """
         Assert that the Partners associated with a program are properly parsed.
         """
-        program_partners = get_program_partners(program_metadata)
+        program_partners = utils.get_program_partners(program_metadata)
         self.assertEqual(expected_partners, program_partners)
 
     @ddt.data(
@@ -1015,7 +984,7 @@ class AlgoliaUtilsTests(TestCase):
             content_type=COURSE,
             json_metadata=course_metadata,
         )
-        program_subjects = get_program_subjects(program_metadata)
+        program_subjects = utils.get_program_subjects(program_metadata)
         self.assertEqual(sorted(expected_subjects), sorted(program_subjects))
 
     @ddt.data(
@@ -1057,7 +1026,7 @@ class AlgoliaUtilsTests(TestCase):
                 content_type=COURSE,
                 json_metadata=course_metadata[i],
             )
-        program_level_type = get_program_level_type(program_metadata)
+        program_level_type = utils.get_program_level_type(program_metadata)
         self.assertEqual(expected_level_type, program_level_type)
 
     @ddt.data(
@@ -1080,7 +1049,7 @@ class AlgoliaUtilsTests(TestCase):
         """
         Assert that the courses associated with a pathway are properly parsed.
         """
-        pathway_course_keys = get_pathway_course_keys(pathway_metadata)
+        pathway_course_keys = utils.get_pathway_course_keys(pathway_metadata)
         self.assertEqual(sorted(expected_course_keys), sorted(pathway_course_keys))
 
     @ddt.data(
@@ -1103,7 +1072,7 @@ class AlgoliaUtilsTests(TestCase):
         """
         Assert that the programs associated with a pathway are properly parsed.
         """
-        pathway_program_uuids = get_pathway_program_uuids(pathway_metadata)
+        pathway_program_uuids = utils.get_pathway_program_uuids(pathway_metadata)
         self.assertEqual(sorted(expected_program_uuids), sorted(pathway_program_uuids))
 
     @ddt.data(
@@ -1172,7 +1141,7 @@ class AlgoliaUtilsTests(TestCase):
                 json_metadata=json_metadata[i],
             )
 
-        pathway_availability = get_pathway_availability(pathway_metadata)
+        pathway_availability = utils.get_pathway_availability(pathway_metadata)
         self.assertEqual(sorted(pathway_availability), sorted(expected_availability))
 
     @ddt.data(
@@ -1194,7 +1163,7 @@ class AlgoliaUtilsTests(TestCase):
         """
         Assert that the banner image with a pathway is properly parsed.
         """
-        image_url = get_pathway_card_image_url(pathway_metadata)
+        image_url = utils.get_pathway_card_image_url(pathway_metadata)
         self.assertEqual(expected_type, image_url)
 
     @ddt.data(
@@ -1277,7 +1246,7 @@ class AlgoliaUtilsTests(TestCase):
                 content_type=PROGRAM,
                 json_metadata=json_metadata[1],
             )
-        pathway_partners = get_pathway_partners(pathway_metadata)
+        pathway_partners = utils.get_pathway_partners(pathway_metadata)
         self.assertEqual(expected_partners, pathway_partners)
 
     @ddt.data(
@@ -1337,7 +1306,7 @@ class AlgoliaUtilsTests(TestCase):
                 content_type=PROGRAM,
                 json_metadata=json_metadata[1],
             )
-        pathway_subjects = get_pathway_subjects(pathway_metadata)
+        pathway_subjects = utils.get_pathway_subjects(pathway_metadata)
         self.assertEqual(sorted(expected_subjects), sorted(pathway_subjects))
 
     @ddt.data(
@@ -1355,5 +1324,39 @@ class AlgoliaUtilsTests(TestCase):
         """
         Assert that the creatd date of pathway is properly parsed.
         """
-        created_date = get_pathway_created_date(pathway_metadata)
+        created_date = utils.get_pathway_created_date(pathway_metadata)
         self.assertEqual(expected_date, created_date)
+
+    @ddt.data(
+        (
+            {'content_type': COURSE, 'course_type': EXEC_ED_2U_COURSE_TYPE},
+            EXEC_ED_2U_COURSE_TYPE,
+        ),
+        (
+            {'content_type': COURSE},
+            COURSE,
+        ),
+        (
+            {'content_type': COURSE, 'course_type': 'ayylmao'},
+            COURSE,
+        ),
+        (
+            {'content_type': PROGRAM},
+            PROGRAM,
+        ),
+        (
+            {'content_type': LEARNER_PATHWAY},
+            LEARNER_PATHWAY,
+        ),
+        (
+            {'ayylmao': 'foobar', },
+            None,
+        ),
+    )
+    @ddt.unpack
+    def test_get_learning_type(self, course, expected_result):
+        """
+        Assert that the learning type of a course is properly parsed.
+        """
+        created_learning_type = utils.get_learning_type(course)
+        self.assertEqual(expected_result, created_learning_type)
