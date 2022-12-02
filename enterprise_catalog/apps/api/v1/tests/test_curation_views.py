@@ -10,6 +10,10 @@ from rest_framework import status
 from rest_framework.reverse import reverse
 
 from enterprise_catalog.apps.api.v1.tests.mixins import APITestMixin
+from enterprise_catalog.apps.api.v1.views.curation.highlights import (
+    CONTENT_PER_HIGHLIGHTSET_LIMIT,
+    HIGHLIGHTSETS_PER_ENTERPRISE_LIMIT,
+)
 from enterprise_catalog.apps.catalog.constants import COURSE, PROGRAM
 from enterprise_catalog.apps.catalog.tests.factories import (
     ContentMetadataFactory,
@@ -295,6 +299,25 @@ class HighlightSetReadOnlyViewSetTests(CurationAPITestBase):
         assert len(highlight_sets_results) == 1
         assert highlight_sets_results[0]['uuid'] == str(self.highlight_set_one.uuid)
 
+    def test_detail_invalid_uuid(self):
+        """
+        An enterprise learner should get a 403 error trying to access a non-existent highlight set.
+        """
+        detail_url = reverse('api:v1:highlight-sets-detail', kwargs={'uuid': uuid.uuid4()})
+        self.set_up_catalog_learner()
+        response = self.client.get(detail_url)
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_detail_other_enterprise(self):
+        """
+        An enterprise admin should get a 403 error trying to access a highlight set belonging to a different enterprise
+        customer.
+        """
+        detail_url = reverse('api:v1:highlight-sets-detail', kwargs={'uuid': self.highlight_set_two.uuid})
+        self.set_up_catalog_learner()
+        response = self.client.get(detail_url)
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
     def test_content_ordered_by_created(self):
         """
         Test that the highlighted content is serialized in the same order as they were added.
@@ -314,11 +337,29 @@ class HighlightSetReadOnlyViewSetTests(CurationAPITestBase):
 class HighlightSetViewSetTests(CurationAPITestBase):
     """
     Test HighlightSetViewSet.
-
-    NOTE: Some tests are missing (e.g. creation/deletion) due to the current fluid state of the API due to development
-    of the curations feature; I decided to just defer those tests for now.  For the purposes of testing security, the
-    patch tests should be sufficient. -Troy
     """
+    def test_detail_invalid_uuid(self):
+        """
+        An enterprise admin should get a 403 error trying to access a non-existent highlight set.
+
+        Importantly, this checks that the status code (403 Forbidden) is the same when trying to access one that does
+        exist but belonging to another enterprise customer.
+        """
+        detail_url = reverse('api:v1:highlight-sets-admin-detail', kwargs={'uuid': uuid.uuid4()})
+        self.set_up_staff()
+        response = self.client.get(detail_url)
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_detail_other_enterprise(self):
+        """
+        An enterprise admin should get a 403 error trying to access a highlight set belonging to a different enterprise
+        customer.
+        """
+        detail_url = reverse('api:v1:highlight-sets-admin-detail', kwargs={'uuid': self.highlight_set_two.uuid})
+        self.set_up_staff()
+        response = self.client.get(detail_url)
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
     def test_unauthorized_patch_learner(self):
         """
         Test that catalog learners cannot edit any HighlightSet, because they should only have readonly access.
@@ -329,6 +370,145 @@ class HighlightSetViewSetTests(CurationAPITestBase):
         patch_data = {'title': 'Patch title'}
         response = self.client.patch(url, patch_data)
         assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_create(self):
+        """
+        Test create HighlightSet, happy case.
+        """
+        url = reverse('api:v1:highlight-sets-admin-list')
+        # Create privileged staff user that should be able to create highlight sets.
+        self.set_up_staff()
+        post_data = {
+            'enterprise_customer': self.enterprise_uuid,
+            'title': 'foobar title',
+            'is_published': True,
+        }
+        response = self.client.post(url, post_data)
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.json() == {
+            'uuid': response.json()['uuid'],
+            'enterprise_curation': str(self.curation_config_one.uuid),
+            'title': 'foobar title',
+            'is_published': True,
+            'card_image_url': None,
+            'highlighted_content': [],
+        }
+
+    def test_create_too_many_sets(self):
+        """
+        Create too many HighlightSet objects.
+        """
+        url = reverse('api:v1:highlight-sets-admin-list')
+        # Create privileged staff user that should be able to create highlight sets.
+        self.set_up_staff()
+        post_data = {
+            'enterprise_customer': self.enterprise_uuid,
+            'title': 'foobar title',
+            'is_published': True,
+        }
+        # Create so many HighlightSet objects such that the final count is just at the limit, but not exceeding it.
+        for _ in range(HIGHLIGHTSETS_PER_ENTERPRISE_LIMIT - 1):
+            response = self.client.post(url, post_data)
+            assert response.status_code == status.HTTP_201_CREATED
+        # Create one more HighlightSet that should trigger an error.
+        response = self.client.post(url, post_data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_create_add_content(self):
+        """
+        Test create HighlightSet, but also add content as part of the same request.  Make sure the following happen:
+
+          * Response data contains serialialized data of the _changed_ HighlightSet after content additions.
+          * Bogus requested content keys don't cause any errors.
+        """
+        url = reverse('api:v1:highlight-sets-admin-list')
+        # Create privileged staff user that should be able to create highlight sets.
+        self.set_up_staff()
+        good_content_keys_to_request = [cm.content_key for cm in self.highlighted_content_metadata_one]
+        # Throw in some oddball content keys that should hopefully not crash the app.
+        bad_content_keys_to_request = ['fake+content+key', '', None]
+        post_data = {
+            'enterprise_customer': self.enterprise_uuid,
+            'title': 'foobar title',
+            'is_published': True,
+            'content_keys': good_content_keys_to_request + bad_content_keys_to_request,
+        }
+        response = self.client.post(url, post_data)
+        assert response.status_code == status.HTTP_201_CREATED
+        response_json_simple = response.json()
+        response_highlighted_content = response_json_simple.pop('highlighted_content')
+        assert response_json_simple == {
+            'uuid': response.json()['uuid'],
+            'enterprise_curation': str(self.curation_config_one.uuid),
+            'title': 'foobar title',
+            'is_published': True,
+            'card_image_url': self.card_image_urls_one[0],
+            'ignored_content_keys': ['fake+content+key', '', None],
+        }
+        assert [hc['content_key'] for hc in response_highlighted_content] == good_content_keys_to_request
+
+    def test_create_add_no_content(self):
+        """
+        Test create HighlightSet, and include content_keys but make it empty in the request.
+        """
+        url = reverse('api:v1:highlight-sets-admin-list')
+        # Create privileged staff user that should be able to create highlight sets.
+        self.set_up_staff()
+        post_data = {
+            'enterprise_customer': self.enterprise_uuid,
+            'title': 'foobar title',
+            'is_published': True,
+            'content_keys': [],
+        }
+        response = self.client.post(url, post_data)
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.json() == {
+            'uuid': response.json()['uuid'],
+            'enterprise_curation': str(self.curation_config_one.uuid),
+            'title': 'foobar title',
+            'is_published': True,
+            'card_image_url': None,
+            'highlighted_content': [],
+        }
+
+    def test_add_content(self):
+        """
+        Test add-content endpoint which adds content to a highlight set. Also test adding so much content that it hits a
+        limit.
+        """
+        url = reverse(
+            'api:v1:highlight-sets-admin-add-content',
+            kwargs={'uuid': self.highlight_set_one.uuid},
+        )
+        # Create privileged staff user that should be able to create highlight sets.
+        self.set_up_staff()
+        # Prepare enough ContentMetadata objects to fill up the HighlightSet but not overflow it.
+        content_metadata_to_request = [
+            ContentMetadataFactory(content_type=COURSE)
+            for _ in range(CONTENT_PER_HIGHLIGHTSET_LIMIT - len(self.highlighted_content_list_one))
+        ]
+        content_keys_to_request = [cm.content_key for cm in content_metadata_to_request]
+        post_data = {
+            'uuid': self.highlight_set_one.uuid,
+            'content_keys': content_keys_to_request,
+        }
+        response = self.client.post(url, post_data)
+        assert response.status_code == status.HTTP_201_CREATED
+
+        # Try to add one more content key and make sure it triggers an error.
+        last_content_metadata_to_request = ContentMetadataFactory(content_type=COURSE)
+        post_data = {
+            'uuid': self.highlight_set_one.uuid,
+            'content_keys': [last_content_metadata_to_request.content_key],
+        }
+        response = self.client.post(url, post_data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+        # Finally, make sure the total count of content still does not exceed the max.
+        detail_url = reverse('api:v1:highlight-sets-admin-detail', kwargs={'uuid': self.highlight_set_one.uuid})
+        response = self.client.get(detail_url)
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.json()['highlighted_content']) == CONTENT_PER_HIGHLIGHTSET_LIMIT
 
     @ddt.data(
         {'highlight_set_exists': False},
