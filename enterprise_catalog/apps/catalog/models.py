@@ -901,8 +901,12 @@ def update_contentmetadata_from_discovery(catalog_query):
         list of str: Returns the content keys that were associated from the query results.
     """
 
-    # metadata will be an empty dict if unavailable from cache or API.
-    metadata = CatalogQueryMetadata(catalog_query).metadata
+    try:
+        # metadata will be an empty dict if unavailable from cache or API.
+        metadata = CatalogQueryMetadata(catalog_query).metadata
+    except Exception as exc:
+        LOGGER.exception('update_contentmetadata_from_discovery ran into an issue while talking to DiscoveryAPI.')
+        raise exc
 
     # associate content metadata with a catalog query only when we get valid results
     # back from the discovery service. if metadata is `None`, an error occurred while
