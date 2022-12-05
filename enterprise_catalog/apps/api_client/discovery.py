@@ -26,7 +26,7 @@ class DiscoveryApiClient(BaseOAuthClient):
 
     # the maximum number of retries to attempt a call
     MAX_RETRIES = getattr(settings, "ENTERPRISE_DISCOVERY_CLIENT_MAX_RETRIES", 4)
-    # the number of seconds to sleep beteween tries, which is doubled every attempt 
+    # the number of seconds to sleep beteween tries, which is doubled every attempt
     BACKOFF_FACTOR = getattr(settings, "ENTERPRISE_DISCOVERY_CLIENT_BACKOFF_FACTOR", 2)
 
     def _calculate_backoff(self, attempt_count):
