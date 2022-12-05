@@ -37,6 +37,7 @@ ALGOLIA_FIELDS = [
     'enterprise_customer_uuids',
     'full_description',
     'key',  # for links to Course about pages from the Learner Portal search page
+    'uuid',
     'language',
     'level_type',
     'objectID',  # required by Algolia, e.g. "course-{uuid}"
