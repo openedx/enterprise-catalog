@@ -44,9 +44,11 @@ class TestDiscoveryApiClient(TestCase):
 
         catalog_query = CatalogQueryFactory()
         client = DiscoveryApiClient()
+        # setting this to 0 means we wont wait between retries
         client.BACKOFF_FACTOR = 0
 
         client.get_metadata_by_query(catalog_query)
+        # the retry logic will end up calling this 5 times
         assert mock_oauth_client.return_value.post.call_count == 5
 
     @mock.patch('enterprise_catalog.apps.api_client.base_oauth.OAuthAPIClient')

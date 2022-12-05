@@ -24,12 +24,14 @@ class DiscoveryApiClient(BaseOAuthClient):
     Object builds an API client to make calls to the Discovery Service.
     """
 
+    # the maximum number of retries to attempt a call
     MAX_RETRIES = getattr(settings, "ENTERPRISE_DISCOVERY_CLIENT_MAX_RETRIES", 4)
+    # the number of seconds to sleep beteween tries, which is doubled every attempt 
     BACKOFF_FACTOR = getattr(settings, "ENTERPRISE_DISCOVERY_CLIENT_BACKOFF_FACTOR", 2)
 
     def _calculate_backoff(self, attempt_count):
         """
-        Calcualte the seconds to sleep based on attempt_count
+        Calculate the seconds to sleep based on attempt_count
         """
         return (self.BACKOFF_FACTOR * (2 ** (attempt_count - 1)))
 
