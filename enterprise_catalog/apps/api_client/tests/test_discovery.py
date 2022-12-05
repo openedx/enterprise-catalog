@@ -18,6 +18,7 @@ class TestDiscoveryApiClient(TestCase):
         get_metadata_by_query should call discovery endpoint, but not call
         traverse_pagination if traverse_pagination is false.
         """
+        mock_oauth_client.return_value.post.return_value.status_code = 200
         mock_oauth_client.return_value.post.return_value.json.return_value = {
             'results': [{'key': 'fakeX'}],
         }
@@ -30,6 +31,23 @@ class TestDiscoveryApiClient(TestCase):
 
         expected_response = [{'key': 'fakeX'}]
         self.assertEqual(actual_response, expected_response)
+
+    @mock.patch('enterprise_catalog.apps.api_client.base_oauth.OAuthAPIClient')
+    def test_get_metadata_by_query_with_retry_and_error(self, mock_oauth_client):
+        """
+        get_metadata_by_query should call discovery endpoint, but not call
+        traverse_pagination if traverse_pagination is false.
+        """
+
+        mock_oauth_client.return_value.post.return_value.status_code = 400
+        mock_oauth_client.return_value.post.return_value.json.return_value = {}
+
+        catalog_query = CatalogQueryFactory()
+        client = DiscoveryApiClient()
+        client.BACKOFF_FACTOR = 0
+
+        client.get_metadata_by_query(catalog_query)
+        assert mock_oauth_client.return_value.post.call_count == 5
 
     @mock.patch('enterprise_catalog.apps.api_client.base_oauth.OAuthAPIClient')
     def test_get_metadata_by_query_with_error(self, mock_oauth_client):
