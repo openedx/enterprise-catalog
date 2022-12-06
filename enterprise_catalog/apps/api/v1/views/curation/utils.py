@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from uuid import UUID
 
 from rest_framework.exceptions import ParseError
@@ -38,12 +39,11 @@ def get_content_keys_from_request_data(request):
     The order of keys are preserved, while duplicates are removed.
 
     Args:
-        - request (rest_framework.request.Request): The request object containing the request payload.
+        request (rest_framework.request.Request): The request object containing the request payload.
 
     Returns:
-        list of str: content keys.
+        list of str: content keys, or empty list if the `content_keys` request argument does not exist.
     """
     content_keys_raw = request.data.get('content_keys', [])
-    # set() removes duplicates but does not preserve order, so we must synchronize the order again with the original
-    # list based on the FIRST occurrence of each element in the original list.
-    return sorted(set(content_keys_raw), key=lambda x: content_keys_raw.index(x))
+    # Remove duplicates by converting to an OrderedDict and back to a list (storing/pulling keys only).
+    return list(OrderedDict.fromkeys(content_keys_raw))
