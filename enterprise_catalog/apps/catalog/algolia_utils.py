@@ -10,6 +10,7 @@ from enterprise_catalog.apps.api.v1.utils import is_course_run_active
 from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
+    EXEC_ED_2U_COURSE_TYPE,
     LEARNER_PATHWAY,
     PROGRAM,
     PROGRAM_TYPES_MAP,
@@ -73,6 +74,7 @@ ALGOLIA_FIELDS = [
     'course_type',
     'course_length',
     'entitlements',
+    'learning_type',
 ]
 
 # default configuration for the index
@@ -112,6 +114,7 @@ ALGOLIA_INDEX_SETTINGS = {
         'course_type',
         'course_length',
         'aggregation_key',
+        'learning_type',
     ],
     'unretrievableAttributes': [
         'enterprise_catalog_uuids',
@@ -1038,7 +1041,7 @@ def get_course_first_paid_enrollable_seat_price(course):
     # Use advertised course run.
     # If that fails use one of the other active course runs. (The latter is what Discovery does)
     advertised_course_run = _get_course_run_by_uuid(course, course.get('advertised_course_run_uuid'))
-    if advertised_course_run.get('first_enrollable_paid_seat_price'):
+    if advertised_course_run and advertised_course_run.get('first_enrollable_paid_seat_price'):
         return advertised_course_run.get('first_enrollable_paid_seat_price')
 
     course_runs = course.get('course_runs') or []
@@ -1050,6 +1053,23 @@ def get_course_first_paid_enrollable_seat_price(course):
         if 'first_enrollable_paid_seat_price' in course_run:
             return course_run['first_enrollable_paid_seat_price']
     return None
+
+
+def get_learning_type(content):
+    """
+    Gets the content's learning type, checking and returning if the content
+    is of course type exec ed. Othwise returning the `content_type` field value
+
+    Arguments:
+        course (dict): a dictionary representing a piece of content
+
+    Returns:
+        str: the learning type (ADR: docs/decisions/0005-creating-learning-type-facet)
+        of the course.
+    """
+    if content.get('course_type') == EXEC_ED_2U_COURSE_TYPE:
+        return EXEC_ED_2U_COURSE_TYPE
+    return content.get('content_type')
 
 
 def _algolia_object_from_product(product, algolia_fields):
@@ -1083,6 +1103,7 @@ def _algolia_object_from_product(product, algolia_fields):
             'marketing_url': get_course_marketing_url(searchable_product),
             'outcome': get_course_outcome(searchable_product),
             'prerequisites': get_course_prerequisites(searchable_product),
+            'learning_type': get_learning_type(searchable_product),
         })
     elif searchable_product.get('content_type') == PROGRAM:
         searchable_product.update({
@@ -1099,6 +1120,7 @@ def _algolia_object_from_product(product, algolia_fields):
             'prices': get_program_prices(searchable_product),
             'banner_image_url': get_program_banner_image_url(searchable_product),
             'course_details': get_program_course_details(searchable_product),
+            'learning_type': get_learning_type(searchable_product),
         })
     elif searchable_product.get('content_type') == LEARNER_PATHWAY:
         searchable_product.update({
@@ -1109,6 +1131,7 @@ def _algolia_object_from_product(product, algolia_fields):
             'partners': get_pathway_partners(searchable_product),
             'subjects': get_pathway_subjects(searchable_product),
             'created': get_pathway_created_date(searchable_product),
+            'learning_type': get_learning_type(searchable_product),
         })
 
     algolia_object = {}
