@@ -367,7 +367,7 @@ class HighlightSetViewSet(HighlightSetBaseViewSet, viewsets.ModelViewSet):
         existing_highlightset_count = len(HighlightSet.objects.filter(enterprise_curation=curation_config))
         if existing_highlightset_count == HIGHLIGHTSETS_PER_ENTERPRISE_LIMIT:
             return Response(
-                'Request exceeds the backend maximum highlight set per enterprise customer '
+                f'Request exceeds the backend maximum highlight set per enterprise customer '
                 '({HIGHLIGHTSETS_PER_ENTERPRISE_LIMIT}).',
                 status=status.HTTP_400_BAD_REQUEST
             )
