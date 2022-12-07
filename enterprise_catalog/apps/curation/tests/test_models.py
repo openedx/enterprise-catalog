@@ -9,7 +9,6 @@ from enterprise_catalog.apps.catalog.constants import COURSE, PROGRAM
 from enterprise_catalog.apps.catalog.tests.factories import (
     FAKE_CONTENT_AUTHOR_NAME,
     FAKE_CONTENT_AUTHOR_UUID,
-    FAKE_IMAGE_URL,
     ContentMetadataFactory,
 )
 from enterprise_catalog.apps.curation.tests.factories import (
@@ -37,4 +36,5 @@ class TestModels(TestCase):
         authoring_organizations_under_test = highlighted_content.authoring_organizations
         self.assertEqual(authoring_organizations_under_test[0]['uuid'], str(FAKE_CONTENT_AUTHOR_UUID))
         self.assertEqual(authoring_organizations_under_test[0]['name'], FAKE_CONTENT_AUTHOR_NAME)
-        self.assertEqual(authoring_organizations_under_test[0]['logo_image_url'], FAKE_IMAGE_URL)
+        self.assertTrue(authoring_organizations_under_test[0]['logo_image_url'].startswith('https://'))
+        self.assertTrue(authoring_organizations_under_test[0]['logo_image_url'].endswith('.jpg'))

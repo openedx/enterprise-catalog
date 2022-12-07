@@ -310,6 +310,7 @@ class HighlightSetSerializer(serializers.ModelSerializer):
             'title',
             'is_published',
             'enterprise_curation',
+            'card_image_url',
             'highlighted_content',
         ]
 
@@ -317,7 +318,7 @@ class HighlightSetSerializer(serializers.ModelSerializer):
         """
         Returns the data for the associated content included in this HighlightSet object.
         """
-        qs = obj.highlighted_content.all()
+        qs = obj.highlighted_content.order_by('created')
         return HighlightedContentSerializer(qs, many=True).data
 
 
@@ -344,16 +345,22 @@ class EnterpriseCurationConfigSerializer(serializers.ModelSerializer):
 
     def get_highlight_sets(self, obj):
         """
-        Returns minimal information around the HighlightSets that
-        exist for the EnterpriseCurationConfig.
+        Returns minimal information around the HighlightSets that exist for the EnterpriseCurationConfig.
+
+        Notes:
+        * Highlighted content UUIDs are sorted by the order in which they were added by the enterprise admin.
+          This may help inform frontend code determine which order to display content.
         """
-        catalog_highlight_sets = obj.catalog_highlights.all()
+        catalog_highlight_sets = obj.catalog_highlights.all().order_by('-created')
         return [
             {
                 'uuid': highlight_set.uuid,
                 'is_published': highlight_set.is_published,
                 'title': highlight_set.title,
-                'highlighted_content_uuids': [item.uuid for item in highlight_set.highlighted_content.all()],
+                'card_image_url': highlight_set.card_image_url,
+                'highlighted_content_uuids': [
+                    item.uuid for item in highlight_set.highlighted_content.order_by('created')
+                ],
             }
             for highlight_set in catalog_highlight_sets
         ]

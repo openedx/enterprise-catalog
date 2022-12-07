@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from uuid import UUID
 
 from rest_framework.exceptions import ParseError
@@ -34,6 +35,15 @@ def get_enterprise_uuid_from_request_data(request):
 def get_content_keys_from_request_data(request):
     """
     Extracts content keys from the request payload.
+
+    The order of keys are preserved, while duplicates are removed.
+
+    Args:
+        request (rest_framework.request.Request): The request object containing the request payload.
+
+    Returns:
+        list of str: content keys, or empty list if the `content_keys` request argument does not exist.
     """
-    content_keys = request.data.get('content_keys', [])
-    return content_keys
+    content_keys_raw = request.data.get('content_keys', [])
+    # Remove duplicates by converting to an OrderedDict and back to a list (storing/pulling keys only).
+    return list(OrderedDict.fromkeys(content_keys_raw))

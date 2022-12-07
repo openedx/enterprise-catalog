@@ -81,7 +81,7 @@ class DefaultCatalogResultsView(GenericAPIView):
 
         if content_type == 'course':
             if course_types := facets.get("course_type"):
-                catalog_filter.append([f'course_type:{type}' in course_types])
+                catalog_filter.append([f'course_type:{type}' for type in course_types])
 
         search_options = {
             'facetFilters': catalog_filter,
