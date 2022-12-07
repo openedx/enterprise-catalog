@@ -3,6 +3,7 @@ from uuid import uuid4
 
 import factory
 from factory.fuzzy import FuzzyText
+from faker import Faker
 
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
@@ -22,10 +23,11 @@ from enterprise_catalog.apps.core.models import User
 
 
 USER_PASSWORD = 'password'
-FAKE_IMAGE_URL = 'https://fake.url/image.jpg'
 FAKE_ADVERTISED_COURSE_RUN_UUID = uuid4()
 FAKE_CONTENT_AUTHOR_NAME = 'Partner Name'
 FAKE_CONTENT_AUTHOR_UUID = uuid4()
+
+fake = Faker()
 
 
 class CatalogQueryFactory(factory.django.DjangoModelFactory):
@@ -61,6 +63,10 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
     """
     class Meta:
         model = ContentMetadata
+        exclude = ('card_image_url_prefix', 'card_image_url')
+
+    card_image_url_prefix = factory.Faker('image_url')
+    card_image_url = factory.LazyAttribute(lambda p: f'{p.card_image_url_prefix}.jpg')
 
     content_key = factory.Sequence(lambda n: f'{str(n).zfill(5)}_metadata_item')
     content_type = factory.Iterator([COURSE_RUN, COURSE, PROGRAM, LEARNER_PATHWAY])
@@ -77,7 +83,7 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
             owners = [{
                 'uuid': str(FAKE_CONTENT_AUTHOR_UUID),
                 'name': FAKE_CONTENT_AUTHOR_NAME,
-                'logo_image_url': FAKE_IMAGE_URL,
+                'logo_image_url': fake.image_url() + '.jpg',
             }]
             course_runs = [{
                 'key': 'course-v1:edX+DemoX',
@@ -91,7 +97,7 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
             json_metadata.update({
                 'content_type': COURSE,
                 'marketing_url': f'https://marketing.url/{self.content_key}',
-                'image_url': FAKE_IMAGE_URL,
+                'image_url': self.card_image_url,
                 'owners': owners,
                 'advertised_course_run_uuid': str(FAKE_ADVERTISED_COURSE_RUN_UUID),
                 'course_runs': course_runs,
@@ -111,7 +117,7 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
             authoring_organizations = [{
                 'uuid': str(FAKE_CONTENT_AUTHOR_UUID),
                 'name': FAKE_CONTENT_AUTHOR_NAME,
-                'logo_image_url': FAKE_IMAGE_URL,
+                'logo_image_url': self.card_image_url,
             }]
             json_metadata.update({
                 'uuid': self.content_key,
