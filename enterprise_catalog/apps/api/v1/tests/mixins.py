@@ -25,6 +25,9 @@ from enterprise_catalog.apps.catalog.tests.factories import (
 )
 
 
+STATIC_LMS_USER_ID = 999
+
+
 class JwtMixin():
     """ Mixin with JWT-related helper functions. """
     def get_request_with_jwt_cookie(self, system_wide_role=None, context=None):
@@ -39,6 +42,9 @@ class JwtMixin():
             payload.update({
                 'roles': [role_data]
             })
+        payload.update({
+            'user_id': STATIC_LMS_USER_ID,
+        })
         jwt_token = generate_jwt_token(payload)
         request = RequestFactory().get('/')
         request.COOKIES[jwt_cookie_name()] = jwt_token
@@ -57,6 +63,9 @@ class JwtMixin():
 
         payload = generate_unversioned_payload(self.user)
         payload.update({'roles': roles})
+        payload.update({
+            'user_id': STATIC_LMS_USER_ID,
+        })
         return generate_jwt_token(payload)
 
     def set_jwt_cookie(self, role_context_pairs=None):
