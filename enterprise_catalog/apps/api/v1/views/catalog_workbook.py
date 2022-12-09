@@ -94,11 +94,8 @@ class CatalogWorkbookView(GenericAPIView):
                     for col_num, cell_data in enumerate(course_row):
                         course_worksheet.write(course_row_num, col_num, cell_data)
                     course_row_num = course_row_num + 1
-                    # extract the course title and key for the course_run tab
-                    course_title = hit.get('title')
-                    course_key = hit.get('aggregation_key')
                     for course_run in export_utils.course_hit_runs(hit):
-                        course_run_row = export_utils.course_run_to_row(course_key, course_title, course_run)
+                        course_run_row = export_utils.course_run_to_row(hit, course_run)
                         # Write course_run row data.
                         for col_num, cell_data in enumerate(course_run_row):
                             course_run_worksheet.write(course_run_row_num, col_num, cell_data)
