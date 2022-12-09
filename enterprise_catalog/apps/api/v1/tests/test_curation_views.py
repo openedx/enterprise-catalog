@@ -412,7 +412,7 @@ class HighlightSetViewSetTests(CurationAPITestBase):
             assert response.status_code == status.HTTP_201_CREATED
         # Create one more HighlightSet that should trigger an error.
         response = self.client.post(url, post_data)
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_create_add_content(self):
         """
@@ -502,7 +502,7 @@ class HighlightSetViewSetTests(CurationAPITestBase):
             'content_keys': [last_content_metadata_to_request.content_key],
         }
         response = self.client.post(url, post_data)
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
         # Finally, make sure the total count of content still does not exceed the max.
         detail_url = reverse('api:v1:highlight-sets-admin-detail', kwargs={'uuid': self.highlight_set_one.uuid})
