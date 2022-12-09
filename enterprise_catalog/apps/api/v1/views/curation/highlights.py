@@ -369,7 +369,7 @@ class HighlightSetViewSet(HighlightSetBaseViewSet, viewsets.ModelViewSet):
             return Response(
                 'Request exceeds the backend maximum highlight set per enterprise customer '
                 f'({HIGHLIGHTSETS_PER_ENTERPRISE_LIMIT}).',
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_403_FORBIDDEN
             )
 
         response = super().create(request, *args, **kwargs)
@@ -401,7 +401,7 @@ class HighlightSetViewSet(HighlightSetBaseViewSet, viewsets.ModelViewSet):
         try:
             added_content_keys, ignored_content_keys, existing_content_keys = self._add_requested_content(highlight_set)
         except LimitExceeded as e:
-            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+            return Response(str(e), status=status.HTTP_403_FORBIDDEN)
         return Response(
             {
                 'ignored_content_keys': ignored_content_keys,
