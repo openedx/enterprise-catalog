@@ -248,7 +248,7 @@ def course_run_to_row(hit, course_run):
     # Subjects
     csv_row.append(', '.join(hit.get('subjects', [])))
 
-    # Language 
+    # Language
     csv_row.append(hit.get('language'))
 
     return csv_row
