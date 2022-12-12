@@ -140,6 +140,33 @@ class EnterpriseCurationConfigViewSet(EnterpriseCurationConfigBaseViewSet, views
     def create(self, request, *args, **kwargs):
         """
         Create a new EnterpriseCurationConfig
+
+        POST /api/v1/enterprise-curations-admin/
+
+        Request JSON Arguments:
+            enterprise_customer (str):
+                UUID of enterprise customer for which to create a EnterpriseCurationConfig.
+            title (str): Desired title of the EnterpriseCurationConfig.
+            is_highlight_feature_active (bool, optional, default=True):
+                True if the highlighting feature is enabled for this enterprise customer.
+
+        Returns:
+            rest_framework.response.Response:
+                400: If there are missing or otherwise invalid input parameters.  Also, if an EnterpriseCurationConfig
+                     already exists for the given enterprise_customer.  Response body is JSON with a single `Error` key.
+                403: If the requester has insufficient create permissions, or if there are already too many highlight
+                     sets for the given enterprise customer, or if the amount of requested content keys is also over
+                     limit.
+                     Response body is JSON with a single `Error` key.
+                201: If highlight set was successfully created.  Response body
+                     is JSON with a serialized EnterpriseCurationConfig containing the following keys:
+                     {
+                         "uuid": <str, UUID of newly created EnterpriseCurationConfig>,
+                         "enterprise_customer": <str, UUID of corresponding enterprise customer>,
+                         "title": <str, Title of newly created EnterpriseCurationConfig>,
+                         "is_highlight_feature_active": <bool, Whether the highlight feature is active>,
+                         "highlight_sets": <empty list>,
+                     }
         """
         if not self.requested_enterprise_uuid:
             return Response({'Error': 'An enterprise UUID was not specified.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -347,6 +374,16 @@ class HighlightSetViewSet(HighlightSetBaseViewSet, viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         """
         Override default deletion behavior inherited from edx-rbac/DRF just to add event tracking.
+
+        DELETE /api/v1/highlight-sets-admin/<uuid>/
+
+        Request URL Arguments:
+            uuid (str): UUID of HighlightSet object to delete.
+
+        Returns:
+            rest_framework.response.Response:
+                403: If the requester does not have delete permission, or the object UUID wasn't found.
+                204: Indicates success, and response body will be empty.
         """
         highlight_set = HighlightSet.objects.get(uuid=kwargs['uuid'])
         deletion_response = super().destroy(request, *args, **kwargs)
@@ -358,11 +395,34 @@ class HighlightSetViewSet(HighlightSetBaseViewSet, viewsets.ModelViewSet):
         """
         Create a new HighlightSet
 
-        Arguments:
-        - `request.data["enterprise_customer"]` (str): UUID of enterprise customer for which to create a highlight set.
-        - `request.data["title"]` (str): Desired title of the highlight set.
-        - `request.data["is_published"]` (bool, optional): True if the highlight set should be published.
-        - `request.data["content_keys"]` (list of str, optional): A list of content keys to add.
+        POST /api/v1/highlight-sets-admin/
+
+        Request JSON Arguments:
+            enterprise_customer (str):
+                UUID of enterprise customer for which to create a highlight set.
+            title (str): Desired title of the highlight set.
+            is_published (bool, optional): True if the highlight set should be published.
+            content_keys (list of str, optional): A list of content keys to add.
+
+        Returns:
+            rest_framework.response.Response:
+                400: If there are missing or otherwise invalid input parameters.  Response body is JSON with a single
+                     `Error` key.
+                403: If the requester has insufficient create permissions, or if there are already too many highlight
+                     sets for the given enterprise customer, or if the amount of requested content keys is also over
+                     limit.
+                     Response body is JSON with a single `Error` key.
+                201: If highlight set was successfully created.  Response body is JSON with a serialized HighlightSet
+                     containing the following keys:
+                     {
+                         "uuid": <str, UUID of newly created HighlightSet>,
+                         "title": <str, Title of newly created HighlightSet>,
+                         "is_published": <bool, True if the newly created HighlightSet is published>,
+                         "enterprise_curation": <str, UUID of EnterpriseCurationConfig that this HighlightSet is a part of>,
+                         "card_image_url": <str, pre-selected card image to use for this entire highlight set>,
+                         "highlighted_content": <list of serialized content>,
+                         "ignored_content_keys": <list of content keys that were ignored from the requested ones>
+                     }
         """
         if not self.requested_enterprise_uuid:
             return Response({'Error': 'An enterprise UUID was not specified.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -441,9 +501,28 @@ class HighlightSetViewSet(HighlightSetBaseViewSet, viewsets.ModelViewSet):
         """
         Add content to an existing HighlightSet
 
-        Arguments:
-        - `uuid` (str): UUID of the HighlightSet to add content to.
-        - `request.data["content_keys"]` (list of str): A list of content keys to add.
+        POST /v1/highlight-sets-admin/<uuid>/add-content/
+
+        Request URL Arguments:
+            uuid (str): UUID of the HighlightSet to add content to.
+
+        Request JSON Arguments:
+            content_keys (list of str): A list of content keys to add.
+
+        Returns:
+            rest_framework.response.Response:
+                400: If there are missing or otherwise invalid input parameters.  Response body is JSON with a single
+                     `Error` key.
+                403: If the requester has insufficient write permissions, or if there is already too much highlighted
+                     content for the given enterprise customer.  Response body is JSON with a single `Error` key.
+                201: If highlight set was successfully updated.  Response body is JSON with the following keys:
+                     {
+                         "ignored_content_keys": <subset of requested content_keys that were skipped/ignored>,
+                         "added_content_keys": <subset of requested content_keys that were added>,
+                         "existing_content_keys":
+                             <subset of requested content_keys that already existed in the HighlightSet>,
+                         "highlight_set": <a serialized HighlightSet representing the final state>,
+                     }
         """
         highlight_set = HighlightSet.objects.get(uuid=uuid)
         try:
@@ -470,9 +549,26 @@ class HighlightSetViewSet(HighlightSetBaseViewSet, viewsets.ModelViewSet):
         """
         Remove existing content from an existing HighlightSet
 
-        Arguments:
-        - `uuid` (str): UUID of the HighlightSet to remove content from.
-        - `request.data["content_keys"]` (str): A list of content keys to remove.
+        POST /v1/highlight-sets-admin/<uuid>/remove-content/
+
+        Request URL Arguments:
+            uuid (str): UUID of the HighlightSet to remove content from.
+
+        Request JSON Arguments:
+            content_keys (list of str): A list of content keys to remove.
+
+        Returns:
+            rest_framework.response.Response:
+                400: If there are missing or otherwise invalid input parameters.  Response body is JSON with a single
+                     `Error` key.
+                403: If the requester has insufficient write permissions, Response body is JSON with a single `Error`
+                     key.
+                201: If highlight set was successfully updated.  Response body is JSON with the following keys:
+                     {
+                         "ignored_content_keys": <subset of requested content_keys that were skipped/ignored>,
+                         "removed_content_keys": <subset of requested content_keys that were removed>,
+                         "highlight_set": <a serialized HighlightSet representing the final state>,
+                     }
         """
         content_keys = self.requested_content_keys
         removed_content_keys = set()
