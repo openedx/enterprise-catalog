@@ -3,6 +3,7 @@
 -c constraints.txt
 -r github.in              # Forks and other dependencies not yet on PyPI
 
+analytics-python
 Django
 django-celery-results
 django-config-models
