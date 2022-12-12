@@ -3,13 +3,18 @@ Tests for curation-related views.
 """
 import itertools
 import uuid
+from unittest import mock
 
 import ddt
 from faker import Faker
 from rest_framework import status
 from rest_framework.reverse import reverse
 
-from enterprise_catalog.apps.api.v1.tests.mixins import APITestMixin
+from enterprise_catalog.apps.api.v1.constants import SegmentEvents
+from enterprise_catalog.apps.api.v1.tests.mixins import (
+    STATIC_LMS_USER_ID,
+    APITestMixin,
+)
 from enterprise_catalog.apps.api.v1.views.curation.highlights import (
     CONTENT_PER_HIGHLIGHTSET_LIMIT,
     HIGHLIGHTSETS_PER_ENTERPRISE_LIMIT,
@@ -179,7 +184,7 @@ class EnterpriseCurationConfigReadOnlyViewSetTests(CurationAPITestBase):
         Test viewset allows calling the detail endpoint for catalog learners and enterprise staff users that should have
         access to the specific EnterpriseCurationConfig being requested.
         """
-        url = reverse('api:v1:enterprise-curations-detail', kwargs={'uuid': self.curation_config_one.uuid})
+        url = reverse('api:v1:enterprise-curations-detail', kwargs={'uuid': str(self.curation_config_one.uuid)})
 
         # Create either a catalog learner user or enterprise staff user, each with access to only one catalog.
         if is_catalog_staff:
@@ -201,7 +206,7 @@ class EnterpriseCurationConfigReadOnlyViewSetTests(CurationAPITestBase):
         """
         Test that the highlighted content is serialized in the same order as they were added.
         """
-        url = reverse('api:v1:enterprise-curations-detail', kwargs={'uuid': self.curation_config_one.uuid})
+        url = reverse('api:v1:enterprise-curations-detail', kwargs={'uuid': str(self.curation_config_one.uuid)})
         self.set_up_catalog_learner()
 
         response = self.client.get(url)
@@ -217,7 +222,7 @@ class EnterpriseCurationConfigReadOnlyViewSetTests(CurationAPITestBase):
         This is more of a basic smoke test, since HighlightSetViewSetTests::test_deterministic_card_image() is far more
         thorough.
         """
-        url = reverse('api:v1:enterprise-curations-detail', kwargs={'uuid': self.curation_config_one.uuid})
+        url = reverse('api:v1:enterprise-curations-detail', kwargs={'uuid': str(self.curation_config_one.uuid)})
         self.set_up_catalog_learner()
 
         response = self.client.get(url)
@@ -233,7 +238,7 @@ class EnterpriseCurationConfigViewSetTests(CurationAPITestBase):
         """
         Test that learners cannot edit any EnterpriseCurationConfig.
         """
-        url = reverse('api:v1:enterprise-curations-admin-detail', kwargs={'uuid': self.curation_config_one.uuid})
+        url = reverse('api:v1:enterprise-curations-admin-detail', kwargs={'uuid': str(self.curation_config_one.uuid)})
         # Create a learner user with learner (readonly) permissions on curation_config_one.
         self.set_up_catalog_learner()
         patch_data = {'title': 'Patch title'}
@@ -255,7 +260,7 @@ class EnterpriseCurationConfigViewSetTests(CurationAPITestBase):
         """
         Test that an enterprise customer can edit their own EnterpriseCurationConfig objects.
         """
-        url = reverse('api:v1:enterprise-curations-admin-detail', kwargs={'uuid': self.curation_config_one.uuid})
+        url = reverse('api:v1:enterprise-curations-admin-detail', kwargs={'uuid': str(self.curation_config_one.uuid)})
         self.set_up_staff()
         patch_data = {'is_highlight_feature_active': False}
         response = self.client.patch(url, patch_data)
@@ -263,11 +268,12 @@ class EnterpriseCurationConfigViewSetTests(CurationAPITestBase):
         assert response.json()['is_highlight_feature_active'] is False
 
         # May as well confirm that it persisted in the database:
-        url = reverse('api:v1:enterprise-curations-detail', kwargs={'uuid': self.curation_config_one.uuid})
+        url = reverse('api:v1:enterprise-curations-detail', kwargs={'uuid': str(self.curation_config_one.uuid)})
         response_get = self.client.get(url)
         assert response_get.json()['is_highlight_feature_active'] is False
 
 
+@ddt.ddt
 class HighlightSetReadOnlyViewSetTests(CurationAPITestBase):
     """
     Test HighlightSetReadOnlyViewSet.
@@ -322,7 +328,7 @@ class HighlightSetReadOnlyViewSetTests(CurationAPITestBase):
         """
         Test that the highlighted content is serialized in the same order as they were added.
         """
-        detail_url = reverse('api:v1:highlight-sets-detail', kwargs={'uuid': self.highlight_set_one.uuid})
+        detail_url = reverse('api:v1:highlight-sets-detail', kwargs={'uuid': str(self.highlight_set_one.uuid)})
         self.set_up_catalog_learner()
 
         response = self.client.get(detail_url)
@@ -331,6 +337,38 @@ class HighlightSetReadOnlyViewSetTests(CurationAPITestBase):
         highlighted_content_keys = [cm['content_key'] for cm in highlighted_content]
         expected_highlighted_content_keys = [cm.content_key for cm in self.highlighted_content_metadata_one]
         assert highlighted_content_keys == expected_highlighted_content_keys
+
+    @ddt.data(
+        {'is_catalog_staff': False, 'is_role_assigned_via_jwt': False},
+        {'is_catalog_staff': False, 'is_role_assigned_via_jwt': True},
+        {'is_catalog_staff': True, 'is_role_assigned_via_jwt': False},
+        {'is_catalog_staff': True, 'is_role_assigned_via_jwt': True},
+    )
+    @ddt.unpack
+    def test_delete_not_allowed(self, is_catalog_staff, is_role_assigned_via_jwt):
+        """
+        Test delete HighlightSet is not allowed on this readonly endpoint.
+        """
+        url = reverse('api:v1:highlight-sets-detail', kwargs={'uuid': str(self.highlight_set_one.uuid)})
+
+        # Create either a catalog learner user or enterprise staff user, each with access to only one catalog.
+        if is_catalog_staff:
+            self.set_up_staff()
+        else:
+            self.set_up_catalog_learner()
+
+        # Remove either explicit or implicit role grants.
+        if is_role_assigned_via_jwt:
+            self.remove_role_assignments()
+        else:
+            self.set_up_invalid_jwt_role()
+
+        # First, check that the resource is available:
+        response = self.client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        # Attempt the delete:
+        response = self.client.delete(url)
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
 
 
 @ddt.ddt
@@ -364,14 +402,43 @@ class HighlightSetViewSetTests(CurationAPITestBase):
         """
         Test that catalog learners cannot edit any HighlightSet, because they should only have readonly access.
         """
-        url = reverse('api:v1:highlight-sets-admin-detail', kwargs={'uuid': self.highlight_set_one.uuid})
+        url = reverse('api:v1:highlight-sets-admin-detail', kwargs={'uuid': str(self.highlight_set_one.uuid)})
         # Create a learner user with learner (readonly) permissions on curation_config_one.
         self.set_up_catalog_learner()
         patch_data = {'title': 'Patch title'}
         response = self.client.patch(url, patch_data)
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    def test_create(self):
+    @mock.patch('enterprise_catalog.apps.api.v1.event_utils.track_event')
+    def test_delete(self, mock_track_event):
+        """
+        Test delete HighlightSet, happy case.
+        """
+        url = reverse('api:v1:highlight-sets-admin-detail', kwargs={'uuid': str(self.highlight_set_one.uuid)})
+        # Create privileged staff user that should be able to create highlight sets.
+        self.set_up_staff()
+        # First, check that the resource is available:
+        response = self.client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        # Perform the delete:
+        response = self.client.delete(url)
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        # Check that the resource is now unavailable:
+        response = self.client.get(url)
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        # Finally, check that a tracking event was emitted:
+        mock_track_event.assert_called_once_with(
+            STATIC_LMS_USER_ID,
+            SegmentEvents.HIGHLIGHT_SET_DELETED,
+            {
+                'highlight_set_uuid': str(self.highlight_set_one.uuid),
+                'enterprise_customer_uuid': str(self.curation_config_one.enterprise_uuid),
+                'enterprise_curation_uuid': str(self.curation_config_one.uuid),
+            },
+        )
+
+    @mock.patch('enterprise_catalog.apps.api.v1.event_utils.track_event')
+    def test_create(self, mock_track_event):
         """
         Test create HighlightSet, happy case.
         """
@@ -392,7 +459,19 @@ class HighlightSetViewSetTests(CurationAPITestBase):
             'is_published': True,
             'card_image_url': None,
             'highlighted_content': [],
+            'ignored_content_keys': [],
         }
+        # Finally, check that a tracking event was emitted:
+        mock_track_event.assert_called_once_with(
+            STATIC_LMS_USER_ID,
+            SegmentEvents.HIGHLIGHT_SET_CREATED,
+            {
+                'highlight_set_uuid': response.json()['uuid'],
+                'enterprise_customer_uuid': str(self.curation_config_one.enterprise_uuid),
+                'enterprise_curation_uuid': str(self.curation_config_one.uuid),
+                'added_content_keys': [],
+            },
+        )
 
     def test_create_too_many_sets(self):
         """
@@ -413,8 +492,10 @@ class HighlightSetViewSetTests(CurationAPITestBase):
         # Create one more HighlightSet that should trigger an error.
         response = self.client.post(url, post_data)
         assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert 'exceeds' in response.json()['Error']
 
-    def test_create_add_content(self):
+    @mock.patch('enterprise_catalog.apps.api.v1.event_utils.track_event')
+    def test_create_add_content(self, mock_track_event):
         """
         Test create HighlightSet, but also add content as part of the same request.  Make sure the following happen:
 
@@ -446,8 +527,20 @@ class HighlightSetViewSetTests(CurationAPITestBase):
             'ignored_content_keys': ['fake+content+key', '', None],
         }
         assert [hc['content_key'] for hc in response_highlighted_content] == good_content_keys_to_request
+        # Finally, check that a tracking event was emitted:
+        mock_track_event.assert_called_once_with(
+            STATIC_LMS_USER_ID,
+            SegmentEvents.HIGHLIGHT_SET_CREATED,
+            {
+                'highlight_set_uuid': response.json()['uuid'],
+                'enterprise_customer_uuid': str(self.curation_config_one.enterprise_uuid),
+                'enterprise_curation_uuid': str(self.curation_config_one.uuid),
+                'added_content_keys': good_content_keys_to_request,
+            },
+        )
 
-    def test_create_add_no_content(self):
+    @mock.patch('enterprise_catalog.apps.api.v1.event_utils.track_event')
+    def test_create_add_no_content(self, mock_track_event):
         """
         Test create HighlightSet, and include content_keys but make it empty in the request.
         """
@@ -469,16 +562,56 @@ class HighlightSetViewSetTests(CurationAPITestBase):
             'is_published': True,
             'card_image_url': None,
             'highlighted_content': [],
+            'ignored_content_keys': [],
         }
+        # Finally, check that a tracking event was emitted:
+        mock_track_event.assert_called_once_with(
+            STATIC_LMS_USER_ID,
+            SegmentEvents.HIGHLIGHT_SET_CREATED,
+            {
+                'highlight_set_uuid': response.json()['uuid'],
+                'enterprise_customer_uuid': str(self.curation_config_one.enterprise_uuid),
+                'enterprise_curation_uuid': str(self.curation_config_one.uuid),
+                'added_content_keys': [],
+            },
+        )
 
-    def test_add_content(self):
+    @mock.patch('enterprise_catalog.apps.api.v1.event_utils.track_event')
+    def test_create_add_too_much_content(self, mock_track_event):
+        """
+        Test create HighlightSet, but also add so much content that it hits a content limit.  This should result in no
+        highlight set being created, empty or not.
+        """
+        url = reverse('api:v1:highlight-sets-admin-list')
+        # Create privileged staff user that should be able to create highlight sets.
+        self.set_up_staff()
+        # Prepare enough ContentMetadata objects to overflow the HighlightSet.
+        content_metadata_to_request = [
+            ContentMetadataFactory(content_type=COURSE)
+            for _ in range(CONTENT_PER_HIGHLIGHTSET_LIMIT + 1)
+        ]
+        content_keys_to_request = [cm.content_key for cm in content_metadata_to_request]
+        post_data = {
+            'enterprise_customer': self.enterprise_uuid,
+            'title': 'foobar title',
+            'is_published': True,
+            'content_keys': content_keys_to_request,
+        }
+        response = self.client.post(url, post_data)
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert 'exceeds' in response.json()['Error']
+        # Finally, check that NO tracking event was emitted:
+        mock_track_event.assert_not_called()
+
+    @mock.patch('enterprise_catalog.apps.api.v1.event_utils.track_event')
+    def test_add_content(self, mock_track_event):
         """
         Test add-content endpoint which adds content to a highlight set. Also test adding so much content that it hits a
         limit.
         """
         url = reverse(
             'api:v1:highlight-sets-admin-add-content',
-            kwargs={'uuid': self.highlight_set_one.uuid},
+            kwargs={'uuid': str(self.highlight_set_one.uuid)},
         )
         # Create privileged staff user that should be able to create highlight sets.
         self.set_up_staff()
@@ -488,27 +621,35 @@ class HighlightSetViewSetTests(CurationAPITestBase):
             for _ in range(CONTENT_PER_HIGHLIGHTSET_LIMIT - len(self.highlighted_content_list_one))
         ]
         content_keys_to_request = [cm.content_key for cm in content_metadata_to_request]
-        post_data = {
-            'uuid': self.highlight_set_one.uuid,
-            'content_keys': content_keys_to_request,
-        }
+        post_data = {'content_keys': content_keys_to_request}
         response = self.client.post(url, post_data)
         assert response.status_code == status.HTTP_201_CREATED
 
         # Try to add one more content key and make sure it triggers an error.
         last_content_metadata_to_request = ContentMetadataFactory(content_type=COURSE)
-        post_data = {
-            'uuid': self.highlight_set_one.uuid,
-            'content_keys': [last_content_metadata_to_request.content_key],
-        }
+        post_data = {'content_keys': [last_content_metadata_to_request.content_key]}
         response = self.client.post(url, post_data)
         assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert 'exceeds' in response.json()['Error']
 
-        # Finally, make sure the total count of content still does not exceed the max.
-        detail_url = reverse('api:v1:highlight-sets-admin-detail', kwargs={'uuid': self.highlight_set_one.uuid})
+        # Make sure the total count of content still does not exceed the max.
+        detail_url = reverse('api:v1:highlight-sets-admin-detail', kwargs={'uuid': str(self.highlight_set_one.uuid)})
         response = self.client.get(detail_url)
         assert response.status_code == status.HTTP_200_OK
         assert len(response.json()['highlighted_content']) == CONTENT_PER_HIGHLIGHTSET_LIMIT
+
+        # Finally check that all the expected track_event calls were made:
+        mock_track_event.assert_called_once_with(
+            STATIC_LMS_USER_ID,
+            SegmentEvents.HIGHLIGHT_SET_UPDATED,
+            {
+                'highlight_set_uuid': str(self.highlight_set_one.uuid),
+                'enterprise_customer_uuid': str(self.curation_config_one.enterprise_uuid),
+                'enterprise_curation_uuid': str(self.curation_config_one.uuid),
+                'added_content_keys': content_keys_to_request,
+                'removed_content_keys': [],
+            },
+        )
 
     @ddt.data(
         {'highlight_set_exists': False},
@@ -533,7 +674,7 @@ class HighlightSetViewSetTests(CurationAPITestBase):
         """
         Test that an enterprise customer can edit their own HighlightSet objects.
         """
-        url = reverse('api:v1:highlight-sets-admin-detail', kwargs={'uuid': self.highlight_set_one.uuid})
+        url = reverse('api:v1:highlight-sets-admin-detail', kwargs={'uuid': str(self.highlight_set_one.uuid)})
         self.set_up_staff()
         patch_data = {'title': 'Patch title'}
         response = self.client.patch(url, patch_data)
@@ -541,7 +682,7 @@ class HighlightSetViewSetTests(CurationAPITestBase):
         assert response.json()['title'] == 'Patch title'
 
         # May as well confirm that it persisted in the database:
-        url = reverse('api:v1:highlight-sets-detail', kwargs={'uuid': self.highlight_set_one.uuid})
+        url = reverse('api:v1:highlight-sets-detail', kwargs={'uuid': str(self.highlight_set_one.uuid)})
         response_get = self.client.get(url)
         assert response_get.json()['title'] == 'Patch title'
 
@@ -563,7 +704,7 @@ class HighlightSetViewSetTests(CurationAPITestBase):
             ^
         Finally, after removing ALL elements, the selected URL is null (JSON null).
         """
-        detail_url = reverse('api:v1:highlight-sets-admin-detail', kwargs={'uuid': self.highlight_set_one.uuid})
+        detail_url = reverse('api:v1:highlight-sets-admin-detail', kwargs={'uuid': str(self.highlight_set_one.uuid)})
         self.set_up_staff()
 
         response = self.client.get(detail_url)
@@ -574,7 +715,7 @@ class HighlightSetViewSetTests(CurationAPITestBase):
         # that of original index 0.
         remove_url = reverse(
             'api:v1:highlight-sets-admin-remove-content',
-            kwargs={'uuid': self.highlight_set_one.uuid},
+            kwargs={'uuid': str(self.highlight_set_one.uuid)},
         )
         response = self.client.post(
             remove_url, {'content_keys': [self.highlighted_content_list_one[1].content_metadata.content_key]},
@@ -596,7 +737,7 @@ class HighlightSetViewSetTests(CurationAPITestBase):
         # Adding new content should have no impact to the card_image_url at the HighlightSet level.
         add_url = reverse(
             'api:v1:highlight-sets-admin-add-content',
-            kwargs={'uuid': self.highlight_set_one.uuid},
+            kwargs={'uuid': str(self.highlight_set_one.uuid)},
         )
         response = self.client.post(
             add_url, {'content_keys': [self.highlighted_content_list_one[0].content_metadata.content_key]},
