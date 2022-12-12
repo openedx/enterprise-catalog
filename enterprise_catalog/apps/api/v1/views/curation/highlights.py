@@ -11,6 +11,10 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework_xml.renderers import XMLRenderer
 
+from enterprise_catalog.apps.api.v1.constants import SegmentEvents
+from enterprise_catalog.apps.api.v1.event_utils import (
+    track_highlight_set_changes,
+)
 from enterprise_catalog.apps.api.v1.pagination import (
     PageNumberWithSizePagination,
 )
@@ -136,12 +140,36 @@ class EnterpriseCurationConfigViewSet(EnterpriseCurationConfigBaseViewSet, views
     def create(self, request, *args, **kwargs):
         """
         Create a new EnterpriseCurationConfig
+
+        POST /api/v1/enterprise-curations-admin/
+
+        Request JSON Arguments:
+            enterprise_customer (str):
+                UUID of enterprise customer for which to create a EnterpriseCurationConfig.
+            title (str): Desired title of the EnterpriseCurationConfig.
+            is_highlight_feature_active (bool, optional, default=True):
+                True if the highlighting feature is enabled for this enterprise customer.
+
+        Returns:
+            rest_framework.response.Response:
+                400: If there are missing or otherwise invalid input parameters.  Also, if an EnterpriseCurationConfig
+                     already exists for the given enterprise_customer.  Response body is JSON with a single `Error` key.
+                403: If the requester has insufficient create permissions, or if there are already too many highlight
+                     sets for the given enterprise customer, or if the amount of requested content keys is also over
+                     limit.
+                     Response body is JSON with a single `Error` key.
+                201: If highlight set was successfully created.  Response body
+                     is JSON with a serialized EnterpriseCurationConfig containing the following keys:
+                     {
+                         "uuid": <str, UUID of newly created EnterpriseCurationConfig>,
+                         "enterprise_customer": <str, UUID of corresponding enterprise customer>,
+                         "title": <str, Title of newly created EnterpriseCurationConfig>,
+                         "is_highlight_feature_active": <bool, Whether the highlight feature is active>,
+                         "highlight_sets": <empty list>,
+                     }
         """
         if not self.requested_enterprise_uuid:
-            return Response(
-                f'An enterprise UUID was not specified.',
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({'Error': 'An enterprise UUID was not specified.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             existing_curation_config_for_enterprise = EnterpriseCurationConfig.objects.get(
@@ -152,7 +180,12 @@ class EnterpriseCurationConfigViewSet(EnterpriseCurationConfigBaseViewSet, views
 
         if existing_curation_config_for_enterprise:
             return Response(
-                f'An EnterpriseCurationConfig already exists for enterprise UUID {self.requested_enterprise_uuid}',
+                {
+                    'Error': (
+                        'An EnterpriseCurationConfig already exists for enterprise UUID '
+                        f'{self.requested_enterprise_uuid}'
+                    ),
+                },
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -320,7 +353,8 @@ class HighlightSetViewSet(HighlightSetBaseViewSet, viewsets.ModelViewSet):
         proposed_final_count = len(set(all_prior_content_keys).union(valid_requested_content_keys_to_add))
         if proposed_final_count > CONTENT_PER_HIGHLIGHTSET_LIMIT:
             raise LimitExceeded(
-                f'Request exceeds the backend maximum content count per highlight set ({CONTENT_PER_HIGHLIGHTSET_LIMIT}).'
+                'Request exceeds the backend maximum content count per highlight set'
+                f'({CONTENT_PER_HIGHLIGHTSET_LIMIT}).'
             )
 
         # Use a loop to create objects one-at-a-time instead of a single bulk create because we currently rely on each
@@ -337,27 +371,71 @@ class HighlightSetViewSet(HighlightSetBaseViewSet, viewsets.ModelViewSet):
 
         return (added_content_keys, ignored_content_keys, existing_content_keys)
 
+    def destroy(self, request, *args, **kwargs):
+        """
+        Override default deletion behavior inherited from edx-rbac/DRF just to add event tracking.
+
+        DELETE /api/v1/highlight-sets-admin/<uuid>/
+
+        Request URL Arguments:
+            uuid (str): UUID of HighlightSet object to delete.
+
+        Returns:
+            rest_framework.response.Response:
+                403: If the requester does not have delete permission, or the object UUID wasn't found.
+                204: Indicates success, and response body will be empty.
+        """
+        highlight_set = HighlightSet.objects.get(uuid=kwargs['uuid'])
+        deletion_response = super().destroy(request, *args, **kwargs)
+        if status.is_success(deletion_response.status_code):
+            track_highlight_set_changes(request, highlight_set, SegmentEvents.HIGHLIGHT_SET_DELETED)
+        return deletion_response
+
     def create(self, request, *args, **kwargs):
         """
         Create a new HighlightSet
 
-        Arguments:
-        - `request.data["enterprise_customer"]` (str): UUID of enterprise customer for which to create a highlight set.
-        - `request.data["title"]` (str): Desired title of the highlight set.
-        - `request.data["is_published"]` (bool, optional): True if the highlight set should be published.
-        - `request.data["content_keys"]` (list of str, optional): A list of content keys to add.
+        POST /api/v1/highlight-sets-admin/
+
+        Request JSON Arguments:
+            enterprise_customer (str):
+                UUID of enterprise customer for which to create a highlight set.
+            title (str): Desired title of the highlight set.
+            is_published (bool, optional): True if the highlight set should be published.
+            content_keys (list of str, optional): A list of content keys to add.
+
+        Returns:
+            rest_framework.response.Response:
+                400: If there are missing or otherwise invalid input parameters.  Response body is JSON with a single
+                     `Error` key.
+                403: If the requester has insufficient create permissions, or if there are already too many highlight
+                     sets for the given enterprise customer, or if the amount of requested content keys is also over
+                     limit.
+                     Response body is JSON with a single `Error` key.
+                201: If highlight set was successfully created.  Response body is JSON with a serialized HighlightSet
+                     containing the following keys:
+                     {
+                         "uuid": <str, UUID of newly created HighlightSet>,
+                         "title": <str, Title of newly created HighlightSet>,
+                         "is_published": <bool, True if the newly created HighlightSet is published>,
+                         "enterprise_curation": <str, UUID of EnterpriseCurationConfig that this HighlightSet is a part of>,
+                         "card_image_url": <str, pre-selected card image to use for this entire highlight set>,
+                         "highlighted_content": <list of serialized content>,
+                         "ignored_content_keys": <list of content keys that were ignored from the requested ones>
+                     }
         """
         if not self.requested_enterprise_uuid:
-            return Response(
-                f'An enterprise UUID was not specified.',
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({'Error': 'An enterprise UUID was not specified.'}, status=status.HTTP_400_BAD_REQUEST)
 
         curation_config = self._validate_existing_enterprise_curation_config()
         if not curation_config:
             return Response(
-                f'An EnterpriseCurationConfig must exist for enterprise UUID {self.requested_enterprise_uuid} '
-                'in order to create a HighlightSet',
+                {
+                    'Error': (
+                        f'An EnterpriseCurationConfig must exist for enterprise UUID {self.requested_enterprise_uuid} '
+                        'in order to create a HighlightSet'
+                    ),
+                },
                 status=status.HTTP_400_BAD_REQUEST
             )
         request.data['enterprise_curation'] = str(curation_config.uuid)
@@ -367,41 +445,95 @@ class HighlightSetViewSet(HighlightSetBaseViewSet, viewsets.ModelViewSet):
         existing_highlightset_count = len(HighlightSet.objects.filter(enterprise_curation=curation_config))
         if existing_highlightset_count == HIGHLIGHTSETS_PER_ENTERPRISE_LIMIT:
             return Response(
-                'Request exceeds the backend maximum highlight set per enterprise customer '
-                f'({HIGHLIGHTSETS_PER_ENTERPRISE_LIMIT}).',
+                {
+                    'Error': (
+                        'Request exceeds the backend maximum highlight set per enterprise customer '
+                        f'({HIGHLIGHTSETS_PER_ENTERPRISE_LIMIT}).'
+                    ),
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
+        if len(self.requested_content_keys) > CONTENT_PER_HIGHLIGHTSET_LIMIT:
+            return Response(
+                {
+                    'Error': (
+                        'Request exceeds the backend maximum content count per highlight set '
+                        f'({CONTENT_PER_HIGHLIGHTSET_LIMIT}).'
+                    ),
+                },
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        response = super().create(request, *args, **kwargs)
+        creation_response = super().create(request, *args, **kwargs)
 
         # If the highlight set is created successfully, we can add requested content to it.
-        if status.is_success(response.status_code) and self.requested_content_keys:
-            highlight_set = HighlightSet.objects.get(uuid=response.data['uuid'])
-            try:
+        if status.is_success(creation_response.status_code):
+            highlight_set = HighlightSet.objects.get(uuid=creation_response.data['uuid'])
+            additional_tracking_properties = {}
+            response_data = {}
+            if self.requested_content_keys:
+                # Add the requested content.  We're not worried about catching LimitExceeded because we already checked
+                # the count of requested content before creating the highlight set.
                 added_content_keys, ignored_content_keys, _ = self._add_requested_content(highlight_set)
-            except LimitExceeded as e:
-                return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
-            serializer = self.get_serializer(highlight_set)
-            response_data = serializer.data
-            response_data.update({'ignored_content_keys': ignored_content_keys})
-            return Response(response_data, status=response.status_code, headers=response.headers)
+                additional_tracking_properties.update({"added_content_keys": added_content_keys})
+                # Produce a success response containing a re-creation of the original response (from `super().create()`) but
+                # reflecting the changed state after adding content.
+                serializer = self.get_serializer(highlight_set)
+                response_data.update(serializer.data)
+                response_data.update({'ignored_content_keys': ignored_content_keys})
+            else:
+                additional_tracking_properties.update({"added_content_keys": []})
+                response_data.update(creation_response.data)
+                response_data.update({'ignored_content_keys': []})
+            # Track an event if a HighlightSet was created, regardless of whether content was added:
+            track_highlight_set_changes(
+                request,
+                highlight_set,
+                SegmentEvents.HIGHLIGHT_SET_CREATED,
+                additional_properties=additional_tracking_properties,
+            )
+            return Response(response_data, status=creation_response.status_code, headers=creation_response.headers)
         else:
-            return response
+            return creation_response
 
     @action(detail=True, methods=['post'], url_path='add-content')
     def add_content(self, request, uuid, *args, **kwargs):
         """
         Add content to an existing HighlightSet
 
-        Arguments:
-        - `uuid` (str): UUID of the HighlightSet to add content to.
-        - `request.data["content_keys"]` (list of str): A list of content keys to add.
+        POST /v1/highlight-sets-admin/<uuid>/add-content/
+
+        Request URL Arguments:
+            uuid (str): UUID of the HighlightSet to add content to.
+
+        Request JSON Arguments:
+            content_keys (list of str): A list of content keys to add.
+
+        Returns:
+            rest_framework.response.Response:
+                400: If there are missing or otherwise invalid input parameters.  Response body is JSON with a single
+                     `Error` key.
+                403: If the requester has insufficient write permissions, or if there is already too much highlighted
+                     content for the given enterprise customer.  Response body is JSON with a single `Error` key.
+                201: If highlight set was successfully updated.  Response body is JSON with the following keys:
+                     {
+                         "ignored_content_keys": <subset of requested content_keys that were skipped/ignored>,
+                         "added_content_keys": <subset of requested content_keys that were added>,
+                         "existing_content_keys":
+                             <subset of requested content_keys that already existed in the HighlightSet>,
+                         "highlight_set": <a serialized HighlightSet representing the final state>,
+                     }
         """
         highlight_set = HighlightSet.objects.get(uuid=uuid)
         try:
             added_content_keys, ignored_content_keys, existing_content_keys = self._add_requested_content(highlight_set)
         except LimitExceeded as e:
-            return Response(str(e), status=status.HTTP_403_FORBIDDEN)
+            return Response({'Error': str(e)}, status=status.HTTP_403_FORBIDDEN)
+        # Track a segment event:
+        additional_properties = {'added_content_keys': added_content_keys, 'removed_content_keys': []}
+        track_highlight_set_changes(
+            request, highlight_set, SegmentEvents.HIGHLIGHT_SET_UPDATED, additional_properties=additional_properties
+        )
         return Response(
             {
                 'ignored_content_keys': ignored_content_keys,
@@ -417,9 +549,26 @@ class HighlightSetViewSet(HighlightSetBaseViewSet, viewsets.ModelViewSet):
         """
         Remove existing content from an existing HighlightSet
 
-        Arguments:
-        - `uuid` (str): UUID of the HighlightSet to remove content from.
-        - `request.data["content_keys"]` (str): A list of content keys to remove.
+        POST /v1/highlight-sets-admin/<uuid>/remove-content/
+
+        Request URL Arguments:
+            uuid (str): UUID of the HighlightSet to remove content from.
+
+        Request JSON Arguments:
+            content_keys (list of str): A list of content keys to remove.
+
+        Returns:
+            rest_framework.response.Response:
+                400: If there are missing or otherwise invalid input parameters.  Response body is JSON with a single
+                     `Error` key.
+                403: If the requester has insufficient write permissions, Response body is JSON with a single `Error`
+                     key.
+                201: If highlight set was successfully updated.  Response body is JSON with the following keys:
+                     {
+                         "ignored_content_keys": <subset of requested content_keys that were skipped/ignored>,
+                         "removed_content_keys": <subset of requested content_keys that were removed>,
+                         "highlight_set": <a serialized HighlightSet representing the final state>,
+                     }
         """
         content_keys = self.requested_content_keys
         removed_content_keys = set()
@@ -433,6 +582,12 @@ class HighlightSetViewSet(HighlightSetBaseViewSet, viewsets.ModelViewSet):
                 for content_item in existing_content_to_remove
             ])
             existing_content_to_remove.delete()
+
+        # Track a segment event:
+        additional_properties = {'added_content_keys': [], 'removed_content_keys': list(removed_content_keys)}
+        track_highlight_set_changes(
+            request, highlight_set, SegmentEvents.HIGHLIGHT_SET_UPDATED, additional_properties=additional_properties
+        )
 
         return Response(
             {
