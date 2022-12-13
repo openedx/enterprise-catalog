@@ -15,8 +15,7 @@ class TrackConfig(AppConfig):
     """
     Application Configuration for the track app.
     """
-    name = 'track'
-    default = False
+    name = 'enterprise_catalog.apps.track'
 
     def ready(self):
         """
