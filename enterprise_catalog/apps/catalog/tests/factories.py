@@ -26,6 +26,7 @@ USER_PASSWORD = 'password'
 FAKE_ADVERTISED_COURSE_RUN_UUID = uuid4()
 FAKE_CONTENT_AUTHOR_NAME = 'Partner Name'
 FAKE_CONTENT_AUTHOR_UUID = uuid4()
+FAKE_CONTENT_TITLE_PREFIX = 'Fake Content Title'
 
 fake = Faker()
 
@@ -63,11 +64,16 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
     """
     class Meta:
         model = ContentMetadata
-        exclude = ('card_image_url_prefix', 'card_image_url')
+        # Exclude certain factory fields from being used as model fields during mode.save().  If these were not
+        # specified here, the test SQL server would throw an error that the field does not exist on the table.
+        exclude = ('card_image_url_prefix', 'card_image_url', 'title')
 
+    # factory fields
     card_image_url_prefix = factory.Faker('image_url')
     card_image_url = factory.LazyAttribute(lambda p: f'{p.card_image_url_prefix}.jpg')
+    title = factory.Faker('lexify', text=f'{FAKE_CONTENT_TITLE_PREFIX} ??????????')
 
+    # model fields
     content_key = factory.Sequence(lambda n: f'{str(n).zfill(5)}_metadata_item')
     content_type = factory.Iterator([COURSE_RUN, COURSE, PROGRAM, LEARNER_PATHWAY])
     parent_content_key = None
@@ -78,6 +84,7 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
             'key': self.content_key,
             'aggregation_key': f'{self.content_type}:{self.content_key}',
             'uuid': str(uuid4()),
+            'title': self.title,
         }
         if self.content_type == COURSE:
             owners = [{
@@ -110,6 +117,7 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
                 'is_enrollable': True,
                 'is_marketable': True,
                 'availability': 'current',
+                'image_url': self.card_image_url,
             })
         elif self.content_type == PROGRAM:
             # programs in the wild do not have a key
@@ -117,7 +125,7 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
             authoring_organizations = [{
                 'uuid': str(FAKE_CONTENT_AUTHOR_UUID),
                 'name': FAKE_CONTENT_AUTHOR_NAME,
-                'logo_image_url': self.card_image_url,
+                'logo_image_url': fake.image_url() + '.jpg',
             }]
             json_metadata.update({
                 'uuid': self.content_key,
@@ -126,6 +134,7 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
                 'hidden': True,
                 'marketing_url': f'https://marketing.url/{self.content_key}',
                 'authoring_organizations': authoring_organizations,
+                'card_image_url': self.card_image_url,
             })
         elif self.content_type == LEARNER_PATHWAY:
             json_metadata.update({
@@ -136,6 +145,13 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
                 'published': True,
                 'visible_via_association': True,
                 'created': datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
+                'card_image': {
+                    'card': {
+                        'url': self.card_image_url,
+                        'width': 378,
+                        'height': 225,
+                    },
+                },
             })
         return json_metadata
 
