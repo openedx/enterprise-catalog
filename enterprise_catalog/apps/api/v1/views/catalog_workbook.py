@@ -54,6 +54,9 @@ class CatalogWorkbookView(GenericAPIView):
         course_worksheet = workbook.add_worksheet('Courses')
         export_utils.write_headers_to_sheet(course_worksheet, export_utils.CSV_COURSE_HEADERS, header_format)
 
+        exec_ed_worksheet = workbook.add_worksheet('Executive Education')
+        export_utils.write_headers_to_sheet(exec_ed_worksheet, export_utils.CSV_EXEC_ED_COURSE_HEADERS, header_format)
+
         program_worksheet = workbook.add_worksheet('Programs')
         export_utils.write_headers_to_sheet(program_worksheet, export_utils.CSV_PROGRAM_HEADERS, header_format)
 
@@ -86,14 +89,21 @@ class CatalogWorkbookView(GenericAPIView):
         course_row_num = 1
         program_row_num = 1
         course_run_row_num = 1
+        exec_ed_row_num = 1
         while len(page['hits']) > 0:
             for hit in page.get('hits', []):
                 if hit.get('content_type') == 'course':
                     course_row = export_utils.course_hit_to_row(hit)
+                    exec_ed_course = hit.get('course_type') == 'executive-education-2u';
                     # Write course row data.
-                    for col_num, cell_data in enumerate(course_row):
-                        course_worksheet.write(course_row_num, col_num, cell_data)
-                    course_row_num = course_row_num + 1
+                    if exec_ed_course:
+                        for col_num, cell_data in enumerate(course_row):
+                            exec_ed_worksheet.write(exec_ed_row_num, col_num, cell_data)
+                        exec_ed_row_num = exec_ed_row_num + 1
+                    else:
+                        for col_num, cell_data in enumerate(course_row):
+                            course_worksheet.write(course_row_num, col_num, cell_data)
+                        course_row_num = course_row_num + 1
                     # extract the course title and key for the course_run tab
                     course_title = hit.get('title')
                     course_key = hit.get('aggregation_key')

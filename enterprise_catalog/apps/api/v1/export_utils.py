@@ -56,28 +56,63 @@ CSV_COURSE_RUN_HEADERS = [
     'Length',
 ]
 
+CSV_EXEC_ED_COURSE_HEADERS = [
+    'Title',
+    'Partner Name',
+    'Start',
+    'End',
+    'Price',
+    'Language',
+    'URL',
+    'Short Description',
+    'Subjects',
+    'Key',
+    'Short Key',
+    'Skills',
+    'Min Effort',
+    'Max Effort',
+    'Length',
+    'What You’ll Learn',
+    'Full Description',
+]
+
+CSV_EXEC_ED_COURSE_RUN_HEADERS = [
+    'Title',
+    'Key',
+    'Course Short Key',
+    'Availability',
+    'Start Date',
+    'End Date',
+    'Min Effort',
+    'Max Effort',
+    'Length',
+]
+
 ALGOLIA_ATTRIBUTES_TO_RETRIEVE = [
-    'title',
-    'key',
-    'content_type',
-    'partners',
     'advertised_course_run',
-    'programs',
-    'program_titles',
-    'level_type',
-    'language',
-    'short_description',
-    'subjects',
     'aggregation_key',
-    'skills',
-    'first_enrollable_paid_seat_price',
-    'marketing_url',
-    'outcome',
-    'prerequisites_raw',
-    'program_type',
-    'subtitle',
+    'content_type',
     'course_keys',
     'course_runs',
+    'course_type',
+    'entitlements',
+    'first_enrollable_paid_seat_price',
+    'full_description',
+    'key',
+    'language',
+    'level_type',
+    'marketing_url',
+    'outcome',
+    'partners',
+    'prerequisites_raw',
+    'program_titles',
+    'program_type',
+    'programs',
+    'short_description',
+    'skills',
+    'subjects',
+    'subtitle',
+    'title',
 ]
 
 DATE_FORMAT = "%Y-%m-%d"
@@ -114,6 +149,7 @@ def course_hit_to_row(hit):
     """
     Helper function to construct a CSV row according to a single Algolia result course hit.
     """
+    exec_course = hit.get('course_type') == 'executive-education-2u' if True else False
     csv_row = []
     csv_row.append(hit.get('title'))
 
@@ -133,29 +169,36 @@ def course_hit_to_row(hit):
             end_date = parser.parse(hit['advertised_course_run']['end']).strftime(DATE_FORMAT)
         csv_row.append(end_date)
 
-        upgrade_deadline = None
-        if hit['advertised_course_run'].get('upgrade_deadline'):
-            raw_deadline = hit['advertised_course_run']['upgrade_deadline']
-            upgrade_deadline = datetime.datetime.fromtimestamp(raw_deadline).strftime(DATE_FORMAT)
-        csv_row.append(upgrade_deadline)
+        if not exec_course:
+            upgrade_deadline = None
+            if hit['advertised_course_run'].get('upgrade_deadline'):
+                raw_deadline = hit['advertised_course_run']['upgrade_deadline']
+                upgrade_deadline = datetime.datetime.fromtimestamp(raw_deadline).strftime(DATE_FORMAT)
+            csv_row.append(upgrade_deadline)
 
         pacing_type = hit['advertised_course_run']['pacing_type']
         key = hit['advertised_course_run'].get('key')
     else:
         csv_row.append(None)  # no start date
         csv_row.append(None)  # no end date
-        csv_row.append(None)  # no upgrade deadline
+        if not exec_course:
+            csv_row.append(None)  # no upgrade deadline
         pacing_type = None
         key = None
 
-    csv_row.append(', '.join(hit.get('programs', [])))
-    csv_row.append(', '.join(hit.get('program_titles', [])))
+    if not exec_course:
+        csv_row.append(', '.join(hit.get('programs', [])))
+        csv_row.append(', '.join(hit.get('program_titles', [])))
+        csv_row.append(pacing_type)
 
-    csv_row.append(pacing_type)
+    if not exec_course:
+        csv_row.append(hit.get('level_type'))
 
-    csv_row.append(hit.get('level_type'))
+    if exec_course:
+        csv_row.append(float(hit['entitlements'][0]['price']))
+    else:
+        csv_row.append(hit.get('first_enrollable_paid_seat_price'))
 
-    csv_row.append(hit.get('first_enrollable_paid_seat_price'))
     csv_row.append(hit.get('language'))
     csv_row.append(hit.get('marketing_url'))
     csv_row.append(strip_tags(hit.get('short_description', '')))
@@ -181,8 +224,11 @@ def course_hit_to_row(hit):
     # What You’ll Learn -> outcome
     csv_row.append(strip_tags(hit.get('outcome', '')))
 
-    # Pre-requisites -> prerequisites_raw
-    csv_row.append(strip_tags(hit.get('prerequisites_raw', '')))
+    if exec_course:
+        csv_row.append(strip_tags(hit.get('full_description', '')))
+    else:
+        # Pre-requisites -> prerequisites_raw
+        csv_row.append(strip_tags(hit.get('prerequisites_raw', '')))
 
     return csv_row
 
