@@ -61,28 +61,51 @@ CSV_COURSE_RUN_HEADERS = [
     'Language',
 ]
 
+CSV_EXEC_ED_COURSE_HEADERS = [
+    'Title',
+    'Partner Name',
+    'Start',
+    'End',
+    'Price',
+    'Language',
+    'URL',
+    'Short Description',
+    'Subjects',
+    'Key',
+    'Short Key',
+    'Skills',
+    'Min Effort',
+    'Max Effort',
+    'Length',
+    'What You’ll Learn',
+    'Full Description',
+]
+
 ALGOLIA_ATTRIBUTES_TO_RETRIEVE = [
-    'title',
-    'key',
-    'content_type',
-    'partners',
     'advertised_course_run',
-    'programs',
-    'program_titles',
-    'level_type',
-    'language',
-    'short_description',
-    'subjects',
     'aggregation_key',
-    'skills',
-    'first_enrollable_paid_seat_price',
-    'marketing_url',
-    'outcome',
-    'prerequisites_raw',
-    'program_type',
-    'subtitle',
+    'content_type',
     'course_keys',
     'course_runs',
+    'course_type',
+    'entitlements',
+    'first_enrollable_paid_seat_price',
+    'full_description',
+    'key',
+    'language',
+    'level_type',
+    'marketing_url',
+    'outcome',
+    'partners',
+    'prerequisites_raw',
+    'program_titles',
+    'program_type',
+    'programs',
+    'short_description',
+    'skills',
+    'subjects',
+    'subtitle',
+    'title',
 ]
 
 DATE_FORMAT = "%Y-%m-%d"
@@ -173,21 +196,65 @@ def course_hit_to_row(hit):
     csv_row.append(', '.join(skills))
 
     advertised_course_run = hit.get('advertised_course_run', {})
-
-    # Min Effort
     csv_row.append(advertised_course_run.get('min_effort'))
-
-    # Max Effort
     csv_row.append(advertised_course_run.get('max_effort'))
+    csv_row.append(advertised_course_run.get('weeks_to_complete'))  # Length
 
-    # Length
-    csv_row.append(advertised_course_run.get('weeks_to_complete'))
+    csv_row.append(strip_tags(hit.get('outcome', '')))  # What You’ll Learn
 
-    # What You’ll Learn -> outcome
-    csv_row.append(strip_tags(hit.get('outcome', '')))
+    csv_row.append(strip_tags(hit.get('prerequisites_raw', '')))  # Pre-requisites
 
-    # Pre-requisites -> prerequisites_raw
-    csv_row.append(strip_tags(hit.get('prerequisites_raw', '')))
+    return csv_row
+
+
+def exec_ed_course_to_row(hit):
+    """
+    Helper function to construct a CSV row according to a single executive education course hit.
+    """
+    csv_row = []
+    csv_row.append(hit.get('title'))
+
+    if hit.get('partners'):
+        csv_row.append(hit['partners'][0]['name'])
+    else:
+        csv_row.append(None)
+
+    if hit.get('advertised_course_run'):
+        start_date = None
+        if hit['advertised_course_run'].get('start'):
+            start_date = parser.parse(hit['advertised_course_run']['start']).strftime(DATE_FORMAT)
+        csv_row.append(start_date)
+
+        end_date = None
+        if hit['advertised_course_run'].get('end'):
+            end_date = parser.parse(hit['advertised_course_run']['end']).strftime(DATE_FORMAT)
+        csv_row.append(end_date)
+        key = hit['advertised_course_run'].get('key')
+    else:
+        csv_row.append(None)  # no start date
+        csv_row.append(None)  # no end date
+        key = None
+
+    csv_row.append(float(hit['entitlements'][0]['price']))
+    csv_row.append(hit.get('language'))
+    csv_row.append(hit.get('marketing_url'))
+    csv_row.append(strip_tags(hit.get('short_description', '')))
+
+    csv_row.append(', '.join(hit.get('subjects', [])))
+    csv_row.append(key)
+    csv_row.append(hit.get('aggregation_key'))
+
+    skills = [skill['name'] for skill in hit.get('skills', [])]
+    csv_row.append(', '.join(skills))
+
+    advertised_course_run = hit.get('advertised_course_run', {})
+    csv_row.append(advertised_course_run.get('min_effort'))
+    csv_row.append(advertised_course_run.get('max_effort'))
+    csv_row.append(advertised_course_run.get('weeks_to_complete'))  # Length
+
+    csv_row.append(strip_tags(hit.get('outcome', '')))  # What You’ll Learn
+
+    csv_row.append(strip_tags(hit.get('full_description', '')))
 
     return csv_row
 
