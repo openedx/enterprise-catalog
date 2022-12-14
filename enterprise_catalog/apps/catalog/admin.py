@@ -47,6 +47,7 @@ class UnchangeableMixin(admin.ModelAdmin):
 class ContentMetadataAdmin(UnchangeableMixin):
     """ Admin configuration for the custom ContentMetadata model. """
     list_display = (
+        'id',  # added to facilitate creating highlighted content (curation app) via the ContentMetadata `id`.
         'content_key',
         'content_type',
         'parent_content_key',
@@ -58,8 +59,9 @@ class ContentMetadataAdmin(UnchangeableMixin):
         'content_key',
         'parent_content_key',
     )
-    filter_horizontal = (
+    readonly_fields = (
         'associated_content_metadata',
+        'catalog_queries'
     )
 
 

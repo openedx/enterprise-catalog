@@ -46,6 +46,12 @@ class EnterpriseCurationConfig(TimeStampedModel):
         verbose_name_plural = _("Enterprise curations")
         app_label = 'curation'
 
+    def __str__(self):
+        """
+        Return human-readable string representation.
+        """
+        return f"<EnterpriseCurationConfig ({self.uuid}) for EnterpriseCustomer '{self.enterprise_uuid}'>"
+
 
 class HighlightSet(TimeStampedModel):
     """

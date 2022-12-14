@@ -2,8 +2,10 @@
 Discovery service api client code.
 """
 import logging
+import time
 
 from celery.exceptions import SoftTimeLimitExceeded
+from django.conf import settings
 
 from .base_oauth import BaseOAuthClient
 from .constants import (
@@ -22,18 +24,42 @@ class DiscoveryApiClient(BaseOAuthClient):
     Object builds an API client to make calls to the Discovery Service.
     """
 
+    # the maximum number of retries to attempt a call
+    MAX_RETRIES = getattr(settings, "ENTERPRISE_DISCOVERY_CLIENT_MAX_RETRIES", 4)
+    # the number of seconds to sleep beteween tries, which is doubled every attempt
+    BACKOFF_FACTOR = getattr(settings, "ENTERPRISE_DISCOVERY_CLIENT_BACKOFF_FACTOR", 2)
+
+    def _calculate_backoff(self, attempt_count):
+        """
+        Calculate the seconds to sleep based on attempt_count
+        """
+        return (self.BACKOFF_FACTOR * (2 ** (attempt_count - 1)))
+
     def _retrieve_metadata_for_content_filter(self, content_filter, page, request_params):
         """
         Makes a request to discovery's /search/all/ endpoint with the specified
         content_filter, page, and request_params
         """
         LOGGER.info('Retrieving results from course-discovery for page %s...', page)
-        response = self.client.post(
-            DISCOVERY_SEARCH_ALL_ENDPOINT,
-            json=content_filter,
-            params=request_params,
-        ).json()
-        return response
+        attempts = 0
+        while True:
+            attempts = attempts + 1
+            response = self.client.post(
+                DISCOVERY_SEARCH_ALL_ENDPOINT,
+                json=content_filter,
+                params=request_params,
+            )
+            if attempts <= self.MAX_RETRIES and response.status_code >= 400:
+                sleep_seconds = self._calculate_backoff(attempts)
+                LOGGER.warning(
+                    f'failed request detected from {DISCOVERY_SEARCH_ALL_ENDPOINT}, '
+                    'backing-off before retrying, '
+                    f'sleeping {sleep_seconds} seconds...'
+                )
+                time.sleep(sleep_seconds)
+            else:
+                break
+        return response.json()
 
     def get_metadata_by_query(self, catalog_query):
         """

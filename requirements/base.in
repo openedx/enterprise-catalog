@@ -3,6 +3,7 @@
 -c constraints.txt
 -r github.in              # Forks and other dependencies not yet on PyPI
 
+analytics-python
 Django
 django-celery-results
 django-config-models
@@ -14,6 +15,7 @@ edx-api-doc-tools
 django-simple-history
 djangorestframework
 djangorestframework-xml
+djangoql
 edx-auth-backends
 edx-celeryutils
 edx-django-release-util

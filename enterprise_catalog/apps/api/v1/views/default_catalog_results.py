@@ -70,18 +70,14 @@ class DefaultCatalogResultsView(GenericAPIView):
         facets = querydict_to_dict(request.query_params)
         invalid_facets = validate_query_facets(facets)
 
-        content_type = facets.get("content_type", ['course'])[0]
+        learning_type = facets.get("learning_type", ['course'])[0]
         if invalid_facets:
             return Response({'Error': f'invalid facet(s): {invalid_facets} provided.'}, status=HTTP_400_BAD_REQUEST)
 
         catalog_filter = [
             f'enterprise_catalog_query_titles:{facets.get("enterprise_catalog_query_titles")[0]}',
-            f'content_type:{content_type}'
+            f'learning_type:{learning_type}'
         ]
-
-        if content_type == 'course':
-            if course_types := facets.get("course_type"):
-                catalog_filter.append([f'course_type:{type}' in course_types])
 
         search_options = {
             'facetFilters': catalog_filter,
