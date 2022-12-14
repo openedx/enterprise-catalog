@@ -5,7 +5,12 @@ from django.utils.translation import gettext as _
 from model_utils.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
 
-from enterprise_catalog.apps.catalog.constants import COURSE, PROGRAM
+from enterprise_catalog.apps.catalog.constants import (
+    COURSE,
+    COURSE_RUN,
+    LEARNER_PATHWAY,
+    PROGRAM,
+)
 from enterprise_catalog.apps.catalog.models import ContentMetadata
 
 
@@ -185,8 +190,6 @@ class HighlightedContent(TimeStampedModel):
     def title(self):
         """
         Returns the title from the raw metadata of the associated ContentMetadata object.
-
-        TODO: handle `COURSERUN` and `LEARNER_PATHWAY`
         """
         if not self.content_metadata:
             return None
@@ -197,9 +200,6 @@ class HighlightedContent(TimeStampedModel):
         """
         Returns the image URL from the raw metadata of the associated ContentMetadata object.
 
-        Notes:
-        * `COURSERUN` and `LEARNER_PATHWAY` content types are not supported, and result in `None`.
-
         Returns:
             str: URL of the card image.  None if no card image is found.
         """
@@ -207,12 +207,24 @@ class HighlightedContent(TimeStampedModel):
             return None
 
         content_type = self.content_type
+        # aside: pylint doesn't know that self.content_metadata.json_metadata is dict-like, so we have to silence all
+        # the warnings.
         if content_type == COURSE:
+            return self.content_metadata.json_metadata.get('image_url')  # pylint: disable=no-member
+        if content_type == COURSE_RUN:
             return self.content_metadata.json_metadata.get('image_url')  # pylint: disable=no-member
         elif content_type == PROGRAM:
             return self.content_metadata.json_metadata.get('card_image_url')  # pylint: disable=no-member
+        elif content_type == LEARNER_PATHWAY:
+            try:
+                # pylint: disable=invalid-sequence-index
+                return self.content_metadata.json_metadata['card_image']['card']['url']
+            except (KeyError, TypeError):
+                # KeyError covers the case where any of the keys along the path are missing,
+                # TypeError covers the case where any of the values along the path are JSON null.
+                return None
         else:
-            # Other possible content_types are `COURSERUN` and `LEARNER_PATHWAY`.
+            # Defend against case where we add more content types before updating this code.
             return None
 
     @property
@@ -222,10 +234,14 @@ class HighlightedContent(TimeStampedModel):
 
         Notes:
         * There may be more than one authoring organization.
-        * `COURSERUN` and `LEARNER_PATHWAY` content types are not supported, and result in an empty list.
+        * The following content types are unsupported, and result in an empty list:
+          - `COURSERUN` content logically does have an authoring organization, but the metadata blob only contains the
+            UUID of the org instead of a pretty name.
+          - `LEARNER_PATHWAY` similar to courseruns, this content type doesn't have content metdata blobs with _direct_
+            references to organiation pretty names, just course and program content keys.
 
         Returns:
-            list of dict: Metadata about each authoring organization.
+            list of dict: Metadata about each found authoring organization.
         """
         if not self.content_metadata:
             return []
