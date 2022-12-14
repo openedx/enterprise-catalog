@@ -18,6 +18,12 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
 logger = logging.getLogger(__name__)
 
 
+def write_row_data(row, worksheet, row_num):
+    for col_num, cell_data in enumerate(row):
+        worksheet.write(row_num, col_num, cell_data)
+    return row_num + 1
+
+
 class CatalogWorkbookView(GenericAPIView):
     """
     Catalog Workbook data generation view. All query params are assumed to be facet filters used to filter indexed data
@@ -94,28 +100,17 @@ class CatalogWorkbookView(GenericAPIView):
             for hit in page.get('hits', []):
                 if hit.get('content_type') == 'course':
                     course_row = export_utils.course_hit_to_row(hit)
-                    exec_ed_course = hit.get('course_type') == 'executive-education-2u'
-                    # Write course row data.
-                    if exec_ed_course:
-                        for col_num, cell_data in enumerate(course_row):
-                            exec_ed_worksheet.write(exec_ed_row_num, col_num, cell_data)
-                        exec_ed_row_num = exec_ed_row_num + 1
+                    is_exec_ed = hit.get('course_type') == 'executive-education-2u'
+                    if is_exec_ed:
+                        exec_ed_row_num = write_row_data(course_row, exec_ed_worksheet, exec_ed_row_num)
                     else:
-                        for col_num, cell_data in enumerate(course_row):
-                            course_worksheet.write(course_row_num, col_num, cell_data)
-                        course_row_num = course_row_num + 1
+                        course_row_num = write_row_data(course_row, course_worksheet, course_row_num)
                     for course_run in export_utils.course_hit_runs(hit):
                         course_run_row = export_utils.course_run_to_row(hit, course_run)
-                        # Write course_run row data.
-                        for col_num, cell_data in enumerate(course_run_row):
-                            course_run_worksheet.write(course_run_row_num, col_num, cell_data)
-                        course_run_row_num = course_run_row_num + 1
+                        course_run_row_num = write_row_data(course_run_row, course_run_worksheet, course_run_row_num)
                 if hit.get('content_type') == 'program':
                     program_row = export_utils.program_hit_to_row(hit)
-                    # Write program row data.
-                    for col_num, cell_data in enumerate(program_row):
-                        program_worksheet.write(program_row_num, col_num, cell_data)
-                    program_row_num = program_row_num + 1
+                    program_row_num = write_row_data(program_row, program_worksheet, program_row_num)
             search_options['page'] = search_options['page'] + 1
             page = algolia_client.algolia_index.search(algoliaQuery, search_options)
 
