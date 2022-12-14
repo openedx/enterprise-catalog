@@ -81,18 +81,6 @@ CSV_EXEC_ED_COURSE_HEADERS = [
     'Full Description',
 ]
 
-CSV_EXEC_ED_COURSE_RUN_HEADERS = [
-    'Title',
-    'Key',
-    'Course Short Key',
-    'Availability',
-    'Start Date',
-    'End Date',
-    'Min Effort',
-    'Max Effort',
-    'Length',
-]
-
 ALGOLIA_ATTRIBUTES_TO_RETRIEVE = [
     'advertised_course_run',
     'aggregation_key',
@@ -154,7 +142,7 @@ def course_hit_to_row(hit):
     """
     Helper function to construct a CSV row according to a single Algolia result course hit.
     """
-    exec_course = hit.get('course_type') == 'executive-education-2u' if True else False
+    exec_course = hit.get('course_type') == 'executive-education-2u'
     csv_row = []
     csv_row.append(hit.get('title'))
 
