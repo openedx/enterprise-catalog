@@ -54,6 +54,11 @@ CSV_COURSE_RUN_HEADERS = [
     'Min Effort',
     'Max Effort',
     'Length',
+    'Programs',
+    'Program Type',
+    'Skills',
+    'Subjects',
+    'Language',
 ]
 
 ALGOLIA_ATTRIBUTES_TO_RETRIEVE = [
@@ -194,14 +199,14 @@ def course_hit_runs(hit):
     return hit.get('course_runs', [])
 
 
-def course_run_to_row(course_key, course_title, course_run):
+def course_run_to_row(hit, course_run):
     """
     Helper function to construct a CSV row corresponding to a single course_run.
     """
     csv_row = []
-    csv_row.append(course_title)
+    csv_row.append(hit.get('title'))
     csv_row.append(course_run.get('key'))
-    csv_row.append(course_key)
+    csv_row.append(hit.get('aggregation_key'))
     csv_row.append(course_run.get('pacing_type'))
     csv_row.append(course_run.get('availability'))
 
@@ -229,6 +234,22 @@ def course_run_to_row(course_key, course_title, course_run):
 
     # Length
     csv_row.append(course_run.get('weeks_to_complete'))
+
+    # Program Type
+    csv_row.append(', '.join(hit.get('program_titles', [])))
+
+    # Programs
+    csv_row.append(', '.join(hit.get('programs', [])))
+
+    # Skills
+    skills = [skill['name'] for skill in hit.get('skills', [])]
+    csv_row.append(', '.join(skills))
+
+    # Subjects
+    csv_row.append(', '.join(hit.get('subjects', [])))
+
+    # Language
+    csv_row.append(hit.get('language'))
 
     return csv_row
 
