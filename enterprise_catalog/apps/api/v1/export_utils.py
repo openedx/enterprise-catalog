@@ -1,13 +1,11 @@
 import datetime
-import logging
+import math
 
 from dateutil import parser
 from django.utils.html import strip_tags
 
 from enterprise_catalog.apps.catalog.algolia_utils import ALGOLIA_INDEX_SETTINGS
 
-
-logger = logging.getLogger(__name__)
 
 CSV_COURSE_HEADERS = [
     'Title',
@@ -235,7 +233,8 @@ def exec_ed_course_to_row(hit):
         csv_row.append(None)  # no end date
         key = None
 
-    csv_row.append(float(hit['entitlements'][0]['price']))
+    price = float(hit['entitlements'][0]['price'])
+    csv_row.append(math.trunc(price))
     csv_row.append(hit.get('language'))
     csv_row.append(hit.get('marketing_url'))
     csv_row.append(strip_tags(hit.get('short_description', '')))
