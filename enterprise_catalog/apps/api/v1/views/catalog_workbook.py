@@ -99,11 +99,12 @@ class CatalogWorkbookView(GenericAPIView):
         while len(page['hits']) > 0:
             for hit in page.get('hits', []):
                 if hit.get('content_type') == 'course':
-                    course_row = export_utils.course_hit_to_row(hit)
                     is_exec_ed = hit.get('course_type') == 'executive-education-2u'
                     if is_exec_ed:
+                        course_row = export_utils.exec_ed_course_to_row(hit)
                         exec_ed_row_num = write_row_data(course_row, exec_ed_worksheet, exec_ed_row_num)
                     else:
+                        course_row = export_utils.course_hit_to_row(hit)
                         course_row_num = write_row_data(course_row, course_worksheet, course_row_num)
                     for course_run in export_utils.course_hit_runs(hit):
                         course_run_row = export_utils.course_run_to_row(hit, course_run)
