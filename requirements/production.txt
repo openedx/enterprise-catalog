@@ -304,7 +304,7 @@ python3-openid==3.2.0
     # via
     #   -r requirements/base.txt
     #   social-auth-core
-pytz==2022.6
+pytz==2022.7
     # via
     #   -r requirements/base.txt
     #   celery
@@ -413,7 +413,7 @@ xlsxwriter==3.0.3
     # via -r requirements/base.txt
 zipp==1.2.0
     # via -r requirements/base.txt
-zope-event==4.5.0
+zope-event==4.6
     # via gevent
 zope-interface==5.5.2
     # via gevent
