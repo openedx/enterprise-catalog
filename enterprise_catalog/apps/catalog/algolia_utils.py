@@ -75,6 +75,7 @@ ALGOLIA_FIELDS = [
     'course_length',
     'entitlements',
     'learning_type',
+    'additional_metadata',
 ]
 
 # default configuration for the index
