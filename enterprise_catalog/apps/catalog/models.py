@@ -533,6 +533,7 @@ class ContentMetadata(TimeStampedModel):
 
     @property
     def aggregation_key(self):
+        # pylint: disable=no-member
         return self.json_metadata.get('aggregation_key')
 
     @classmethod
