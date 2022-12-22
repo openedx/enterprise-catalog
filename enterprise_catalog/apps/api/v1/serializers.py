@@ -327,7 +327,7 @@ class HighlightSetSerializer(serializers.ModelSerializer):
         """
         Returns the data for the associated content included in this HighlightSet object.
         """
-        qs = obj.highlighted_content.order_by('created')
+        qs = obj.highlighted_content.order_by('created').select_related('content_metadata')
         return HighlightedContentSerializer(qs, many=True).data
 
 
