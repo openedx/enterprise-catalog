@@ -283,16 +283,25 @@ class HighlightedContentSerializer(serializers.ModelSerializer):
     """
     Serializer for the `HighlightedContent` model.
     """
+    aggregation_key = serializers.SerializerMethodField()
+
     class Meta:
         model = HighlightedContent
         fields = [
             'uuid',
+            'aggregation_key',
             'content_type',
             'content_key',
             'title',
             'card_image_url',
             'authoring_organizations',
         ]
+
+    def get_aggregation_key(self, obj):
+        """
+        Returns the aggregation key for the associated ContentMetadata.
+        """
+        return obj.aggregation_key
 
 
 class HighlightSetSerializer(serializers.ModelSerializer):
@@ -318,7 +327,7 @@ class HighlightSetSerializer(serializers.ModelSerializer):
         """
         Returns the data for the associated content included in this HighlightSet object.
         """
-        qs = obj.highlighted_content.order_by('created')
+        qs = obj.highlighted_content.order_by('created').select_related('content_metadata')
         return HighlightedContentSerializer(qs, many=True).data
 
 
