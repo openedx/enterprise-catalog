@@ -187,6 +187,15 @@ class HighlightedContent(TimeStampedModel):
         return self.content_metadata.content_key
 
     @property
+    def aggregation_key(self):
+        """
+        Returns the aggregation key of the associated ContentMetadata.
+        """
+        if not self.content_metadata:
+            return None
+        return self.content_metadata.aggregation_key
+
+    @property
     def title(self):
         """
         Returns the title from the raw metadata of the associated ContentMetadata object.
