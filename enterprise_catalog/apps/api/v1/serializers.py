@@ -301,7 +301,7 @@ class HighlightedContentSerializer(serializers.ModelSerializer):
         """
         Returns the aggregation key for the associated ContentMetadata.
         """
-        return obj.content_metadata.aggregation_key
+        return obj.aggregation_key
 
 
 class HighlightSetSerializer(serializers.ModelSerializer):
