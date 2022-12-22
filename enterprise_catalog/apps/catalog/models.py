@@ -531,7 +531,7 @@ class ContentMetadata(TimeStampedModel):
         # pylint: disable=no-member
         return self.content_type == COURSE and self.json_metadata.get('course_type') == EXEC_ED_2U_COURSE_TYPE
 
-    @property 
+    @property
     def aggregation_key(self):
         return self.json_metadata.get('aggregation_key')
 
