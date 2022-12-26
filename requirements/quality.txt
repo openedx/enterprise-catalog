@@ -12,7 +12,7 @@ amqp==5.1.1
     #   kombu
 analytics-python==1.4.0
     # via -r requirements/base.txt
-asgiref==3.5.2
+asgiref==3.6.0
     # via
     #   -r requirements/base.txt
     #   django
@@ -187,7 +187,7 @@ edx-django-utils==5.2.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==8.3.1
+edx-drf-extensions==8.4.0
     # via
     #   -r requirements/base.txt
     #   edx-rbac
@@ -218,7 +218,7 @@ inflection==0.5.1
     # via
     #   -r requirements/base.txt
     #   drf-yasg
-isort==5.10.1
+isort==5.11.4
     # via
     #   -r requirements/quality.in
     #   pylint
@@ -346,7 +346,7 @@ python3-openid==3.2.0
     # via
     #   -r requirements/base.txt
     #   social-auth-core
-pytz==2022.6
+pytz==2022.7
     # via
     #   -r requirements/base.txt
     #   celery
