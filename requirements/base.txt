@@ -10,7 +10,7 @@ amqp==5.1.1
     # via kombu
 analytics-python==1.4.0
     # via -r requirements/base.in
-asgiref==3.5.2
+asgiref==3.6.0
     # via django
 backoff==1.10.0
     # via analytics-python
@@ -142,7 +142,7 @@ edx-django-utils==5.2.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==8.3.1
+edx-drf-extensions==8.4.0
     # via
     #   -r requirements/base.in
     #   edx-rbac
@@ -221,7 +221,7 @@ python-slugify==7.0.0
     # via code-annotations
 python3-openid==3.2.0
     # via social-auth-core
-pytz==2022.6
+pytz==2022.7
     # via
     #   -r requirements/base.in
     #   celery
