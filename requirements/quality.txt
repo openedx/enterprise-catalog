@@ -272,7 +272,7 @@ pbr==5.11.0
     # via
     #   -r requirements/base.txt
     #   stevedore
-platformdirs==2.6.0
+platformdirs==2.6.2
     # via pylint
 ply==3.11
     # via
@@ -465,7 +465,7 @@ wcwidth==0.2.5
     #   prompt-toolkit
 wrapt==1.14.1
     # via astroid
-xlsxwriter==3.0.3
+xlsxwriter==3.0.5
     # via -r requirements/base.txt
 zipp==1.2.0
     # via -r requirements/base.txt

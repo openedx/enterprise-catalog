@@ -223,7 +223,7 @@ factory-boy==3.2.1
     # via -r requirements/test.in
 faker==15.3.4
     # via factory-boy
-filelock==3.8.2
+filelock==3.9.0
     # via
     #   tox
     #   virtualenv
@@ -296,7 +296,7 @@ pbr==5.11.0
     # via
     #   -r requirements/base.txt
     #   stevedore
-platformdirs==2.6.0
+platformdirs==2.6.2
     # via
     #   pylint
     #   virtualenv
@@ -515,7 +515,7 @@ wcwidth==0.2.5
     #   prompt-toolkit
 wrapt==1.14.1
     # via astroid
-xlsxwriter==3.0.3
+xlsxwriter==3.0.5
     # via -r requirements/base.txt
 zipp==1.2.0
     # via -r requirements/base.txt

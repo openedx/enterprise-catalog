@@ -302,7 +302,7 @@ vine==5.0.0
     #   kombu
 wcwidth==0.2.5
     # via prompt-toolkit
-xlsxwriter==3.0.3
+xlsxwriter==3.0.5
     # via -r requirements/base.in
 zipp==1.2.0
     # via -r requirements/base.in

@@ -330,7 +330,7 @@ faker==15.3.4
     # via
     #   -r requirements/test.txt
     #   factory-boy
-filelock==3.8.2
+filelock==3.9.0
     # via
     #   -r requirements/test.txt
     #   tox
@@ -348,7 +348,7 @@ idna==3.4
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   requests
-importlib-metadata==5.2.0
+importlib-metadata==6.0.0
     # via inflect
 inflect==3.0.2
     # via
@@ -460,7 +460,7 @@ pep517==0.13.0
     #   build
 pip-tools==6.12.1
     # via -r requirements/pip-tools.txt
-platformdirs==2.6.0
+platformdirs==2.6.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -507,7 +507,7 @@ pycryptodomex==3.16.0
     #   pyjwkest
 pydocstyle==6.1.1
     # via -r requirements/quality.txt
-pygments==2.13.0
+pygments==2.14.0
     # via diff-cover
 pyjwkest==1.4.2
     # via
@@ -559,7 +559,7 @@ pynacl==1.5.0
     #   -r requirements/test.txt
     #   edx-django-utils
     #   paramiko
-pyrsistent==0.19.2
+pyrsistent==0.19.3
     # via jsonschema
 pytest==7.2.0
     # via
@@ -786,7 +786,7 @@ wrapt==1.14.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   astroid
-xlsxwriter==3.0.3
+xlsxwriter==3.0.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
