@@ -742,70 +742,193 @@ class EnterpriseCatalogWorkbookViewTests(APITestMixin):
     """
     Tests for the CatalogWorkbookView view.
     """
-    mock_algolia_hits = {'hits': [{
-        'aggregation_key': 'course:MITx+18.01.2x',
-        'key': 'MITx+18.01.2x',
-        'language': 'English',
-        'level_type': 'Intermediate',
-        'content_type': 'course',
-        'partners': [
-            {'name': 'Massachusetts Institute of Technology',
-             'logo_image_url': 'https://edx.org/image.png'}
-        ],
-        'programs': ['Professional Certificate'],
-        'program_titles': ['Totally Awesome Program'],
-        'short_description': 'description',
-        'subjects': ['Math'],
-        'skills': [{
-            'name': 'Probability And Statistics',
-            'description': 'description'
-        }, {
-            'name': 'Engineering Design Process',
-            'description': 'description'
-        }],
-        'title': 'Calculus 1B: Integration',
-        'marketing_url': 'edx.org/foo-bar',
-        'first_enrollable_paid_seat_price': 100,
-        'advertised_course_run': {
-            'key': 'MITx/18.01.2x/3T2015',
-            'pacing_type': 'instructor_paced',
-            'start': '2015-09-08T00:00:00Z',
-            'end': '2015-09-08T00:00:01Z',
-            'upgrade_deadline': 32503680000.0,
-            'max_effort': 10,
-            'min_effort': 1,
-            'weeks_to_complete': 1,
-        },
-        'course_runs': [
+    mock_algolia_hits = {
+        "hits": [
             {
-                'key': 'MITx/18.01.2x/3T2015',
-                'pacing_type': 'instructor_paced',
-                'start': '2015-09-08T00:00:00Z',
-                'end': '2015-09-08T00:00:01Z',
-                'upgrade_deadline': 32503680000.0,
-                'max_effort': 10,
-                'min_effort': 1,
-                'weeks_to_complete': 1,
+                "aggregation_key": "course:MITx+18.01.2x",
+                "key": "MITx+18.01.2x",
+                "language": "English",
+                "level_type": "Intermediate",
+                "content_type": "course",
+                "partners": [
+                    {
+                        "name": "Massachusetts Institute of Technology",
+                        "logo_image_url": "https://edx.org/image.png"
+                    }
+                ],
+                "programs": [
+                    "Professional Certificate"
+                ],
+                "program_titles":[
+                    "Totally Awesome Program"
+                ],
+                "short_description":"description",
+                "subjects":[
+                    "Math"
+                ],
+                "skills":[
+                    {
+                        "name": "Probability And Statistics",
+                        "description": "description"
+                    },
+                    {
+                        "name": "Engineering Design Process",
+                        "description": "description"
+                    }
+                ],
+                "title": "Calculus 1B: Integration",
+                "marketing_url": "edx.org/foo-bar",
+                "first_enrollable_paid_seat_price": 100,
+                "advertised_course_run": {
+                    "key": "MITx/18.01.2x/3T2015",
+                    "pacing_type": "instructor_paced",
+                    "start": "2015-09-08T00:00:00Z",
+                    "end": "2015-09-08T00:00:01Z",
+                    "upgrade_deadline": 32503680000.0,
+                    "max_effort": 10,
+                    "min_effort": 1,
+                    "weeks_to_complete": 1
+                },
+                "course_runs": [
+                    {
+                        "key": "MITx/18.01.2x/3T2015",
+                        "pacing_type": "instructor_paced",
+                        "start": "2015-09-08T00:00:00Z",
+                        "end": "2015-09-08T00:00:01Z",
+                        "upgrade_deadline": 32503680000.0,
+                        "max_effort": 10,
+                        "min_effort": 1,
+                        "weeks_to_complete": 1
+                    }
+                ],
+                "outcome": "<p>learn</p>",
+                "prerequisites_raw": "<p>interest</p>",
+                "objectID": "course-3543aa4e-3c64-4d9a-a343-5d5eda1dacf8-catalog-query-uuids-0"
+            },
+            {
+                "aggregation_key": "course:OxfordX+PSF",
+                "content_type": "course",
+                "full_description": "<p><strong>Duration:</strong> 6 weeks (excluding orientation)</p>\n<p>",
+                "key": "OxfordX+PSF",
+                "language": "English",
+                "level_type": "Introductory",
+                "outcome": "<p>On completion of this programme",
+                "partners": [
+                    {
+                        "name": "University of Oxford",
+                        "logo_image_url": "https://prod-discovery.edx-cdn.org/organization/logos/2b6474eb5fac.png"
+                    }
+                ],
+                "prerequisites_raw": "",
+                "programs": [
+
+                ],
+                "program_titles":[
+
+                ],
+                "short_description":"<p>Respond to unique industry challenges",
+                "subjects":[
+                    "Business & Management"
+                ],
+                "skills":[
+                    {
+                        "name": "Finance",
+                        "description": "",
+                        "category": {
+                            "name": "Finance"
+                        },
+                        "subcategory": {
+                            "name": "Financial Accounting",
+                            "category": {
+                                "name": "Finance"
+                            }
+                        }
+                    }
+                ],
+                "title": "Oxford Leading Professional Service Firms Programme",
+                "advertised_course_run": {
+                    "key": "course-v1:OxfordX+PSF+2T2022",
+                    "pacing_type": "instructor_paced",
+                    "availability": "Current",
+                    "start": "2022-06-15T00:00:00Z",
+                    "end": "2022-07-24T23:59:59Z",
+                    "min_effort": 7,
+                    "max_effort": 10,
+                    "weeks_to_complete": 6,
+                    "upgrade_deadline": 32503680000.0
+                },
+                "course_runs": [
+
+                ],
+                "marketing_url":"https://www.edx.org/course/oxford-leadinaffiliate_partner",
+                "course_type":"executive-education-2u",
+                "entitlements":[
+                    {
+                        "mode": "paid-executive-education",
+                        "price": "2843.00",
+                        "currency": "USD",
+                        "sku": "67A1CAE",
+                        "expires": "None"
+                    }
+                ],
+                "additional_metadata": {
+                    "external_identifier": "242576ed-7443-4c3c-a8a8-d624862a1951",
+                    "external_url": "https://oxford-onlineprogrammes.getsmarter.com/prional-service-firms-programme/",
+                    "lead_capture_form_url": "https://www.getsmarter.com/presentat1951",
+                    "facts": [
+                        {
+                            "heading": "Top trends",
+                            "blurb": "<p>Emerging technologies are one of the top trends impacting PSFs"
+                        }
+                    ],
+                    "certificate_info": {
+                        "heading": "About the certificate",
+                        "blurb": "<p>Learn how to achieve"
+                    },
+                    "organic_url": "https://www.getsmarter.com/products/oxford-leacel&utm_campaign=edx_OXF-PSF",
+                    "start_date": "2023-03-01T00:00:00Z",
+                    "end_date": "2023-04-09T23:59:59Z",
+                    "registration_deadline": "2023-02-21T23:59:59Z",
+                    "variant_id": "065fcd63-55a9-43e3-b9f9-ca3ba3129ebf",
+                    "course_term_override": "",
+                    "product_status": "published",
+                    "product_meta": "None"
+                },
+                "objectID": "course-d3dc62b5-531d-40a7-b44f-1acf687b1148-catalog-query-uuids-0",
+                "_highlightResult": {
+                    "additional_information": {
+                        "value": "",
+                        "matchLevel": "none",
+                        "matchedWords": [
+
+                        ]
+                    }
+                },
+                "skill_names":[
+                    {
+                        "value": "People Management",
+                        "matchLevel": "none",
+                        "matchedWords": [
+
+                        ]
+                    }
+                ]
+            },
+            {
+                "aggregation_key": "course:MITx+19",
+                "key": "MITx+19",
+                "language": "English",
+                "level_type": "Intermediate",
+                "objectID": "course-3543aa4e-3c64-4d9a-a343-5d5eda1dacf9-catalog-query-uuids-0"
+            },
+            {
+                "aggregation_key": "course:MITx+20",
+                "language": "English",
+                "level_type": "Intermediate",
+                "objectID": "course-3543aa4e-3c64-4d9a-a343-5d5eda1dacf7-catalog-query-uuids-0"
             }
-        ],
-        'outcome': '<p>learn</p>',
-        'prerequisites_raw': '<p>interest</p>',
-        'objectID': 'course-3543aa4e-3c64-4d9a-a343-5d5eda1dacf8-catalog-query-uuids-0'
-    },
-        {
-        'aggregation_key': 'course:MITx+19',
-        'key': 'MITx+19',
-        'language': 'English',
-        'level_type': 'Intermediate',
-        'objectID': 'course-3543aa4e-3c64-4d9a-a343-5d5eda1dacf9-catalog-query-uuids-0'
-    },
-        {
-        'aggregation_key': 'course:MITx+20',
-        'language': 'English',
-        'level_type': 'Intermediate',
-        'objectID': 'course-3543aa4e-3c64-4d9a-a343-5d5eda1dacf7-catalog-query-uuids-0'
+        ]
     }
-    ]}
 
     def setUp(self):
         super().setUp()

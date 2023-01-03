@@ -80,6 +80,7 @@ CSV_EXEC_ED_COURSE_HEADERS = [
 ]
 
 ALGOLIA_ATTRIBUTES_TO_RETRIEVE = [
+    'additional_metadata',
     'advertised_course_run',
     'aggregation_key',
     'content_type',
@@ -216,18 +217,17 @@ def exec_ed_course_to_row(hit):
         csv_row.append(hit['partners'][0]['name'])
     else:
         csv_row.append(None)
-
-    if hit.get('advertised_course_run'):
+    if hit.get('additional_metadata'):
         start_date = None
-        if hit['advertised_course_run'].get('start'):
-            start_date = parser.parse(hit['advertised_course_run']['start']).strftime(DATE_FORMAT)
+        if hit['additional_metadata'].get('start_date'):
+            start_date = parser.parse(hit['additional_metadata']['start_date']).strftime(DATE_FORMAT)
         csv_row.append(start_date)
 
         end_date = None
-        if hit['advertised_course_run'].get('end'):
-            end_date = parser.parse(hit['advertised_course_run']['end']).strftime(DATE_FORMAT)
+        if hit['additional_metadata'].get('end_date'):
+            end_date = parser.parse(hit['additional_metadata']['end_date']).strftime(DATE_FORMAT)
         csv_row.append(end_date)
-        key = hit['advertised_course_run'].get('key')
+        key = hit.get('advertised_course_run', {}).get('key')
     else:
         csv_row.append(None)  # no start date
         csv_row.append(None)  # no end date
