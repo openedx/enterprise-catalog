@@ -35,6 +35,7 @@ class CatalogWorkbookView(GenericAPIView):
     """
     permission_classes = []
 
+    # pylint: disable=too-many-statements
     @action(detail=True)
     def get(self, request, **kwargs):
         """
@@ -56,18 +57,6 @@ class CatalogWorkbookView(GenericAPIView):
         # 'in_memory' Workbook() constructor option as shown in the docs.
         workbook = xlsxwriter.Workbook(output)
         header_format = workbook.add_format({'bold': True})
-
-        course_worksheet = workbook.add_worksheet('Courses')
-        export_utils.write_headers_to_sheet(course_worksheet, export_utils.CSV_COURSE_HEADERS, header_format)
-
-        exec_ed_worksheet = workbook.add_worksheet('Executive Education')
-        export_utils.write_headers_to_sheet(exec_ed_worksheet, export_utils.CSV_EXEC_ED_COURSE_HEADERS, header_format)
-
-        program_worksheet = workbook.add_worksheet('Programs')
-        export_utils.write_headers_to_sheet(program_worksheet, export_utils.CSV_PROGRAM_HEADERS, header_format)
-
-        course_run_worksheet = workbook.add_worksheet('Course Runs')
-        export_utils.write_headers_to_sheet(course_run_worksheet, export_utils.CSV_COURSE_RUN_HEADERS, header_format)
 
         algolia_client = get_initialized_algolia_client()
 
@@ -96,20 +85,48 @@ class CatalogWorkbookView(GenericAPIView):
         program_row_num = 1
         course_run_row_num = 1
         exec_ed_row_num = 1
+        exec_ed_results_found = False
+        edx_course_results_found = False
+        edx_program_results_found = False
+        course_run_results_found = False
         while len(page['hits']) > 0:
             for hit in page.get('hits', []):
                 if hit.get('content_type') == 'course':
                     is_exec_ed = hit.get('course_type') == 'executive-education-2u'
                     if is_exec_ed:
+                        if not exec_ed_results_found:
+                            exec_ed_results_found = True
+                            exec_ed_worksheet = workbook.add_worksheet('Executive Education')
+                            export_utils.write_headers_to_sheet(
+                                exec_ed_worksheet, export_utils.CSV_EXEC_ED_COURSE_HEADERS, header_format
+                            )
                         course_row = export_utils.exec_ed_course_to_row(hit)
                         exec_ed_row_num = write_row_data(course_row, exec_ed_worksheet, exec_ed_row_num)
                     else:
+                        if not edx_course_results_found:
+                            edx_course_results_found = True
+                            course_worksheet = workbook.add_worksheet('Courses')
+                            export_utils.write_headers_to_sheet(
+                                course_worksheet, export_utils.CSV_COURSE_HEADERS, header_format
+                            )
                         course_row = export_utils.course_hit_to_row(hit)
                         course_row_num = write_row_data(course_row, course_worksheet, course_row_num)
                     for course_run in export_utils.course_hit_runs(hit):
+                        if not course_run_results_found:
+                            course_run_results_found = True
+                            course_run_worksheet = workbook.add_worksheet('Course Runs')
+                            export_utils.write_headers_to_sheet(
+                                course_run_worksheet, export_utils.CSV_COURSE_RUN_HEADERS, header_format
+                            )
                         course_run_row = export_utils.course_run_to_row(hit, course_run)
                         course_run_row_num = write_row_data(course_run_row, course_run_worksheet, course_run_row_num)
                 if hit.get('content_type') == 'program':
+                    if not edx_program_results_found:
+                        edx_program_results_found = True
+                        program_worksheet = workbook.add_worksheet('Programs')
+                        export_utils.write_headers_to_sheet(
+                            program_worksheet, export_utils.CSV_PROGRAM_HEADERS, header_format
+                        )
                     program_row = export_utils.program_hit_to_row(hit)
                     program_row_num = write_row_data(program_row, program_worksheet, program_row_num)
             search_options['page'] = search_options['page'] + 1
