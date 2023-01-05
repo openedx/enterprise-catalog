@@ -74,6 +74,7 @@ CSV_EXEC_ED_COURSE_HEADERS = [
     'Skills',
     'Min Effort',
     'Max Effort',
+    'Registration Deadline',
     'Length',
     'What You’ll Learn',
     'Full Description',
@@ -219,19 +220,23 @@ def exec_ed_course_to_row(hit):
         csv_row.append(None)
     if hit.get('additional_metadata'):
         start_date = None
-        if hit['additional_metadata'].get('start_date'):
-            start_date = parser.parse(hit['additional_metadata']['start_date']).strftime(DATE_FORMAT)
+        additional_md = hit['additional_metadata']
+        if additional_md.get('start_date'):
+            start_date = parser.parse(additional_md['start_date']).strftime(DATE_FORMAT)
         csv_row.append(start_date)
 
         end_date = None
-        if hit['additional_metadata'].get('end_date'):
-            end_date = parser.parse(hit['additional_metadata']['end_date']).strftime(DATE_FORMAT)
+        if additional_md.get('end_date'):
+            end_date = parser.parse(additional_md['end_date']).strftime(DATE_FORMAT)
         csv_row.append(end_date)
-        key = hit.get('advertised_course_run', {}).get('key')
+        enroll_by_date = additional_md.get('registration_deadline')
     else:
         csv_row.append(None)  # no start date
         csv_row.append(None)  # no end date
-        key = None
+        enroll_by_date = None
+
+    adv_course_run = hit.get('advertised_course_run', {})
+    key = adv_course_run.get('key')
 
     price = float(hit['entitlements'][0]['price'])
     csv_row.append(math.trunc(price))
@@ -246,10 +251,10 @@ def exec_ed_course_to_row(hit):
     skills = [skill['name'] for skill in hit.get('skills', [])]
     csv_row.append(', '.join(skills))
 
-    advertised_course_run = hit.get('advertised_course_run', {})
-    csv_row.append(advertised_course_run.get('min_effort'))
-    csv_row.append(advertised_course_run.get('max_effort'))
-    csv_row.append(advertised_course_run.get('weeks_to_complete'))  # Length
+    csv_row.append(adv_course_run.get('min_effort'))
+    csv_row.append(adv_course_run.get('max_effort'))
+    csv_row.append(enroll_by_date)
+    csv_row.append(adv_course_run.get('weeks_to_complete'))  # Length
 
     csv_row.append(strip_tags(hit.get('outcome', '')))  # What You’ll Learn
 
