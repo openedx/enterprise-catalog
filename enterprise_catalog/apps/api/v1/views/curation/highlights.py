@@ -165,7 +165,7 @@ class EnterpriseCurationConfigViewSet(EnterpriseCurationConfigBaseViewSet, views
                          "enterprise_customer": <str, UUID of corresponding enterprise customer>,
                          "title": <str, Title of newly created EnterpriseCurationConfig>,
                          "is_highlight_feature_active": <bool, Whether the highlight feature is active>,
-                         "highlight_sets": <empty list>,
+                         "highlight_sets": <empty list>, bye
                      }
         """
         if not self.requested_enterprise_uuid:
