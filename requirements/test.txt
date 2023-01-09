@@ -4,7 +4,7 @@
 #
 #    make upgrade
 #
-algoliasearch==2.6.2
+algoliasearch==2.6.3
     # via -r requirements/base.txt
 amqp==5.1.1
     # via
@@ -90,11 +90,11 @@ coreschema==0.0.4
     #   -r requirements/base.txt
     #   coreapi
     #   drf-yasg
-coverage[toml]==7.0.1
+coverage[toml]==7.0.4
     # via
     #   -r requirements/test.in
     #   pytest-cov
-cryptography==38.0.4
+cryptography==39.0.0
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -223,7 +223,7 @@ factory-boy==3.2.1
     # via -r requirements/test.in
 faker==15.3.4
     # via factory-boy
-filelock==3.8.2
+filelock==3.9.0
     # via
     #   tox
     #   virtualenv
@@ -240,7 +240,7 @@ inflection==0.5.1
     # via
     #   -r requirements/base.txt
     #   drf-yasg
-iniconfig==1.1.1
+iniconfig==2.0.0
     # via pytest
 isort==5.11.4
     # via pylint
@@ -263,7 +263,7 @@ kombu==5.2.4
     # via
     #   -r requirements/base.txt
     #   celery
-lazy-object-proxy==1.8.0
+lazy-object-proxy==1.9.0
     # via astroid
 markupsafe==2.1.1
     # via
@@ -286,7 +286,7 @@ oauthlib==3.2.2
     #   -r requirements/base.txt
     #   requests-oauthlib
     #   social-auth-core
-packaging==22.0
+packaging==23.0
     # via
     #   -r requirements/base.txt
     #   drf-yasg
@@ -296,7 +296,7 @@ pbr==5.11.0
     # via
     #   -r requirements/base.txt
     #   stevedore
-platformdirs==2.6.0
+platformdirs==2.6.2
     # via
     #   pylint
     #   virtualenv
@@ -430,7 +430,7 @@ semantic-version==2.10.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-simplejson==3.18.0
+simplejson==3.18.1
     # via -r requirements/base.txt
 six==1.16.0
     # via
@@ -515,7 +515,7 @@ wcwidth==0.2.5
     #   prompt-toolkit
 wrapt==1.14.1
     # via astroid
-xlsxwriter==3.0.3
+xlsxwriter==3.0.6
     # via -r requirements/base.txt
 zipp==1.2.0
     # via -r requirements/base.txt
