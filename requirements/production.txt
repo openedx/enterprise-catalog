@@ -4,7 +4,7 @@
 #
 #    make upgrade
 #
-algoliasearch==2.6.2
+algoliasearch==2.6.3
     # via -r requirements/base.txt
 amqp==5.1.1
     # via
@@ -76,7 +76,7 @@ coreschema==0.0.4
     #   -r requirements/base.txt
     #   coreapi
     #   drf-yasg
-cryptography==38.0.4
+cryptography==39.0.0
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -241,7 +241,7 @@ oauthlib==3.2.2
     #   -r requirements/base.txt
     #   requests-oauthlib
     #   social-auth-core
-packaging==22.0
+packaging==23.0
     # via
     #   -r requirements/base.txt
     #   drf-yasg
@@ -349,7 +349,7 @@ semantic-version==2.10.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-simplejson==3.18.0
+simplejson==3.18.1
     # via -r requirements/base.txt
 six==1.16.0
     # via
@@ -409,7 +409,7 @@ wcwidth==0.2.5
     # via
     #   -r requirements/base.txt
     #   prompt-toolkit
-xlsxwriter==3.0.3
+xlsxwriter==3.0.6
     # via -r requirements/base.txt
 zipp==1.2.0
     # via -r requirements/base.txt

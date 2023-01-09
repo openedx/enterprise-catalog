@@ -4,7 +4,7 @@
 #
 #    make upgrade
 #
-algoliasearch==2.6.2
+algoliasearch==2.6.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -115,11 +115,11 @@ coreschema==0.0.4
     #   -r requirements/test.txt
     #   coreapi
     #   drf-yasg
-coverage[toml]==7.0.1
+coverage[toml]==7.0.4
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==38.0.4
+cryptography==39.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -298,7 +298,7 @@ faker==15.3.4
     # via
     #   -r requirements/test.txt
     #   factory-boy
-filelock==3.8.2
+filelock==3.9.0
     # via
     #   -r requirements/test.txt
     #   tox
@@ -319,7 +319,7 @@ inflection==0.5.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   drf-yasg
-iniconfig==1.1.1
+iniconfig==2.0.0
     # via
     #   -r requirements/test.txt
     #   pytest
@@ -353,7 +353,7 @@ kombu==5.2.4
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   celery
-lazy-object-proxy==1.8.0
+lazy-object-proxy==1.9.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -388,7 +388,7 @@ oauthlib==3.2.2
     #   -r requirements/test.txt
     #   requests-oauthlib
     #   social-auth-core
-packaging==22.0
+packaging==23.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -400,7 +400,7 @@ pbr==5.11.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   stevedore
-platformdirs==2.6.0
+platformdirs==2.6.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -442,7 +442,7 @@ pycryptodomex==3.16.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pyjwkest
-pydocstyle==6.1.1
+pydocstyle==6.2.3
     # via -r requirements/quality.txt
 pyjwkest==1.4.2
     # via
@@ -576,7 +576,7 @@ semantic-version==2.10.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-drf-extensions
-simplejson==3.18.0
+simplejson==3.18.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -690,7 +690,7 @@ wrapt==1.14.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   astroid
-xlsxwriter==3.0.3
+xlsxwriter==3.0.6
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
