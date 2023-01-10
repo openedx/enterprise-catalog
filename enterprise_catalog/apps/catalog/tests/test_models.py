@@ -56,6 +56,13 @@ class TestModels(TestCase):
             ('title', 'test course'),
             ('course_type', 'executive-education-2u'),
         ])
+        exec_ed_2u_course_run_metadata = OrderedDict([
+            ('aggregation_key', 'courserun:TheEconomist+CAB'),
+            ('key', 'course-v1:edX+testX'),
+            ('title', 'test course run'),
+            ('content_type', 'courserun'),
+            ('seat_types', ['unpaid-executive-education']),
+        ])
         edx_course_metadata = OrderedDict([
             ('aggregation_key', 'course:edX+testX2'),
             ('key', 'edX+testX2'),
@@ -64,6 +71,7 @@ class TestModels(TestCase):
         ])
         mock_client.return_value.get_metadata_by_query.return_value = [
             exec_ed_2u_course_metadata,
+            exec_ed_2u_course_run_metadata,
             edx_course_metadata,
         ]
         catalog = factories.EnterpriseCatalogFactory()
@@ -75,7 +83,7 @@ class TestModels(TestCase):
         catalog.catalog_query.include_exec_ed_2u_courses = True
         catalog.catalog_query.save()
         update_contentmetadata_from_discovery(catalog.catalog_query)
-        self.assertEqual(ContentMetadata.objects.count(), 2)
+        self.assertEqual(ContentMetadata.objects.count(), 3)
 
     @override_settings(DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT=0)
     @mock.patch('enterprise_catalog.apps.api_client.discovery_cache.DiscoveryApiClient')
@@ -274,8 +282,8 @@ class TestModels(TestCase):
         """
         path = 'enterprise_catalog.apps.api_client.enterprise_cache.'
         with mock.patch(path + 'EnterpriseApiClient') as mock_enterprise_api_client, \
-             mock.patch(path + 'LicenseManagerApiClient') as mock_license_manager_client, \
-             mock.patch(path + 'EcommerceApiClient') as mock_ecommerce_client:
+                mock.patch(path + 'LicenseManagerApiClient') as mock_license_manager_client, \
+                mock.patch(path + 'EcommerceApiClient') as mock_ecommerce_client:
             mock_enterprise_api_client.return_value.get_enterprise_customer.return_value = \
                 mock_enterprise_customer_return_value
             mock_ecommerce_client.return_value.get_coupons_overview.return_value = \
