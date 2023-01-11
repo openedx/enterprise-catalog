@@ -733,7 +733,16 @@ def _should_allow_metadata(metadata_entry, catalog_query=None):
     Returns:
         bool: If we should save the metadata as a ContentMetaData object
     """
-    if get_content_type(metadata_entry) != 'course':
+    # make sure to exclude exec ed course runs
+    content_type = get_content_type(metadata_entry)
+    if not catalog_query or not catalog_query.include_exec_ed_2u_courses:
+        if content_type == 'courserun':
+            if seat_types := metadata_entry.get('seat_types'):
+                for seat_type in seat_types:
+                    if 'executive-education' in seat_type:
+                        return False
+
+    if content_type != 'course':
         return True
     entry_course_type = metadata_entry.get('course_type')
     # allowing None here accounts for pre-existing tests, dirty prod data
