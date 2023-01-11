@@ -338,6 +338,7 @@ class EnterpriseCurationConfigSerializer(serializers.ModelSerializer):
     enterprise_customer = serializers.UUIDField(source='enterprise_uuid')
     title = serializers.CharField()
     is_highlight_feature_active = serializers.BooleanField(required=False)
+    view_only_highlight_sets = serializers.BooleanField(required=False)
     highlight_sets = serializers.SerializerMethodField()
 
     class Meta:
@@ -349,6 +350,7 @@ class EnterpriseCurationConfigSerializer(serializers.ModelSerializer):
             'enterprise_customer',
             'title',
             'is_highlight_feature_active',
+            'view_only_highlight_sets',
             'highlight_sets',
         ]
 
