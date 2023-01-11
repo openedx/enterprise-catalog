@@ -44,6 +44,10 @@ class EnterpriseCurationConfig(TimeStampedModel):
         null=False,
         default=True,
     )
+    view_only_highlight_sets = models.BooleanField(
+        null=False,
+        default=False,
+    )
     history = HistoricalRecords()
 
     class Meta:
