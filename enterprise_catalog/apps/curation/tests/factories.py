@@ -28,7 +28,7 @@ class EnterpriseCurationConfigFactory(factory.django.DjangoModelFactory):
     title = FuzzyText(length=255)
     enterprise_uuid = factory.LazyFunction(uuid4)
     is_highlight_feature_active = True
-    view_only_highlight_sets = False
+    can_only_view_highlight_sets = False
 
 
 class HighlightSetFactory(factory.django.DjangoModelFactory):
