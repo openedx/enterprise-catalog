@@ -27,12 +27,14 @@ class EnterpriseCurationConfigAdmin(DjangoQLSearchMixin, SimpleHistoryAdmin):
         'title',
         'enterprise_uuid',
         'is_highlight_feature_active',
+        'can_only_view_highlight_sets',
     )
     list_display = (
         'uuid',
         'enterprise_uuid',
         'title',
         'is_highlight_feature_active',
+        'can_only_view_highlight_sets',
     )
 
     def get_readonly_fields(self, request, obj=None):
