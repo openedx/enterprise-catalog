@@ -149,6 +149,8 @@ class EnterpriseCurationConfigViewSet(EnterpriseCurationConfigBaseViewSet, views
             title (str): Desired title of the EnterpriseCurationConfig.
             is_highlight_feature_active (bool, optional, default=True):
                 True if the highlighting feature is enabled for this enterprise customer.
+            can_only_view_highlight_sets (bool, optional, default=False):
+                True if the admin selects learner visiblity options to only show highlight sets.
 
         Returns:
             rest_framework.response.Response:
