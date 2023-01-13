@@ -1,10 +1,14 @@
 import datetime
+import logging
 import math
 
 from dateutil import parser
 from django.utils.html import strip_tags
 
 from enterprise_catalog.apps.catalog.algolia_utils import ALGOLIA_INDEX_SETTINGS
+
+
+logger = logging.getLogger(__name__)
 
 
 CSV_COURSE_HEADERS = [
@@ -64,6 +68,7 @@ CSV_EXEC_ED_COURSE_HEADERS = [
     'Partner Name',
     'Start',
     'End',
+    'Registration Deadline',
     'Price',
     'Language',
     'URL',
@@ -74,7 +79,6 @@ CSV_EXEC_ED_COURSE_HEADERS = [
     'Skills',
     'Min Effort',
     'Max Effort',
-    'Registration Deadline',
     'Length',
     'What You’ll Learn',
     'Full Description',
@@ -207,6 +211,18 @@ def course_hit_to_row(hit):
     return csv_row
 
 
+def fetch_and_format_registration_date(obj):
+    enroll_by_date = obj.get('registration_deadline')
+    stripped_enroll_by = enroll_by_date.split("T")[0]
+    formatted_enroll_by = None
+    try:
+        enroll_by_datetime_obj = datetime.datetime.strptime(stripped_enroll_by, '%Y-%m-%d')
+        formatted_enroll_by = enroll_by_datetime_obj.strftime('%m-%d-%Y')
+    except ValueError as exc:
+        logger.info(f"Unable to format registration deadline, failed with error: {exc}")
+    return formatted_enroll_by
+
+
 def exec_ed_course_to_row(hit):
     """
     Helper function to construct a CSV row according to a single executive education course hit.
@@ -229,11 +245,13 @@ def exec_ed_course_to_row(hit):
         if additional_md.get('end_date'):
             end_date = parser.parse(additional_md['end_date']).strftime(DATE_FORMAT)
         csv_row.append(end_date)
-        enroll_by_date = additional_md.get('registration_deadline')
+        formatted_enroll_by = fetch_and_format_registration_date(additional_md)
     else:
         csv_row.append(None)  # no start date
         csv_row.append(None)  # no end date
-        enroll_by_date = None
+        formatted_enroll_by = None
+
+    csv_row.append(formatted_enroll_by)
 
     adv_course_run = hit.get('advertised_course_run', {})
     key = adv_course_run.get('key')
@@ -253,7 +271,6 @@ def exec_ed_course_to_row(hit):
 
     csv_row.append(adv_course_run.get('min_effort'))
     csv_row.append(adv_course_run.get('max_effort'))
-    csv_row.append(enroll_by_date)
     csv_row.append(adv_course_run.get('weeks_to_complete'))  # Length
 
     csv_row.append(strip_tags(hit.get('outcome', '')))  # What You’ll Learn
