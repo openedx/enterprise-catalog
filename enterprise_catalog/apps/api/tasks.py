@@ -776,7 +776,7 @@ def update_catalog_metadata_task(self, catalog_query_id, force=False):  # pylint
 
 @shared_task(base=LoggedTaskWithRetry, bind=True)
 @expiring_task_semaphore()
-def fetch_missing_course_metadata_task(self):  # pylint: disable=unused-argument
+def fetch_missing_course_metadata_task(self, force=False):  # pylint: disable=unused-argument
     """
     Creates a CatalogQuery for all the courses that do not have ContentMetadata instance.
 
@@ -820,7 +820,7 @@ def fetch_missing_course_metadata_task(self):  # pylint: disable=unused-argument
 
 @shared_task(base=LoggedTaskWithRetry, bind=True)
 @expiring_task_semaphore()
-def fetch_missing_pathway_metadata_task(self):  # pylint: disable=unused-argument
+def fetch_missing_pathway_metadata_task(sel, force=False):  # pylint: disable=unused-argument
     """
     Creates ContentMetadata for Learner Pathways and all its associates.
 
