@@ -132,7 +132,7 @@ class EnterpriseCatalogRoleAssignmentAdmin(UserRoleAssignmentAdmin):
 
         model = EnterpriseCatalogRoleAssignment
 
-    fields = ('user', 'role', 'enterprise_id')
+    fields = ('user', 'role', 'enterprise_id', 'applies_to_all_contexts')
     form = EnterpriseCatalogRoleAssignmentAdminForm
 
     get_username.short_description = 'User'
