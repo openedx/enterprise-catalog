@@ -32,19 +32,19 @@ class Command(BaseCommand):
         logger.info(message, catalog_query)
         return update_catalog_metadata_task.s(catalog_query.id, force=force)
 
-    def _fetch_missing_course_metadata_task(self):
+    def _fetch_missing_course_metadata_task(self, force=False):
         logger.info(
             'Spinning off fetch_missing_course_metadata_task from update_content_metadata command'
             ' to update content_metadata of missing courses.'
         )
-        return fetch_missing_course_metadata_task.si()
+        return fetch_missing_course_metadata_task.si(force=force)
 
-    def _fetch_missing_pathway_metadata_task(self):
+    def _fetch_missing_pathway_metadata_task(self, force=False):
         logger.info(
             'Spinning off fetch_missing_pathway_metadata_task from update_content_metadata command'
             ' to update content_metadata of missing pathways.'
         )
-        return fetch_missing_pathway_metadata_task.si()
+        return fetch_missing_pathway_metadata_task.si(force=force)
 
     def _update_full_content_metadata_task(self, *args, **kwargs):
         """
@@ -83,13 +83,13 @@ class Command(BaseCommand):
         options.update(CatalogUpdateCommandConfig.current_options())
 
         # Fetch program metadata for the programs that are missing.
-        self._fetch_missing_pathway_metadata_task().apply_async().get(
+        self._fetch_missing_pathway_metadata_task(force=options['force']).apply_async().get(
             timeout=TASK_TIMEOUT,
             propagate=True,
         )
 
         # Fetch course metadata for the courses that are missing.
-        self._fetch_missing_course_metadata_task().apply_async().get(
+        self._fetch_missing_course_metadata_task(force=options['force']).apply_async().get(
             timeout=TASK_TIMEOUT,
             propagate=True,
         )
