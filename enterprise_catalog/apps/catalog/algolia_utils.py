@@ -76,6 +76,7 @@ ALGOLIA_FIELDS = [
     'course_length',
     'entitlements',
     'learning_type',
+    'learning_type_v2',
     'additional_metadata',
 ]
 
@@ -117,6 +118,7 @@ ALGOLIA_INDEX_SETTINGS = {
         'course_length',
         'aggregation_key',
         'learning_type',
+        'learning_type_v2',
     ],
     'unretrievableAttributes': [
         'enterprise_catalog_uuids',
