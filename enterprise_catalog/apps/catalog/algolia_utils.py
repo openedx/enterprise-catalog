@@ -11,6 +11,7 @@ from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
     EXEC_ED_2U_COURSE_TYPE,
+    EXEC_ED_2U_READABLE_COURSE_TYPE,
     LEARNER_PATHWAY,
     PROGRAM,
     PROGRAM_TYPES_MAP,
@@ -1073,6 +1074,16 @@ def get_learning_type(content):
     return content.get('content_type')
 
 
+def get_learning_type_v2(content):
+    """
+    Placeholder learning type value used while switching exec ed learning type
+    to a readable value
+    """
+    if content.get('course_type') == EXEC_ED_2U_COURSE_TYPE:
+        return EXEC_ED_2U_READABLE_COURSE_TYPE
+    return content.get('content_type')
+
+
 def _algolia_object_from_product(product, algolia_fields):
     """
     Transforms a course or program into an Algolia object.
@@ -1105,6 +1116,7 @@ def _algolia_object_from_product(product, algolia_fields):
             'outcome': get_course_outcome(searchable_product),
             'prerequisites': get_course_prerequisites(searchable_product),
             'learning_type': get_learning_type(searchable_product),
+            'learning_type_v2': get_learning_type_v2(searchable_product),
         })
     elif searchable_product.get('content_type') == PROGRAM:
         searchable_product.update({
@@ -1122,6 +1134,7 @@ def _algolia_object_from_product(product, algolia_fields):
             'banner_image_url': get_program_banner_image_url(searchable_product),
             'course_details': get_program_course_details(searchable_product),
             'learning_type': get_learning_type(searchable_product),
+            'learning_type_v2': get_learning_type_v2(searchable_product),
         })
     elif searchable_product.get('content_type') == LEARNER_PATHWAY:
         searchable_product.update({
@@ -1133,6 +1146,7 @@ def _algolia_object_from_product(product, algolia_fields):
             'subjects': get_pathway_subjects(searchable_product),
             'created': get_pathway_created_date(searchable_product),
             'learning_type': get_learning_type(searchable_product),
+            'learning_type_v2': get_learning_type_v2(searchable_product),
         })
 
     algolia_object = {}
