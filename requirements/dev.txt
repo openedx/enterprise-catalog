@@ -46,7 +46,7 @@ billiard==3.6.4.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   celery
-build==0.9.0
+build==0.10.0
     # via
     #   -r requirements/pip-tools.txt
     #   pip-tools
@@ -68,7 +68,7 @@ cffi==1.15.1
     #   -r requirements/test.txt
     #   cryptography
     #   pynacl
-charset-normalizer==2.1.1
+charset-normalizer==3.0.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -124,7 +124,7 @@ coreschema==0.0.4
     #   -r requirements/test.txt
     #   coreapi
     #   drf-yasg
-coverage[toml]==7.0.4
+coverage[toml]==7.0.5
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -275,7 +275,7 @@ edx-auth-backends==4.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-edx-celeryutils==1.2.1
+edx-celeryutils==1.2.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -291,7 +291,7 @@ edx-django-utils==5.2.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==8.4.0
+edx-drf-extensions==8.4.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -326,7 +326,7 @@ exceptiongroup==1.1.0
     #   pytest
 factory-boy==3.2.1
     # via -r requirements/test.txt
-faker==15.3.4
+faker==16.6.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -335,11 +335,10 @@ filelock==3.9.0
     #   -r requirements/test.txt
     #   tox
     #   virtualenv
-future==0.18.2
+future==0.18.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-    #   edx-celeryutils
     #   pyjwkest
 gunicorn==20.1.0
     # via -r requirements/dev.in
@@ -405,7 +404,7 @@ lazy-object-proxy==1.9.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   astroid
-markupsafe==2.1.1
+markupsafe==2.1.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -445,19 +444,15 @@ packaging==23.0
     #   drf-yasg
     #   pytest
     #   tox
-paramiko==2.12.0
+paramiko==3.0.0
     # via docker
 path==16.6.0
     # via edx-i18n-tools
-pbr==5.11.0
+pbr==5.11.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   stevedore
-pep517==0.13.0
-    # via
-    #   -r requirements/pip-tools.txt
-    #   build
 pip-tools==6.12.1
     # via -r requirements/pip-tools.txt
 platformdirs==2.6.2
@@ -505,7 +500,7 @@ pycryptodomex==3.16.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pyjwkest
-pydocstyle==6.2.3
+pydocstyle==6.3.0
     # via -r requirements/quality.txt
 pygments==2.14.0
     # via diff-cover
@@ -559,9 +554,13 @@ pynacl==1.5.0
     #   -r requirements/test.txt
     #   edx-django-utils
     #   paramiko
+pyproject-hooks==1.0.0
+    # via
+    #   -r requirements/pip-tools.txt
+    #   build
 pyrsistent==0.19.3
     # via jsonschema
-pytest==7.2.0
+pytest==7.2.1
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -577,7 +576,7 @@ python-dateutil==2.8.2
     #   analytics-python
     #   edx-drf-extensions
     #   faker
-python-dotenv==0.21.0
+python-dotenv==0.21.1
     # via docker-compose
 python-memcached==1.59
     # via -r requirements/dev.in
@@ -591,7 +590,7 @@ python3-openid==3.2.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   social-auth-core
-pytz==2022.7
+pytz==2022.7.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -613,7 +612,7 @@ redis==3.5.3
     #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-requests==2.28.1
+requests==2.28.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -670,7 +669,6 @@ six==1.16.0
     #   edx-lint
     #   edx-rbac
     #   jsonschema
-    #   paramiko
     #   pyjwkest
     #   python-dateutil
     #   python-memcached
@@ -723,8 +721,8 @@ tomli==2.0.1
     #   -r requirements/test.txt
     #   build
     #   coverage
-    #   pep517
     #   pylint
+    #   pyproject-hooks
     #   pytest
     #   tox
 tomlkit==0.11.6
@@ -751,7 +749,7 @@ uritemplate==4.1.1
     #   -r requirements/test.txt
     #   coreapi
     #   drf-yasg
-urllib3==1.26.13
+urllib3==1.26.14
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -768,7 +766,7 @@ virtualenv==20.17.1
     # via
     #   -r requirements/test.txt
     #   tox
-wcwidth==0.2.5
+wcwidth==0.2.6
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -786,7 +784,7 @@ wrapt==1.14.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   astroid
-xlsxwriter==3.0.6
+xlsxwriter==3.0.7
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
