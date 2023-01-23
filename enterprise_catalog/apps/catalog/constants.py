@@ -19,6 +19,7 @@ CONTENT_TYPE_CHOICES = [
 ]
 
 EXEC_ED_2U_COURSE_TYPE = 'executive-education-2u'
+EXEC_ED_2U_READABLE_COURSE_TYPE = 'Executive Education'
 EXEC_ED_2U_ENTITLEMENT_MODE = 'paid-executive-education'
 
 # ContentMetadata allow/block lists
