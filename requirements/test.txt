@@ -46,7 +46,7 @@ cffi==1.15.1
     #   -r requirements/base.txt
     #   cryptography
     #   pynacl
-charset-normalizer==2.1.1
+charset-normalizer==3.0.1
     # via
     #   -r requirements/base.txt
     #   requests
@@ -90,7 +90,7 @@ coreschema==0.0.4
     #   -r requirements/base.txt
     #   coreapi
     #   drf-yasg
-coverage[toml]==7.0.4
+coverage[toml]==7.0.5
     # via
     #   -r requirements/test.in
     #   pytest-cov
@@ -188,7 +188,7 @@ edx-api-doc-tools==1.6.0
     # via -r requirements/base.txt
 edx-auth-backends==4.1.0
     # via -r requirements/base.txt
-edx-celeryutils==1.2.1
+edx-celeryutils==1.2.2
     # via -r requirements/base.txt
 edx-django-release-util==1.2.0
     # via -r requirements/base.txt
@@ -199,7 +199,7 @@ edx-django-utils==5.2.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==8.4.0
+edx-drf-extensions==8.4.1
     # via
     #   -r requirements/base.txt
     #   edx-rbac
@@ -221,16 +221,15 @@ exceptiongroup==1.1.0
     # via pytest
 factory-boy==3.2.1
     # via -r requirements/test.in
-faker==15.3.4
+faker==16.6.0
     # via factory-boy
 filelock==3.9.0
     # via
     #   tox
     #   virtualenv
-future==0.18.2
+future==0.18.3
     # via
     #   -r requirements/base.txt
-    #   edx-celeryutils
     #   pyjwkest
 idna==3.4
     # via
@@ -265,7 +264,7 @@ kombu==5.2.4
     #   celery
 lazy-object-proxy==1.9.0
     # via astroid
-markupsafe==2.1.1
+markupsafe==2.1.2
     # via
     #   -r requirements/base.txt
     #   jinja2
@@ -292,7 +291,7 @@ packaging==23.0
     #   drf-yasg
     #   pytest
     #   tox
-pbr==5.11.0
+pbr==5.11.1
     # via
     #   -r requirements/base.txt
     #   stevedore
@@ -361,7 +360,7 @@ pynacl==1.5.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
-pytest==7.2.0
+pytest==7.2.1
     # via
     #   pytest-cov
     #   pytest-django
@@ -383,7 +382,7 @@ python3-openid==3.2.0
     # via
     #   -r requirements/base.txt
     #   social-auth-core
-pytz==2022.7
+pytz==2022.7.1
     # via
     #   -r requirements/base.txt
     #   celery
@@ -400,7 +399,7 @@ redis==3.5.3
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.txt
-requests==2.28.1
+requests==2.28.2
     # via
     #   -r requirements/base.txt
     #   algoliasearch
@@ -497,7 +496,7 @@ uritemplate==4.1.1
     #   -r requirements/base.txt
     #   coreapi
     #   drf-yasg
-urllib3==1.26.13
+urllib3==1.26.14
     # via
     #   -r requirements/base.txt
     #   requests
@@ -509,13 +508,13 @@ vine==5.0.0
     #   kombu
 virtualenv==20.17.1
     # via tox
-wcwidth==0.2.5
+wcwidth==0.2.6
     # via
     #   -r requirements/base.txt
     #   prompt-toolkit
 wrapt==1.14.1
     # via astroid
-xlsxwriter==3.0.6
+xlsxwriter==3.0.7
     # via -r requirements/base.txt
 zipp==1.2.0
     # via -r requirements/base.txt
