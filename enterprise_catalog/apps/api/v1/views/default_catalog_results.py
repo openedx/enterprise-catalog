@@ -61,6 +61,10 @@ class DefaultCatalogResultsView(GenericAPIView):
         # Since this view does not hit any models, override the queryset
         pass
 
+    def get_serializer(self, *args, **kwargs):
+        # Since this view does not hit any models, override the serializer
+        pass
+
     @method_decorator(require_at_least_one_query_parameter('enterprise_catalog_query_titles'))
     @action(detail=True)
     def get(self, request, **kwargs):
@@ -82,7 +86,8 @@ class DefaultCatalogResultsView(GenericAPIView):
         ]
 
         if learning_type_v2:
-            catalog_filter.append(f'learning_type_v2:{learning_type_v2}')
+            # if we have the v2 learning type, replace the original learning type
+            catalog_filter[1] = f'learning_type_v2:{learning_type_v2}'
 
         search_options = {
             'facetFilters': catalog_filter,
