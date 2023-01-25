@@ -1,10 +1,12 @@
 import logging
+import uuid
 
 from django.utils.decorators import method_decorator
 from edx_rbac.utils import get_decoded_jwt
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
+from rest_framework.status import HTTP_400_BAD_REQUEST
 
 from enterprise_catalog.apps.api.v1.decorators import (
     require_at_least_one_query_parameter,
@@ -84,7 +86,19 @@ class EnterpriseCustomerViewSet(BaseViewSet):
         get_catalog_list = request.GET.get('get_catalog_list', False)
         course_run_ids = unquote_course_keys(course_run_ids)
 
+        try:
+            uuid.UUID(enterprise_uuid)
+        except ValueError as exc:
+            logger.warning(
+                f"Could not parse catalogs from provided enterprise uuid: {enterprise_uuid}. "
+                f"Query failed with exception: {exc}"
+            )
+            return Response(
+                f'Error: invalid enterprice customer uuid: "{enterprise_uuid}" provided.',
+                status=HTTP_400_BAD_REQUEST
+            )
         customer_catalogs = EnterpriseCatalog.objects.filter(enterprise_uuid=enterprise_uuid)
+
         any_catalog_contains_content_items = False
         catalogs_that_contain_course = []
         for catalog in customer_catalogs:
