@@ -8,6 +8,7 @@ from enterprise_catalog.apps.catalog import algolia_utils as utils
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
     EXEC_ED_2U_COURSE_TYPE,
+    EXEC_ED_2U_READABLE_COURSE_TYPE,
     LEARNER_PATHWAY,
     PROGRAM,
 )
@@ -1330,7 +1331,7 @@ class AlgoliaUtilsTests(TestCase):
     @ddt.data(
         (
             {'content_type': COURSE, 'course_type': EXEC_ED_2U_COURSE_TYPE},
-            EXEC_ED_2U_COURSE_TYPE,
+            EXEC_ED_2U_READABLE_COURSE_TYPE,
         ),
         (
             {'content_type': COURSE},
