@@ -1072,7 +1072,7 @@ def get_learning_type(content):
         of the course.
     """
     if content.get('course_type') == EXEC_ED_2U_COURSE_TYPE:
-        return EXEC_ED_2U_COURSE_TYPE
+        return EXEC_ED_2U_READABLE_COURSE_TYPE
     return content.get('content_type')
 
 
