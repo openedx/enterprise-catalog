@@ -300,9 +300,11 @@ def _update_full_content_metadata_course(content_keys):
                 json_meta = metadata_record.json_metadata
                 start_date = json_meta.get('additional_metadata', {}).get('start_date')
                 end_date = json_meta.get('additional_metadata', {}).get('end_date')
-                course_run = _get_course_run_by_uuid(
-                    json_meta, json_meta.get('advertised_course_run_uuid'),
-                )
+                course_run_uuid = json_meta.get('advertised_course_run_uuid')
+                for run in json_meta.get('course_runs'):
+                    if run.get('uuid') == course_run_uuid:
+                        run.update({'start': start_date, 'end': end_date})
+                course_run = _get_course_run_by_uuid(json_meta, course_run_uuid)
                 course_run_meta = metadata_by_key.get(course_run.get('key'))
                 course_run_meta.json_metadata.update({'start': start_date, 'end': end_date})
                 modified_content_metadata_records.append(course_run_meta)

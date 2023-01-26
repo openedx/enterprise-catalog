@@ -471,9 +471,11 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         Assert that full course metadata is merged with original json_metadata for all ContentMetadata records.
         """
 
+        course_run_uuid = uuid.uuid4()
         course_run_key = 'course-v1:edX+testX+1'
         course_run_data = {
             'key': 'course-v1:edX+testX+1',
+            'uuid': course_run_uuid,
             'aggregation_key': 'courserun:edX+testX',
             'start': '2022-03-01T00:00:00Z',
             'end': '2022-03-01T00:00:00Z',
@@ -484,7 +486,12 @@ class UpdateFullContentMetadataTaskTests(TestCase):
             'aggregation_key': 'course:edX+testX',
             'key': 'edX+testX',
             'course_type': 'executive-education-2u',
-            'course_runs': [{'key': course_run_key}],
+            'course_runs': [{
+                'key': course_run_key,
+                'uuid': course_run_uuid,
+                'start': '2022-03-01T00:00:00Z',
+                'end': '2022-03-01T00:00:00Z'
+            }],
             'programs': [],
             'additional_metadata': {
                 'start_date': '2023-03-01T00:00:00Z',
@@ -524,7 +531,10 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         self.assertEqual(ContentMetadata.objects.count(), 2)
         course_cm = ContentMetadata.objects.get(content_key=course_key)
         self.assertEqual(course_cm.content_type, COURSE)
-
+        for runs in course_cm.json_metadata.get('course_runs'):
+            if runs.get('uuid') == course_run_uuid:
+                self.assertEqual(runs.get('start'), '2023-03-01T00:00:00Z')
+                self.assertEqual(runs.get('end'), '2023-04-09T23:59:59Z')
         course_run_cm = ContentMetadata.objects.get(content_key=course_run_key)
         self.assertEqual(course_run_cm.content_type, COURSE_RUN)
         self.assertEqual(course_run_cm.json_metadata.get('start'), '2023-03-01T00:00:00Z')
