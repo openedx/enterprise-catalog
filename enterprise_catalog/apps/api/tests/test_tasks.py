@@ -19,6 +19,7 @@ from enterprise_catalog.apps.api_client.discovery_cache import (
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
     COURSE_RUN,
+    EXEC_ED_2U_COURSE_TYPE,
     LEARNER_PATHWAY,
     PROGRAM,
 )
@@ -460,6 +461,84 @@ class UpdateFullContentMetadataTaskTests(TestCase):
 
         assert metadata_1.json_metadata == program_data_1
         assert metadata_2.json_metadata == program_data_2
+
+    # pylint: disable=unused-argument
+    @mock.patch('enterprise_catalog.apps.api.tasks.task_recently_run', return_value=False)
+    @mock.patch('enterprise_catalog.apps.api.tasks.partition_program_keys_for_indexing')
+    @mock.patch('enterprise_catalog.apps.api_client.base_oauth.OAuthAPIClient')
+    def test_update_full_metadata_exec_ed(self, mock_oauth_client, mock_partition_course_keys, mock_task_recently_run):
+        """
+        Assert that full course metadata is merged with original json_metadata for all ContentMetadata records.
+        """
+
+        course_run_uuid = uuid.uuid4()
+        course_run_key = 'course-v1:edX+testX+1'
+        course_run_data = {
+            'key': 'course-v1:edX+testX+1',
+            'uuid': course_run_uuid,
+            'aggregation_key': 'courserun:edX+testX',
+            'start': '2022-03-01T00:00:00Z',
+            'end': '2022-03-01T00:00:00Z',
+            'programs': [],
+        }
+        course_key = 'edX+testX'
+        course_data = {
+            'aggregation_key': 'course:edX+testX',
+            'key': 'edX+testX',
+            'course_type': 'executive-education-2u',
+            'course_runs': [{
+                'key': course_run_key,
+                'uuid': course_run_uuid,
+                'start': '2022-03-01T00:00:00Z',
+                'end': '2022-03-01T00:00:00Z'
+            }],
+            'programs': [],
+            'additional_metadata': {
+                'start_date': '2023-03-01T00:00:00Z',
+                'end_date': '2023-04-09T23:59:59Z',
+            }
+
+        }
+
+        # Mock out the data that should be returned from discovery's /api/v1/courses endpoint
+        mock_oauth_client.return_value.get.return_value.json.side_effect = [
+            {'results': [course_run_data, course_data]}
+        ]
+        mock_partition_course_keys.return_value = ([], [],)
+
+        course_metadata = ContentMetadataFactory.create(
+            content_type=COURSE, content_key=course_key, json_metadata={
+                'aggregation_key': 'course:edX+testX',
+                'key': 'edX+testX',
+                'course_type': EXEC_ED_2U_COURSE_TYPE,
+                'course_runs': [{'key': course_run_key}],
+                'programs': [],
+                'additional_metadata': {
+                    'start_date': '2023-03-01T00:00:00Z',
+                    'end_date': '2023-04-09T23:59:59Z',
+                }
+            }
+        )
+
+        course_metadata.catalog_queries.set([self.catalog_query])
+        course_run_metadata = ContentMetadataFactory(content_type=COURSE_RUN, content_key=course_run_key)
+        course_run_metadata.catalog_queries.set([self.catalog_query])
+
+        course_run_data.update(course_run_metadata.json_metadata)
+
+        tasks.update_full_content_metadata_task.apply().get()
+
+        self.assertEqual(ContentMetadata.objects.count(), 2)
+        course_cm = ContentMetadata.objects.get(content_key=course_key)
+        self.assertEqual(course_cm.content_type, COURSE)
+        for runs in course_cm.json_metadata.get('course_runs'):
+            if runs.get('uuid') == course_run_uuid:
+                self.assertEqual(runs.get('start'), '2023-03-01T00:00:00Z')
+                self.assertEqual(runs.get('end'), '2023-04-09T23:59:59Z')
+        course_run_cm = ContentMetadata.objects.get(content_key=course_run_key)
+        self.assertEqual(course_run_cm.content_type, COURSE_RUN)
+        self.assertEqual(course_run_cm.json_metadata.get('start'), '2023-03-01T00:00:00Z')
+        self.assertEqual(course_run_cm.json_metadata.get('end'), '2023-04-09T23:59:59Z')
 
 
 class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
