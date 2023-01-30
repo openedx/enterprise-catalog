@@ -124,7 +124,7 @@ coreschema==0.0.4
     #   -r requirements/test.txt
     #   coreapi
     #   drf-yasg
-coverage[toml]==7.0.5
+coverage[toml]==7.1.0
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -326,7 +326,7 @@ exceptiongroup==1.1.0
     #   pytest
 factory-boy==3.2.1
     # via -r requirements/test.txt
-faker==16.6.0
+faker==16.6.1
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -363,7 +363,7 @@ iniconfig==2.0.0
     # via
     #   -r requirements/test.txt
     #   pytest
-isort==5.11.4
+isort==5.12.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -495,7 +495,7 @@ pycparser==2.21
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   cffi
-pycryptodomex==3.16.0
+pycryptodomex==3.17
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -580,7 +580,7 @@ python-dotenv==0.21.1
     # via docker-compose
 python-memcached==1.59
     # via -r requirements/dev.in
-python-slugify==7.0.0
+python-slugify==8.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
