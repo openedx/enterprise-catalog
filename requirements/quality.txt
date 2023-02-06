@@ -100,7 +100,7 @@ defusedxml==0.7.1
     #   social-auth-core
 dill==0.3.6
     # via pylint
-django==3.2.16
+django==3.2.17
     # via
     #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -c requirements/constraints.txt
@@ -392,7 +392,7 @@ semantic-version==2.10.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-simplejson==3.18.1
+simplejson==3.18.3
     # via -r requirements/base.txt
 six==1.16.0
     # via
@@ -464,7 +464,7 @@ wcwidth==0.2.6
     #   prompt-toolkit
 wrapt==1.14.1
     # via astroid
-xlsxwriter==3.0.7
+xlsxwriter==3.0.8
     # via -r requirements/base.txt
 zipp==1.2.0
     # via -r requirements/base.txt
