@@ -61,6 +61,10 @@ class DefaultCatalogResultsView(GenericAPIView):
         # Since this view does not hit any models, override the queryset
         pass
 
+    def get_serializer(self, *args, **kwargs):
+        # Since this view does not hit any models, override the serializer
+        pass
+
     @method_decorator(require_at_least_one_query_parameter('enterprise_catalog_query_titles'))
     @action(detail=True)
     def get(self, request, **kwargs):
@@ -71,6 +75,8 @@ class DefaultCatalogResultsView(GenericAPIView):
         invalid_facets = validate_query_facets(facets)
 
         learning_type = facets.get("learning_type", ['course'])[0]
+        learning_type_v2 = facets.get("learning_type_v2", [None])[0]
+
         if invalid_facets:
             return Response({'Error': f'invalid facet(s): {invalid_facets} provided.'}, status=HTTP_400_BAD_REQUEST)
 
@@ -78,6 +84,10 @@ class DefaultCatalogResultsView(GenericAPIView):
             f'enterprise_catalog_query_titles:{facets.get("enterprise_catalog_query_titles")[0]}',
             f'learning_type:{learning_type}'
         ]
+
+        if learning_type_v2:
+            # if we have the v2 learning type, replace the original learning type
+            catalog_filter[1] = f'learning_type_v2:{learning_type_v2}'
 
         search_options = {
             'facetFilters': catalog_filter,

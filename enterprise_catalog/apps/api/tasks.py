@@ -836,7 +836,7 @@ def fetch_missing_course_metadata_task(self, force=False):  # pylint: disable=un
 
 @shared_task(base=LoggedTaskWithRetry, bind=True)
 @expiring_task_semaphore()
-def fetch_missing_pathway_metadata_task(sel, force=False):  # pylint: disable=unused-argument
+def fetch_missing_pathway_metadata_task(self, force=False):  # pylint: disable=unused-argument
     """
     Creates ContentMetadata for Learner Pathways and all its associates.
 

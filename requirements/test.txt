@@ -90,7 +90,7 @@ coreschema==0.0.4
     #   -r requirements/base.txt
     #   coreapi
     #   drf-yasg
-coverage[toml]==7.0.5
+coverage[toml]==7.1.0
     # via
     #   -r requirements/test.in
     #   pytest-cov
@@ -221,7 +221,7 @@ exceptiongroup==1.1.0
     # via pytest
 factory-boy==3.2.1
     # via -r requirements/test.in
-faker==16.6.0
+faker==16.6.1
     # via factory-boy
 filelock==3.9.0
     # via
@@ -241,7 +241,7 @@ inflection==0.5.1
     #   drf-yasg
 iniconfig==2.0.0
     # via pytest
-isort==5.11.4
+isort==5.12.0
     # via pylint
 itypes==1.2.0
     # via
@@ -321,7 +321,7 @@ pycparser==2.21
     # via
     #   -r requirements/base.txt
     #   cffi
-pycryptodomex==3.16.0
+pycryptodomex==3.17
     # via
     #   -r requirements/base.txt
     #   pyjwkest
@@ -374,7 +374,7 @@ python-dateutil==2.8.2
     #   analytics-python
     #   edx-drf-extensions
     #   faker
-python-slugify==7.0.0
+python-slugify==8.0.0
     # via
     #   -r requirements/base.txt
     #   code-annotations
@@ -429,7 +429,7 @@ semantic-version==2.10.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-simplejson==3.18.1
+simplejson==3.18.3
     # via -r requirements/base.txt
 six==1.16.0
     # via
@@ -514,7 +514,7 @@ wcwidth==0.2.6
     #   prompt-toolkit
 wrapt==1.14.1
     # via astroid
-xlsxwriter==3.0.7
+xlsxwriter==3.0.8
     # via -r requirements/base.txt
 zipp==1.2.0
     # via -r requirements/base.txt

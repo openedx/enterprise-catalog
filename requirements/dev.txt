@@ -124,7 +124,7 @@ coreschema==0.0.4
     #   -r requirements/test.txt
     #   coreapi
     #   drf-yasg
-coverage[toml]==7.0.5
+coverage[toml]==7.1.0
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -161,7 +161,7 @@ distlib==0.3.6
     #   virtualenv
 distro==1.8.0
     # via docker-compose
-django==3.2.16
+django==3.2.17
     # via
     #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -c requirements/constraints.txt
@@ -326,7 +326,7 @@ exceptiongroup==1.1.0
     #   pytest
 factory-boy==3.2.1
     # via -r requirements/test.txt
-faker==16.6.0
+faker==16.6.1
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -363,7 +363,7 @@ iniconfig==2.0.0
     # via
     #   -r requirements/test.txt
     #   pytest
-isort==5.11.4
+isort==5.12.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -453,7 +453,7 @@ pbr==5.11.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   stevedore
-pip-tools==6.12.1
+pip-tools==6.12.2
     # via -r requirements/pip-tools.txt
 platformdirs==2.6.2
     # via
@@ -495,7 +495,7 @@ pycparser==2.21
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   cffi
-pycryptodomex==3.16.0
+pycryptodomex==3.17
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -580,7 +580,7 @@ python-dotenv==0.21.1
     # via docker-compose
 python-memcached==1.59
     # via -r requirements/dev.in
-python-slugify==7.0.0
+python-slugify==8.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -651,7 +651,7 @@ semantic-version==2.10.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-drf-extensions
-simplejson==3.18.1
+simplejson==3.18.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -784,7 +784,7 @@ wrapt==1.14.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   astroid
-xlsxwriter==3.0.7
+xlsxwriter==3.0.8
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
