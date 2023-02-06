@@ -305,9 +305,11 @@ def _update_full_content_metadata_course(content_keys):
                     if run.get('uuid') == course_run_uuid:
                         run.update({'start': start_date, 'end': end_date})
                 course_run = _get_course_run_by_uuid(json_meta, course_run_uuid)
-                course_run_meta = metadata_by_key.get(course_run.get('key'))
-                course_run_meta.json_metadata.update({'start': start_date, 'end': end_date})
-                modified_content_metadata_records.append(course_run_meta)
+                if course_run is not None:
+                    course_run_meta = metadata_by_key.get(course_run.get('key'))
+                    if hasattr(course_run_meta, 'json_metadata'):
+                        course_run_meta.json_metadata.update({'start': start_date, 'end': end_date})
+                        modified_content_metadata_records.append(course_run_meta)
             metadata_record.json_metadata.update(course_metadata_dict)
             modified_content_metadata_records.append(metadata_record)
             program_content_keys = create_course_associated_programs(course_metadata_dict['programs'], metadata_record)
