@@ -94,7 +94,7 @@ coverage[toml]==7.1.0
     # via
     #   -r requirements/test.in
     #   pytest-cov
-cryptography==39.0.0
+cryptography==39.0.1
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -180,7 +180,7 @@ drf-jwt==1.19.2
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-drf-yasg==1.21.4
+drf-yasg==1.21.5
     # via
     #   -r requirements/base.txt
     #   edx-api-doc-tools
@@ -221,7 +221,7 @@ exceptiongroup==1.1.0
     # via pytest
 factory-boy==3.2.1
     # via -r requirements/test.in
-faker==16.6.1
+faker==16.8.1
     # via factory-boy
 filelock==3.9.0
     # via
@@ -276,7 +276,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.1.1
     # via -r requirements/base.txt
-newrelic==8.5.0
+newrelic==8.6.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -295,7 +295,7 @@ pbr==5.11.1
     # via
     #   -r requirements/base.txt
     #   stevedore
-platformdirs==2.6.2
+platformdirs==3.0.0
     # via
     #   pylint
     #   virtualenv
@@ -462,7 +462,7 @@ sqlparse==0.4.3
     # via
     #   -r requirements/base.txt
     #   django
-stevedore==4.1.1
+stevedore==5.0.0
     # via
     #   -r requirements/base.txt
     #   code-annotations
@@ -506,7 +506,7 @@ vine==5.0.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.17.1
+virtualenv==20.19.0
     # via tox
 wcwidth==0.2.6
     # via

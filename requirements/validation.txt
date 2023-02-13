@@ -119,7 +119,7 @@ coverage[toml]==7.1.0
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==39.0.0
+cryptography==39.0.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -232,7 +232,7 @@ drf-jwt==1.19.2
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-drf-extensions
-drf-yasg==1.21.4
+drf-yasg==1.21.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -294,7 +294,7 @@ exceptiongroup==1.1.0
     #   pytest
 factory-boy==3.2.1
     # via -r requirements/test.txt
-faker==16.6.1
+faker==16.8.1
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -376,7 +376,7 @@ mysqlclient==2.1.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-newrelic==8.5.0
+newrelic==8.6.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -399,7 +399,7 @@ pbr==5.11.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   stevedore
-platformdirs==2.6.2
+platformdirs==3.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -619,7 +619,7 @@ sqlparse==0.4.3
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   django
-stevedore==4.1.1
+stevedore==5.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -675,7 +675,7 @@ vine==5.0.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.17.1
+virtualenv==20.19.0
     # via
     #   -r requirements/test.txt
     #   tox
