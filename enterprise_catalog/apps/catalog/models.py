@@ -125,11 +125,8 @@ class CatalogQuery(TimeStampedModel):
         Return human-readable string representation.
         """
         return (
-            "CatalogQuery with content_filter_hash '{content_filter_hash}' "
-            "and content_filter '{content_filter}'>".format(
-                content_filter_hash=self.content_filter_hash,
-                content_filter=self.pretty_print_content_filter(),
-            )
+            f"<CatalogQuery: ({self.id}) with content_filter_hash '{self.content_filter_hash}' "
+            f"and content_filter '{self.pretty_print_content_filter()}'>"
         )
 
 

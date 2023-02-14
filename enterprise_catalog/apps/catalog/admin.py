@@ -61,8 +61,16 @@ class ContentMetadataAdmin(UnchangeableMixin):
     )
     readonly_fields = (
         'associated_content_metadata',
-        'catalog_queries'
+        'catalog_queries',
+        'get_catalog',
     )
+
+    @admin.display(description='Enterprise Catalogs')
+    def get_catalog(self, obj):
+        catalogs = EnterpriseCatalog.objects.filter(
+            catalog_query_id__in=obj.catalog_queries.all().values_list('id')
+        )
+        return f"{list(catalogs)}"
 
 
 @admin.register(CatalogQuery)
