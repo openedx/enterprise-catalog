@@ -35,10 +35,6 @@ from enterprise_catalog.apps.catalog.models import (
     ContentMetadata,
     EnterpriseCatalogRoleAssignment,
 )
-from enterprise_catalog.apps.catalog.rules import (
-    enterprises_with_admin_access,
-    has_access_to_all_enterprises,
-)
 from enterprise_catalog.apps.curation.models import (
     EnterpriseCurationConfig,
     HighlightedContent,
