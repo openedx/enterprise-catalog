@@ -35,7 +35,7 @@ class EnterpriseCatalogCRUDViewSet(BaseViewSet, viewsets.ModelViewSet):
         """
         Cached set of enterprise identifiers the requesting user has admin access to.
         """
-        return enterprises_with_admin_access(self.request.user)
+        return enterprises_with_admin_access(self.request)
 
     def get_serializer_class(self):
         request_action = getattr(self, 'action', None)
