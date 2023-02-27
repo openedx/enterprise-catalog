@@ -109,16 +109,19 @@ def has_access_to_all_enterprises(enterprise_ids):
     return ACCESS_TO_ALL_ENTERPRISES_TOKEN in enterprise_ids
 
 
-def enterprises_with_admin_access(user):
+def enterprises_with_admin_access(request):
     """
     Returns a set of enterprise ids to which a user has been granted admin access.
 
     Note that this may include the "*" wildcard identifier, which means that the user
     is allowed access to all enterprises.
     """
-    if user.is_superuser:
+    if hasattr(request, 'user') and request.user.is_superuser:
         return {ACCESS_TO_ALL_ENTERPRISES_TOKEN}
-    return set(_enterprises_with_jwt_admin_access() + _enterprises_with_database_admin_access(user))
+    eligible_enterprises_jwt_admin_access = _enterprises_with_jwt_admin_access(request)
+    if hasattr(request, 'user'):
+        eligible_enterprises_jwt_admin_access += _enterprises_with_database_admin_access(request.user)
+    return set(eligible_enterprises_jwt_admin_access)
 
 
 def _enterprises_with_database_admin_access(user):
@@ -134,10 +137,9 @@ def _enterprises_with_database_admin_access(user):
     ]
 
 
-def _enterprises_with_jwt_admin_access():
+def _enterprises_with_jwt_admin_access(request):
     """
     Returns a list of enterprise ids to which a user has been granted admin access via JWT roles.
     """
-    request = crum.get_current_request()
     roles_from_jwt = get_jwt_roles(request)
     return roles_from_jwt.get(ENTERPRISE_CATALOG_ADMIN_ROLE, [])
