@@ -29,6 +29,7 @@ from enterprise_catalog.apps.api_client.enterprise_cache import (
 from enterprise_catalog.apps.catalog.constants import (
     ACCESS_TO_ALL_ENTERPRISES_TOKEN,
     CONTENT_COURSE_TYPE_ALLOW_LIST,
+    CONTENT_PRODUCT_SOURCE_ALLOW_LIST,
     CONTENT_TYPE_CHOICES,
     COURSE,
     COURSE_RUN,
@@ -732,13 +733,15 @@ def _should_allow_metadata(metadata_entry, catalog_query=None):
     """
     # make sure to exclude exec ed course runs
     content_type = get_content_type(metadata_entry)
+    entry_product_source = metadata_entry.get('product_source')
+    if entry_product_source not in CONTENT_PRODUCT_SOURCE_ALLOW_LIST and entry_product_source is not None:
+        return False
     if not catalog_query or not catalog_query.include_exec_ed_2u_courses:
         if content_type == 'courserun':
             if seat_types := metadata_entry.get('seat_types'):
                 for seat_type in seat_types:
                     if 'executive-education' in seat_type:
                         return False
-
     if content_type != 'course':
         return True
     entry_course_type = metadata_entry.get('course_type')
