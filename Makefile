@@ -136,7 +136,7 @@ open-devstack: ## open a shell on the server started by start-devstack
 	docker exec -it enterprise_catalog /edx/app/catalog/devstack.sh open
 
 pkg-devstack: ## build the catalog image from the latest configuration and code
-	docker build -t enterprise_catalog:latest -f docker/build/enterprise_catalog/Dockerfile git://github.com/edx/configuration
+	docker build -t enterprise_catalog:latest -f docker/build/enterprise_catalog/Dockerfile git://github.com/openedx/configuration
 
 detect_changed_source_translations: ## check if translation files are up-to-date
 	cd enterprise_catalog && i18n_tool changed

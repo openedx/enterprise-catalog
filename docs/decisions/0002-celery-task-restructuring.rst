@@ -205,6 +205,6 @@ References
 * `Update/reindex mgmt commands flowchart`_
 
 
-.. _Detailed metadata tasks flowchart: https://github.com/edx/enterprise-catalog/blob/master/docs/update-metadata-tasks-detailed-flowchart-2021-feb.png
-.. _Algolia indexing flowchart: https://github.com/edx/enterprise-catalog/blob/master/docs/index-algolia-task-flowchart-2021-feb.png
-.. _Update/reindex mgmt commands flowchart: https://github.com/edx/enterprise-catalog/blob/master/docs/update-content-metadata-mgmt-cmd-flowchart-2021-feb.png
+.. _Detailed metadata tasks flowchart: https://github.com/openedx/enterprise-catalog/blob/master/docs/update-metadata-tasks-detailed-flowchart-2021-feb.png
+.. _Algolia indexing flowchart: https://github.com/openedx/enterprise-catalog/blob/master/docs/index-algolia-task-flowchart-2021-feb.png
+.. _Update/reindex mgmt commands flowchart: https://github.com/openedx/enterprise-catalog/blob/master/docs/update-content-metadata-mgmt-cmd-flowchart-2021-feb.png
