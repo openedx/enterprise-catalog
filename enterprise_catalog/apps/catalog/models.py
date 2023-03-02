@@ -721,6 +721,14 @@ def _create_new_content_metadata(nonexisting_metadata_defaults):
     return metadata_list
 
 
+def _fetch_product_source(metadata_entry):
+    product_source = metadata_entry.get('product_source')
+    if isinstance(product_source, dict):
+        return product_source.get('slug')
+    else:
+        return product_source
+
+
 def _should_allow_metadata(metadata_entry, catalog_query=None):
     """
     Determines if an object from Discovery meets our criteria for indexing
@@ -731,11 +739,11 @@ def _should_allow_metadata(metadata_entry, catalog_query=None):
     Returns:
         bool: If we should save the metadata as a ContentMetaData object
     """
-    # make sure to exclude exec ed course runs
-    content_type = get_content_type(metadata_entry)
-    entry_product_source = metadata_entry.get('product_source')
+    entry_product_source = _fetch_product_source(metadata_entry)
     if entry_product_source not in CONTENT_PRODUCT_SOURCE_ALLOW_LIST and entry_product_source is not None:
         return False
+    # make sure to exclude exec ed course runs
+    content_type = get_content_type(metadata_entry)
     if not catalog_query or not catalog_query.include_exec_ed_2u_courses:
         if content_type == 'courserun':
             if seat_types := metadata_entry.get('seat_types'):

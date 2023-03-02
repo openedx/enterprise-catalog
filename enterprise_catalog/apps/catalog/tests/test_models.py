@@ -102,7 +102,11 @@ class TestModels(TestCase):
             ('aggregation_key', 'course:edX+2uSourceX'),
             ('key', 'edX+2uSourceX'),
             ('title', 'test course 2'),
-            ('product_source', '2u'),
+            ('product_source', OrderedDict(
+                [('name', '2u'),
+                 ('slug', '2u'),
+                 ('description', '2U, Trilogy, Getsmarter -- external source for 2u courses and programs')]
+            )),
         ])
         emeritus_course_metadata = OrderedDict([
             ('aggregation_key', 'course:edX+emeritusSourceX'),
