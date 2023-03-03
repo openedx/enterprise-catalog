@@ -44,6 +44,14 @@ CONTENT_COURSE_TYPE_ALLOW_LIST = {
     'credit-verified-honor',
 }
 
+# deliberate omissions:
+# 'emeritus'
+
+CONTENT_PRODUCT_SOURCE_ALLOW_LIST = {
+    '2u',
+    'edX',
+}
+
 # ContentFilter field types for validation.
 CONTENT_FILTER_FIELD_TYPES = {
     'key': {'type': list, 'subtype': str},
