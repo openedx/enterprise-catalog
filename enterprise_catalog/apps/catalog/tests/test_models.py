@@ -114,16 +114,23 @@ class TestModels(TestCase):
             ('title', 'test course 3'),
             ('product_source', 'emeritus'),
         ])
+        null_source_course_metadata = OrderedDict([
+            ('aggregation_key', 'course:edX+nullSourceX'),
+            ('key', 'edX+nullSourceX'),
+            ('title', 'test course 4'),
+            ('product_source', None),
+        ])
         mock_client.return_value.get_metadata_by_query.return_value = [
             edx_course_metadata,
             twou_course_metadata,
             emeritus_course_metadata,
+            null_source_course_metadata,
         ]
         catalog = factories.EnterpriseCatalogFactory()
         self.assertEqual(ContentMetadata.objects.count(), 0)
         update_contentmetadata_from_discovery(catalog.catalog_query)
         mock_client.assert_called_once()
-        self.assertEqual(ContentMetadata.objects.count(), 2)
+        self.assertEqual(ContentMetadata.objects.count(), 3)
 
     @override_settings(DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT=0)
     @mock.patch('enterprise_catalog.apps.api_client.discovery_cache.DiscoveryApiClient')
