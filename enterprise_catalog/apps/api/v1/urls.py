@@ -11,6 +11,9 @@ from enterprise_catalog.apps.api.v1.views.catalog_csv_data import (
 from enterprise_catalog.apps.api.v1.views.catalog_workbook import (
     CatalogWorkbookView,
 )
+from enterprise_catalog.apps.api.v1.views.content_metadata import (
+    ContentMetadataCRUDViewSet,
+)
 from enterprise_catalog.apps.api.v1.views.curation.highlights import (
     EnterpriseCurationConfigReadOnlyViewSet,
     EnterpriseCurationConfigViewSet,
@@ -53,6 +56,7 @@ router.register(r'enterprise-curations', EnterpriseCurationConfigReadOnlyViewSet
 router.register(r'enterprise-curations-admin', EnterpriseCurationConfigViewSet, basename='enterprise-curations-admin')
 router.register(r'highlight-sets', HighlightSetReadOnlyViewSet, basename='highlight-sets')
 router.register(r'highlight-sets-admin', HighlightSetViewSet, basename='highlight-sets-admin')
+router.register(r'content-metadata', ContentMetadataCRUDViewSet, basename='content-metadata')
 
 urlpatterns = [
     path('enterprise-catalogs/catalog_csv_data', CatalogCsvDataView.as_view(),

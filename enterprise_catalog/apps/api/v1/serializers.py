@@ -218,7 +218,12 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
         Returns:
             dict: The modified json_metadata field.
         """
-        enterprise_catalog = self.context['enterprise_catalog']
+        catalog_modified = None
+        customer_modified = None
+        if enterprise_catalog := self.context.get('enterprise_catalog'):
+            catalog_modified = enterprise_catalog.modified
+            customer_modified = enterprise_catalog.enterprise_customer.last_modified_date
+
         content_type = instance.content_type
         json_metadata = instance.json_metadata.copy()
         marketing_url = json_metadata.get('marketing_url')
@@ -229,13 +234,13 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
         # modified, we have to also check the customer and the catalog's modified times.
         modified_time = get_most_recent_modified_time(
             instance.modified,
-            enterprise_catalog.modified,
-            enterprise_catalog.enterprise_customer.last_modified_date
+            catalog_modified,
+            customer_modified
         )
 
         json_metadata['content_last_modified'] = modified_time
 
-        if marketing_url:
+        if marketing_url and enterprise_catalog:
             marketing_url = update_query_parameters(
                 marketing_url,
                 get_enterprise_utm_context(enterprise_catalog.enterprise_name)
@@ -243,11 +248,12 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
             json_metadata['marketing_url'] = marketing_url
 
         if content_type in (COURSE, COURSE_RUN):
-            json_metadata['enrollment_url'] = enterprise_catalog.get_content_enrollment_url(instance)
-            json_metadata['xapi_activity_id'] = enterprise_catalog.get_xapi_activity_id(
-                content_resource=content_type,
-                content_key=content_key,
-            )
+            if enterprise_catalog:
+                json_metadata['enrollment_url'] = enterprise_catalog.get_content_enrollment_url(instance)
+                json_metadata['xapi_activity_id'] = enterprise_catalog.get_xapi_activity_id(
+                    content_resource=content_type,
+                    content_key=content_key,
+                )
             if content_type == COURSE:
                 serialized_course_runs = json_metadata.get('course_runs', [])
                 json_metadata['active'] = is_any_course_run_active(serialized_course_runs)

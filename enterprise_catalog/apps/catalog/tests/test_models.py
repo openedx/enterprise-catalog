@@ -150,9 +150,9 @@ class TestModels(TestCase):
             ('title', 'test course run'),
         ])
         program_metadata = OrderedDict([
-            ('aggregation_key', 'program:fake-uuid'),
+            ('aggregation_key', 'program:c7d546f2-a442-49d2-8ef1-4cb64f46df88'),
             ('title', 'test program'),
-            ('uuid', 'fake-uuid'),
+            ('uuid', '6e8e47ed-28d8-4861-917e-cedca1135a3f'),
         ])
         mock_client.return_value.get_metadata_by_query.return_value = [
             course_metadata,
@@ -246,9 +246,9 @@ class TestModels(TestCase):
             ('title', 'test course run'),
         ])
         program_metadata = OrderedDict([
-            ('aggregation_key', 'program:fake-uuid'),
+            ('aggregation_key', 'program:1df0af94-79e9-4966-8d0c-e25985831ef5'),
             ('title', 'test program'),
-            ('uuid', 'fake-uuid'),
+            ('uuid', 'ebffde14-b432-4615-9609-b09a7ab57331'),
         ])
         mock_client.return_value.get_metadata_by_query.return_value = [
             audit_course_metadata,
