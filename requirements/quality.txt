@@ -4,7 +4,7 @@
 #
 #    make upgrade
 #
-algoliasearch==2.6.3
+algoliasearch==3.0.0
     # via -r requirements/base.txt
 amqp==5.1.1
     # via
@@ -87,7 +87,7 @@ coreschema==0.0.4
     #   -r requirements/base.txt
     #   coreapi
     #   drf-yasg
-cryptography==39.0.0
+cryptography==39.0.2
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -100,7 +100,7 @@ defusedxml==0.7.1
     #   social-auth-core
 dill==0.3.6
     # via pylint
-django==3.2.17
+django==3.2.18
     # via
     #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -c requirements/constraints.txt
@@ -127,7 +127,7 @@ django-celery-results==2.4.0
     # via -r requirements/base.txt
 django-config-models==2.3.0
     # via -r requirements/base.txt
-django-cors-headers==3.13.0
+django-cors-headers==3.14.0
     # via -r requirements/base.txt
 django-crum==0.7.9
     # via
@@ -168,7 +168,7 @@ drf-jwt==1.19.2
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-drf-yasg==1.21.4
+drf-yasg==1.21.5
     # via
     #   -r requirements/base.txt
     #   edx-api-doc-tools
@@ -254,7 +254,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.1.1
     # via -r requirements/base.txt
-newrelic==8.5.0
+newrelic==8.7.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -271,13 +271,13 @@ pbr==5.11.1
     # via
     #   -r requirements/base.txt
     #   stevedore
-platformdirs==2.6.2
+platformdirs==3.1.0
     # via pylint
 ply==3.11
     # via
     #   -r requirements/base.txt
     #   djangoql
-prompt-toolkit==3.0.36
+prompt-toolkit==3.0.38
     # via
     #   -r requirements/base.txt
     #   click-repl
@@ -337,7 +337,7 @@ python-dateutil==2.8.2
     #   -r requirements/base.txt
     #   analytics-python
     #   edx-drf-extensions
-python-slugify==8.0.0
+python-slugify==8.0.1
     # via
     #   -r requirements/base.txt
     #   code-annotations
@@ -425,7 +425,7 @@ sqlparse==0.4.3
     # via
     #   -r requirements/base.txt
     #   django
-stevedore==4.1.1
+stevedore==5.0.0
     # via
     #   -r requirements/base.txt
     #   code-annotations
@@ -439,7 +439,7 @@ tomli==2.0.1
     # via pylint
 tomlkit==0.11.6
     # via pylint
-typing-extensions==4.4.0
+typing-extensions==4.5.0
     # via
     #   astroid
     #   pylint
@@ -462,7 +462,7 @@ wcwidth==0.2.6
     # via
     #   -r requirements/base.txt
     #   prompt-toolkit
-wrapt==1.14.1
+wrapt==1.15.0
     # via astroid
 xlsxwriter==3.0.8
     # via -r requirements/base.txt

@@ -4,7 +4,7 @@
 #
 #    make upgrade
 #
-algoliasearch==2.6.3
+algoliasearch==3.0.0
     # via -r requirements/base.txt
 amqp==5.1.1
     # via
@@ -76,7 +76,7 @@ coreschema==0.0.4
     #   -r requirements/base.txt
     #   coreapi
     #   drf-yasg
-cryptography==39.0.0
+cryptography==39.0.2
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -87,7 +87,7 @@ defusedxml==0.7.1
     #   djangorestframework-xml
     #   python3-openid
     #   social-auth-core
-django==3.2.17
+django==3.2.18
     # via
     #   -r requirements/base.txt
     #   django-config-models
@@ -112,7 +112,7 @@ django-celery-results==2.4.0
     # via -r requirements/base.txt
 django-config-models==2.3.0
     # via -r requirements/base.txt
-django-cors-headers==3.13.0
+django-cors-headers==3.14.0
     # via -r requirements/base.txt
 django-crum==0.7.9
     # via
@@ -151,7 +151,7 @@ drf-jwt==1.19.2
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-drf-yasg==1.21.4
+drf-yasg==1.21.5
     # via
     #   -r requirements/base.txt
     #   edx-api-doc-tools
@@ -231,7 +231,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.1.1
     # via -r requirements/base.txt
-newrelic==8.5.0
+newrelic==8.7.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -252,7 +252,7 @@ ply==3.11
     # via
     #   -r requirements/base.txt
     #   djangoql
-prompt-toolkit==3.0.36
+prompt-toolkit==3.0.38
     # via
     #   -r requirements/base.txt
     #   click-repl
@@ -295,7 +295,7 @@ python-dateutil==2.8.2
     #   edx-drf-extensions
 python-memcached==1.59
     # via -r requirements/production.in
-python-slugify==8.0.0
+python-slugify==8.0.1
     # via
     #   -r requirements/base.txt
     #   code-annotations
@@ -379,7 +379,7 @@ sqlparse==0.4.3
     # via
     #   -r requirements/base.txt
     #   django
-stevedore==4.1.1
+stevedore==5.0.0
     # via
     #   -r requirements/base.txt
     #   code-annotations
