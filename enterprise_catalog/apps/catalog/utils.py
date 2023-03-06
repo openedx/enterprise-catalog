@@ -26,6 +26,13 @@ def get_content_filter_hash(content_filter):
     return content_filter_hash
 
 
+def get_content_uuid(metadata):
+    """
+    Returns the content uuid for a piece of metadata. Returns None for course runs.
+    """
+    return metadata.get('uuid')
+
+
 def get_content_key(metadata):
     """
     Returns the content key of a piece of metadata
