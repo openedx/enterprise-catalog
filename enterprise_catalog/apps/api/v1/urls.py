@@ -11,9 +11,6 @@ from enterprise_catalog.apps.api.v1.views.catalog_csv_data import (
 from enterprise_catalog.apps.api.v1.views.catalog_workbook import (
     CatalogWorkbookView,
 )
-from enterprise_catalog.apps.api.v1.views.content_metadata import (
-    ContentMetadataCRUDViewSet,
-)
 from enterprise_catalog.apps.api.v1.views.curation.highlights import (
     EnterpriseCurationConfigReadOnlyViewSet,
     EnterpriseCurationConfigViewSet,
@@ -56,7 +53,6 @@ router.register(r'enterprise-curations', EnterpriseCurationConfigReadOnlyViewSet
 router.register(r'enterprise-curations-admin', EnterpriseCurationConfigViewSet, basename='enterprise-curations-admin')
 router.register(r'highlight-sets', HighlightSetReadOnlyViewSet, basename='highlight-sets')
 router.register(r'highlight-sets-admin', HighlightSetViewSet, basename='highlight-sets-admin')
-router.register(r'content-metadata', ContentMetadataCRUDViewSet, basename='content-metadata')
 
 urlpatterns = [
     path('enterprise-catalogs/catalog_csv_data', CatalogCsvDataView.as_view(),
@@ -86,9 +82,16 @@ urlpatterns = [
         EnterpriseCatalogRefreshDataFromDiscovery.as_view({'post': 'post'}),
         name='update-enterprise-catalog'
     ),
-    path('distinct-catalog-queries/', DistinctCatalogQueriesView.as_view(),
-         name='distinct-catalog-queries'
-         ),
+    path(
+        'distinct-catalog-queries/',
+        DistinctCatalogQueriesView.as_view(),
+        name='distinct-catalog-queries'
+    ),
+    path(
+        'enterprise-customer/<enterprise_uuid>/content-metadata/<content_identifier>/',
+        EnterpriseCustomerViewSet.as_view({'get': 'content_metadata'}),
+        name='customer-content-metadata-retrieve'
+    ),
 ]
 
 urlpatterns += router.urls
