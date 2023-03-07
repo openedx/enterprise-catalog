@@ -1,6 +1,7 @@
 import logging
 import uuid
 
+from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from edx_rbac.utils import get_decoded_jwt
 from rest_framework.decorators import action
@@ -11,6 +12,7 @@ from rest_framework.status import HTTP_400_BAD_REQUEST
 from enterprise_catalog.apps.api.v1.decorators import (
     require_at_least_one_query_parameter,
 )
+from enterprise_catalog.apps.api.v1.serializers import ContentMetadataSerializer
 from enterprise_catalog.apps.api.v1.utils import unquote_course_keys
 from enterprise_catalog.apps.api.v1.views.base import BaseViewSet
 from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
@@ -29,6 +31,9 @@ class EnterpriseCustomerViewSet(BaseViewSet):
     permission_required = 'catalog.has_learner_access'
     # Just a convenience so that `enterprise_uuid` becomes an argument on our detail routes
     lookup_field = 'enterprise_uuid'
+
+    def get_serializer_context(self):
+        return {"request": self.request}
 
     def check_permissions(self, request):
         """
@@ -140,3 +145,41 @@ class EnterpriseCustomerViewSet(BaseViewSet):
         }
 
         return Response(response_data)
+
+    def get_metadata_item_serializer(self, **kwargs):
+        """
+        Fetches the queryset of content metadata under a specific customer context for a request
+        """
+        # Grab the enterprise from the url params and fetch the catalogs belonging to the customer
+        enterprise_uuid = self.kwargs.get('enterprise_uuid')
+        enterprise_catalogs = EnterpriseCatalog.objects.filter(enterprise_uuid=enterprise_uuid)
+
+        # Set the context IFF there exists only one customer catalog
+        serializer_context = {}
+        if len(enterprise_catalogs) == 1:
+            serializer_context['enterprise_catalog'] = enterprise_catalogs.first()
+
+        # Collect a queryset of all content under all of the customer's catalogs
+        content_metadata_queryset = EnterpriseCatalog.objects.none()
+        for catalog in enterprise_catalogs:
+            content_metadata_queryset = content_metadata_queryset | catalog.content_metadata
+
+        # Filter the queryset down to the desired content
+        if content_identifier := self.kwargs.get('content_identifier'):
+            try:
+                uuid.UUID(content_identifier)
+                content_filter = {'content_uuid': content_identifier}
+            except ValueError:
+                content_filter = {'content_key': content_identifier}
+            content_metadata_queryset = get_object_or_404(content_metadata_queryset.filter(**content_filter)[:1])
+
+        return ContentMetadataSerializer(content_metadata_queryset, context=serializer_context, many=False)
+
+    @action(detail=True, methods=['get'])
+    def content_metadata(self, customer_uuid, content_identifier, **kwargs):  # pylint: disable=unused-argument
+        """
+        Get endpoint for `/api/v1/enterprise-customer/{customer uuid}/content-metadata/{content identifier}`.
+        Accepts both content uuids and content keys for the specific content metadata record requested
+        """
+        serializer = self.get_metadata_item_serializer()
+        return Response(serializer.data)
