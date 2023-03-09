@@ -2210,6 +2210,7 @@ class EnterpriseCustomerContentMetadataViewSetTests(APITestMixin):
         other_content_key = "not-in-your-catalog"
         other_content = ContentMetadataFactory(
             content_key=other_content_key,
+            content_type='course',
             content_uuid=uuid.uuid4(),
         )
         assert len(ContentMetadata.objects.all()) == 3
