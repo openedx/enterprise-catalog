@@ -30,6 +30,7 @@ STATIC_LMS_USER_ID = 999
 
 class JwtMixin():
     """ Mixin with JWT-related helper functions. """
+
     def get_request_with_jwt_cookie(self, system_wide_role=None, context=None):
         """
         Set jwt token in cookies.

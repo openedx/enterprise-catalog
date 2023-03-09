@@ -43,6 +43,7 @@ from enterprise_catalog.apps.catalog.utils import (
     get_content_filter_hash,
     get_content_key,
     get_content_type,
+    get_content_uuid,
     get_parent_content_key,
     localized_utcnow,
 )
@@ -476,6 +477,18 @@ class ContentMetadata(TimeStampedModel):
     .. no_pii:
     """
 
+    content_uuid = models.UUIDField(
+        null=True,
+        blank=True,
+        max_length=32,
+        unique=False,
+        verbose_name='Content UUID',
+        help_text=_(
+            "The UUID that represents a piece of content. This value is usually a secondary identifier to content_key "
+            "in the enterprise environment."
+        )
+    )
+
     content_key = models.CharField(
         max_length=255,
         blank=False,
@@ -581,8 +594,8 @@ def _get_defaults_from_metadata(entry, exists=False):
     Given a metadata entry from course-discovery's /search/all API endpoint, this function determines the
     default values to be used when creating/updating ContentMetadata objects (e.g., content_key).
 
-    Regardless of content type, ContentMetadata objects will have its content_key, parent_content_key, and
-    content_type fields updated to reflect the most current state. However, the json_metadata field is only
+    Regardless of content type, ContentMetadata objects will have its content_key, content_uuid, parent_content_key,
+    and content_type fields updated to reflect the most current state. However, the json_metadata field is only
     conditionally included as part of the update.
 
     For net-new ContentMetadata objects, json_metadata is always included, determined by the ``exists``
@@ -603,7 +616,9 @@ def _get_defaults_from_metadata(entry, exists=False):
     content_key = get_content_key(entry)
     parent_content_key = get_parent_content_key(entry)
     content_type = get_content_type(entry)
+    content_uuid = get_content_uuid(entry)
     defaults = {
+        'content_uuid': content_uuid,
         'content_key': content_key,
         'parent_content_key': parent_content_key,
         'content_type': content_type,
