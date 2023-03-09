@@ -16,6 +16,7 @@ from rest_framework.reverse import reverse
 from rest_framework.settings import api_settings
 from six.moves.urllib.parse import quote_plus
 
+from enterprise_catalog.apps.api.v1.serializers import ContentMetadataSerializer
 from enterprise_catalog.apps.api.v1.tests.mixins import APITestMixin
 from enterprise_catalog.apps.api.v1.utils import is_any_course_run_active
 from enterprise_catalog.apps.catalog.constants import (
@@ -2136,3 +2137,106 @@ class DistinctCatalogQueriesViewTests(APITestMixin):
         else:
             assert response['num_distinct_query_ids'] == 1
         assert str(self.catalog_query_one.id) in response['catalog_uuids_by_catalog_query_id']
+
+
+@ddt.ddt
+class EnterpriseCustomerContentMetadataViewSetTests(APITestMixin):
+    """
+    Tests for the Enterprise Customer Content Metadata related endpoints.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.set_up_catalog_learner()
+        self.catalog_query = CatalogQueryFactory()
+        self.catalog_query_2 = CatalogQueryFactory()
+        self.enterprise_catalog = EnterpriseCatalogFactory(
+            enterprise_uuid=self.enterprise_uuid,
+            catalog_query=self.catalog_query,
+        )
+        self.enterprise_catalog = EnterpriseCatalogFactory(
+            enterprise_uuid=self.enterprise_uuid,
+            catalog_query=self.catalog_query_2,
+        )
+        self.content_key_1 = 'test-key'
+        self.content_key_2 = 'test-key-2'
+        self.uuid = uuid.uuid4()
+        self.uuid_2 = uuid.uuid4()
+        self.first_content_metadata = ContentMetadataFactory(
+            content_key=self.content_key_1,
+            content_uuid=self.uuid,
+        )
+        self.add_metadata_to_catalog(self.enterprise_catalog, [self.first_content_metadata])
+        self.second_content_metadata = ContentMetadataFactory(
+            content_key=self.content_key_2,
+            content_uuid=self.uuid_2,
+        )
+        self.add_metadata_to_catalog(self.enterprise_catalog, [self.second_content_metadata])
+        self.url = reverse(
+            'api:v1:enterprise-customer-content-metadata',
+            kwargs={'enterprise_uuid': self.enterprise_uuid}
+        ).replace('_', '-')
+
+    def test_content_metadata_get_item_with_content_key(self):
+        """
+        Test the base success case for the `content-metadata` view using a content key as an identifier
+        """
+        response = self.client.get(urljoin(self.url, f"{self.content_key_1}/"))
+        assert response.status_code == 200
+        expected_data = ContentMetadataSerializer(self.first_content_metadata).data
+        expected_data['content_last_modified'] = str(
+            expected_data['content_last_modified']
+        ).replace('+00:00', 'Z').replace(' ', 'T')
+        assert response.json() == expected_data
+
+    def test_content_metadata_get_item_with_uuid(self):
+        """
+        Test the base success case for the `content-metadata` view using a UUID as an identifier
+        """
+        response = self.client.get(urljoin(self.url, f"{str(self.uuid)}/"))
+        assert response.status_code == 200
+        expected_data = ContentMetadataSerializer(self.first_content_metadata).data
+        expected_data['content_last_modified'] = str(
+            expected_data['content_last_modified']
+        ).replace('+00:00', 'Z').replace(' ', 'T')
+        assert response.json() == expected_data
+
+    def test_content_metadata_exists_outside_of_requested_catalog(self):
+        """
+        Test that the content metadata list endpoint will only fetch content that exists under a catalog owned by the
+        requesting user's Enterprise Customer
+        """
+        assert len(ContentMetadata.objects.all()) == 2
+        other_content_key = "not-in-your-catalog"
+        other_content = ContentMetadataFactory(
+            content_key=other_content_key,
+            content_uuid=uuid.uuid4(),
+        )
+        assert len(ContentMetadata.objects.all()) == 3
+        response = self.client.get(urljoin(self.url, f"{str(other_content_key)}/"))
+        assert response.status_code == 404
+        self.add_metadata_to_catalog(self.enterprise_catalog, [other_content])
+        response = self.client.get(urljoin(self.url, f"{str(other_content_key)}/"))
+        assert response.json().get('key') == other_content_key
+        assert response.status_code == 200
+
+    def test_content_metadata_content_not_found(self):
+        """
+        Test the 404 NOT FOUND case for the `content-metadata` view.
+        """
+        response = self.client.get(urljoin(self.url, "somerandomkey/"))
+        assert response.status_code == 404
+
+    def test_content_metadata_create_not_implemented(self):
+        """
+        Test that CREATE requests are not supported by the `content-metadata` view.
+        """
+        response = self.client.post(urljoin(self.url, f"{self.content_key_1}/"))
+        assert response.status_code == 405
+
+    def test_content_metadata_delete_not_implemented(self):
+        """
+        Test that DELETE requests are not supported by the `content-metadata` view.
+        """
+        response = self.client.delete(urljoin(self.url, f"{self.content_key_1}/"))
+        assert response.status_code == 405

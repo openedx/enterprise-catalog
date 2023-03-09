@@ -94,12 +94,13 @@ def is_any_course_run_active(course_runs):
     return False
 
 
-def get_most_recent_modified_time(content_modified, catalog_modified, customer_modified):
+def get_most_recent_modified_time(content_modified, catalog_modified=None, customer_modified=None):
     """
     Helper function to get the appropriate content last modified time for a content metadata object under a specific
     customer
     """
-    content_modified = max([content_modified, catalog_modified])
+    if catalog_modified:
+        content_modified = max([content_modified, catalog_modified])
     if customer_modified:
         content_modified = max([content_modified, customer_modified])
     return content_modified
