@@ -4,7 +4,7 @@
 #
 #    make upgrade
 #
-algoliasearch==2.6.3
+algoliasearch==3.0.0
     # via -r requirements/base.txt
 amqp==5.1.1
     # via
@@ -46,7 +46,7 @@ cffi==1.15.1
     #   -r requirements/base.txt
     #   cryptography
     #   pynacl
-charset-normalizer==3.0.1
+charset-normalizer==3.1.0
     # via
     #   -r requirements/base.txt
     #   requests
@@ -90,11 +90,11 @@ coreschema==0.0.4
     #   -r requirements/base.txt
     #   coreapi
     #   drf-yasg
-coverage[toml]==7.1.0
+coverage[toml]==7.2.1
     # via
     #   -r requirements/test.in
     #   pytest-cov
-cryptography==39.0.0
+cryptography==39.0.2
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -137,7 +137,7 @@ django-celery-results==2.4.0
     # via -r requirements/base.txt
 django-config-models==2.3.0
     # via -r requirements/base.txt
-django-cors-headers==3.13.0
+django-cors-headers==3.14.0
     # via -r requirements/base.txt
 django-crum==0.7.9
     # via
@@ -180,7 +180,7 @@ drf-jwt==1.19.2
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-drf-yasg==1.21.4
+drf-yasg==1.21.5
     # via
     #   -r requirements/base.txt
     #   edx-api-doc-tools
@@ -217,11 +217,11 @@ edx-rest-api-client==5.5.0
     # via -r requirements/base.txt
 edx-toggles==5.0.0
     # via -r requirements/base.txt
-exceptiongroup==1.1.0
+exceptiongroup==1.1.1
     # via pytest
 factory-boy==3.2.1
     # via -r requirements/test.in
-faker==16.6.1
+faker==17.6.0
     # via factory-boy
 filelock==3.9.0
     # via
@@ -276,7 +276,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.1.1
     # via -r requirements/base.txt
-newrelic==8.5.0
+newrelic==8.7.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -295,7 +295,7 @@ pbr==5.11.1
     # via
     #   -r requirements/base.txt
     #   stevedore
-platformdirs==2.6.2
+platformdirs==3.1.1
     # via
     #   pylint
     #   virtualenv
@@ -307,7 +307,7 @@ ply==3.11
     # via
     #   -r requirements/base.txt
     #   djangoql
-prompt-toolkit==3.0.36
+prompt-toolkit==3.0.38
     # via
     #   -r requirements/base.txt
     #   click-repl
@@ -360,7 +360,7 @@ pynacl==1.5.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
-pytest==7.2.1
+pytest==7.2.2
     # via
     #   pytest-cov
     #   pytest-django
@@ -374,7 +374,7 @@ python-dateutil==2.8.2
     #   analytics-python
     #   edx-drf-extensions
     #   faker
-python-slugify==8.0.0
+python-slugify==8.0.1
     # via
     #   -r requirements/base.txt
     #   code-annotations
@@ -462,7 +462,7 @@ sqlparse==0.4.3
     # via
     #   -r requirements/base.txt
     #   django
-stevedore==4.1.1
+stevedore==5.0.0
     # via
     #   -r requirements/base.txt
     #   code-annotations
@@ -487,7 +487,7 @@ tox==3.28.0
     #   tox-battery
 tox-battery==0.6.1
     # via -r requirements/test.in
-typing-extensions==4.4.0
+typing-extensions==4.5.0
     # via
     #   astroid
     #   pylint
@@ -496,7 +496,7 @@ uritemplate==4.1.1
     #   -r requirements/base.txt
     #   coreapi
     #   drf-yasg
-urllib3==1.26.14
+urllib3==1.26.15
     # via
     #   -r requirements/base.txt
     #   requests
@@ -506,15 +506,15 @@ vine==5.0.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.17.1
+virtualenv==20.21.0
     # via tox
 wcwidth==0.2.6
     # via
     #   -r requirements/base.txt
     #   prompt-toolkit
-wrapt==1.14.1
+wrapt==1.15.0
     # via astroid
-xlsxwriter==3.0.8
+xlsxwriter==3.0.9
     # via -r requirements/base.txt
 zipp==1.2.0
     # via -r requirements/base.txt
