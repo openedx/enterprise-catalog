@@ -49,7 +49,7 @@ CONTENT_COURSE_TYPE_ALLOW_LIST = {
 
 CONTENT_PRODUCT_SOURCE_ALLOW_LIST = {
     '2u',
-    'edX',
+    'edx',
 }
 
 # ContentFilter field types for validation.

@@ -755,7 +755,7 @@ def _should_allow_metadata(metadata_entry, catalog_query=None):
         bool: If we should save the metadata as a ContentMetaData object
     """
     entry_product_source = _fetch_product_source(metadata_entry)
-    if entry_product_source not in CONTENT_PRODUCT_SOURCE_ALLOW_LIST and entry_product_source is not None:
+    if entry_product_source is not None and entry_product_source.lower() not in CONTENT_PRODUCT_SOURCE_ALLOW_LIST:
         return False
     # make sure to exclude exec ed course runs
     content_type = get_content_type(metadata_entry)
