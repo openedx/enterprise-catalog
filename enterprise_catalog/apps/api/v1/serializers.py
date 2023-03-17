@@ -229,6 +229,12 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
         marketing_url = json_metadata.get('marketing_url')
         content_key = json_metadata.get('key')
 
+        # Currently (3/17/23) product source can potentially be two different formats, string and dict.
+        # For the purposes of the metadata serializer, we will standardize and default to the dict format.
+        if product_source := json_metadata.get('product_source'):
+            if isinstance(product_source, str):
+                json_metadata['product_source'] = {'name': product_source, 'slug': None, 'description': None}
+
         # The enrollment URL field of content metadata is generated on request and is determined by the status of the
         # enterprise customer as well as the catalog. So, in order to detect when content metadata has last been
         # modified, we have to also check the customer and the catalog's modified times.
