@@ -5,10 +5,40 @@ from django.test import TestCase
 from rest_framework import serializers
 
 from enterprise_catalog.apps.api.v1.serializers import (
+    ContentMetadataSerializer,
     find_and_modify_catalog_query,
 )
 from enterprise_catalog.apps.catalog.models import CatalogQuery
+from enterprise_catalog.apps.catalog.tests.factories import (
+    ContentMetadataFactory,
+)
 from enterprise_catalog.apps.catalog.utils import get_content_filter_hash
+
+
+class ContentMetadataSerializerTests(TestCase):
+    """
+    Tests for the content metadata serializer and how it formats data
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.content_metadata_item = ContentMetadataFactory()
+
+    def test_product_source_formatting(self):
+        """
+        Test that the content metadata serializer will transform product source data within the json metadata field
+        from a string to a dict.
+        """
+        json_metadata = self.content_metadata_item.json_metadata
+        json_metadata['product_source'] = '2u'
+        self.content_metadata_item.json_metadata = json_metadata
+        self.content_metadata_item.save()
+        serialized_data = ContentMetadataSerializer(self.content_metadata_item)
+        assert serialized_data.data.get('product_source') == {
+            'name': self.content_metadata_item.json_metadata.get('product_source'),
+            'slug': None,
+            'description': None
+        }
 
 
 class FindCatalogQueryTest(TestCase):
