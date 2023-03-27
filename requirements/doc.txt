@@ -12,7 +12,7 @@ amqp==5.1.1
     # via
     #   -r requirements/test.txt
     #   kombu
-analytics-python==1.4.0
+analytics-python==1.4.post1
     # via -r requirements/test.txt
 asgiref==3.6.0
     # via
@@ -104,7 +104,7 @@ coverage[toml]==7.2.2
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==39.0.2
+cryptography==40.0.1
     # via
     #   -r requirements/test.txt
     #   pyjwt
@@ -249,11 +249,11 @@ exceptiongroup==1.1.1
     #   pytest
 factory-boy==3.2.1
     # via -r requirements/test.txt
-faker==17.6.0
+faker==18.3.1
     # via
     #   -r requirements/test.txt
     #   factory-boy
-filelock==3.10.0
+filelock==3.10.6
     # via
     #   -r requirements/test.txt
     #   tox
@@ -320,7 +320,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.1.1
     # via -r requirements/test.txt
-newrelic==8.7.0
+newrelic==8.7.1
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
@@ -340,7 +340,7 @@ pbr==5.11.1
     # via
     #   -r requirements/test.txt
     #   stevedore
-platformdirs==3.1.1
+platformdirs==3.2.0
     # via
     #   -r requirements/test.txt
     #   pylint
@@ -443,7 +443,7 @@ python3-openid==3.2.0
     # via
     #   -r requirements/test.txt
     #   social-auth-core
-pytz==2022.7.1
+pytz==2023.2
     # via
     #   -r requirements/test.txt
     #   babel
