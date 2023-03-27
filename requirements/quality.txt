@@ -10,7 +10,7 @@ amqp==5.1.1
     # via
     #   -r requirements/base.txt
     #   kombu
-analytics-python==1.4.0
+analytics-python==1.4.post1
     # via -r requirements/base.txt
 asgiref==3.6.0
     # via
@@ -87,7 +87,7 @@ coreschema==0.0.4
     #   -r requirements/base.txt
     #   coreapi
     #   drf-yasg
-cryptography==39.0.2
+cryptography==40.0.1
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -255,7 +255,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.1.1
     # via -r requirements/base.txt
-newrelic==8.7.0
+newrelic==8.7.1
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -272,7 +272,7 @@ pbr==5.11.1
     # via
     #   -r requirements/base.txt
     #   stevedore
-platformdirs==3.1.1
+platformdirs==3.2.0
     # via pylint
 ply==3.11
     # via
@@ -346,7 +346,7 @@ python3-openid==3.2.0
     # via
     #   -r requirements/base.txt
     #   social-auth-core
-pytz==2022.7.1
+pytz==2023.2
     # via
     #   -r requirements/base.txt
     #   celery
