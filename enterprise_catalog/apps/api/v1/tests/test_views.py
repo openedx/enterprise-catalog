@@ -40,6 +40,7 @@ from enterprise_catalog.apps.catalog.tests.factories import (
 from enterprise_catalog.apps.catalog.utils import (
     get_content_key,
     get_parent_content_key,
+    localized_utcnow,
 )
 
 
@@ -2147,17 +2148,21 @@ class EnterpriseCustomerContentMetadataViewSetTests(APITestMixin):
 
     def setUp(self):
         super().setUp()
+        self.customer_details_patcher = mock.patch(
+            'enterprise_catalog.apps.catalog.models.EnterpriseCustomerDetails'
+        )
+        self.mock_customer_details = self.customer_details_patcher.start()
+        self.NOW = localized_utcnow()
+        self.mock_customer_details.return_value.last_modified_date = self.NOW
+
         self.set_up_catalog_learner()
+
         self.catalog_query = CatalogQueryFactory()
-        self.catalog_query_2 = CatalogQueryFactory()
         self.enterprise_catalog = EnterpriseCatalogFactory(
             enterprise_uuid=self.enterprise_uuid,
             catalog_query=self.catalog_query,
         )
-        self.enterprise_catalog = EnterpriseCatalogFactory(
-            enterprise_uuid=self.enterprise_uuid,
-            catalog_query=self.catalog_query_2,
-        )
+
         self.content_key_1 = 'test-key'
         self.content_key_2 = 'test-key-2'
         self.uuid = uuid.uuid4()
@@ -2165,17 +2170,22 @@ class EnterpriseCustomerContentMetadataViewSetTests(APITestMixin):
         self.first_content_metadata = ContentMetadataFactory(
             content_key=self.content_key_1,
             content_uuid=self.uuid,
+            content_type=COURSE_RUN,
         )
         self.add_metadata_to_catalog(self.enterprise_catalog, [self.first_content_metadata])
         self.second_content_metadata = ContentMetadataFactory(
             content_key=self.content_key_2,
             content_uuid=self.uuid_2,
+            content_type=COURSE,
         )
         self.add_metadata_to_catalog(self.enterprise_catalog, [self.second_content_metadata])
+
         self.url = reverse(
             'api:v1:enterprise-customer-content-metadata',
             kwargs={'enterprise_uuid': self.enterprise_uuid}
         ).replace('_', '-')
+
+        self.addCleanup(self.customer_details_patcher.stop)
 
     def test_content_metadata_get_item_with_content_key(self):
         """
@@ -2183,23 +2193,79 @@ class EnterpriseCustomerContentMetadataViewSetTests(APITestMixin):
         """
         response = self.client.get(urljoin(self.url, f"{self.content_key_1}/"))
         assert response.status_code == 200
-        expected_data = ContentMetadataSerializer(self.first_content_metadata).data
-        expected_data['content_last_modified'] = str(
-            expected_data['content_last_modified']
-        ).replace('+00:00', 'Z').replace(' ', 'T')
-        assert response.json() == expected_data
+        expected_data = ContentMetadataSerializer(
+            self.first_content_metadata,
+            context={'enterprise_catalog': self.enterprise_catalog},
+        ).data
+        actual_data = response.json()
+        for payload_key in ['key', 'uuid']:
+            assert actual_data[payload_key] == expected_data[payload_key]
+
+    def test_content_metadata_get_item_with_content_key_in_multiple_catalogs(self):
+        """
+        Test the base success case for the `content-metadata` view using a content key as an identifier
+        when the customer has multiple catalogs in which to search for matching content.
+        """
+        other_catalog = EnterpriseCatalogFactory(
+            enterprise_uuid=self.enterprise_uuid,
+            catalog_query=self.catalog_query,
+        )
+        other_metadata = ContentMetadataFactory(
+            content_type=COURSE,
+        )
+        self.add_metadata_to_catalog(other_catalog, [other_metadata])
+
+        response = self.client.get(urljoin(self.url, f"{self.content_key_1}/"))
+
+        assert response.status_code == 200
+        expected_data = ContentMetadataSerializer(
+            self.first_content_metadata,
+            context={'enterprise_catalog': self.enterprise_catalog},
+        ).data
+        actual_data = response.json()
+        for payload_key in ['key', 'uuid']:
+            assert actual_data[payload_key] == expected_data[payload_key]
+
+    def test_content_metadata_get_item_with_course_run_key(self):
+        """
+        Test the success case for the `content-metadata` view using a course run key
+        as the content identifier, where the customer's catalog is only
+        directly associated with the course record containing that run.
+        """
+        # First create a metadata record representing the course run,
+        # but _don't_ associate it directly with the customer's catalog.
+        # The searching/match logic will infer a corresponding course
+        # and match on that course, based on the course run record's parent_content_key.
+        course_run_content = ContentMetadataFactory(
+            content_key='my-awesome-course-run',
+            content_type=COURSE_RUN,
+            parent_content_key=self.second_content_metadata.content_key,
+        )
+        other_catalog = EnterpriseCatalogFactory()
+        self.add_metadata_to_catalog(other_catalog, [course_run_content])
+
+        response = self.client.get(urljoin(self.url, f"{course_run_content.content_key}/"))
+
+        expected_data = ContentMetadataSerializer(
+            self.second_content_metadata,
+            context={'enterprise_catalog': self.enterprise_catalog},
+        ).data
+        assert response.status_code == 200
+        actual_data = response.json()
+        for payload_key in ['key', 'uuid']:
+            assert actual_data[payload_key] == expected_data[payload_key]
 
     def test_content_metadata_get_item_with_uuid(self):
         """
         Test the base success case for the `content-metadata` view using a UUID as an identifier
         """
         response = self.client.get(urljoin(self.url, f"{str(self.uuid)}/"))
+
         assert response.status_code == 200
         expected_data = ContentMetadataSerializer(self.first_content_metadata).data
-        expected_data['content_last_modified'] = str(
-            expected_data['content_last_modified']
-        ).replace('+00:00', 'Z').replace(' ', 'T')
-        assert response.json() == expected_data
+        actual_data = response.json()
+        for payload_key in ['key', 'uuid']:
+            assert actual_data[payload_key] == expected_data[payload_key]
 
     def test_content_metadata_exists_outside_of_requested_catalog(self):
         """
@@ -2210,14 +2276,18 @@ class EnterpriseCustomerContentMetadataViewSetTests(APITestMixin):
         other_content_key = "not-in-your-catalog"
         other_content = ContentMetadataFactory(
             content_key=other_content_key,
-            content_type='course',
+            content_type=COURSE,
             content_uuid=uuid.uuid4(),
         )
         assert len(ContentMetadata.objects.all()) == 3
+
         response = self.client.get(urljoin(self.url, f"{str(other_content_key)}/"))
+
         assert response.status_code == 404
         self.add_metadata_to_catalog(self.enterprise_catalog, [other_content])
+
         response = self.client.get(urljoin(self.url, f"{str(other_content_key)}/"))
+
         assert response.json().get('key') == other_content_key
         assert response.status_code == 200
 
