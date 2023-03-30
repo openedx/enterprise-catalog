@@ -268,24 +268,26 @@ class EnterpriseCatalog(TimeStampedModel):
         items_not_found = distinct_content_keys - found_content_keys
         return [{'content_key': item} for item in items_not_found], items_not_included, items_found
 
-    def contains_content_keys(self, content_keys):
+    def get_matching_content(self, content_keys):
         """
-        Determines whether content_keys are part of the catalog.
-
-        Return True if catalog contains the courses, course runs, and/or programs specified by
-        the given content key(s), else False.
+        Returns the set of content contained within this catalog that matches
+        any of the course keys, course run keys, or programs keys specified by
+        the given ``content_keys`` argument.
 
         A content key is considered contained within the catalog when:
-          - associated metadata contains the specified content key.
-          - associated metadata contains the specified content key as a parent (to handle when
-            a catalog only contains course runs but a course id is searched).
-          - associated metadata contains the specified content key in a nested course run (to
-            handle when a catalog only contains courses but a course run id is searched).
+          - any metadata associated with the catalog has an exact ``content_key`` value that is contained
+            in the provided ``content_keys`` list.
+          - any metadata associated with the catalog has a ``parent_content_key`` value that is contained
+            in the ``content_keys`` list (to handle cases when a catalog contains only
+            course runs, but course ids are provided in the ``content_keys`` argument).
+          - any metadata associated with the catalog has a nested course run with a ``key`` that is contained
+            in the ``content_keys`` list (to handle cases when a catalog contains only courses,
+            but course run keys are provided in the ``content_keys`` argument).
         """
-        # cannot determine if specified content keys are part of catalog when catalog
-        # query doesn't exist or no content keys are provided.
+        # We cannot determine which content keys are part of this catalog when the catalog
+        # query doesn't exist, or when no content keys are provided.
         if not self.catalog_query or not content_keys:
-            return False
+            return ContentMetadata.objects.none()
 
         content_keys = set(content_keys)
 
@@ -309,9 +311,27 @@ class EnterpriseCatalog(TimeStampedModel):
             if metadata.parent_content_key
         }
         query |= Q(content_key__in=parent_content_keys)
+        return self.content_metadata.filter(query)
 
-        # if the filtered content metadata exists, the specified content_keys exist in the catalog
-        return self.content_metadata.filter(query).exists()
+    def contains_content_keys(self, content_keys):
+        """
+        Determines whether the given ``content_keys`` are part of the catalog.
+
+        Returns True if this catalog contains the courses, course runs, and/or programs specified by
+        the given content key(s), else False.
+
+        A content key is considered contained within the catalog when:
+          - any metadata associated with the catalog has an exact ``content_key`` value that is contained
+            in the provided ``content_keys`` list.
+          - any metadata associated with the catalog has a ``parent_content_key`` value that is contained
+            in the ``content_keys`` list (to handle cases when a catalog contains only
+            course runs, but course ids are provided in the ``content_keys`` argument).
+          - any metadata associated with the catalog has a nested course run with a ``key`` that is contained
+            in the ``content_keys`` list (to handle cases when a catalog contains only courses,
+            but course run keys are provided in the ``content_keys`` argument).
+        """
+        included_content = self.get_matching_content(content_keys)
+        return included_content.exists()
 
     def filter_content_keys(self, content_keys):
         """
