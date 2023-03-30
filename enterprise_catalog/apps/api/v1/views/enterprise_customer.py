@@ -1,11 +1,10 @@
 import logging
 import uuid
 
-from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from edx_rbac.utils import get_decoded_jwt
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 
@@ -15,10 +14,7 @@ from enterprise_catalog.apps.api.v1.decorators import (
 from enterprise_catalog.apps.api.v1.serializers import ContentMetadataSerializer
 from enterprise_catalog.apps.api.v1.utils import unquote_course_keys
 from enterprise_catalog.apps.api.v1.views.base import BaseViewSet
-from enterprise_catalog.apps.catalog.models import (
-    ContentMetadata,
-    EnterpriseCatalog,
-)
+from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
 
 
 logger = logging.getLogger(__name__)
@@ -151,38 +147,37 @@ class EnterpriseCustomerViewSet(BaseViewSet):
 
     def get_metadata_item_serializer(self):
         """
-        Fetches the queryset of content metadata under a specific customer context for a request
+        Gets the first matching serialized ContentMetadata for a requested ``content_identifier``
+        associated with any of a requested ``customer_uuid``'s catalogs.
         """
-        # Grab the enterprise from the url params and fetch the catalogs belonging to the customer
-        enterprise_uuid = self.kwargs.get('enterprise_uuid')
-        enterprise_catalogs = list(EnterpriseCatalog.objects.filter(enterprise_uuid=enterprise_uuid))
-
-        # Set the context IFF there exists only one customer catalog
-        serializer_context = {}
-        if len(enterprise_catalogs) == 1:
-            serializer_context['enterprise_catalog'] = enterprise_catalogs[0]
-
-        # Filter the queryset down to the desired content
+        enterprise_catalogs = list(EnterpriseCatalog.objects.filter(
+            enterprise_uuid=self.kwargs.get('enterprise_uuid')
+        ))
         content_identifier = self.kwargs.get('content_identifier')
+
         try:
-            uuid.UUID(content_identifier)
-            content_filter = {'content_uuid': content_identifier}
+            # Search for matching metadata if the value of the requested
+            # identifier is a valid UUID.
+            content_uuid = uuid.UUID(content_identifier)
+            for catalog in enterprise_catalogs:
+                content_with_uuid = catalog.content_metadata.filter(content_uuid=content_uuid)
+                if content_with_uuid:
+                    return ContentMetadataSerializer(
+                        content_with_uuid.first(),
+                        context={'enterprise_catalog': catalog},
+                    )
         except ValueError:
-            content_filter = {'content_key': content_identifier}
-
-        # Build a query set of Content Metadata items and prefetch both the content's enterprise
-        # catalogs and their queries, filter the queryset by selecting for content which has a catalog
-        # that is contained by the list `enterprise_catalogs` and by the constructed content filter.
-        content_metadata_queryset = ContentMetadata.objects.prefetch_related(
-            'catalog_queries',
-            'catalog_queries__enterprise_catalogs',
-        ).filter(
-            catalog_queries__enterprise_catalogs__uuid__in=[catalog.uuid for catalog in enterprise_catalogs],
-        ).filter(**content_filter)
-
-        # Throw a 404 if the object doesn't exist.
-        content_metadata = get_object_or_404(content_metadata_queryset[:1])
-        return ContentMetadataSerializer(content_metadata, context=serializer_context, many=False)
+            # Otherwise, search for matching metadata as a content key
+            for catalog in enterprise_catalogs:
+                content_with_key = catalog.get_matching_content(content_keys=[content_identifier])
+                if content_with_key:
+                    return ContentMetadataSerializer(
+                        content_with_key.first(),
+                        context={'enterprise_catalog': catalog},
+                    )
+        # If we've made it here without finding a matching ContentMetadata record,
+        # assume no matching record exists and raise a 404.
+        raise NotFound(detail='No matching content in any catalog for this customer')
 
     @action(detail=True, methods=['get'])
     def content_metadata(self, customer_uuid, content_identifier, **kwargs):  # pylint: disable=unused-argument
