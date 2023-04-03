@@ -85,6 +85,7 @@ django==3.2.18
     #   edx-toggles
     #   jsonfield
     #   jsonfield2
+    #   social-auth-app-django
 django-celery-results==2.5.0
     # via -r requirements/base.in
 django-config-models==2.3.0
@@ -179,7 +180,7 @@ monotonic==1.6
     # via analytics-python
 mysqlclient==2.1.1
     # via -r requirements/base.in
-newrelic==8.7.1
+newrelic==8.8.0
     # via edx-django-utils
 oauthlib==3.2.2
     # via
@@ -220,7 +221,7 @@ python-slugify==8.0.1
     # via code-annotations
 python3-openid==3.2.0
     # via social-auth-core
-pytz==2023.2
+pytz==2023.3
     # via
     #   -r requirements/base.in
     #   celery
@@ -271,11 +272,11 @@ six==1.16.0
     #   python-dateutil
 slumber==0.7.1
     # via edx-rest-api-client
-social-auth-app-django==5.1.0
+social-auth-app-django==5.2.0
     # via
     #   -r requirements/base.in
     #   edx-auth-backends
-social-auth-core==4.4.0
+social-auth-core==4.4.1
     # via
     #   edx-auth-backends
     #   social-auth-app-django
