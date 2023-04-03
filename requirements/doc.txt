@@ -149,6 +149,7 @@ django==3.2.18
     #   edx-toggles
     #   jsonfield
     #   jsonfield2
+    #   social-auth-app-django
 django-celery-results==2.5.0
     # via -r requirements/test.txt
 django-config-models==2.3.0
@@ -249,11 +250,11 @@ exceptiongroup==1.1.1
     #   pytest
 factory-boy==3.2.1
     # via -r requirements/test.txt
-faker==18.3.1
+faker==18.3.2
     # via
     #   -r requirements/test.txt
     #   factory-boy
-filelock==3.10.6
+filelock==3.10.7
     # via
     #   -r requirements/test.txt
     #   tox
@@ -320,7 +321,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.1.1
     # via -r requirements/test.txt
-newrelic==8.7.1
+newrelic==8.8.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
@@ -443,7 +444,7 @@ python3-openid==3.2.0
     # via
     #   -r requirements/test.txt
     #   social-auth-core
-pytz==2023.2
+pytz==2023.3
     # via
     #   -r requirements/test.txt
     #   babel
@@ -520,11 +521,11 @@ slumber==0.7.1
     #   edx-rest-api-client
 snowballstemmer==2.2.0
     # via sphinx
-social-auth-app-django==5.1.0
+social-auth-app-django==5.2.0
     # via
     #   -r requirements/test.txt
     #   edx-auth-backends
-social-auth-core==4.4.0
+social-auth-core==4.4.1
     # via
     #   -r requirements/test.txt
     #   edx-auth-backends
@@ -569,7 +570,7 @@ tomli==2.0.1
     #   pylint
     #   pytest
     #   tox
-tomlkit==0.11.6
+tomlkit==0.11.7
     # via
     #   -r requirements/test.txt
     #   pylint
