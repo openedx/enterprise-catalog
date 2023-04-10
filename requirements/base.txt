@@ -258,7 +258,7 @@ rules==3.3
     # via -r requirements/base.in
 semantic-version==2.10.0
     # via edx-drf-extensions
-simplejson==3.18.4
+simplejson==3.19.1
     # via -r requirements/base.in
 six==1.16.0
     # via
