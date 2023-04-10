@@ -394,7 +394,7 @@ semantic-version==2.10.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-simplejson==3.18.4
+simplejson==3.19.1
     # via -r requirements/base.txt
 six==1.16.0
     # via
