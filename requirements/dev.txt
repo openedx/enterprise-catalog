@@ -30,10 +30,7 @@ astroid==2.11.7
     #   pylint
     #   pylint-celery
 attrs==22.2.0
-    # via
-    #   -r requirements/test.txt
-    #   jsonschema
-    #   pytest
+    # via jsonschema
 backoff==1.10.0
     # via
     #   -r requirements/quality.txt
@@ -124,7 +121,7 @@ coreschema==0.0.4
     #   -r requirements/test.txt
     #   coreapi
     #   drf-yasg
-coverage[toml]==7.2.2
+coverage[toml]==7.2.3
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -208,7 +205,7 @@ django-crum==0.7.9
     #   edx-django-utils
     #   edx-rbac
     #   edx-toggles
-django-debug-toolbar==3.8.1
+django-debug-toolbar==4.0.0
     # via -r requirements/dev.in
 django-dynamic-fixture==3.1.2
     # via -r requirements/test.txt
@@ -328,11 +325,11 @@ exceptiongroup==1.1.1
     #   pytest
 factory-boy==3.2.1
     # via -r requirements/test.txt
-faker==18.3.2
+faker==18.4.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
-filelock==3.10.7
+filelock==3.11.0
     # via
     #   -r requirements/test.txt
     #   tox
@@ -349,7 +346,7 @@ idna==3.4
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   requests
-importlib-metadata==6.1.0
+importlib-metadata==6.2.1
     # via inflect
 inflect==3.0.2
     # via
@@ -455,7 +452,7 @@ pbr==5.11.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   stevedore
-pip-tools==6.12.3
+pip-tools==6.13.0
     # via -r requirements/pip-tools.txt
 platformdirs==3.2.0
     # via
@@ -562,7 +559,7 @@ pyproject-hooks==1.0.0
     #   build
 pyrsistent==0.19.3
     # via jsonschema
-pytest==7.2.2
+pytest==7.3.0
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -653,7 +650,7 @@ semantic-version==2.10.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-drf-extensions
-simplejson==3.18.4
+simplejson==3.19.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
