@@ -92,6 +92,11 @@ urlpatterns = [
         EnterpriseCustomerViewSet.as_view({'get': 'content_metadata'}),
         name='customer-content-metadata-retrieve'
     ),
+    path(
+        'enterprise-customer/<enterprise_uuid>/catalog_query',
+        EnterpriseCustomerViewSet.as_view({'post': 'post_new_catalog'}),
+        name='customer-content-metadata-retrieve'
+    ),
 ]
 
 urlpatterns += router.urls

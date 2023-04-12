@@ -77,6 +77,8 @@ CORS_ORIGIN_WHITELIST = [
     'http://localhost:1991',
     # Enterprise explore catalog MFE
     'http://localhost:8735',
+    # Support tools MFE
+    'http://localhost:18450',
 ]
 
 CACHES = {

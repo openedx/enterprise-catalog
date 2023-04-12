@@ -6,9 +6,9 @@ from rest_framework import permissions, viewsets
 from rest_framework.authentication import SessionAuthentication
 
 
-class BaseViewSet(PermissionRequiredMixin, viewsets.ViewSet):
+class BaseViewSet(viewsets.ViewSet):
     """
     Base class for all enterprise catalog view sets.
     """
-    authentication_classes = [JwtAuthentication, SessionAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
+    # authentication_classes = [JwtAuthentication, SessionAuthentication]
+    # permission_classes = [permissions.IsAuthenticated]

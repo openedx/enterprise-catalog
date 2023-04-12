@@ -6,7 +6,7 @@ from edx_rbac.utils import get_decoded_jwt
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.response import Response
-from rest_framework.status import HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
 from enterprise_catalog.apps.api.v1.decorators import (
     require_at_least_one_query_parameter,
@@ -14,7 +14,7 @@ from enterprise_catalog.apps.api.v1.decorators import (
 from enterprise_catalog.apps.api.v1.serializers import ContentMetadataSerializer
 from enterprise_catalog.apps.api.v1.utils import unquote_course_keys
 from enterprise_catalog.apps.api.v1.views.base import BaseViewSet
-from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
+from enterprise_catalog.apps.catalog.models import CatalogQuery, EnterpriseCatalog
 
 
 logger = logging.getLogger(__name__)
@@ -40,9 +40,12 @@ class EnterpriseCustomerViewSet(BaseViewSet):
         PermissionDenied errors.
         See https://openedx.atlassian.net/browse/ENT-4885
         """
+        print("?????? AYYLMAO ??????")
+        print(request.user)
         try:
             super().check_permissions(request)
         except PermissionDenied:
+            print("sadge")
             decoded_jwt = get_decoded_jwt(request)
             message = (
                 'PermissionDenied for user_id (from JWT) %s and EnterpriseCustomer %s in '
@@ -187,3 +190,32 @@ class EnterpriseCustomerViewSet(BaseViewSet):
         """
         serializer = self.get_metadata_item_serializer()
         return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def post_new_catalog(self, customer_uuid, **kwargs):
+        """
+        Placeholder
+        """
+        print(self.request.data)
+
+        if not self.request.data:
+            return Response('need query', status=HTTP_400_BAD_REQUEST)
+
+        catalog_query, _ = CatalogQuery.objects.get_or_create(
+            content_filter=self.request.data,
+            # title=f'hackathon query tool generated query {len(CatalogQuery.objects.all())}',
+            include_exec_ed_2u_courses=True,
+        )
+        catalog_query.title = f'hackathon query tool generated query {len(CatalogQuery.objects.all())}'
+        catalog_query.save()
+
+        if kwargs.get('enterprise_uuid') != 'undefined':
+            catalog, _ = EnterpriseCatalog.objects.get_or_create(
+                enterprise_uuid=kwargs.get('enterprise_uuid'),
+            )
+            catalog.catalog_query = catalog_query
+            catalog.save()
+        else:
+            print("no uuid :(")
+
+        return Response({'data': 'success'}, status=HTTP_200_OK)
