@@ -76,7 +76,7 @@ coreschema==0.0.4
     #   -r requirements/base.txt
     #   coreapi
     #   drf-yasg
-cryptography==40.0.1
+cryptography==40.0.2
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -165,14 +165,14 @@ edx-celeryutils==1.2.2
     # via -r requirements/base.txt
 edx-django-release-util==1.2.0
     # via -r requirements/base.txt
-edx-django-utils==5.3.0
+edx-django-utils==5.4.0
     # via
     #   -r requirements/base.txt
     #   django-config-models
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==8.4.1
+edx-drf-extensions==8.6.0
     # via
     #   -r requirements/base.txt
     #   edx-rbac
@@ -242,7 +242,7 @@ oauthlib==3.2.2
     #   -r requirements/base.txt
     #   requests-oauthlib
     #   social-auth-core
-packaging==23.0
+packaging==23.1
     # via
     #   -r requirements/base.txt
     #   drf-yasg
@@ -410,7 +410,7 @@ wcwidth==0.2.6
     # via
     #   -r requirements/base.txt
     #   prompt-toolkit
-xlsxwriter==3.0.9
+xlsxwriter==3.1.0
     # via -r requirements/base.txt
 zipp==1.2.0
     # via -r requirements/base.txt
