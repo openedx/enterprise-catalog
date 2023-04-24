@@ -92,7 +92,7 @@ coverage[toml]==7.2.3
     # via
     #   -r requirements/test.in
     #   pytest-cov
-cryptography==40.0.1
+cryptography==40.0.2
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -192,14 +192,14 @@ edx-celeryutils==1.2.2
     # via -r requirements/base.txt
 edx-django-release-util==1.2.0
     # via -r requirements/base.txt
-edx-django-utils==5.3.0
+edx-django-utils==5.4.0
     # via
     #   -r requirements/base.txt
     #   django-config-models
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==8.4.1
+edx-drf-extensions==8.7.0
     # via
     #   -r requirements/base.txt
     #   edx-rbac
@@ -223,7 +223,7 @@ factory-boy==3.2.1
     # via -r requirements/test.in
 faker==18.4.0
     # via factory-boy
-filelock==3.11.0
+filelock==3.12.0
     # via
     #   tox
     #   virtualenv
@@ -285,7 +285,7 @@ oauthlib==3.2.2
     #   -r requirements/base.txt
     #   requests-oauthlib
     #   social-auth-core
-packaging==23.0
+packaging==23.1
     # via
     #   -r requirements/base.txt
     #   drf-yasg
@@ -311,7 +311,7 @@ prompt-toolkit==3.0.38
     # via
     #   -r requirements/base.txt
     #   click-repl
-psutil==5.9.4
+psutil==5.9.5
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -360,7 +360,7 @@ pynacl==1.5.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
-pytest==7.3.0
+pytest==7.3.1
     # via
     #   pytest-cov
     #   pytest-django
@@ -453,12 +453,12 @@ social-auth-app-django==5.2.0
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends
-social-auth-core==4.4.1
+social-auth-core==4.4.2
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends
     #   social-auth-app-django
-sqlparse==0.4.3
+sqlparse==0.4.4
     # via
     #   -r requirements/base.txt
     #   django
@@ -506,7 +506,7 @@ vine==5.0.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.21.0
+virtualenv==20.22.0
     # via tox
 wcwidth==0.2.6
     # via
@@ -514,7 +514,7 @@ wcwidth==0.2.6
     #   prompt-toolkit
 wrapt==1.15.0
     # via astroid
-xlsxwriter==3.0.9
+xlsxwriter==3.1.0
     # via -r requirements/base.txt
 zipp==1.2.0
     # via -r requirements/base.txt
