@@ -320,7 +320,7 @@ pyyaml==5.4.1
     #   edx-django-release-util
 redis==3.5.3
     # via -r requirements/base.txt
-requests==2.28.2
+requests==2.29.0
     # via
     #   -r requirements/base.txt
     #   algoliasearch
