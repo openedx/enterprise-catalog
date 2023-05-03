@@ -40,6 +40,7 @@ from enterprise_catalog.apps.catalog.constants import (
 )
 from enterprise_catalog.apps.catalog.utils import (
     batch,
+    enterprise_proxy_login_url,
     get_content_filter_hash,
     get_content_key,
     get_content_type,
@@ -403,6 +404,12 @@ class EnterpriseCatalog(TimeStampedModel):
                 LOGGER.warning(warning, content_metadata.content_key, self.uuid)
                 return None
             params['sku'] = entitlement_sku
+            exec_ed_enrollment_url = update_query_parameters(url, params)
+            enterprise_proxy_exec_ed_enrollment_url = enterprise_proxy_login_url(
+                self.enterprise_customer.slug,
+                next_url=exec_ed_enrollment_url
+            )
+            return enterprise_proxy_exec_ed_enrollment_url
         elif self._can_enroll_via_learner_portal(content_key):
             course_key = content_key
             if parent_content_key:

@@ -38,6 +38,7 @@ from enterprise_catalog.apps.catalog.tests.factories import (
     EnterpriseCatalogFactory,
 )
 from enterprise_catalog.apps.catalog.utils import (
+    enterprise_proxy_login_url,
     get_content_key,
     get_parent_content_key,
     localized_utcnow,
@@ -1112,7 +1113,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         """
         return reverse('api:v1:get-content-metadata', kwargs={'uuid': enterprise_catalog.uuid})
 
-    def _get_expected_json_metadata(self, content_metadata, learner_portal_enabled):
+    def _get_expected_json_metadata(self, content_metadata, learner_portal_enabled):  # pylint: disable=too-many-statements
         """
         Helper to get the expected json_metadata from the passed in content_metadata instance
         """
@@ -1122,11 +1123,12 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         json_metadata['content_last_modified'] = content_metadata.modified.isoformat()[:-6] + 'Z'
         if content_metadata.is_exec_ed_2u_course:
             if sku := json_metadata.get('entitlements', [{}])[0].get('sku'):
-                enrollment_url = '{}/executive-education-2u/checkout?sku={}&utm_medium=enterprise&utm_source={}'.format(
-                    settings.ECOMMERCE_BASE_URL,
-                    sku,
-                    slugify(self.enterprise_catalog.enterprise_name),
+                exec_ed_enrollment_url = (
+                    f"{settings.ECOMMERCE_BASE_URL}/executive-education-2u/checkout"
+                    f"?sku={sku}"
+                    f"&utm_medium=enterprise&utm_source={slugify(self.enterprise_catalog.enterprise_name)}"
                 )
+                enrollment_url = enterprise_proxy_login_url(self.enterprise_slug, next_url=exec_ed_enrollment_url)
         elif learner_portal_enabled and content_type in (COURSE, COURSE_RUN):
             enrollment_url = '{}/{}/course/{}?{}utm_medium=enterprise&utm_source={}'
         else:
