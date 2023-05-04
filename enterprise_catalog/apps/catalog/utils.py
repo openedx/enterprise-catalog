@@ -5,7 +5,9 @@ import hashlib
 import json
 from datetime import datetime
 from logging import getLogger
+from urllib.parse import urljoin
 
+from django.conf import settings
 from edx_rbac.utils import feature_roles_from_jwt
 from edx_rest_framework_extensions.auth.jwt.authentication import (
     get_decoded_jwt_from_auth,
@@ -105,3 +107,10 @@ def batch(iterable, batch_size=1):
 def localized_utcnow():
     """Helper function to return localized utcnow()."""
     return UTC.localize(datetime.utcnow())  # pylint: disable=no-value-for-parameter
+
+
+def enterprise_proxy_login_url(slug, next_url=None):
+    url = urljoin(settings.LMS_BASE_URL, f'/enterprise/proxy-login/?enterprise_slug={slug}')
+    if next_url:
+        url += f'&next={next_url}'
+    return url

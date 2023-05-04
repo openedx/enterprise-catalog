@@ -414,10 +414,17 @@ class TestModels(TestCase):
             else:
                 assert settings.LMS_BASE_URL in content_enrollment_url
 
-    def test_enrollment_url_exec_ed(self):
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.LicenseManagerApiClient')
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EcommerceApiClient')
+    def test_enrollment_url_exec_ed(
+        self, ecommerce_api_client, license_manager_api_client, mock_enterprise_api_client
+    ):
         """
         Test that a correct enrollment URL is returned for exec ed. 2U courses.
         """
+        license_manager_api_client.get_customer_agreement.return_value = None
+        ecommerce_api_client.get_coupons_overview.return_value = []
         enterprise_catalog = factories.EnterpriseCatalogFactory()
         content_metadata = factories.ContentMetadataFactory(
             content_key='the-content-key',
@@ -432,8 +439,15 @@ class TestModels(TestCase):
         })
         enterprise_catalog.catalog_query.contentmetadata_set.add(*[content_metadata])
         enterprise_catalog.catalog_query.include_exec_ed_2u_courses = True
+        enterprise_slug = 'sluggy'
+        mock_enterprise_customer_return_value = {
+            'slug': enterprise_slug
+        }
+        mock_enterprise_api_client.return_value.get_enterprise_customer.return_value =\
+            mock_enterprise_customer_return_value
         actual_enrollment_url = enterprise_catalog.get_content_enrollment_url(content_metadata)
         assert 'happy-little-sku' in actual_enrollment_url
+        assert 'proxy-login' in actual_enrollment_url
 
     @ddt.data(
         {'content_type': COURSE, 'course_type': EXEC_ED_2U_COURSE_TYPE, 'course_mode': 'honor',
