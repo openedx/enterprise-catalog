@@ -48,6 +48,9 @@ from enterprise_catalog.apps.catalog.utils import (
     get_parent_content_key,
     localized_utcnow,
 )
+from enterprise_catalog.apps.catalog.waffle import (
+    use_learner_portal_for_all_subsidies_content_types,
+)
 
 
 LOGGER = getLogger(__name__)
@@ -395,22 +398,37 @@ class EnterpriseCatalog(TimeStampedModel):
         if self.publish_audit_enrollment_urls:
             params['audit'] = 'true'
 
+        use_learner_portal_for_all = use_learner_portal_for_all_subsidies_content_types()
+        can_enroll_with_learner_portal = self._can_enroll_via_learner_portal(
+            content_key,
+            is_learner_portal_enabled_for_all_subsidies_content_types=use_learner_portal_for_all
+        )
+
         if content_metadata.is_exec_ed_2u_course:
             if not self.catalog_query.include_exec_ed_2u_courses:
                 return None
-            url, entitlement_sku = self._get_exec_ed_2u_enrollment_url(content_metadata)
-            if not entitlement_sku:
+
+            exec_ed_enroll_url, exec_ed_entitlement_sku = self._get_exec_ed_2u_enrollment_url(
+                content_metadata,
+                enterprise_slug=self.enterprise_customer.slug,
+                use_learner_portal=(can_enroll_with_learner_portal
+                                    and use_learner_portal_for_all),
+            )
+            if can_enroll_with_learner_portal and use_learner_portal_for_all:
+                return update_query_parameters(exec_ed_enroll_url, params)
+
+            if not exec_ed_entitlement_sku:
                 warning = 'No sku found for exec ed 2u course: %s in catalog %s'
                 LOGGER.warning(warning, content_metadata.content_key, self.uuid)
                 return None
-            params['sku'] = entitlement_sku
-            exec_ed_enrollment_url = update_query_parameters(url, params)
-            enterprise_proxy_exec_ed_enrollment_url = enterprise_proxy_login_url(
+
+            params['sku'] = exec_ed_entitlement_sku
+            exec_ed_proxy_login_enrollment_url = enterprise_proxy_login_url(
                 self.enterprise_customer.slug,
-                next_url=exec_ed_enrollment_url
+                next_url=update_query_parameters(exec_ed_enroll_url, params)
             )
-            return enterprise_proxy_exec_ed_enrollment_url
-        elif self._can_enroll_via_learner_portal(content_key):
+            return exec_ed_proxy_login_enrollment_url
+        elif can_enroll_with_learner_portal:
             course_key = content_key
             if parent_content_key:
                 # If parent_content_key is truthy, we know this is a course run.
@@ -436,36 +454,64 @@ class EnterpriseCatalog(TimeStampedModel):
 
         return update_query_parameters(url, params)
 
-    def _get_exec_ed_2u_enrollment_url(self, content_metadata):
+    def _get_exec_ed_2u_enrollment_url(self, content_metadata, enterprise_slug, use_learner_portal):
         entitlement_sku = None
         for entitlement in content_metadata.json_metadata.get('entitlements', []):
             if entitlement['mode'] == EXEC_ED_2U_ENTITLEMENT_MODE:
                 entitlement_sku = entitlement.get('sku')
+
+        if use_learner_portal:
+            return (
+                f"{settings.ENTERPRISE_LEARNER_PORTAL_BASE_URL}/{enterprise_slug}/"
+                f"executive-education-2u/course/{content_metadata.content_key}",
+                None
+            )
+
         return (
-            '{}/executive-education-2u/checkout'.format(settings.ECOMMERCE_BASE_URL),
+            f"{settings.ECOMMERCE_BASE_URL}/executive-education-2u/checkout",
             entitlement_sku,
         )
 
-    def _can_enroll_via_learner_portal(self, content_key):
+    def _can_enroll_via_learner_portal(self, content_key, is_learner_portal_enabled_for_all_subsidies_content_types):
         """
-        These changes are temporary until offers are implemented in the learner portal.
-        See ENT-5968
+        Check whether the enterprise customer has the learner portal enabled. Note that enterprise
+        offers were previously only partially supported by the learner portal (i.e., it did not
+        support per-learner spend or enrollment limits). As a result, we had to avoid the learner
+        portal as an enrollment url for enterprise customers who had the learner portal enabled
+        for other subsidy types like a subscription but with at least one enterprise offer with a
+        per-learner limit.
+
+        Now, the learner portal does support all enterprise offer configurations so we no longer
+        need to check against the specific enterprise customer exclusion list via the setting
+        `INTEGRATED_CUSTOMERS_WITH_SUBSIDIES_AND_OFFERS`. To bypass the existing behavior during
+        this transition, the `use_learner_portal_for_all_subsidies_content_types` kwarg may be set
+        to True (e.g., based on a Waffle flag).
+
+        If `use_learner_portal_for_all_subsidies_content_types` is False, falls back to existing behavior
+        of checking whether the enterprise customer is in `INTEGRATED_CUSTOMERS_WITH_SUBSIDIES_AND_OFFERS`
+        settings list and, if so, check if the enterprise customer has any non-offer related catalogs (e.g.,
+        subscription license) containing the specified content key, in which case the learner portal is
+        supported.
         """
         if not self.enterprise_customer.learner_portal_enabled:
             return False
 
-        is_integrated_customer_with_subsidies_and_offers = (
+        # If the waffle flag is active, we want to allow enrollment via the learner portal.
+        if is_learner_portal_enabled_for_all_subsidies_content_types:
+            return True
+
+        # Otherwise, the waffle flag is inactive; fall back to current state where we check
+        # against `settings.INTEGRATED_CUSTOMERS_WITH_SUBSIDIES_AND_OFFERS`.
+        is_integrated_customer_with_offer_and_nonoffer_subsidies = (
             str(self.enterprise_uuid) in
             settings.INTEGRATED_CUSTOMERS_WITH_SUBSIDIES_AND_OFFERS
         )
-        if not is_integrated_customer_with_subsidies_and_offers:
+        if not is_integrated_customer_with_offer_and_nonoffer_subsidies:
             return True
 
         # Customers in the special `INTEGRATED_CUSTOMERS_WITH_SUBSIDIES_AND_OFFERS` list
         # must have the content_key contained in an active catalog for this method to return True.
-        active_catalogs = EnterpriseCatalog.objects.filter(
-            uuid__in=self.enterprise_customer.active_catalogs
-        )
+        active_catalogs = EnterpriseCatalog.objects.filter(uuid__in=self.enterprise_customer.active_catalogs)
         for catalog in active_catalogs:
             contains_content_items = catalog.contains_content_keys([content_key])
             if contains_content_items:

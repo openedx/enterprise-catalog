@@ -9,6 +9,7 @@ from uuid import uuid4
 import ddt
 from django.conf import settings
 from django.test import TestCase, override_settings
+from edx_toggles.toggles.testutils import override_waffle_flag
 
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
@@ -22,6 +23,9 @@ from enterprise_catalog.apps.catalog.models import (
     update_contentmetadata_from_discovery,
 )
 from enterprise_catalog.apps.catalog.tests import factories
+from enterprise_catalog.apps.catalog.waffle import (
+    LEARNER_PORTAL_ENROLLMENT_ALL_SUBSIDIES_AND_CONTENT_TYPES_FLAG,
+)
 
 
 @ddt.ddt
@@ -319,9 +323,9 @@ class TestModels(TestCase):
     @contextmanager
     def _mock_enterprise_customer_cache(
         self,
-        mock_enterprise_customer_return_value,
-        mock_customer_agreement_return_value,
-        mock_coupon_overview_return_value,
+        mock_enterprise_customer_return_value=None,
+        mock_customer_agreement_return_value=None,
+        mock_coupon_overview_return_value=None,
     ):
         """
         Helper to mock out all API client calls that would normally occur
@@ -417,8 +421,37 @@ class TestModels(TestCase):
     @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
     @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.LicenseManagerApiClient')
     @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EcommerceApiClient')
+    @ddt.data(
+        {
+            'is_learner_portal_enabled': True,
+            'is_learner_portal_waffle_flag_enabled': False,
+            'should_expect_learner_portal_url': False,
+        },
+        {
+            'is_learner_portal_enabled': True,
+            'is_learner_portal_waffle_flag_enabled': True,
+            'should_expect_learner_portal_url': True,
+        },
+        {
+            'is_learner_portal_enabled': False,
+            'is_learner_portal_waffle_flag_enabled': True,
+            'should_expect_learner_portal_url': False,
+        },
+        {
+            'is_learner_portal_enabled': False,
+            'is_learner_portal_waffle_flag_enabled': False,
+            'should_expect_learner_portal_url': False,
+        },
+    )
+    @ddt.unpack
     def test_enrollment_url_exec_ed(
-        self, ecommerce_api_client, license_manager_api_client, mock_enterprise_api_client
+        self,
+        ecommerce_api_client,
+        license_manager_api_client,
+        mock_enterprise_api_client,
+        is_learner_portal_enabled,
+        is_learner_portal_waffle_flag_enabled,
+        should_expect_learner_portal_url,
     ):
         """
         Test that a correct enrollment URL is returned for exec ed. 2U courses.
@@ -441,14 +474,27 @@ class TestModels(TestCase):
         enterprise_catalog.catalog_query.include_exec_ed_2u_courses = True
         enterprise_slug = 'sluggy'
         mock_enterprise_customer_return_value = {
-            'slug': enterprise_slug
+            'slug': enterprise_slug,
+            'enable_learner_portal': is_learner_portal_enabled,
         }
         mock_enterprise_api_client.return_value.get_enterprise_customer.return_value =\
             mock_enterprise_customer_return_value
-        actual_enrollment_url = enterprise_catalog.get_content_enrollment_url(content_metadata)
-        assert 'happy-little-sku' in actual_enrollment_url
-        assert 'proxy-login' in actual_enrollment_url
 
+        with override_waffle_flag(
+            LEARNER_PORTAL_ENROLLMENT_ALL_SUBSIDIES_AND_CONTENT_TYPES_FLAG,
+            active=is_learner_portal_waffle_flag_enabled,
+        ):
+            actual_enrollment_url = enterprise_catalog.get_content_enrollment_url(content_metadata)
+
+        if should_expect_learner_portal_url:
+            assert settings.ENTERPRISE_LEARNER_PORTAL_BASE_URL in actual_enrollment_url
+        else:
+            assert 'happy-little-sku' in actual_enrollment_url
+            assert 'proxy-login' in actual_enrollment_url
+
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.LicenseManagerApiClient')
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EcommerceApiClient')
     @ddt.data(
         {'content_type': COURSE, 'course_type': EXEC_ED_2U_COURSE_TYPE, 'course_mode': 'honor',
          'sku': None, 'query_includes_ee_courses': True},
@@ -461,7 +507,15 @@ class TestModels(TestCase):
     )
     @ddt.unpack
     def test_enrollment_url_exec_ed_is_null(
-        self, content_type, course_type, course_mode, sku, query_includes_ee_courses
+        self,
+        ecommerce_api_client,
+        license_manager_api_client,
+        mock_enterprise_api_client,
+        content_type,
+        course_type,
+        course_mode,
+        sku,
+        query_includes_ee_courses
     ):
         """
         Tests for all scenarios when a null value should be
@@ -470,6 +524,15 @@ class TestModels(TestCase):
         because the content_type is always "course" and the course_type is always
         the exec ed 2U course type.
         """
+        license_manager_api_client.get_customer_agreement.return_value = None
+        ecommerce_api_client.get_coupons_overview.return_value = []
+        enterprise_slug = 'sluggy'
+        mock_enterprise_customer_return_value = {
+            'slug': enterprise_slug,
+        }
+        mock_enterprise_api_client.return_value.get_enterprise_customer.return_value =\
+            mock_enterprise_customer_return_value
+
         enterprise_catalog = factories.EnterpriseCatalogFactory()
         content_metadata = factories.ContentMetadataFactory(
             content_key='the-content-key',
