@@ -55,7 +55,7 @@ class EnterpriseCustomerDetails:
     @property
     def active_catalogs(self):
         """
-        Return catalogs associated with active subisides for the enterprise customer.
+        Return catalogs associated with active coupon code and subscription catalogs for the enterprise customer.
         """
         catalogs = self.customer_data.get('coupons_catalogs', []) + self.customer_data.get('subscriptions_catalogs', [])
         return list(set(catalogs))

@@ -11,6 +11,7 @@ import pytz
 from django.conf import settings
 from django.db import IntegrityError
 from django.utils.text import slugify
+from edx_toggles.toggles.testutils import override_waffle_flag
 from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.settings import api_settings
@@ -42,6 +43,9 @@ from enterprise_catalog.apps.catalog.utils import (
     get_content_key,
     get_parent_content_key,
     localized_utcnow,
+)
+from enterprise_catalog.apps.catalog.waffle import (
+    LEARNER_PORTAL_ENROLLMENT_ALL_SUBSIDIES_AND_CONTENT_TYPES_FLAG,
 )
 
 
@@ -1113,7 +1117,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         """
         return reverse('api:v1:get-content-metadata', kwargs={'uuid': enterprise_catalog.uuid})
 
-    def _get_expected_json_metadata(self, content_metadata, learner_portal_enabled):  # pylint: disable=too-many-statements
+    def _get_expected_json_metadata(self, content_metadata, is_learner_portal_enabled):  # pylint: disable=too-many-statements
         """
         Helper to get the expected json_metadata from the passed in content_metadata instance
         """
@@ -1121,7 +1125,9 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         json_metadata = content_metadata.json_metadata.copy()
 
         json_metadata['content_last_modified'] = content_metadata.modified.isoformat()[:-6] + 'Z'
-        if content_metadata.is_exec_ed_2u_course:
+        if content_metadata.is_exec_ed_2u_course and is_learner_portal_enabled:
+            enrollment_url = '{}/{}/executive-education-2u/course/{}?{}utm_medium=enterprise&utm_source={}'
+        elif content_metadata.is_exec_ed_2u_course:
             if sku := json_metadata.get('entitlements', [{}])[0].get('sku'):
                 exec_ed_enrollment_url = (
                     f"{settings.ECOMMERCE_BASE_URL}/executive-education-2u/checkout"
@@ -1129,7 +1135,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
                     f"&utm_medium=enterprise&utm_source={slugify(self.enterprise_catalog.enterprise_name)}"
                 )
                 enrollment_url = enterprise_proxy_login_url(self.enterprise_slug, next_url=exec_ed_enrollment_url)
-        elif learner_portal_enabled and content_type in (COURSE, COURSE_RUN):
+        elif is_learner_portal_enabled and content_type in (COURSE, COURSE_RUN):
             enrollment_url = '{}/{}/course/{}?{}utm_medium=enterprise&utm_source={}'
         else:
             enrollment_url = '{}/enterprise/{}/{}/{}/enroll/?catalog={}&utm_medium=enterprise&utm_source={}'
@@ -1156,7 +1162,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         if content_type == COURSE:
             course_key = json_metadata.get('key')
             course_runs = json_metadata.get('course_runs') or []
-            if learner_portal_enabled:
+            if is_learner_portal_enabled:
                 course_enrollment_url = enrollment_url.format(
                     settings.ENTERPRISE_LEARNER_PORTAL_BASE_URL,
                     self.enterprise_slug,
@@ -1204,7 +1210,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
 
         # course run
         if content_type == COURSE_RUN:
-            if learner_portal_enabled:
+            if is_learner_portal_enabled:
                 course_key = content_metadata.parent_content_key or get_parent_content_key(json_metadata)
                 course_run_key = quote_plus(json_metadata.get('key'))
                 course_run_key_param = f'course_run_key={course_run_key}&'
@@ -1429,7 +1435,11 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         False,
         True
     )
-    def test_get_content_metadata_no_nested_enrollment_urls_exec_ed_2u(self, learner_portal_enabled, mock_api_client):
+    def test_get_content_metadata_no_nested_enrollment_urls_exec_ed_2u(
+        self,
+        is_learner_portal_enabled,
+        mock_api_client
+    ):
         """
         Verify the get_content_metadata endpoint returns
         all the metadata associated with a particular catalog, and that
@@ -1437,7 +1447,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         """
         mock_api_client.return_value.get_enterprise_customer.return_value = {
             'slug': self.enterprise_slug,
-            'enable_learner_portal': learner_portal_enabled,
+            'enable_learner_portal': is_learner_portal_enabled,
             'modified': str(datetime.now().replace(tzinfo=pytz.UTC)),
         }
         # Create enough metadata to force pagination
@@ -1461,7 +1471,11 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         metadata = course_runs + [course]
         self.add_metadata_to_catalog(self.enterprise_catalog, metadata)
 
-        response = self.client.get(self._get_content_metadata_url(self.enterprise_catalog))
+        with override_waffle_flag(
+            LEARNER_PORTAL_ENROLLMENT_ALL_SUBSIDIES_AND_CONTENT_TYPES_FLAG,
+            active=is_learner_portal_enabled,
+        ):
+            response = self.client.get(self._get_content_metadata_url(self.enterprise_catalog))
 
         self.maxDiff = None
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1469,12 +1483,13 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         response_data = response.json()
         expected_metadata = sorted(
             [
-                self._get_expected_json_metadata(item, learner_portal_enabled)
+                self._get_expected_json_metadata(item, is_learner_portal_enabled)
                 for item in metadata
             ],
             key=get_content_key,
         )
         actual_metadata = sorted(response_data['results'], key=get_content_key)
+
         self.assertEqual(
             json.dumps(actual_metadata, sort_keys=True),
             json.dumps(expected_metadata, sort_keys=True),
