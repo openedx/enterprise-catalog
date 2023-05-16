@@ -461,7 +461,7 @@ class EnterpriseCatalog(TimeStampedModel):
                 f"executive-education-2u/course/{content_metadata.content_key}",
                 None
             )
-        
+
         entitlement_sku = None
         for entitlement in content_metadata.json_metadata.get('entitlements', []):
             if entitlement['mode'] == EXEC_ED_2U_ENTITLEMENT_MODE:
