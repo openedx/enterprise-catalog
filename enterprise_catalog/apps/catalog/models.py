@@ -455,17 +455,17 @@ class EnterpriseCatalog(TimeStampedModel):
         return update_query_parameters(url, params)
 
     def _get_exec_ed_2u_enrollment_url(self, content_metadata, enterprise_slug, use_learner_portal):
-        entitlement_sku = None
-        for entitlement in content_metadata.json_metadata.get('entitlements', []):
-            if entitlement['mode'] == EXEC_ED_2U_ENTITLEMENT_MODE:
-                entitlement_sku = entitlement.get('sku')
-
         if use_learner_portal:
             return (
                 f"{settings.ENTERPRISE_LEARNER_PORTAL_BASE_URL}/{enterprise_slug}/"
                 f"executive-education-2u/course/{content_metadata.content_key}",
                 None
             )
+        
+        entitlement_sku = None
+        for entitlement in content_metadata.json_metadata.get('entitlements', []):
+            if entitlement['mode'] == EXEC_ED_2U_ENTITLEMENT_MODE:
+                entitlement_sku = entitlement.get('sku')
 
         return (
             f"{settings.ECOMMERCE_BASE_URL}/executive-education-2u/checkout",

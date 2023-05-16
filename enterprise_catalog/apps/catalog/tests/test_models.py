@@ -349,24 +349,35 @@ class TestModels(TestCase):
             'is_course_in_subscriptions_catalog': True,
             'is_course_in_coupons_catalog': True,
             'should_direct_to_lp': True,
+            'has_learner_portal_enrollment_flag_enabled': False,
         },
         {
             'is_integrated_customer_with_subsidies_and_offer': True,
             'is_course_in_subscriptions_catalog': False,
             'is_course_in_coupons_catalog': False,
             'should_direct_to_lp': False,
+            'has_learner_portal_enrollment_flag_enabled': False,
+        },
+        {
+            'is_integrated_customer_with_subsidies_and_offer': True,
+            'is_course_in_subscriptions_catalog': False,
+            'is_course_in_coupons_catalog': False,
+            'should_direct_to_lp': True,
+            'has_learner_portal_enrollment_flag_enabled': True,
         },
         {
             'is_integrated_customer_with_subsidies_and_offer': True,
             'is_course_in_subscriptions_catalog': True,
             'is_course_in_coupons_catalog': False,
             'should_direct_to_lp': True,
+            'has_learner_portal_enrollment_flag_enabled': False,
         },
         {
             'is_integrated_customer_with_subsidies_and_offer': True,
             'is_course_in_subscriptions_catalog': False,
             'is_course_in_coupons_catalog': True,
             'should_direct_to_lp': True,
+            'has_learner_portal_enrollment_flag_enabled': False,
         }
     )
     @ddt.unpack
@@ -375,7 +386,8 @@ class TestModels(TestCase):
         is_integrated_customer_with_subsidies_and_offer,
         is_course_in_subscriptions_catalog,
         is_course_in_coupons_catalog,
-        should_direct_to_lp
+        should_direct_to_lp,
+        has_learner_portal_enrollment_flag_enabled,
     ):
         enterprise_uuid = uuid4()
         enterprise_slug = 'sluggy'
@@ -387,6 +399,9 @@ class TestModels(TestCase):
 
         with self.settings(
             INTEGRATED_CUSTOMERS_WITH_SUBSIDIES_AND_OFFERS=INTEGRATED_CUSTOMERS_WITH_SUBSIDIES_AND_OFFERS
+        ), override_waffle_flag(
+            LEARNER_PORTAL_ENROLLMENT_ALL_SUBSIDIES_AND_CONTENT_TYPES_FLAG,
+            active=has_learner_portal_enrollment_flag_enabled
         ):
             enterprise_catalog = factories.EnterpriseCatalogFactory(enterprise_uuid=enterprise_uuid)
             content_metadata = factories.ContentMetadataFactory(
