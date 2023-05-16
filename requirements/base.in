@@ -34,3 +34,4 @@ zipp<2.0
 algoliasearch
 social-auth-app-django
 xlsxwriter
+django-clearcache

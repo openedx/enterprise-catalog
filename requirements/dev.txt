@@ -165,6 +165,7 @@ django==3.2.19
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   django-celery-results
+    #   django-clearcache
     #   django-config-models
     #   django-cors-headers
     #   django-crum
@@ -190,6 +191,10 @@ django-celery-results==2.5.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+django-clearcache==1.2.1
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
 django-config-models==2.3.0
     # via
     #   -r requirements/quality.txt
@@ -205,7 +210,7 @@ django-crum==0.7.9
     #   edx-django-utils
     #   edx-rbac
     #   edx-toggles
-django-debug-toolbar==4.0.0
+django-debug-toolbar==4.1.0
     # via -r requirements/dev.in
 django-dynamic-fixture==3.1.2
     # via -r requirements/test.txt
@@ -311,7 +316,7 @@ edx-rbac==1.7.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-edx-rest-api-client==5.5.0
+edx-rest-api-client==5.5.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -536,7 +541,7 @@ pylint-django==2.5.3
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-lint
-pylint-plugin-utils==0.7
+pylint-plugin-utils==0.8.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -699,7 +704,7 @@ sqlparse==0.4.4
     #   -r requirements/test.txt
     #   django
     #   django-debug-toolbar
-stevedore==5.0.0
+stevedore==5.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
