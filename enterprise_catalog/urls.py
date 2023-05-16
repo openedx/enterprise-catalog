@@ -35,6 +35,7 @@ api_info = make_api_info(
 urlpatterns = [
     path('', include(oauth2_urlpatterns)),
     path('', include('csrf.urls')),  # Include csrf urls from edx-drf-extensions
+    path('admin/clearcache/', include('clearcache.urls')),
     path('admin/', admin.site.urls),
     path('api/', include(api_urls), name='api'),
     # Use the same auth views for all logins, including those originating from the browseable API.

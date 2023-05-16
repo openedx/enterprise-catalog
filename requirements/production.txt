@@ -91,6 +91,7 @@ django==3.2.19
     # via
     #   -r requirements/base.txt
     #   django-celery-results
+    #   django-clearcache
     #   django-config-models
     #   django-cors-headers
     #   django-crum
@@ -111,6 +112,8 @@ django==3.2.19
     #   jsonfield2
     #   social-auth-app-django
 django-celery-results==2.5.1
+    # via -r requirements/base.txt
+django-clearcache==1.2.1
     # via -r requirements/base.txt
 django-config-models==2.3.0
     # via -r requirements/base.txt
@@ -182,7 +185,7 @@ edx-opaque-keys==2.3.0
     #   edx-drf-extensions
 edx-rbac==1.7.0
     # via -r requirements/base.txt
-edx-rest-api-client==5.5.0
+edx-rest-api-client==5.5.1
     # via -r requirements/base.txt
 edx-toggles==5.0.0
     # via -r requirements/base.txt
@@ -381,7 +384,7 @@ sqlparse==0.4.4
     # via
     #   -r requirements/base.txt
     #   django
-stevedore==5.0.0
+stevedore==5.1.0
     # via
     #   -r requirements/base.txt
     #   code-annotations
