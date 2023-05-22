@@ -149,13 +149,14 @@ edx-django-utils==5.4.0
     #   edx-toggles
 edx-drf-extensions==8.7.0
     # via
+    #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -r requirements/base.in
     #   edx-rbac
 edx-opaque-keys==2.3.0
     # via edx-drf-extensions
 edx-rbac==1.7.0
     # via -r requirements/base.in
-edx-rest-api-client==5.5.1
+edx-rest-api-client==5.5.2
     # via -r requirements/base.in
 edx-toggles==5.0.0
     # via -r requirements/base.in
@@ -201,7 +202,7 @@ psutil==5.9.5
     # via edx-django-utils
 pycparser==2.21
     # via cffi
-pycryptodomex==3.17
+pycryptodomex==3.18.0
     # via pyjwkest
 pyjwkest==1.4.2
     # via edx-drf-extensions
@@ -305,7 +306,7 @@ vine==5.0.0
     #   kombu
 wcwidth==0.2.6
     # via prompt-toolkit
-xlsxwriter==3.1.0
+xlsxwriter==3.1.1
     # via -r requirements/base.in
 zipp==1.2.0
     # via -r requirements/base.in
