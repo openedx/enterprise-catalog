@@ -204,6 +204,7 @@ edx-django-utils==5.4.0
     #   edx-toggles
 edx-drf-extensions==8.7.0
     # via
+    #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -r requirements/base.txt
     #   edx-rbac
 edx-lint==5.2.5
@@ -216,7 +217,7 @@ edx-opaque-keys==2.3.0
     #   edx-drf-extensions
 edx-rbac==1.7.0
     # via -r requirements/base.txt
-edx-rest-api-client==5.5.1
+edx-rest-api-client==5.5.2
     # via -r requirements/base.txt
 edx-toggles==5.0.0
     # via -r requirements/base.txt
@@ -224,7 +225,7 @@ exceptiongroup==1.1.1
     # via pytest
 factory-boy==3.2.1
     # via -r requirements/test.in
-faker==18.7.0
+faker==18.9.0
     # via factory-boy
 filelock==3.12.0
     # via
@@ -324,7 +325,7 @@ pycparser==2.21
     # via
     #   -r requirements/base.txt
     #   cffi
-pycryptodomex==3.17
+pycryptodomex==3.18.0
     # via
     #   -r requirements/base.txt
     #   pyjwkest
@@ -351,7 +352,7 @@ pylint-celery==0.3
     # via edx-lint
 pylint-django==2.5.3
     # via edx-lint
-pylint-plugin-utils==0.8.1
+pylint-plugin-utils==0.8.2
     # via
     #   pylint-celery
     #   pylint-django
@@ -517,7 +518,7 @@ wcwidth==0.2.6
     #   prompt-toolkit
 wrapt==1.15.0
     # via astroid
-xlsxwriter==3.1.0
+xlsxwriter==3.1.1
     # via -r requirements/base.txt
 zipp==1.2.0
     # via -r requirements/base.txt
