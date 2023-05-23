@@ -620,6 +620,7 @@ class EnterpriseCatalogCsvDataViewTests(APITestMixin):
         'language': 'English',
         'level_type': 'Intermediate',
         'content_type': 'course',
+        'enterprise_catalog_query_titles': ['A la carte', 'Business', 'DemoX'],
         'partners': [
             {'name': 'Massachusetts Institute of Technology',
              'logo_image_url': 'https://edx.org/image.png'}
@@ -669,12 +670,12 @@ class EnterpriseCatalogCsvDataViewTests(APITestMixin):
 
     expected_result_data = 'Title,Partner Name,Start,End,Verified Upgrade Deadline,Program Type,Program Name,Pacing,' \
                            'Level,Price,Language,URL,Short Description,Subjects,Key,Short Key,Skills,Min Effort,' \
-                           'Max Effort,Length,What You’ll Learn,Pre-requisites\r\nCalculus 1B: ' \
+                           'Max Effort,Length,What You’ll Learn,Pre-requisites,Associated Catalogs\r\nCalculus 1B: ' \
                            'Integration,Massachusetts Institute of Technology,2015-09-08,' \
                            '2015-09-08,3000-01-01,Professional Certificate,Totally ' \
                            'Awesome Program,instructor_paced,Intermediate,100,English,edx.org/foo-bar,description,' \
                            'Math,MITx/18.01.2x/3T2015,course:MITx+18.01.2x,"Probability And Statistics, ' \
-                           'Engineering Design Process",1,10,1,learn,interest\r\n'
+                           'Engineering Design Process",1,10,1,learn,interest,"A la carte, Business"\r\n'
 
     def setUp(self):
         super().setUp()
@@ -733,12 +734,12 @@ class EnterpriseCatalogCsvDataViewTests(APITestMixin):
         assert response.status_code == 200
         excpected_csv_data = 'Title,Partner Name,Start,End,Verified Upgrade Deadline,Program Type,Program Name,' \
                              'Pacing,Level,Price,Language,URL,Short Description,Subjects,Key,Short Key,Skills,' \
-                             'Min Effort,Max Effort,Length,What You’ll Learn,Pre-requisites\r\n' \
+                             'Min Effort,Max Effort,Length,What You’ll Learn,Pre-requisites,Associated Catalogs\r\n' \
                              'Calculus 1B: Integration,Massachusetts Institute of Technology,2015-09-08,' \
                              ',,Professional Certificate,Totally Awesome ' \
                              'Program,instructor_paced,Intermediate,,English,,description,' \
                              'Math,MITx/18.01.2x/3T2015,course:MITx+18.01.2x,"Probability And Statistics, ' \
-                             'Engineering Design Process",1,10,1,learn,interest\r\n'
+                             'Engineering Design Process",1,10,1,learn,interest,"A la carte, Business"\r\n'
         expected_response = {
             'csv_data': excpected_csv_data
         }
@@ -757,6 +758,7 @@ class EnterpriseCatalogWorkbookViewTests(APITestMixin):
                 "language": "English",
                 "level_type": "Intermediate",
                 "content_type": "course",
+                "enterprise_catalog_query_titles": ["A la carte", "Business", "DemoX"],
                 "partners": [
                     {
                         "name": "Massachusetts Institute of Technology",
