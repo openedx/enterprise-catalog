@@ -942,8 +942,10 @@ class EnterpriseCatalogWorkbookViewTests(APITestMixin):
                 "content_type": "program",
                 "enterprise_catalog_query_titles": ["A la carte", "Business", "DemoX"],
                 "partners": [
-                    {"name": "Harvard University",
-                    "logo_image_url": "https://edx.org/image.png"}
+                    {
+                        "name": "Harvard University",
+                        "logo_image_url": "https://edx.org/image.png"
+                    }
                 ],
                 "title": "Calculus 1B: Integration",
                 "subtitle": "this is a subtitle",
