@@ -935,6 +935,19 @@ class EnterpriseCatalogWorkbookViewTests(APITestMixin):
                 "language": "English",
                 "level_type": "Intermediate",
                 "objectID": "course-3543aa4e-3c64-4d9a-a343-5d5eda1dacf7-catalog-query-uuids-0"
+            },
+            {
+                "aggregation_key": "course:MITx+18.01.2x",
+                "course_keys": ['MITx+18.01.2x'],
+                "content_type": "program",
+                "enterprise_catalog_query_titles": ["A la carte", "Business", "DemoX"],
+                "partners": [
+                    {"name": "Harvard University",
+                    "logo_image_url": "https://edx.org/image.png"}
+                ],
+                "title": "Calculus 1B: Integration",
+                "subtitle": "this is a subtitle",
+                "program_type": "Professional Certificate"
             }
         ]
     }
