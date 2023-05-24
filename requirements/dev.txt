@@ -17,7 +17,7 @@ analytics-python==1.4.post1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-asgiref==3.6.0
+asgiref==3.7.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -121,7 +121,7 @@ coreschema==0.0.4
     #   -r requirements/test.txt
     #   coreapi
     #   drf-yasg
-coverage[toml]==7.2.5
+coverage[toml]==7.2.6
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -171,6 +171,7 @@ django==3.2.19
     #   django-crum
     #   django-debug-toolbar
     #   django-extensions
+    #   django-log-request-id
     #   django-model-utils
     #   djangorestframework
     #   drf-jwt
@@ -215,6 +216,10 @@ django-debug-toolbar==4.1.0
 django-dynamic-fixture==3.1.2
     # via -r requirements/test.txt
 django-extensions==3.2.1
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+django-log-request-id==2.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -295,9 +300,8 @@ edx-django-utils==5.4.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==8.7.0
+edx-drf-extensions==8.8.0
     # via
-    #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-rbac
@@ -340,11 +344,6 @@ filelock==3.12.0
     #   -r requirements/test.txt
     #   tox
     #   virtualenv
-future==0.18.3
-    # via
-    #   -r requirements/quality.txt
-    #   -r requirements/test.txt
-    #   pyjwkest
 gunicorn==20.1.0
     # via -r requirements/dev.in
 idna==3.4
@@ -500,20 +499,10 @@ pycparser==2.21
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   cffi
-pycryptodomex==3.18.0
-    # via
-    #   -r requirements/quality.txt
-    #   -r requirements/test.txt
-    #   pyjwkest
 pydocstyle==6.3.0
     # via -r requirements/quality.txt
 pygments==2.15.1
     # via diff-cover
-pyjwkest==1.4.2
-    # via
-    #   -r requirements/quality.txt
-    #   -r requirements/test.txt
-    #   edx-drf-extensions
 pyjwt[crypto]==2.7.0
     # via
     #   -r requirements/quality.txt
@@ -617,7 +606,7 @@ redis==3.5.3
     #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-requests==2.30.0
+requests==2.31.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -628,7 +617,6 @@ requests==2.30.0
     #   docker-compose
     #   edx-drf-extensions
     #   edx-rest-api-client
-    #   pyjwkest
     #   requests-oauthlib
     #   slumber
     #   social-auth-core
@@ -674,7 +662,6 @@ six==1.16.0
     #   edx-lint
     #   edx-rbac
     #   jsonschema
-    #   pyjwkest
     #   python-dateutil
     #   python-memcached
     #   tox
@@ -742,10 +729,11 @@ tox==3.28.0
     #   tox-battery
 tox-battery==0.6.1
     # via -r requirements/test.txt
-typing-extensions==4.5.0
+typing-extensions==4.6.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+    #   asgiref
     #   astroid
     #   pylint
 uritemplate==4.1.1

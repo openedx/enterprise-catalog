@@ -35,3 +35,4 @@ algoliasearch
 social-auth-app-django
 xlsxwriter
 django-clearcache
+django-log-request-id
