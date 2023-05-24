@@ -34,6 +34,7 @@ CSV_COURSE_HEADERS = [
     'Length',
     'What You’ll Learn',
     'Pre-requisites',
+    'Associated Catalogs',
 ]
 
 CSV_PROGRAM_HEADERS = [
@@ -42,6 +43,7 @@ CSV_PROGRAM_HEADERS = [
     'Partner',
     'Short Description',
     'Number of courses',
+    'Associated Catalogs',
 ]
 
 CSV_COURSE_RUN_HEADERS = [
@@ -61,6 +63,7 @@ CSV_COURSE_RUN_HEADERS = [
     'Skills',
     'Subjects',
     'Language',
+    'Associated Catalogs'
 ]
 
 CSV_EXEC_ED_COURSE_HEADERS = [
@@ -93,6 +96,7 @@ ALGOLIA_ATTRIBUTES_TO_RETRIEVE = [
     'course_runs',
     'course_type',
     'entitlements',
+    'enterprise_catalog_query_titles',
     'first_enrollable_paid_seat_price',
     'full_description',
     'key',
@@ -124,6 +128,19 @@ def write_headers_to_sheet(worksheet, headers, cell_format):
         worksheet.write(0, col_num, cell_data, cell_format)
 
 
+def fetch_catalog_types(hit):
+    """
+    Helper function to extract only the three needed catalog types.
+    """
+    CATALOG_TYPES = [
+        'A la carte',
+        'Business',
+        'Education'
+    ]
+
+    return [catalog for catalog in CATALOG_TYPES if catalog in hit.get('enterprise_catalog_query_titles')]
+
+
 def program_hit_to_row(hit):
     """
     Helper function to construct a CSV row according to a single Algolia result program hit.
@@ -138,6 +155,9 @@ def program_hit_to_row(hit):
     csv_row.append(hit.get('subtitle'))
 
     csv_row.append(len(hit.get('course_keys', [])))
+
+    catalogs = fetch_catalog_types(hit)
+    csv_row.append(', '.join(catalogs))
 
     return csv_row
 
@@ -207,6 +227,9 @@ def course_hit_to_row(hit):
     csv_row.append(strip_tags(hit.get('outcome', '')))  # What You’ll Learn
 
     csv_row.append(strip_tags(hit.get('prerequisites_raw', '')))  # Pre-requisites
+
+    catalogs = fetch_catalog_types(hit)  # Catalog types
+    csv_row.append(', '.join(catalogs))
 
     return csv_row
 
@@ -338,6 +361,10 @@ def course_run_to_row(hit, course_run):
 
     # Language
     csv_row.append(hit.get('language'))
+
+    # Course Catalogs
+    catalogs = fetch_catalog_types(hit)
+    csv_row.append(', '.join(catalogs))
 
     return csv_row
 
