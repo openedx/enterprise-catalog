@@ -76,6 +76,7 @@ INSTALLED_APPS += THIRD_PARTY_APPS
 INSTALLED_APPS += PROJECT_APPS
 
 MIDDLEWARE = (
+    'log_request_id.middleware.RequestIDMiddleware',
     'edx_django_utils.monitoring.CookieMonitoringMiddleware',
     'edx_django_utils.monitoring.DeploymentMonitoringMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -96,6 +97,13 @@ MIDDLEWARE = (
     'simple_history.middleware.HistoryRequestMiddleware',
     'edx_django_utils.cache.middleware.RequestCacheMiddleware',
 )
+
+# https://github.com/dabapps/django-log-request-id
+LOG_REQUEST_ID_HEADER = "HTTP_X_REQUEST_ID"
+GENERATE_REQUEST_ID_IF_NOT_IN_HEADER = False
+REQUEST_ID_RESPONSE_HEADER = "X-Request-ID"
+NO_REQUEST_ID = "None"
+LOG_REQUESTS = False
 
 # Enable CORS
 CORS_ALLOW_CREDENTIALS = True

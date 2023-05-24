@@ -12,7 +12,7 @@ amqp==5.1.1
     #   kombu
 analytics-python==1.4.post1
     # via -r requirements/base.txt
-asgiref==3.6.0
+asgiref==3.7.1
     # via
     #   -r requirements/base.txt
     #   django
@@ -111,6 +111,7 @@ django==3.2.19
     #   django-cors-headers
     #   django-crum
     #   django-extensions
+    #   django-log-request-id
     #   django-model-utils
     #   djangorestframework
     #   drf-jwt
@@ -141,6 +142,8 @@ django-crum==0.7.9
     #   edx-rbac
     #   edx-toggles
 django-extensions==3.2.1
+    # via -r requirements/base.txt
+django-log-request-id==2.1.0
     # via -r requirements/base.txt
 django-model-utils==4.3.1
     # via
@@ -192,9 +195,8 @@ edx-django-utils==5.4.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==8.7.0
+edx-drf-extensions==8.8.0
     # via
-    #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -r requirements/base.txt
     #   edx-rbac
 edx-lint==5.2.5
@@ -211,10 +213,6 @@ edx-rest-api-client==5.5.2
     # via -r requirements/base.txt
 edx-toggles==5.0.0
     # via -r requirements/base.txt
-future==0.18.3
-    # via
-    #   -r requirements/base.txt
-    #   pyjwkest
 idna==3.4
     # via
     #   -r requirements/base.txt
@@ -297,16 +295,8 @@ pycparser==2.21
     # via
     #   -r requirements/base.txt
     #   cffi
-pycryptodomex==3.18.0
-    # via
-    #   -r requirements/base.txt
-    #   pyjwkest
 pydocstyle==6.3.0
     # via -r requirements/quality.in
-pyjwkest==1.4.2
-    # via
-    #   -r requirements/base.txt
-    #   edx-drf-extensions
 pyjwt[crypto]==2.7.0
     # via
     #   -r requirements/base.txt
@@ -368,7 +358,7 @@ redis==3.5.3
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.txt
-requests==2.30.0
+requests==2.31.0
     # via
     #   -r requirements/base.txt
     #   algoliasearch
@@ -376,7 +366,6 @@ requests==2.30.0
     #   coreapi
     #   edx-drf-extensions
     #   edx-rest-api-client
-    #   pyjwkest
     #   requests-oauthlib
     #   slumber
     #   social-auth-core
@@ -410,7 +399,6 @@ six==1.16.0
     #   edx-drf-extensions
     #   edx-lint
     #   edx-rbac
-    #   pyjwkest
     #   python-dateutil
 slumber==0.7.1
     # via
@@ -445,8 +433,10 @@ tomli==2.0.1
     # via pylint
 tomlkit==0.11.8
     # via pylint
-typing-extensions==4.5.0
+typing-extensions==4.6.1
     # via
+    #   -r requirements/base.txt
+    #   asgiref
     #   astroid
     #   pylint
 uritemplate==4.1.1
