@@ -1015,7 +1015,7 @@ def update_contentmetadata_from_discovery(catalog_query):
         # metadata will be an empty dict if unavailable from cache or API.
         metadata = CatalogQueryMetadata(catalog_query).metadata
     except Exception as exc:
-        LOGGER.exception(f'update_contentmetadata_from_discovery failed {catalog_query.id}')
+        LOGGER.exception(f'update_contentmetadata_from_discovery failed {catalog_query}')
         raise exc
 
     # associate content metadata with a catalog query only when we get valid results
