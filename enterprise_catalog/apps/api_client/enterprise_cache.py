@@ -98,7 +98,7 @@ def _get_enterprise_customer_data(uuid):
             ecommerce_client = EcommerceApiClient()
             coupons_overview = ecommerce_client.get_coupons_overview(uuid)
             coupons_catalogs = [coupon['enterprise_catalog_uuid'] for coupon in coupons_overview]
-        except requests.exceptions.HTTPError as exc:
+        except requests.exceptions.RequestException as exc:
             logger.error(
                 'Failed to fetch coupons overview for %r because %r',
                 uuid,
@@ -115,7 +115,7 @@ def _get_enterprise_customer_data(uuid):
                 ]
             else:
                 subscriptions_catalogs = []
-        except requests.exceptions.HTTPError as exc:
+        except requests.exceptions.RequestException as exc:
             logger.error(
                 'Failed to fetch customer agreement for %r because %r',
                 uuid,
