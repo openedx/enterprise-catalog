@@ -12,7 +12,7 @@ amqp==5.1.1
     #   kombu
 analytics-python==1.4.post1
     # via -r requirements/base.txt
-asgiref==3.7.1
+asgiref==3.7.2
     # via
     #   -r requirements/base.txt
     #   django
@@ -25,6 +25,10 @@ backoff==1.10.0
     # via
     #   -r requirements/base.txt
     #   analytics-python
+backports-zoneinfo[tzdata]==0.2.1
+    # via
+    #   -r requirements/base.txt
+    #   kombu
 billiard==3.6.4.0
     # via
     #   -r requirements/base.txt
@@ -87,7 +91,7 @@ coreschema==0.0.4
     #   -r requirements/base.txt
     #   coreapi
     #   drf-yasg
-cryptography==40.0.2
+cryptography==41.0.1
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -188,7 +192,7 @@ edx-celeryutils==1.2.2
     # via -r requirements/base.txt
 edx-django-release-util==1.2.0
     # via -r requirements/base.txt
-edx-django-utils==5.4.0
+edx-django-utils==5.5.0
     # via
     #   -r requirements/base.txt
     #   django-config-models
@@ -240,13 +244,13 @@ jsonfield==3.1.0
     #   edx-celeryutils
 jsonfield2==4.0.0.post0
     # via -r requirements/base.txt
-kombu==5.2.4
+kombu==5.3.0
     # via
     #   -r requirements/base.txt
     #   celery
 lazy-object-proxy==1.9.0
     # via astroid
-markupsafe==2.1.2
+markupsafe==2.1.3
     # via
     #   -r requirements/base.txt
     #   jinja2
@@ -373,7 +377,7 @@ requests-oauthlib==1.3.1
     # via
     #   -r requirements/base.txt
     #   social-auth-core
-ruamel-yaml==0.17.26
+ruamel-yaml==0.17.31
     # via
     #   -r requirements/base.txt
     #   drf-yasg
@@ -433,12 +437,17 @@ tomli==2.0.1
     # via pylint
 tomlkit==0.11.8
     # via pylint
-typing-extensions==4.6.1
+typing-extensions==4.6.3
     # via
     #   -r requirements/base.txt
     #   asgiref
     #   astroid
+    #   kombu
     #   pylint
+tzdata==2023.3
+    # via
+    #   -r requirements/base.txt
+    #   backports-zoneinfo
 uritemplate==4.1.1
     # via
     #   -r requirements/base.txt
@@ -460,7 +469,7 @@ wcwidth==0.2.6
     #   prompt-toolkit
 wrapt==1.15.0
     # via astroid
-xlsxwriter==3.1.1
+xlsxwriter==3.1.2
     # via -r requirements/base.txt
 zipp==1.2.0
     # via -r requirements/base.txt

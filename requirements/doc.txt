@@ -16,7 +16,7 @@ amqp==5.1.1
     #   kombu
 analytics-python==1.4.post1
     # via -r requirements/test.txt
-asgiref==3.7.1
+asgiref==3.7.2
     # via
     #   -r requirements/test.txt
     #   django
@@ -34,6 +34,10 @@ backoff==1.10.0
     # via
     #   -r requirements/test.txt
     #   analytics-python
+backports-zoneinfo[tzdata]==0.2.1
+    # via
+    #   -r requirements/test.txt
+    #   kombu
 beautifulsoup4==4.12.2
     # via pydata-sphinx-theme
 billiard==3.6.4.0
@@ -102,11 +106,11 @@ coreschema==0.0.4
     #   -r requirements/test.txt
     #   coreapi
     #   drf-yasg
-coverage[toml]==7.2.6
+coverage[toml]==7.2.7
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==40.0.2
+cryptography==41.0.1
     # via
     #   -r requirements/test.txt
     #   pyjwt
@@ -226,7 +230,7 @@ edx-celeryutils==1.2.2
     # via -r requirements/test.txt
 edx-django-release-util==1.2.0
     # via -r requirements/test.txt
-edx-django-utils==5.4.0
+edx-django-utils==5.5.0
     # via
     #   -r requirements/test.txt
     #   django-config-models
@@ -257,7 +261,7 @@ exceptiongroup==1.1.1
     #   pytest
 factory-boy==3.2.1
     # via -r requirements/test.txt
-faker==18.9.0
+faker==18.10.1
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -302,7 +306,7 @@ jsonfield==3.1.0
     #   edx-celeryutils
 jsonfield2==4.0.0.post0
     # via -r requirements/test.txt
-kombu==5.2.4
+kombu==5.3.0
     # via
     #   -r requirements/test.txt
     #   celery
@@ -310,7 +314,7 @@ lazy-object-proxy==1.9.0
     # via
     #   -r requirements/test.txt
     #   astroid
-markupsafe==2.1.2
+markupsafe==2.1.3
     # via
     #   -r requirements/test.txt
     #   jinja2
@@ -426,7 +430,7 @@ pytest==7.3.1
     #   -r requirements/test.txt
     #   pytest-cov
     #   pytest-django
-pytest-cov==4.0.0
+pytest-cov==4.1.0
     # via -r requirements/test.txt
 pytest-django==4.5.2
     # via -r requirements/test.txt
@@ -482,7 +486,7 @@ requests-oauthlib==1.3.1
     #   social-auth-core
 restructuredtext-lint==1.4.0
     # via doc8
-ruamel-yaml==0.17.26
+ruamel-yaml==0.17.31
     # via
     #   -r requirements/test.txt
     #   drf-yasg
@@ -583,13 +587,18 @@ tox==3.28.0
     #   tox-battery
 tox-battery==0.6.1
     # via -r requirements/test.txt
-typing-extensions==4.6.1
+typing-extensions==4.6.3
     # via
     #   -r requirements/test.txt
     #   asgiref
     #   astroid
+    #   kombu
     #   pydata-sphinx-theme
     #   pylint
+tzdata==2023.3
+    # via
+    #   -r requirements/test.txt
+    #   backports-zoneinfo
 uritemplate==4.1.1
     # via
     #   -r requirements/test.txt
@@ -619,7 +628,7 @@ wrapt==1.15.0
     # via
     #   -r requirements/test.txt
     #   astroid
-xlsxwriter==3.1.1
+xlsxwriter==3.1.2
     # via -r requirements/test.txt
 zipp==1.2.0
     # via
