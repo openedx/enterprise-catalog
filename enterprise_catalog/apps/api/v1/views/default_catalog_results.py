@@ -1,12 +1,8 @@
-from django.utils.decorators import method_decorator
 from rest_framework.decorators import action
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
-from enterprise_catalog.apps.api.v1.decorators import (
-    require_at_least_one_query_parameter,
-)
 from enterprise_catalog.apps.api.v1.export_utils import (
     querydict_to_dict,
     validate_query_facets,
@@ -65,7 +61,6 @@ class DefaultCatalogResultsView(GenericAPIView):
         # Since this view does not hit any models, override the serializer
         pass
 
-    @method_decorator(require_at_least_one_query_parameter('enterprise_catalog_query_titles'))
     @action(detail=True)
     def get(self, request, **kwargs):
         """
