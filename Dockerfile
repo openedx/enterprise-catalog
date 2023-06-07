@@ -1,5 +1,5 @@
 FROM ubuntu:bionic as app
-LABEL maintainer="devops@edx.org"
+LABEL maintainer="sre@edx.org"
 
 # Packages installed:
 # git
@@ -20,12 +20,18 @@ LABEL maintainer="devops@edx.org"
 #     MySQL-python for performance gains.
 
 # If you add a package here please include a comment above describing what it is used for
-RUN apt-get update && \
-apt-get install -y software-properties-common && \
-apt-add-repository -y ppa:deadsnakes/ppa && apt-get update && \
-apt-get upgrade -qy && apt-get install language-pack-en locales git \
-libmysqlclient-dev libssl-dev build-essential python3.8-dev python3.8-venv -qy && \
-rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get -qy install --no-install-recommends \
+ language-pack-en \
+ locales \
+ python3.8 \
+ python3-pip \
+ python3.8-venv \
+ python3.8-dev \
+ libmysqlclient-dev \
+ libssl-dev \
+ build-essential \
+ git \
+ wget
 
 ENV VIRTUAL_ENV=/venv
 RUN python3.8 -m venv $VIRTUAL_ENV
