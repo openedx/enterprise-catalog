@@ -6,6 +6,7 @@ from enterprise_catalog.apps.api.v1.decorators import (
     require_at_least_one_query_parameter,
 )
 
+
 class DecoratorTests(TestCase):
     """
     Tests for the existence of at least one of the specified query in the decorator
