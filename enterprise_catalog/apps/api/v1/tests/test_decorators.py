@@ -1,10 +1,10 @@
-from django.test import TestCase
 from django.http import HttpResponse
-from django.test import RequestFactory
-
+from django.test import RequestFactory, TestCase
 from rest_framework.exceptions import ValidationError
-from enterprise_catalog.apps.api.v1.decorators import require_at_least_one_query_parameter
 
+from enterprise_catalog.apps.api.v1.decorators import (
+    require_at_least_one_query_parameter,
+)
 
 class DecoratorTests(TestCase):
     """
