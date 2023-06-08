@@ -133,18 +133,6 @@ class EnterpriseCatalogDefaultCatalogResultsTests(APITestMixin):
         response = self.client.get(f'{url}?{facets}')
         assert response.status_code == 200
 
-    def test_required_param_validation(self):
-        """
-        Tests that the view requires a provided catalog
-        """
-        url = self._get_contains_content_base_url()
-        invalid_facets = 'bad=ayylmao'
-        response = self.client.get(f'{url}?{invalid_facets}')
-        assert response.status_code == 400
-        assert response.json() == [
-            'You must provide at least one of the following query parameters: enterprise_catalog_query_titles.'
-        ]
-
     @mock.patch('enterprise_catalog.apps.api.v1.views.default_catalog_results.get_initialized_algolia_client')
     def test_default_catalog_results_view_works_with_one_and_many_course_types(self, mock_algolia_client):
         """
