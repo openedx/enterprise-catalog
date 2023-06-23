@@ -23,6 +23,8 @@ class DiscoveryApiClient(BaseOAuthClientWithRetry):
     Object builds an API client to make calls to the Discovery Service.
     """
 
+    HTTP_TIMEOUT = getattr(settings, "ENTERPRISE_DISCOVERY_CLIENT_TIMEOUT", 15)
+
     def __init__(self):
         backoff_factor = getattr(settings, "ENTERPRISE_DISCOVERY_CLIENT_BACKOFF_FACTOR", 2)
         max_retries = getattr(settings, "ENTERPRISE_DISCOVERY_CLIENT_MAX_RETRIES", 4)
@@ -38,9 +40,12 @@ class DiscoveryApiClient(BaseOAuthClientWithRetry):
             DISCOVERY_SEARCH_ALL_ENDPOINT,
             json=content_filter,
             params=request_params,
+            timeout=self.HTTP_TIMEOUT,
         )
-        elabsed_seconds = response.elapsed.total_seconds()
-        LOGGER.info(f'Retrieved results from course-discovery for page {page} in {elabsed_seconds} seconds.')
+        elapsed_seconds = response.elapsed.total_seconds()
+        LOGGER.info(
+            f'Retrieved results from course-discovery for page {page} in '
+            f'retrieve_metadata_for_content_filter_seconds={elapsed_seconds} seconds.')
         return response.json()
 
     def get_metadata_by_query(self, catalog_query):
@@ -95,6 +100,7 @@ class DiscoveryApiClient(BaseOAuthClientWithRetry):
         response = self.client.get(
             DISCOVERY_COURSES_ENDPOINT,
             params=request_params,
+            timeout=self.HTTP_TIMEOUT,
         ).json()
         return response
 
@@ -151,6 +157,7 @@ class DiscoveryApiClient(BaseOAuthClientWithRetry):
         response = self.client.get(
             DISCOVERY_PROGRAMS_ENDPOINT,
             params=request_params,
+            timeout=self.HTTP_TIMEOUT,
         ).json()
         return response
 
