@@ -22,6 +22,7 @@ class BaseOAuthClientWithRetry(BaseOAuthClient):
             total=max_retries,
             backoff_factor=backoff_factor,
             backoff_jitter=backoff_jitter,
+            allowed_methods=None,
         )
         adapter = HTTPAdapter(max_retries=retry)
         self.client.mount('http://', adapter)
