@@ -2,6 +2,7 @@ import copy
 import functools
 import json
 import logging
+import time
 from collections import defaultdict
 from datetime import timedelta
 
@@ -772,6 +773,7 @@ def update_catalog_metadata_task(self, catalog_query_id, force=False):  # pylint
         list of str: Returns the content keys for ContentMetadata objects that were associated with the query.
             This result can be passed to the `update_full_content_metadata_task`.
     """
+    start_time = time.perf_counter()
     try:
         catalog_query = CatalogQuery.objects.get(id=catalog_query_id)
     except CatalogQuery.DoesNotExist:
@@ -781,13 +783,16 @@ def update_catalog_metadata_task(self, catalog_query_id, force=False):  # pylint
         associated_content_keys = update_contentmetadata_from_discovery(catalog_query)
     except Exception as e:
         logger.exception(
-            f'Something went wrong while updating content metadata from discovery using catalog: {catalog_query_id}. ',
+            f'Something went wrong while updating content metadata from discovery using catalog: {catalog_query_id} '
+            f'after update_catalog_metadata_task_seconds={time.perf_counter()-start_time} seconds',
             exc_info=e,
         )
         raise e
-    logger.info('Finished update_catalog_metadata_task with {} associated content keys for catalog {}'.format(
-        len(associated_content_keys), catalog_query_id
-    ))
+    logger.info(
+        f'Finished update_catalog_metadata_task with {len(associated_content_keys)} '
+        f'associated content keys for catalog {catalog_query_id} '
+        f'after update_catalog_metadata_task_seconds={time.perf_counter()-start_time} seconds'
+    )
 
 
 @shared_task(base=LoggedTaskWithRetry, bind=True)
