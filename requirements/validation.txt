@@ -17,7 +17,7 @@ analytics-python==1.4.post1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-asgiref==3.7.1
+asgiref==3.7.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -34,12 +34,18 @@ backoff==1.10.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   analytics-python
-billiard==3.6.4.0
+backports-zoneinfo[tzdata]==0.2.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   celery
-celery==5.2.7
+    #   kombu
+billiard==4.1.0
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   celery
+celery==5.3.1
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
@@ -89,7 +95,7 @@ click-plugins==1.1.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   celery
-click-repl==0.2.0
+click-repl==0.3.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -100,22 +106,11 @@ code-annotations==1.3.0
     #   -r requirements/test.txt
     #   edx-lint
     #   edx-toggles
-coreapi==2.3.3
-    # via
-    #   -r requirements/quality.txt
-    #   -r requirements/test.txt
-    #   drf-yasg
-coreschema==0.0.4
-    # via
-    #   -r requirements/quality.txt
-    #   -r requirements/test.txt
-    #   coreapi
-    #   drf-yasg
-coverage[toml]==7.2.6
+coverage[toml]==7.2.7
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==40.0.2
+cryptography==41.0.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -179,7 +174,7 @@ django-config-models==2.3.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-django-cors-headers==4.0.0
+django-cors-headers==4.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -192,7 +187,7 @@ django-crum==0.7.9
     #   edx-toggles
 django-dynamic-fixture==3.1.2
     # via -r requirements/test.txt
-django-extensions==3.2.1
+django-extensions==3.2.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -240,7 +235,7 @@ drf-jwt==1.19.2
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-drf-extensions
-drf-yasg==1.21.5
+drf-yasg==1.21.6
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -261,7 +256,7 @@ edx-django-release-util==1.2.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-edx-django-utils==5.4.0
+edx-django-utils==5.5.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -302,11 +297,11 @@ exceptiongroup==1.1.1
     #   pytest
 factory-boy==3.2.1
     # via -r requirements/test.txt
-faker==18.9.0
+faker==18.11.1
     # via
     #   -r requirements/test.txt
     #   factory-boy
-filelock==3.12.0
+filelock==3.12.2
     # via
     #   -r requirements/test.txt
     #   tox
@@ -330,17 +325,11 @@ isort==5.12.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pylint
-itypes==1.2.0
-    # via
-    #   -r requirements/quality.txt
-    #   -r requirements/test.txt
-    #   coreapi
 jinja2==3.1.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   code-annotations
-    #   coreschema
 jsonfield==3.1.0
     # via
     #   -r requirements/quality.txt
@@ -350,7 +339,7 @@ jsonfield2==4.0.0.post0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-kombu==5.2.4
+kombu==5.3.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -360,7 +349,7 @@ lazy-object-proxy==1.9.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   astroid
-markupsafe==2.1.2
+markupsafe==2.1.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -375,7 +364,7 @@ monotonic==1.6
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   analytics-python
-mysqlclient==2.1.1
+mysqlclient==2.2.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -402,13 +391,13 @@ pbr==5.11.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   stevedore
-platformdirs==3.5.1
+platformdirs==3.8.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pylint
     #   virtualenv
-pluggy==1.0.0
+pluggy==1.2.0
     # via
     #   -r requirements/test.txt
     #   pytest
@@ -485,12 +474,12 @@ pynacl==1.5.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-django-utils
-pytest==7.3.1
+pytest==7.4.0
     # via
     #   -r requirements/test.txt
     #   pytest-cov
     #   pytest-django
-pytest-cov==4.0.0
+pytest-cov==4.1.0
     # via -r requirements/test.txt
 pytest-django==4.5.2
     # via -r requirements/test.txt
@@ -499,6 +488,7 @@ python-dateutil==2.8.2
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   analytics-python
+    #   celery
     #   edx-drf-extensions
     #   faker
 python-slugify==8.0.1
@@ -515,7 +505,6 @@ pytz==2023.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-    #   celery
     #   django
     #   djangorestframework
     #   drf-yasg
@@ -525,6 +514,7 @@ pyyaml==5.4.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   code-annotations
+    #   drf-yasg
     #   edx-django-release-util
 redis==3.5.3
     # via
@@ -537,7 +527,6 @@ requests==2.31.0
     #   -r requirements/test.txt
     #   algoliasearch
     #   analytics-python
-    #   coreapi
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   requests-oauthlib
@@ -548,16 +537,6 @@ requests-oauthlib==1.3.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   social-auth-core
-ruamel-yaml==0.17.26
-    # via
-    #   -r requirements/quality.txt
-    #   -r requirements/test.txt
-    #   drf-yasg
-ruamel-yaml-clib==0.2.7
-    # via
-    #   -r requirements/quality.txt
-    #   -r requirements/test.txt
-    #   ruamel-yaml
 rules==3.3
     # via
     #   -r requirements/quality.txt
@@ -576,7 +555,6 @@ six==1.16.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   analytics-python
-    #   click-repl
     #   django-dynamic-fixture
     #   edx-auth-backends
     #   edx-django-release-util
@@ -642,20 +620,26 @@ tox==3.28.0
     #   tox-battery
 tox-battery==0.6.1
     # via -r requirements/test.txt
-typing-extensions==4.6.1
+typing-extensions==4.6.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   asgiref
     #   astroid
+    #   kombu
     #   pylint
+tzdata==2023.3
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   backports-zoneinfo
+    #   celery
 uritemplate==4.1.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-    #   coreapi
     #   drf-yasg
-urllib3==2.0.2
+urllib3==2.0.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -667,7 +651,7 @@ vine==5.0.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.23.0
+virtualenv==20.23.1
     # via
     #   -r requirements/test.txt
     #   tox
@@ -681,7 +665,7 @@ wrapt==1.15.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   astroid
-xlsxwriter==3.1.1
+xlsxwriter==3.1.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
