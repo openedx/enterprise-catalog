@@ -27,6 +27,7 @@ RUN apt-get update && apt-get -qy install --no-install-recommends \
  python3-pip \
  python3.8-venv \
  python3.8-dev \
+ pkg-config \
  libmysqlclient-dev \
  libssl-dev \
  build-essential \
