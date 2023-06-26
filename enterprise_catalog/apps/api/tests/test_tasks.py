@@ -613,6 +613,54 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'course_metadata_unpublished': self.course_metadata_unpublished,
         }
 
+    def test_index_content_keys_in_algolia(self):
+        """
+        Test the _index_content_keys_in_algolia helper function to make sure it creates a generator to support batching
+        correctly.
+        """
+        test_content_keys = [
+            'course-v1:edX+testX+0',
+            'course-v1:edX+testX+1',
+            'course-v1:edX+testX+2',
+            'course-v1:edX+testX+3',
+            'course-v1:edX+testX+4',
+        ]
+
+        actual_algolia_products_sent_sequence = None
+
+        def mock_replace_all_objects(products_iterable):
+            nonlocal actual_algolia_products_sent_sequence
+            actual_algolia_products_sent_sequence = list(products_iterable)
+        mock_algolia_client = mock.MagicMock()
+        mock_algolia_client.replace_all_objects.side_effect = mock_replace_all_objects
+
+        # pylint: disable=unused-argument
+        def mock_get_algolia_products_for_batch(
+            batch_num,
+            content_keys_batch,
+            course_to_pathway_mapping,
+            program_to_pathway_mapping,
+            metrics_accumulator,
+        ):
+            return [{'key': content_key, 'foo': 'bar'} for content_key in content_keys_batch]
+
+        with mock.patch(
+            'enterprise_catalog.apps.api.tasks._get_algolia_products_for_batch',
+            side_effect=mock_get_algolia_products_for_batch,
+        ):
+            with mock.patch('enterprise_catalog.apps.api.tasks.REINDEX_TASK_BATCH_SIZE', 2):
+                # pylint: disable=protected-access
+                tasks._index_content_keys_in_algolia(test_content_keys, mock_algolia_client)
+
+        assert actual_algolia_products_sent_sequence == [
+            {'key': 'course-v1:edX+testX+0', 'foo': 'bar'},
+            {'key': 'course-v1:edX+testX+1', 'foo': 'bar'},
+            {'key': 'course-v1:edX+testX+2', 'foo': 'bar'},
+            {'key': 'course-v1:edX+testX+3', 'foo': 'bar'},
+            {'key': 'course-v1:edX+testX+4', 'foo': 'bar'},
+        ]
+
+    # pylint: disable=too-many-statements
     @mock.patch('enterprise_catalog.apps.api.tasks._was_recently_indexed',
                 side_effect=[
                     False, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True
@@ -642,10 +690,24 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         )
         pathway_program_metadata.catalog_queries.set([self.enterprise_catalog_query])
 
+        actual_algolia_products_sent_sequence = []
+
+        # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
+        # result into `actual_algolia_products_sent_sequence` for unit testing.
+        def mock_replace_all_objects(products_iterable):
+            nonlocal actual_algolia_products_sent_sequence
+            actual_algolia_products_sent_sequence.append(list(products_iterable))
+        mock_search_client().replace_all_objects.side_effect = mock_replace_all_objects
+
         with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
-            tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
-            # call it a second time, make assertions that only one thing happened below
-            tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
+            with self.assertLogs(level='INFO') as info_logs:
+                tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
+                # call it a second time, make assertions that only one thing happened below
+                tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
+
+        products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
+        assert '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] 15 products found.' in products_found_log_records[0]
+        assert '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] 12 products found.' in products_found_log_records[1]
 
         # create expected data to be added/updated in the Algolia index.
         expected_algolia_objects_to_index = []
@@ -746,14 +808,14 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # on the first invocation and with programs/pathways only on the second invocation.
         expected_first_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
         actual_first_call_args = sorted(
-            mock_search_client().replace_all_objects.mock_calls[0].args[0], key=itemgetter('objectID')
+            actual_algolia_products_sent_sequence[0], key=itemgetter('objectID')
         )
 
         unsorted_expected_calls_args = expected_algolia_program_objects + expected_algolia_pathway_objects + \
             expected_algolia_program_objects2 + expected_algolia_pathway_objects2
         expected_second_call_args = sorted(unsorted_expected_calls_args, key=itemgetter('objectID'))
         actual_second_call_args = sorted(
-            mock_search_client().replace_all_objects.mock_calls[1].args[0], key=itemgetter('objectID')
+            actual_algolia_products_sent_sequence[1], key=itemgetter('objectID')
         )
         self.assertEqual(expected_first_call_args, actual_first_call_args)
         self.assertEqual(expected_second_call_args, actual_second_call_args)
@@ -785,9 +847,21 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         """
         algolia_data = self._set_up_factory_data_for_algolia()
 
+        actual_algolia_products_sent = None
+
+        # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
+        # result into `actual_algolia_products_sent` for unit testing.
+        def mock_replace_all_objects(products_iterable):
+            nonlocal actual_algolia_products_sent
+            actual_algolia_products_sent = list(products_iterable)
+        mock_search_client().replace_all_objects.side_effect = mock_replace_all_objects
+
         with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_UUID_BATCH_SIZE', 1), \
              mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
-            tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
+            with self.assertLogs(level='INFO') as info_logs:
+                tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
+
+        assert '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] 6 products found.' in info_logs.output[-1]
 
         # create expected data to be added/updated in the Algolia index.
         expected_algolia_objects_to_index = []
@@ -826,7 +900,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         })
 
         # verify replace_all_objects is called with the correct Algolia object data
-        mock_search_client().replace_all_objects.assert_called_once_with(expected_algolia_objects_to_index)
+        self.assertEqual(expected_algolia_objects_to_index, actual_algolia_products_sent)
+        mock_search_client().replace_all_objects.assert_called_once()
 
         mock_was_recently_indexed.assert_called_once_with(self.course_metadata_published.content_key)
 
@@ -840,10 +915,22 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # override the explore UI titles with test data to show every batch contains them
         explore_titles = [algolia_data['query_titles'][0]]
 
+        actual_algolia_products_sent = None
+
+        # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
+        # result into `actual_algolia_products_sent` for unit testing.
+        def mock_replace_all_objects(products_iterable):
+            nonlocal actual_algolia_products_sent
+            actual_algolia_products_sent = list(products_iterable)
+        mock_search_client().replace_all_objects.side_effect = mock_replace_all_objects
+
         with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_UUID_BATCH_SIZE', 1), \
              mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS), \
              mock.patch('enterprise_catalog.apps.api.tasks.EXPLORE_CATALOG_TITLES', explore_titles):
-            tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
+            with self.assertLogs(level='INFO') as info_logs:
+                tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
+
+        assert '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] 6 products found.' in info_logs.output[-1]
 
         # create expected data to be added/updated in the Algolia index.
         expected_algolia_objects_to_index = []
@@ -884,6 +971,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         })
 
         # verify replace_all_objects is called with the correct Algolia object data
-        mock_search_client().replace_all_objects.assert_called_once_with(expected_algolia_objects_to_index)
+        self.assertEqual(expected_algolia_objects_to_index, actual_algolia_products_sent)
+        mock_search_client().replace_all_objects.assert_called_once()
 
         mock_was_recently_indexed.assert_called_once_with(self.course_metadata_published.content_key)
