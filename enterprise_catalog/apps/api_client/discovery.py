@@ -28,7 +28,12 @@ class DiscoveryApiClient(BaseOAuthClientWithRetry):
     def __init__(self):
         backoff_factor = getattr(settings, "ENTERPRISE_DISCOVERY_CLIENT_BACKOFF_FACTOR", 2)
         max_retries = getattr(settings, "ENTERPRISE_DISCOVERY_CLIENT_MAX_RETRIES", 4)
-        super().__init__(backoff_factor=backoff_factor, max_retries=max_retries)
+        super().__init__(
+            backoff_factor=backoff_factor,
+            max_retries=max_retries,
+            # setting this to None ensures all verbs (including POST) are retried
+            allowed_methods=None,
+        )
 
     def _retrieve_metadata_for_content_filter(self, content_filter, page, request_params):
         """
