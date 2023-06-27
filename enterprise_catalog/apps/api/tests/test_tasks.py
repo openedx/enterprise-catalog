@@ -640,7 +640,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             content_keys_batch,
             course_to_pathway_mapping,
             program_to_pathway_mapping,
-            metrics_accumulator,
+            context_accumulator,
         ):
             return [{'key': content_key, 'foo': 'bar'} for content_key in content_keys_batch]
 

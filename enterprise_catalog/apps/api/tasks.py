@@ -578,7 +578,7 @@ def _get_algolia_products_for_batch(
     content_keys_batch,
     course_to_pathway_mapping,
     program_to_pathway_mapping,
-    metrics_accumulator,
+    context_accumulator,
 ):
     """
     Produce a list of products to index in algolia, given a fixed length batch of content_keys.
@@ -613,9 +613,6 @@ def _get_algolia_products_for_batch(
     content_metadata = ContentMetadata.objects.filter(query).prefetch_related(
         Prefetch('catalog_queries', queryset=catalog_queries),
         Prefetch('associated_content_metadata', queryset=associated_programs_query, to_attr='associated_programs'),
-    )
-    logger.info(
-        f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] batch#{batch_num}: {content_metadata.count()} metadata found.'
     )
 
     # Retrieve the associated enterprise_catalog_uuids and enterprise_customer_uuids for each selected ContentMetadata
@@ -673,8 +670,8 @@ def _get_algolia_products_for_batch(
             continue
 
         # Build all the algolia products for this single metadata record and append them to
-        # `algolia_products_by_object_id`.  This function contains all the logic to create duplicate records with
-        # non-overlapping UUID list fields to keep the product size below a fixed limit controlled by
+        # `algolia_products_by_object_id`.  This function contains all the logic to create duplicate/segmented records
+        # with non-overlapping UUID list fields to keep the product size below a fixed limit controlled by
         # ALGOLIA_UUID_BATCH_SIZE.
         add_metadata_to_algolia_objects(
             metadata,
@@ -684,7 +681,28 @@ def _get_algolia_products_for_batch(
             catalog_queries_by_key[metadata.content_key],
         )
 
-    metrics_accumulator['total_products_count'] += len(algolia_products_by_object_id)
+    # In case there are multiple CourseMetadata records that share the exact same content_uuid (which would cause an
+    # algolia objectID collision), do not send more than one.  Note that selection of duplicate content is
+    # non-deterministic because we do not use order_by() on the queryset.
+    context_accumulator.setdefault('generated_algolia_object_ids', set())
+    duplicate_algolia_records_discarded = 0
+    for algolia_object_id in algolia_products_by_object_id.keys():
+        if algolia_object_id in context_accumulator['generated_algolia_object_ids']:
+            del algolia_products_by_object_id[algolia_object_id]
+            duplicate_algolia_records_discarded += 1
+    context_accumulator['generated_algolia_object_ids'].update(algolia_products_by_object_id.keys())
+
+    # Increment counter used for logging at the very end.
+    context_accumulator['total_algolia_products_count'] += len(algolia_products_by_object_id)
+
+    logger.info(
+        f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] batch#{batch_num}: '
+        f'{len(content_keys_batch)} content keys, '
+        f'{content_metadata.count()} content metadata found, '
+        f'{filtered_content_metadata.count()} content metadata processed, '
+        f'{len(algolia_products_by_object_id)} generated algolia products kept, '
+        f'{duplicate_algolia_records_discarded} generated algolia products discarded.'
+    )
 
     # extract only the fields we care about.
     return create_algolia_objects(algolia_products_by_object_id.values(), ALGOLIA_FIELDS)
@@ -711,8 +729,8 @@ def _index_content_keys_in_algolia(content_keys, algolia_client):
         f' Algolia index.'
     )
     course_to_pathway_mapping, program_to_pathway_mapping = get_pathways_by_associated_content()
-    metrics_accumulator = {
-        'total_products_count': 0,
+    context_accumulator = {
+        'total_algolia_products_count': 0,
     }
     # Produce a generator of batches of algolia products to index.  Each batch has an unpredictable, variable length.
     # Not immediately evaluated, so no memory is consumed yet.
@@ -722,7 +740,7 @@ def _index_content_keys_in_algolia(content_keys, algolia_client):
             content_keys_batch,
             course_to_pathway_mapping,
             program_to_pathway_mapping,
-            metrics_accumulator,
+            context_accumulator,
         )
         for batch_num, content_keys_batch
         in enumerate(batch(content_keys, batch_size=REINDEX_TASK_BATCH_SIZE))
@@ -743,10 +761,10 @@ def _index_content_keys_in_algolia(content_keys, algolia_client):
     # https://github.com/algolia/algoliasearch-client-python/blob/e0a2a578464a1b01caaa84dba927b99ae8476af3/algoliasearch/search_index.py#L89
     algolia_client.replace_all_objects(algolia_products_generator)
 
-    # Now, the generator will have been fully evaluated, and metrics_accumulator will have been filled with interesting
+    # Now, the generator will have been fully evaluated, and context_accumulator will have been filled with interesting
     # metrics.
     logger.info(
-        f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] {metrics_accumulator["total_products_count"]} products found.'
+        f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] {context_accumulator["total_algolia_products_count"]} products found.'
     )
 
 
