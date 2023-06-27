@@ -1,7 +1,12 @@
+import logging
+
 from requests.adapters import HTTPAdapter, Retry
 from requests.exceptions import RequestException
 
 from .base_oauth import BaseOAuthClient
+
+
+logger = logging.getLogger(__name__)
 
 
 class EnterpriseRetry(Retry):
@@ -10,13 +15,28 @@ class EnterpriseRetry(Retry):
     """
 
     def _is_read_error(self, err: Exception) -> bool:
-        """Errors that occur after the request has been started, so we should
-        assume that the server began processing it.
+        """
+        Extending this method to account for requests.exceptions.RequestException
         """
         super_result = super()._is_read_error(err)
         # this is triggered by a ProtocolError but isnt in the stack
         local_result = isinstance(err, RequestException)
         return super_result or local_result
+
+    def increment(
+        self,
+        method=None,
+        url=None,
+        response=None,
+        error=None,
+        _pool=None,
+        _stacktrace=None,
+    ):
+        """
+        This method is called before every retry, adding logging.
+        """
+        logger.info("EnterpriseRetry retrying {method} to {url}...")
+        return super().increment(method, url, response, error, _pool, _stacktrace)
 
 
 class BaseOAuthClientWithRetry(BaseOAuthClient):
