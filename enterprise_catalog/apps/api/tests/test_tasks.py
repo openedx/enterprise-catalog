@@ -975,3 +975,65 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         mock_search_client().replace_all_objects.assert_called_once()
 
         mock_was_recently_indexed.assert_called_once_with(self.course_metadata_published.content_key)
+
+    # pylint: disable=unused-argument
+    @mock.patch('enterprise_catalog.apps.api.tasks._was_recently_indexed', return_value=False)
+    @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
+    def test_index_algolia_duplicate_content_uuids(self, mock_search_client, mock_was_recently_indexed):
+        """
+        When multiple ContentMetadata objects have identical content_uuid values, they result in algolia objectID
+        collisions.  In this case we should check that the output logging indicates the correct records were discarded.
+        """
+        # Create a course that has a unique content_key but overlapping content_uuid with an existing course.
+        ContentMetadataFactory(
+            content_type=COURSE,
+            content_key='duplicateX',
+            content_uuid=self.course_metadata_published.content_uuid
+        )
+        course_run_for_duplicate = ContentMetadataFactory(content_type=COURSE_RUN, parent_content_key='duplicateX')
+        course_run_for_duplicate.catalog_queries.set([self.enterprise_catalog_course_runs.catalog_query])
+
+        actual_algolia_products_sent_sequence = []
+
+        # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
+        # result into `actual_algolia_products_sent_sequence` for unit testing.
+        def mock_replace_all_objects(products_iterable):
+            nonlocal actual_algolia_products_sent_sequence
+            actual_algolia_products_sent_sequence.append(list(products_iterable))
+        mock_search_client().replace_all_objects.side_effect = mock_replace_all_objects
+
+        with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS), \
+             mock.patch('enterprise_catalog.apps.api.tasks.REINDEX_TASK_BATCH_SIZE', 1):
+            with self.assertLogs(level='INFO') as info_logs:
+                tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
+
+        histogram_found_log_records = [record for record in info_logs.output if ' Histogram of ' in record]
+        assert (
+            f"[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] Histogram of top 10 most frequently discarded algolia object IDs: ["
+            f"('course-{self.course_metadata_published.content_uuid}-catalog-uuids-0', 1), "
+            f"('course-{self.course_metadata_published.content_uuid}-customer-uuids-0', 1), "
+            f"('course-{self.course_metadata_published.content_uuid}-catalog-query-uuids-0', 1)"
+        ) in histogram_found_log_records[0]
+
+    # pylint: disable=unused-argument
+    @mock.patch('enterprise_catalog.apps.api.tasks._was_recently_indexed', return_value=False)
+    @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
+    def test_index_algolia_dry_run(self, mock_search_client, mock_was_recently_indexed):
+        """
+        Make sure the dry_run argument functions correctly and does not call replace_all_objects().
+        """
+        with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_UUID_BATCH_SIZE', 1), \
+             mock.patch('enterprise_catalog.apps.api.tasks.REINDEX_TASK_BATCH_SIZE', 1), \
+             mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
+            with self.assertLogs(level='INFO') as info_logs:
+                # For some reason in order to call a celery task in-memory you must pass kwargs as args.
+                force = False
+                dry_run = True
+                tasks.index_enterprise_catalog_in_algolia_task(force, dry_run)
+
+        mock_search_client().replace_all_objects.assert_not_called()
+        assert '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] 6 products found.' in info_logs.output[-1]
+        assert any(
+            '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] [DRY_RUN] skipping algolia_client.replace_all_objects().' in record
+            for record in info_logs.output
+        )
