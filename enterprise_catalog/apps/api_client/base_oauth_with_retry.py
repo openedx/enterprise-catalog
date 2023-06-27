@@ -35,7 +35,7 @@ class EnterpriseRetry(Retry):
         """
         This method is called before every retry, adding logging.
         """
-        logger.info("EnterpriseRetry retrying {method} to {url}...")
+        logger.info(f'EnterpriseRetry retrying {method} to {url}...')
         return super().increment(method, url, response, error, _pool, _stacktrace)
 
 
