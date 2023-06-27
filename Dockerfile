@@ -13,6 +13,8 @@ LABEL maintainer="sre@edx.org"
 #     application
 # python3-pip
 #     install pip to install application requirements.txt files
+# pkg-config
+#     mysqlclient>=2.2.0 requires this (https://github.com/PyMySQL/mysqlclient/issues/620)
 # libssl-dev
 #     mysqlclient wont install without this.
 # libmysqlclient-dev
