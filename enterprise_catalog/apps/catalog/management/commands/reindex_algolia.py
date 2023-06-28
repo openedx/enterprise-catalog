@@ -17,18 +17,11 @@ class Command(BaseCommand):
     )
 
     def add_arguments(self, parser):
+        # Argument to force execution of celery task, ignoring time since last execution
         parser.add_argument(
             '--force',
             default=False,
             action='store_true',
-            help='Force execution of celery task, ignoring time since last execution.',
-        )
-        parser.add_argument(
-            '--dry-run',
-            dest='dry_run',
-            action='store_true',
-            default=False,
-            help='Generate algolia products to index, but do not actually send them to algolia for indexing.',
         )
 
     def handle(self, *args, **options):
@@ -38,13 +31,11 @@ class Command(BaseCommand):
         options.update(CatalogUpdateCommandConfig.current_options())
         try:
             force_task_execution = options.get('force', False)
-            dry_run = options.get('dry_run', False)
             if options.get('no_async'):
-                # For some reason in order to call a celery task in-memory you must pass kwargs as args.
-                index_enterprise_catalog_in_algolia_task(force_task_execution, dry_run)
+                index_enterprise_catalog_in_algolia_task()
             else:
                 index_enterprise_catalog_in_algolia_task.apply_async(
-                    kwargs={'force': force_task_execution, 'dry_run': dry_run}
+                    kwargs={'force': force_task_execution}
                 ).get()
             logger.info(
                 'index_enterprise_catalog_in_algolia_task from command reindex_algolia finished successfully.'
