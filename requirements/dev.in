@@ -14,3 +14,4 @@ gunicorn                  # For running the application locally
 inflect
 ddt
 python-memcached
+responses

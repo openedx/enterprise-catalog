@@ -5,6 +5,7 @@ import logging
 
 from celery.exceptions import SoftTimeLimitExceeded
 from django.conf import settings
+from requests.adapters import Retry
 
 from .base_oauth_with_retry import BaseOAuthClientWithRetry
 from .constants import (
@@ -31,8 +32,8 @@ class DiscoveryApiClient(BaseOAuthClientWithRetry):
         super().__init__(
             backoff_factor=backoff_factor,
             max_retries=max_retries,
-            # setting this to None ensures all verbs (including POST) are retried
-            allowed_methods=None,
+            allowed_methods={'POST'}.union(Retry.DEFAULT_ALLOWED_METHODS),
+            status_forcelist=Retry.RETRY_AFTER_STATUS_CODES,
         )
 
     def _retrieve_metadata_for_content_filter(self, content_filter, page, request_params):
