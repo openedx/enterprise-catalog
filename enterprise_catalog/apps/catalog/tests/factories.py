@@ -75,7 +75,6 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
 
     # model fields
     content_key = factory.Sequence(lambda n: f'{str(n).zfill(5)}_metadata_item')
-    content_uuid = factory.LazyFunction(uuid4)
     content_type = factory.Iterator([COURSE_RUN, COURSE, PROGRAM, LEARNER_PATHWAY])
     parent_content_key = None
 
@@ -84,7 +83,7 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
         json_metadata = {
             'key': self.content_key,
             'aggregation_key': f'{self.content_type}:{self.content_key}',
-            'uuid': str(self.content_uuid),
+            'uuid': str(uuid4()),
             'title': self.title,
         }
         if self.content_type == COURSE:
