@@ -5,6 +5,7 @@ import logging
 import time
 from collections import defaultdict
 from datetime import timedelta
+from operator import itemgetter
 
 from celery import shared_task, states
 from celery.exceptions import Ignore
@@ -455,7 +456,7 @@ def _batched_metadata_with_queries(json_metadata, sorted_queries):
 
 @shared_task(base=LoggedTaskWithRetry, bind=True, default_retry_delay=UNREADY_TASK_RETRY_COUNTDOWN_SECONDS)
 @expiring_task_semaphore()
-def index_enterprise_catalog_in_algolia_task(self, force=False):  # pylint: disable=unused-argument
+def index_enterprise_catalog_in_algolia_task(self, force=False, dry_run=False):  # pylint: disable=unused-argument
     """
     Index course and program data in Algolia with enterprise-related fields.
 
@@ -466,6 +467,7 @@ def index_enterprise_catalog_in_algolia_task(self, force=False):  # pylint: disa
 
     Args:
         force (bool): If true, forces execution of task and ignores time since last run.
+        dry_run (bool): If true, does everything except call Algolia APIs.
     """
     try:
         if unready_tasks(update_full_content_metadata_task, ONE_HOUR).exists():
@@ -491,6 +493,7 @@ def index_enterprise_catalog_in_algolia_task(self, force=False):  # pylint: disa
         _reindex_algolia(
             indexable_content_keys=indexable_content_keys,
             nonindexable_content_keys=nonindexable_content_keys,
+            dry_run=dry_run,
         )
     except Exception as exep:
         logger.exception(f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] reindex_algolia failed. Error: {exep}')
@@ -686,9 +689,11 @@ def _get_algolia_products_for_batch(
     # non-deterministic because we do not use order_by() on the queryset.
     context_accumulator.setdefault('generated_algolia_object_ids', set())
     duplicate_algolia_records_discarded = 0
-    for algolia_object_id in algolia_products_by_object_id.keys():
+    candidate_algolia_object_ids = list(algolia_products_by_object_id.keys())
+    for algolia_object_id in candidate_algolia_object_ids:
         if algolia_object_id in context_accumulator['generated_algolia_object_ids']:
             del algolia_products_by_object_id[algolia_object_id]
+            context_accumulator['discarded_algolia_object_ids'][algolia_object_id] += 1
             duplicate_algolia_records_discarded += 1
     context_accumulator['generated_algolia_object_ids'].update(algolia_products_by_object_id.keys())
 
@@ -722,7 +727,7 @@ def _index_content_keys_in_algolia(content_keys, algolia_client):
 
     Arguments:
         content_keys (list): List of indexable content_key strings.
-        algolia_client: Instance of an Algolia API client
+        algolia_client: Instance of an Algolia API client, or None if dry_run is enabled.
     """
     logger.info(
         f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] There are {len(content_keys)} total content keys to include in the'
@@ -731,6 +736,7 @@ def _index_content_keys_in_algolia(content_keys, algolia_client):
     course_to_pathway_mapping, program_to_pathway_mapping = get_pathways_by_associated_content()
     context_accumulator = {
         'total_algolia_products_count': 0,
+        'discarded_algolia_object_ids': defaultdict(int),
     }
     # Produce a generator of batches of algolia products to index.  Each batch has an unpredictable, variable length.
     # Not immediately evaluated, so no memory is consumed yet.
@@ -759,16 +765,30 @@ def _index_content_keys_in_algolia(content_keys, algolia_client):
     #
     # See function documentation for indication that an Iterator is accepted:
     # https://github.com/algolia/algoliasearch-client-python/blob/e0a2a578464a1b01caaa84dba927b99ae8476af3/algoliasearch/search_index.py#L89
-    algolia_client.replace_all_objects(algolia_products_generator)
+    if algolia_client:
+        algolia_client.replace_all_objects(algolia_products_generator)
+    else:
+        logger.info(
+            '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] [DRY_RUN] skipping algolia_client.replace_all_objects().'
+        )
+        # Force evaluation of the generator to simulate algolia client reading it.
+        _ = list(algolia_products_generator)
 
     # Now, the generator will have been fully evaluated, and context_accumulator will have been filled with interesting
     # metrics.
+    if context_accumulator['discarded_algolia_object_ids']:
+        top_10_discarded_algolia_object_ids = \
+            sorted(context_accumulator['discarded_algolia_object_ids'].items(), key=itemgetter(1), reverse=True)[:10]
+        logger.info(
+            f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] Histogram of top 10 most frequently discarded algolia object IDs: '
+            f'{top_10_discarded_algolia_object_ids}.'
+        )
     logger.info(
         f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] {context_accumulator["total_algolia_products_count"]} products found.'
     )
 
 
-def _reindex_algolia(indexable_content_keys, nonindexable_content_keys):
+def _reindex_algolia(indexable_content_keys, nonindexable_content_keys, dry_run=False):
     """
     Indexes courses, programs and pathways metadata in the Algolia search index.
     """
@@ -784,8 +804,10 @@ def _reindex_algolia(indexable_content_keys, nonindexable_content_keys):
         # will help prevent us from unintentionally removing all content keys from the index.
         return
 
-    algolia_client = get_initialized_algolia_client()
-    configure_algolia_index(algolia_client)
+    algolia_client = None
+    if not dry_run:
+        algolia_client = get_initialized_algolia_client()
+        configure_algolia_index(algolia_client)
 
     # Replaces all objects in the Algolia index with new objects based on the specified
     # indexable content keys.
