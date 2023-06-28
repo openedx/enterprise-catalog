@@ -14,11 +14,11 @@ class EnterpriseRetry(Retry):
     A class to tweak which Exceptions are considered retryable by Retry
     """
 
-    def _is_read_error(self, err: Exception) -> bool:
+    def _is_connection_error(self, err: Exception) -> bool:
         """
         Extending this method to account for requests.exceptions.RequestException
         """
-        super_result = super()._is_read_error(err)
+        super_result = super()._is_connection_error(err)
         # this is triggered by a ProtocolError but isnt in the stack
         local_result = isinstance(err, RequestException)
         return super_result or local_result
@@ -35,8 +35,17 @@ class EnterpriseRetry(Retry):
         """
         This method is called before every retry, adding logging.
         """
-        logger.info(f'EnterpriseRetry retrying {method} to {url}...')
+        logger.info(f'EnterpriseRetry retrying {method} to {url}, error={error}...')
         return super().increment(method, url, response, error, _pool, _stacktrace)
+
+    def is_exhausted(self) -> bool:
+        """
+        Are we out of retries? Adding logging.
+        """
+        super_result = super().is_exhausted()
+        if super_result:
+            logger.info('EnterpriseRetry retries exhausted.')
+        return super_result
 
 
 class BaseOAuthClientWithRetry(BaseOAuthClient):
@@ -51,14 +60,17 @@ class BaseOAuthClientWithRetry(BaseOAuthClient):
             max_retries=3,
             backoff_jitter=1,
             allowed_methods=Retry.DEFAULT_ALLOWED_METHODS,
-            **kwargs
+            status_forcelist=Retry.RETRY_AFTER_STATUS_CODES,
     ):
-        super().__init__(**kwargs)
+        super().__init__()
         retry = EnterpriseRetry(
             total=max_retries,
+            read=max_retries,
+            connect=max_retries,
             backoff_factor=backoff_factor,
             backoff_jitter=backoff_jitter,
             allowed_methods=allowed_methods,
+            status_forcelist=status_forcelist,
         )
         adapter = HTTPAdapter(max_retries=retry)
         self.client.mount('http://', adapter)
