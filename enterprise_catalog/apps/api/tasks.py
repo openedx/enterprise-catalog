@@ -5,6 +5,7 @@ import logging
 import time
 from collections import defaultdict
 from datetime import timedelta
+from operator import itemgetter
 
 from celery import shared_task, states
 from celery.exceptions import Ignore
@@ -455,7 +456,7 @@ def _batched_metadata_with_queries(json_metadata, sorted_queries):
 
 @shared_task(base=LoggedTaskWithRetry, bind=True, default_retry_delay=UNREADY_TASK_RETRY_COUNTDOWN_SECONDS)
 @expiring_task_semaphore()
-def index_enterprise_catalog_in_algolia_task(self, force=False):  # pylint: disable=unused-argument
+def index_enterprise_catalog_in_algolia_task(self, force=False, dry_run=False):  # pylint: disable=unused-argument
     """
     Index course and program data in Algolia with enterprise-related fields.
 
@@ -466,6 +467,7 @@ def index_enterprise_catalog_in_algolia_task(self, force=False):  # pylint: disa
 
     Args:
         force (bool): If true, forces execution of task and ignores time since last run.
+        dry_run (bool): If true, does everything except call Algolia APIs.
     """
     try:
         if unready_tasks(update_full_content_metadata_task, ONE_HOUR).exists():
@@ -491,6 +493,7 @@ def index_enterprise_catalog_in_algolia_task(self, force=False):  # pylint: disa
         _reindex_algolia(
             indexable_content_keys=indexable_content_keys,
             nonindexable_content_keys=nonindexable_content_keys,
+            dry_run=dry_run,
         )
     except Exception as exep:
         logger.exception(f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] reindex_algolia failed. Error: {exep}')
@@ -515,13 +518,30 @@ def get_pathways_by_associated_content():
 
 def add_metadata_to_algolia_objects(
     metadata,
-    content_key,
-    catalog_uuids_by_key,
     algolia_products_by_object_id,
-    customer_uuids_by_key,
-    catalog_queries_by_key,
+    catalog_uuids,
+    customer_uuids,
+    catalog_queries,
 ):
-    """ Helper method to take individual content objects and add them to a combined `algolia products` object"""
+    """
+    Convert ContentMetadata objects into Algolia products and accumulate results into `algolia_products_by_object_id`.
+
+    At minimum, there are 3 duplicate Algolia products generated per course, one for each of [catalog uuids, customer
+    uuids, catalog queries], and possibly more if any one of those exceeds ALGOLIA_UUID_BATCH_SIZE.  In the case of the
+    batch size being exceeded, create further duplicate algolia product records, batching the uuids to reduce the
+    payload size of the Algolia product objects.
+
+    Args:
+        metadata (ContentMetadata): The course, program or learner pathway for which to generate aloglia products.
+        algolia_products_by_object_id (dict):
+            Object to append the resulting algolia products to.  Keys are objectIDs, and values are algolia products to
+            actually index.
+        catalog_uuids (list of str): Associated catalog UUIDs.
+        customer_uuids (list of str): Associated customer UUIDs.
+        catalog_queries (list of tuple(str, str)): Associated catalog queries, as a list of (UUID, title) tuples.
+    """
+
+    content_key = metadata.content_key
     # add enterprise-related uuids to json_metadata
     json_metadata = copy.deepcopy(metadata.json_metadata)
     json_metadata.update({
@@ -529,7 +549,7 @@ def add_metadata_to_algolia_objects(
     })
 
     # enterprise catalog uuids
-    catalog_uuids = sorted(list(catalog_uuids_by_key[content_key]))
+    catalog_uuids = sorted(list(catalog_uuids))
     batched_metadata = _batched_metadata(
         json_metadata,
         catalog_uuids,
@@ -539,7 +559,7 @@ def add_metadata_to_algolia_objects(
     _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata)
 
     # enterprise customer uuids
-    customer_uuids = sorted(list(customer_uuids_by_key[content_key]))
+    customer_uuids = sorted(list(customer_uuids))
     batched_metadata = _batched_metadata(
         json_metadata,
         customer_uuids,
@@ -551,154 +571,224 @@ def add_metadata_to_algolia_objects(
 
     # enterprise catalog queries (tuples of (query uuid, query title)), note: account for None being present
     # within the list
-    queries = sorted(list(catalog_queries_by_key[content_key]))
+    queries = sorted(list(catalog_queries))
     batched_metadata = _batched_metadata_with_queries(json_metadata, queries)
     _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata)
 
 
-def index_content_keys_in_algolia(content_keys, algolia_client):  # pylint: disable=too-many-statements
+def _get_algolia_products_for_batch(
+    batch_num,
+    content_keys_batch,
+    course_to_pathway_mapping,
+    program_to_pathway_mapping,
+    context_accumulator,
+):
+    """
+    Produce a list of products to index in algolia, given a fixed length batch of content_keys.
+
+    The intention of this function is to produce an output object that consumes a relatively fixed amount of memory.
+    Callers can also maintain a fixed memory cap by only keeping a fixed number of output objects in-memory at any given
+    time.
+
+    Returns:
+        list of dict: Algolia products to index.
+    """
+    algolia_products_by_object_id = {}
+
+    catalog_uuids_by_key = defaultdict(set)
+    customer_uuids_by_key = defaultdict(set)
+    catalog_queries_by_key = defaultdict(set)
+    # Retrieve ContentMetadata records for courses, course runs, programs and learner pathways that match the specified
+    # content_keys in the content_key, parent_content_key or associated content metadata's content_key.
+    query = (
+        Q(content_key__in=content_keys_batch)
+        | Q(parent_content_key__in=content_keys_batch)
+        | Q(
+            associated_content_metadata__content_key__in=content_keys_batch,
+            content_type__in=[PROGRAM, LEARNER_PATHWAY]
+        )
+    )
+
+    catalog_queries = CatalogQuery.objects.prefetch_related(
+        'enterprise_catalogs',
+    )
+    associated_programs_query = ContentMetadata.objects.filter(content_type__in=[PROGRAM, LEARNER_PATHWAY])
+    content_metadata = ContentMetadata.objects.filter(query).prefetch_related(
+        Prefetch('catalog_queries', queryset=catalog_queries),
+        Prefetch('associated_content_metadata', queryset=associated_programs_query, to_attr='associated_programs'),
+    )
+
+    # Retrieve the associated enterprise_catalog_uuids and enterprise_customer_uuids for each selected ContentMetadata
+    # record, storing them for later retrieval.
+    for metadata in content_metadata:
+        if metadata.content_type in (COURSE, PROGRAM, LEARNER_PATHWAY):
+            content_key = metadata.content_key
+        else:
+            content_key = metadata.parent_content_key
+
+        associated_queries = metadata.catalog_queries.all()
+        enterprise_catalog_uuids = set()
+        enterprise_customer_uuids = set()
+        enterprise_catalog_queries = set()
+        for query in associated_queries:
+            enterprise_catalog_queries.add((str(query.uuid), query.title))
+            associated_catalogs = query.enterprise_catalogs.all()
+            for catalog in associated_catalogs:
+                enterprise_catalog_uuids.add(str(catalog.uuid))
+                enterprise_customer_uuids.add(str(catalog.enterprise_uuid))
+
+        # add to any existing enterprise catalog uuids, enterprise customer uuids or catalog query uuids
+        catalog_uuids_by_key[content_key].update(enterprise_catalog_uuids)
+        customer_uuids_by_key[content_key].update(enterprise_customer_uuids)
+        catalog_queries_by_key[content_key].update(enterprise_catalog_queries)
+
+        if metadata.content_type == COURSE:
+            for program_metadata in metadata.associated_programs:
+                content_key = program_metadata.content_key
+                catalog_uuids_by_key[content_key].update(enterprise_catalog_uuids)
+                customer_uuids_by_key[content_key].update(enterprise_customer_uuids)
+                catalog_queries_by_key[content_key].update(enterprise_catalog_queries)
+
+            for pathway in course_to_pathway_mapping[metadata.content_key]:
+                catalog_queries_by_key[pathway.content_key].update(enterprise_catalog_queries)
+                catalog_uuids_by_key[pathway.content_key].update(enterprise_catalog_uuids)
+                customer_uuids_by_key[pathway.content_key].update(enterprise_customer_uuids)
+
+        if metadata.content_type == PROGRAM:
+            for pathway in program_to_pathway_mapping[content_key]:
+                catalog_queries_by_key[pathway.content_key].update(enterprise_catalog_queries)
+                catalog_uuids_by_key[pathway.content_key].update(enterprise_catalog_uuids)
+                customer_uuids_by_key[pathway.content_key].update(enterprise_customer_uuids)
+
+    # iterate over courses, programs and pathways and add their metadata to the list of objects to be indexed
+    filtered_content_metadata = content_metadata.filter(
+        Q(content_type=COURSE)
+        | Q(content_type=PROGRAM)
+        | Q(content_type=LEARNER_PATHWAY)
+    )
+    for metadata in filtered_content_metadata:
+        # Check if we've indexed the course recently
+        # (programs/pathways are indexed every time regardless of last indexing)
+        if _was_recently_indexed(metadata.content_key) and metadata.content_type not in [PROGRAM, LEARNER_PATHWAY]:
+            continue
+
+        # Build all the algolia products for this single metadata record and append them to
+        # `algolia_products_by_object_id`.  This function contains all the logic to create duplicate/segmented records
+        # with non-overlapping UUID list fields to keep the product size below a fixed limit controlled by
+        # ALGOLIA_UUID_BATCH_SIZE.
+        add_metadata_to_algolia_objects(
+            metadata,
+            algolia_products_by_object_id,
+            catalog_uuids_by_key[metadata.content_key],
+            customer_uuids_by_key[metadata.content_key],
+            catalog_queries_by_key[metadata.content_key],
+        )
+
+    # In case there are multiple CourseMetadata records that share the exact same content_uuid (which would cause an
+    # algolia objectID collision), do not send more than one.  Note that selection of duplicate content is
+    # non-deterministic because we do not use order_by() on the queryset.
+    context_accumulator.setdefault('generated_algolia_object_ids', set())
+    duplicate_algolia_records_discarded = 0
+    candidate_algolia_object_ids = list(algolia_products_by_object_id.keys())
+    for algolia_object_id in candidate_algolia_object_ids:
+        if algolia_object_id in context_accumulator['generated_algolia_object_ids']:
+            del algolia_products_by_object_id[algolia_object_id]
+            context_accumulator['discarded_algolia_object_ids'][algolia_object_id] += 1
+            duplicate_algolia_records_discarded += 1
+    context_accumulator['generated_algolia_object_ids'].update(algolia_products_by_object_id.keys())
+
+    # Increment counter used for logging at the very end.
+    context_accumulator['total_algolia_products_count'] += len(algolia_products_by_object_id)
+
+    logger.info(
+        f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] batch#{batch_num}: '
+        f'{len(content_keys_batch)} content keys, '
+        f'{content_metadata.count()} content metadata found, '
+        f'{filtered_content_metadata.count()} content metadata processed, '
+        f'{len(algolia_products_by_object_id)} generated algolia products kept, '
+        f'{duplicate_algolia_records_discarded} generated algolia products discarded.'
+    )
+
+    # extract only the fields we care about.
+    return create_algolia_objects(algolia_products_by_object_id.values(), ALGOLIA_FIELDS)
+
+
+def _index_content_keys_in_algolia(content_keys, algolia_client):
     """
     Determines list of Algolia objects to include in the Algolia index based on the
     specified content keys, and replaces all existing objects with the new ones in an atomic reindex.
 
+    Memory consumption of this function follows a sawtooth pattern over time.  Maximum instantaneous memory consumption
+    is dictated by the larger of two batch sizes:
+
+    * The number of algolia products generated by a batch of `REINDEX_TASK_BATCH_SIZE` content keys.  This number is
+      variable, but at the time of writing this was on order of 180 (with `REINDEX_TASK_BATCH_SIZE` = 10).
+    * The algoliasearch library batch size, default 1000.
+
     Arguments:
         content_keys (list): List of indexable content_key strings.
-        algolia_client: Instance of an Algolia API client
+        algolia_client: Instance of an Algolia API client, or None if dry_run is enabled.
     """
     logger.info(
         f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] There are {len(content_keys)} total content keys to include in the'
         f' Algolia index.'
     )
-    algolia_products_by_object_id = {}
-    batch_num = 1
-    catalog_uuids_by_key = defaultdict(set)
-    customer_uuids_by_key = defaultdict(set)
-    catalog_queries_by_key = defaultdict(set)
     course_to_pathway_mapping, program_to_pathway_mapping = get_pathways_by_associated_content()
-    max_uuid_count = 0
-    for content_keys_batch in batch(content_keys, batch_size=REINDEX_TASK_BATCH_SIZE):
-        uuid_count = 0
-        # retrieve ContentMetadata records that match the specified content_keys in the
-        # content_key or parent_content_key or course associated programs. returns courses, programs and course runs.
-        query = (
-            Q(content_key__in=content_keys_batch)
-            | Q(parent_content_key__in=content_keys_batch)
-            | Q(
-                associated_content_metadata__content_key__in=content_keys_batch,
-                content_type__in=[PROGRAM, LEARNER_PATHWAY]
-            )
+    context_accumulator = {
+        'total_algolia_products_count': 0,
+        'discarded_algolia_object_ids': defaultdict(int),
+    }
+    # Produce a generator of batches of algolia products to index.  Each batch has an unpredictable, variable length.
+    # Not immediately evaluated, so no memory is consumed yet.
+    algolia_products_batch_generator = (
+        _get_algolia_products_for_batch(
+            batch_num,
+            content_keys_batch,
+            course_to_pathway_mapping,
+            program_to_pathway_mapping,
+            context_accumulator,
         )
+        for batch_num, content_keys_batch
+        in enumerate(batch(content_keys, batch_size=REINDEX_TASK_BATCH_SIZE))
+    )
+    # Flatten the variable-length batches of products into a flat iterable of all products to index.  Whatever consumes
+    # this will not even know that it was already batched and recombined.
+    # Still not evaluated, so no memory is consumed yet.
+    algolia_products_generator = (
+        algolia_product
+        for batch in algolia_products_batch_generator
+        for algolia_product in batch
+    )
 
-        catalog_queries = CatalogQuery.objects.prefetch_related(
-            'enterprise_catalogs',
-        )
-        associate_programs_query = ContentMetadata.objects.filter(content_type__in=[PROGRAM, LEARNER_PATHWAY])
-        content_metadata = ContentMetadata.objects.filter(query).prefetch_related(
-            Prefetch('catalog_queries', queryset=catalog_queries),
-            Prefetch('associated_content_metadata', queryset=associate_programs_query, to_attr='associate_programs'),
-        )
+    # Feed the un-evaluated flat iterable of algolia products into the 3rd party library function.  As of this writing,
+    # this library function will chunk the interable again using a default batch size of 1000.
+    #
+    # See function documentation for indication that an Iterator is accepted:
+    # https://github.com/algolia/algoliasearch-client-python/blob/e0a2a578464a1b01caaa84dba927b99ae8476af3/algoliasearch/search_index.py#L89
+    if algolia_client:
+        algolia_client.replace_all_objects(algolia_products_generator)
+    else:
         logger.info(
-            f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] batch#{batch_num}: {content_metadata.count()} metadata found.'
+            '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] [DRY_RUN] skipping algolia_client.replace_all_objects().'
         )
+        # Force evaluation of the generator to simulate algolia client reading it.
+        _ = list(algolia_products_generator)
 
-        # iterate through ContentMetadata records, retrieving the enterprise_catalog_uuids
-        # and enterprise_customer_uuids associated with each ContentMetadata record (either
-        # a course or a course run or program), storing them in a dictionary with the related
-        # content_key as a key for later retrieval. the content_key is determined by
-        # the content_key field if the metadata is a `COURSE` or `PROGRAM` or by the parent_content_key
-        # field if the metadata is a `COURSE_RUN`.
-        for metadata in content_metadata:
-            if metadata.content_type in (COURSE, PROGRAM, LEARNER_PATHWAY):
-                content_key = metadata.content_key
-            else:
-                content_key = metadata.parent_content_key
-
-            associated_queries = metadata.catalog_queries.all()
-            enterprise_catalog_uuids = set()
-            enterprise_customer_uuids = set()
-            enterprise_catalog_queries = set()
-            for query in associated_queries:
-                enterprise_catalog_queries.add((str(query.uuid), query.title))
-                associated_catalogs = query.enterprise_catalogs.all()
-                for catalog in associated_catalogs:
-                    enterprise_catalog_uuids.add(str(catalog.uuid))
-                    enterprise_customer_uuids.add(str(catalog.enterprise_uuid))
-
-            # add to any existing enterprise catalog uuids, enterprise customer uuids or catalog query uuids
-            catalog_uuids_by_key[content_key].update(enterprise_catalog_uuids)
-            customer_uuids_by_key[content_key].update(enterprise_customer_uuids)
-            catalog_queries_by_key[content_key].update(enterprise_catalog_queries)
-
-            if metadata.content_type == COURSE:
-                for program_metadata in metadata.associate_programs:
-                    content_key = program_metadata.content_key
-                    catalog_uuids_by_key[content_key].update(enterprise_catalog_uuids)
-                    customer_uuids_by_key[content_key].update(enterprise_customer_uuids)
-                    catalog_queries_by_key[content_key].update(enterprise_catalog_queries)
-
-                for pathway in course_to_pathway_mapping[metadata.content_key]:
-                    catalog_queries_by_key[pathway.content_key].update(enterprise_catalog_queries)
-                    catalog_uuids_by_key[pathway.content_key].update(enterprise_catalog_uuids)
-                    customer_uuids_by_key[pathway.content_key].update(enterprise_customer_uuids)
-
-            if metadata.content_type == PROGRAM:
-                for pathway in program_to_pathway_mapping[content_key]:
-                    catalog_queries_by_key[pathway.content_key].update(enterprise_catalog_queries)
-                    catalog_uuids_by_key[pathway.content_key].update(enterprise_catalog_uuids)
-                    customer_uuids_by_key[pathway.content_key].update(enterprise_customer_uuids)
-
-        # iterate through the courses and programs, retrieving the enterprise-related uuids from the
-        # dictionary created above. there is at least 2 duplicate course records per course,
-        # each including the catalog uuids and customer uuids respectively.
-        #
-        # if the number of uuids for both catalogs/customers exceeds ALGOLIA_UUID_BATCH_SIZE, then
-        # create duplicate course records, batching the uuids (flattened records) to reduce
-        # the payload size of the Algolia objects.
-        filtered_content_metadata = content_metadata.filter(
-            Q(content_type=COURSE)
-            | Q(content_type=PROGRAM)
-            | Q(content_type=LEARNER_PATHWAY)
+    # Now, the generator will have been fully evaluated, and context_accumulator will have been filled with interesting
+    # metrics.
+    if context_accumulator['discarded_algolia_object_ids']:
+        top_10_discarded_algolia_object_ids = \
+            sorted(context_accumulator['discarded_algolia_object_ids'].items(), key=itemgetter(1), reverse=True)[:10]
+        logger.info(
+            f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] Histogram of top 10 most frequently discarded algolia object IDs: '
+            f'{top_10_discarded_algolia_object_ids}.'
         )
-        # iterate over courses, programs and pathways and add their metadata to the list of objects to be indexed
-        for metadata in filtered_content_metadata:
-            content_key = metadata.content_key
-            # Check if we've indexed the course recently
-            # (programs/pathways are indexed every time regardless of last indexing)
-            if _was_recently_indexed(content_key) and metadata.content_type not in [PROGRAM, LEARNER_PATHWAY]:
-                continue
-
-            add_metadata_to_algolia_objects(
-                metadata,
-                content_key,
-                catalog_uuids_by_key,
-                algolia_products_by_object_id,
-                customer_uuids_by_key,
-                catalog_queries_by_key
-            )
-
-        batch_num += 1
-        for contents_catalogs in catalog_uuids_by_key.values():
-            uuid_count += len(contents_catalogs)
-        for contents_queries in catalog_queries_by_key.values():
-            uuid_count += len(contents_queries)
-        for contents_customers in customer_uuids_by_key.values():
-            uuid_count += len(contents_customers)
-        max_uuid_count = max(uuid_count, max_uuid_count)
-
     logger.info(
-        f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] max number of uuids held in memory during reindexing: {max_uuid_count}'
+        f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] {context_accumulator["total_algolia_products_count"]} products found.'
     )
 
-    logger.info(
-        f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] {len(algolia_products_by_object_id.keys())} products found.'
-    )
 
-    # extract out only the fields we care about and send to Algolia index
-    algolia_objects = create_algolia_objects(algolia_products_by_object_id.values(), ALGOLIA_FIELDS)
-    algolia_client.replace_all_objects(algolia_objects)
-
-
-def _reindex_algolia(indexable_content_keys, nonindexable_content_keys):
+def _reindex_algolia(indexable_content_keys, nonindexable_content_keys, dry_run=False):
     """
     Indexes courses, programs and pathways metadata in the Algolia search index.
     """
@@ -714,12 +804,14 @@ def _reindex_algolia(indexable_content_keys, nonindexable_content_keys):
         # will help prevent us from unintentionally removing all content keys from the index.
         return
 
-    algolia_client = get_initialized_algolia_client()
-    configure_algolia_index(algolia_client)
+    algolia_client = None
+    if not dry_run:
+        algolia_client = get_initialized_algolia_client()
+        configure_algolia_index(algolia_client)
 
     # Replaces all objects in the Algolia index with new objects based on the specified
     # indexable content keys.
-    index_content_keys_in_algolia(
+    _index_content_keys_in_algolia(
         content_keys=indexable_content_keys,
         algolia_client=algolia_client,
     )
