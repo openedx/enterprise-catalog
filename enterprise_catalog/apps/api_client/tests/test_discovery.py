@@ -1,6 +1,7 @@
 """ Tests for discovery api client. """
 from unittest import mock
 
+import requests
 from django.test import TestCase
 from simplejson import JSONDecodeError
 
@@ -31,6 +32,42 @@ class TestDiscoveryApiClient(TestCase):
 
         expected_response = [{'key': 'fakeX'}]
         self.assertEqual(actual_response, expected_response)
+
+    @mock.patch('enterprise_catalog.apps.api_client.base_oauth.OAuthAPIClient')
+    def test_get_metadata_by_query_with_retry_and_error(self, mock_oauth_client):
+        """
+        get_metadata_by_query should call discovery endpoint, but not call
+        traverse_pagination if traverse_pagination is false.
+        """
+
+        mock_oauth_client.return_value.post.return_value.status_code = 400
+        mock_oauth_client.return_value.post.return_value.json.return_value = {}
+
+        catalog_query = CatalogQueryFactory()
+        client = DiscoveryApiClient()
+        # setting this to 0 means we wont wait between retries
+        client.BACKOFF_FACTOR = 0
+
+        client.get_metadata_by_query(catalog_query)
+        # the retry logic will end up calling this 5 times
+        assert mock_oauth_client.return_value.post.call_count == 5
+
+    @mock.patch('enterprise_catalog.apps.api_client.base_oauth.OAuthAPIClient')
+    def test_get_metadata_by_query_with_retry_and_exception(self, mock_oauth_client):
+        """
+        get_metadata_by_query should call discovery endpoint, but not call
+        traverse_pagination if traverse_pagination is false.
+        """
+
+        mock_oauth_client.return_value.post.side_effect = requests.exceptions.ChunkedEncodingError()
+
+        catalog_query = CatalogQueryFactory()
+        client = DiscoveryApiClient()
+        # setting this to 0 means we wont wait between retries
+        client.BACKOFF_FACTOR = 0
+
+        with self.assertRaises(requests.exceptions.ChunkedEncodingError):
+            client.get_metadata_by_query(catalog_query)
 
     @mock.patch('enterprise_catalog.apps.api_client.base_oauth.OAuthAPIClient')
     def test_get_metadata_by_query_with_error(self, mock_oauth_client):

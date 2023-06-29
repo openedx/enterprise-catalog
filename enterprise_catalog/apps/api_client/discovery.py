@@ -2,12 +2,13 @@
 Discovery service api client code.
 """
 import logging
+import time
 
+import requests
 from celery.exceptions import SoftTimeLimitExceeded
 from django.conf import settings
-from requests.adapters import Retry
 
-from .base_oauth_with_retry import BaseOAuthClientWithRetry
+from .base_oauth import BaseOAuthClient
 from .constants import (
     DISCOVERY_COURSES_ENDPOINT,
     DISCOVERY_OFFSET_SIZE,
@@ -19,22 +20,21 @@ from .constants import (
 LOGGER = logging.getLogger(__name__)
 
 
-class DiscoveryApiClient(BaseOAuthClientWithRetry):
+class DiscoveryApiClient(BaseOAuthClient):
     """
     Object builds an API client to make calls to the Discovery Service.
     """
 
-    HTTP_TIMEOUT = getattr(settings, "ENTERPRISE_DISCOVERY_CLIENT_TIMEOUT", 15)
+    # the maximum number of retries to attempt a call
+    MAX_RETRIES = getattr(settings, "ENTERPRISE_DISCOVERY_CLIENT_MAX_RETRIES", 4)
+    # the number of seconds to sleep beteween tries, which is doubled every attempt
+    BACKOFF_FACTOR = getattr(settings, "ENTERPRISE_DISCOVERY_CLIENT_BACKOFF_FACTOR", 2)
 
-    def __init__(self):
-        backoff_factor = getattr(settings, "ENTERPRISE_DISCOVERY_CLIENT_BACKOFF_FACTOR", 2)
-        max_retries = getattr(settings, "ENTERPRISE_DISCOVERY_CLIENT_MAX_RETRIES", 4)
-        super().__init__(
-            backoff_factor=backoff_factor,
-            max_retries=max_retries,
-            allowed_methods={'POST'}.union(Retry.DEFAULT_ALLOWED_METHODS),
-            status_forcelist=Retry.RETRY_AFTER_STATUS_CODES,
-        )
+    def _calculate_backoff(self, attempt_count):
+        """
+        Calculate the seconds to sleep based on attempt_count
+        """
+        return (self.BACKOFF_FACTOR * (2 ** (attempt_count - 1)))
 
     def _retrieve_metadata_for_content_filter(self, content_filter, page, request_params):
         """
@@ -42,16 +42,39 @@ class DiscoveryApiClient(BaseOAuthClientWithRetry):
         content_filter, page, and request_params
         """
         LOGGER.info(f'Retrieving results from course-discovery for page {page}...')
-        response = self.client.post(
-            DISCOVERY_SEARCH_ALL_ENDPOINT,
-            json=content_filter,
-            params=request_params,
-            timeout=self.HTTP_TIMEOUT,
-        )
-        elapsed_seconds = response.elapsed.total_seconds()
-        LOGGER.info(
-            f'Retrieved results from course-discovery for page {page} in '
-            f'retrieve_metadata_for_content_filter_seconds={elapsed_seconds} seconds.')
+        attempts = 0
+        while True:
+            attempts = attempts + 1
+            successful = True
+            exception = None
+            try:
+                response = self.client.post(
+                    DISCOVERY_SEARCH_ALL_ENDPOINT,
+                    json=content_filter,
+                    params=request_params,
+                )
+                successful = response.status_code < 400
+                elapsed_seconds = response.elapsed.total_seconds()
+                LOGGER.info(
+                    f'Retrieved results from course-discovery for page {page} in '
+                    f'retrieve_metadata_for_content_filter_seconds={elapsed_seconds} seconds.'
+                )
+            except requests.exceptions.RequestException as err:
+                exception = err
+                LOGGER.exception(f'Error while retrieving results from course-discovery for page {page}')
+                successful = False
+            if attempts <= self.MAX_RETRIES and not successful:
+                sleep_seconds = self._calculate_backoff(attempts)
+                LOGGER.warning(
+                    f'failed request detected from {DISCOVERY_SEARCH_ALL_ENDPOINT}, '
+                    'backing-off before retrying, '
+                    f'sleeping {sleep_seconds} seconds...'
+                )
+                time.sleep(sleep_seconds)
+            else:
+                if exception:
+                    raise exception
+                break
         return response.json()
 
     def get_metadata_by_query(self, catalog_query):
@@ -106,7 +129,6 @@ class DiscoveryApiClient(BaseOAuthClientWithRetry):
         response = self.client.get(
             DISCOVERY_COURSES_ENDPOINT,
             params=request_params,
-            timeout=self.HTTP_TIMEOUT,
         ).json()
         return response
 
@@ -163,7 +185,6 @@ class DiscoveryApiClient(BaseOAuthClientWithRetry):
         response = self.client.get(
             DISCOVERY_PROGRAMS_ENDPOINT,
             params=request_params,
-            timeout=self.HTTP_TIMEOUT,
         ).json()
         return response
 
