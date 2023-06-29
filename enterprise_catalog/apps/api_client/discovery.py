@@ -29,6 +29,8 @@ class DiscoveryApiClient(BaseOAuthClient):
     MAX_RETRIES = getattr(settings, "ENTERPRISE_DISCOVERY_CLIENT_MAX_RETRIES", 4)
     # the number of seconds to sleep beteween tries, which is doubled every attempt
     BACKOFF_FACTOR = getattr(settings, "ENTERPRISE_DISCOVERY_CLIENT_BACKOFF_FACTOR", 2)
+    # the number of seconds to wait for a response
+    HTTP_TIMEOUT = getattr(settings, "ENTERPRISE_DISCOVERY_CLIENT_TIMEOUT", 15)
 
     def _calculate_backoff(self, attempt_count):
         """
@@ -52,6 +54,7 @@ class DiscoveryApiClient(BaseOAuthClient):
                     DISCOVERY_SEARCH_ALL_ENDPOINT,
                     json=content_filter,
                     params=request_params,
+                    timeout=self.HTTP_TIMEOUT,
                 )
                 successful = response.status_code < 400
                 elapsed_seconds = response.elapsed.total_seconds()
@@ -129,6 +132,7 @@ class DiscoveryApiClient(BaseOAuthClient):
         response = self.client.get(
             DISCOVERY_COURSES_ENDPOINT,
             params=request_params,
+            timeout=self.HTTP_TIMEOUT,
         ).json()
         return response
 
@@ -185,6 +189,7 @@ class DiscoveryApiClient(BaseOAuthClient):
         response = self.client.get(
             DISCOVERY_PROGRAMS_ENDPOINT,
             params=request_params,
+            timeout=self.HTTP_TIMEOUT,
         ).json()
         return response
 
