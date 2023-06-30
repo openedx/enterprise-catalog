@@ -638,8 +638,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         def mock_get_algolia_products_for_batch(
             batch_num,
             content_keys_batch,
-            course_to_pathway_mapping,
-            program_to_pathway_mapping,
+            program_to_courses_courseruns_mapping,
+            pathway_to_programs_courses_mapping,
             context_accumulator,
         ):
             return [{'key': content_key, 'foo': 'bar'} for content_key in content_keys_batch]
@@ -660,17 +660,14 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             {'key': 'course-v1:edX+testX+4', 'foo': 'bar'},
         ]
 
-    # pylint: disable=too-many-statements
-    @mock.patch('enterprise_catalog.apps.api.tasks._was_recently_indexed',
-                side_effect=[
-                    False, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True
-                ])
+    @mock.patch('enterprise_catalog.apps.api.tasks._was_recently_indexed')
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
     def test_index_algolia_with_all_uuids(self, mock_search_client, mock_was_recently_indexed):
         """
         Assert that the correct data is sent to Algolia index, with the expected enterprise
         catalog and enterprise customer associations.
         """
+        mock_was_recently_indexed.return_value = False
         algolia_data = self._set_up_factory_data_for_algolia()
         course_associated_program_metadata = ContentMetadataFactory(content_type=PROGRAM, content_key='program-1')
         pathway_program_metadata = ContentMetadataFactory(content_type=PROGRAM, content_key='program-2')
@@ -702,12 +699,9 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
             with self.assertLogs(level='INFO') as info_logs:
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
-                # call it a second time, make assertions that only one thing happened below
-                tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
         assert '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] 15 products found.' in products_found_log_records[0]
-        assert '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] 12 products found.' in products_found_log_records[1]
 
         # create expected data to be added/updated in the Algolia index.
         expected_algolia_objects_to_index = []
@@ -733,15 +727,15 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         program_uuid = course_associated_program_metadata.json_metadata.get('uuid')
         expected_algolia_program_objects.append({
             'objectID': f'program-{program_uuid}-catalog-uuids-0',
-            'enterprise_catalog_uuids': [str(self.enterprise_catalog_courses.uuid)],
+            'enterprise_catalog_uuids': algolia_data['catalog_uuids'],
         })
         expected_algolia_program_objects.append({
             'objectID': f'program-{program_uuid}-customer-uuids-0',
-            'enterprise_customer_uuids': [str(self.enterprise_catalog_courses.enterprise_uuid)],
+            'enterprise_customer_uuids': algolia_data['customer_uuids'],
         })
         expected_algolia_program_objects.append({
             'objectID': f'program-{program_uuid}-catalog-query-uuids-0',
-            'enterprise_catalog_query_uuids': [str(self.enterprise_catalog_courses.catalog_query.uuid)],
+            'enterprise_catalog_query_uuids': sorted(algolia_data['query_uuids']),
             'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
         })
 
@@ -766,17 +760,17 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         expected_algolia_pathway_objects.append({
             'key': pathway_metadata.content_key,
             'objectID': f'learnerpathway-{pathway_uuid}-catalog-uuids-0',
-            'enterprise_catalog_uuids': [str(self.enterprise_catalog_courses.uuid)],
+            'enterprise_catalog_uuids': algolia_data['catalog_uuids'],
         })
         expected_algolia_pathway_objects.append({
             'key': pathway_metadata.content_key,
             'objectID': f'learnerpathway-{pathway_uuid}-customer-uuids-0',
-            'enterprise_customer_uuids': [str(self.enterprise_catalog_courses.enterprise_uuid)],
+            'enterprise_customer_uuids': algolia_data['customer_uuids'],
         })
         expected_algolia_pathway_objects.append({
             'key': pathway_metadata.content_key,
             'objectID': f'learnerpathway-{pathway_uuid}-catalog-query-uuids-0',
-            'enterprise_catalog_query_uuids': [str(self.enterprise_catalog_courses.catalog_query.uuid)],
+            'enterprise_catalog_query_uuids': sorted(algolia_data['query_uuids']),
             'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
         })
 
@@ -811,40 +805,16 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             actual_algolia_products_sent_sequence[0], key=itemgetter('objectID')
         )
 
-        unsorted_expected_calls_args = expected_algolia_program_objects + expected_algolia_pathway_objects + \
-            expected_algolia_program_objects2 + expected_algolia_pathway_objects2
-        expected_second_call_args = sorted(unsorted_expected_calls_args, key=itemgetter('objectID'))
-        actual_second_call_args = sorted(
-            actual_algolia_products_sent_sequence[1], key=itemgetter('objectID')
-        )
         self.assertEqual(expected_first_call_args, actual_first_call_args)
-        self.assertEqual(expected_second_call_args, actual_second_call_args)
 
-        # Verify that we checked the cache twice, though
-        mock_was_recently_indexed.assert_has_calls([
-            mock.call(self.course_metadata_published.content_key),
-            mock.call(self.course_metadata_published.content_key),
-            mock.call(course_associated_program_metadata.content_key),
-            mock.call(pathway_program_metadata.content_key),
-            mock.call(pathway_metadata.content_key),
-            mock.call(pathway_metadata2.content_key),
-            mock.call(pathway_metadata2.content_key),
-            mock.call(self.course_metadata_published.content_key),
-            mock.call(self.course_metadata_published.content_key),
-            mock.call(course_associated_program_metadata.content_key),
-            mock.call(pathway_program_metadata.content_key),
-            mock.call(pathway_metadata.content_key),
-            mock.call(pathway_metadata2.content_key),
-            mock.call(pathway_metadata2.content_key),
-        ])
-
-    @mock.patch('enterprise_catalog.apps.api.tasks._was_recently_indexed', return_value=False)
+    @mock.patch('enterprise_catalog.apps.api.tasks._was_recently_indexed')
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
     def test_index_algolia_with_batched_uuids(self, mock_search_client, mock_was_recently_indexed):
         """
         Assert that the correct data is sent to Algolia index, with the expected enterprise
         catalog, enterprise customer, and catalog query associations.
         """
+        mock_was_recently_indexed.return_value = False
         algolia_data = self._set_up_factory_data_for_algolia()
 
         actual_algolia_products_sent = None
@@ -1023,7 +993,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         Make sure the dry_run argument functions correctly and does not call replace_all_objects().
         """
         with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_UUID_BATCH_SIZE', 1), \
-             mock.patch('enterprise_catalog.apps.api.tasks.REINDEX_TASK_BATCH_SIZE', 1), \
+             mock.patch('enterprise_catalog.apps.api.tasks.REINDEX_TASK_BATCH_SIZE', 10), \
              mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
             with self.assertLogs(level='INFO') as info_logs:
                 # For some reason in order to call a celery task in-memory you must pass kwargs as args.
