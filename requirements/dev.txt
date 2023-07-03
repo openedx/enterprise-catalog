@@ -446,7 +446,7 @@ pbr==5.11.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   stevedore
-pip-tools==6.13.0
+pip-tools==6.14.0
     # via -r requirements/pip-tools.txt
 platformdirs==3.8.0
     # via
@@ -697,6 +697,7 @@ tomli==2.0.1
     #   -r requirements/test.txt
     #   build
     #   coverage
+    #   pip-tools
     #   pylint
     #   pyproject-hooks
     #   pytest
@@ -717,7 +718,7 @@ types-pyyaml==6.0.12.10
     # via
     #   -r requirements/test.txt
     #   responses
-typing-extensions==4.6.3
+typing-extensions==4.7.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
