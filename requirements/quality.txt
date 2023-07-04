@@ -96,7 +96,7 @@ defusedxml==0.7.1
     #   social-auth-core
 dill==0.3.6
     # via pylint
-django==3.2.19
+django==3.2.20
     # via
     #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -c requirements/constraints.txt
@@ -272,7 +272,7 @@ ply==3.11
     # via
     #   -r requirements/base.txt
     #   djangoql
-prompt-toolkit==3.0.38
+prompt-toolkit==3.0.39
     # via
     #   -r requirements/base.txt
     #   click-repl
@@ -415,7 +415,7 @@ tomli==2.0.1
     # via pylint
 tomlkit==0.11.8
     # via pylint
-typing-extensions==4.6.3
+typing-extensions==4.7.1
     # via
     #   -r requirements/base.txt
     #   asgiref
