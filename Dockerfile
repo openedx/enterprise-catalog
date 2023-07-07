@@ -1,5 +1,5 @@
-FROM ubuntu:bionic as app
-LABEL maintainer="sre@edx.org"
+FROM ubuntu:focal as app
+MAINTAINER sre@edx.org
 
 # Packages installed:
 # git
