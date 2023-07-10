@@ -49,11 +49,11 @@ cffi==1.15.1
     #   -r requirements/base.txt
     #   cryptography
     #   pynacl
-charset-normalizer==3.1.0
+charset-normalizer==3.2.0
     # via
     #   -r requirements/base.txt
     #   requests
-click==8.1.3
+click==8.1.4
     # via
     #   -r requirements/base.txt
     #   celery
@@ -266,7 +266,7 @@ pbr==5.11.1
     # via
     #   -r requirements/base.txt
     #   stevedore
-platformdirs==3.8.0
+platformdirs==3.8.1
     # via pylint
 ply==3.11
     # via
