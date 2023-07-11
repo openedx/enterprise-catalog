@@ -641,6 +641,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             program_to_courses_courseruns_mapping,
             pathway_to_programs_courses_mapping,
             context_accumulator,
+            dry_run=False,
         ):
             return [{'key': content_key, 'foo': 'bar'} for content_key in content_keys_batch]
 
@@ -1002,8 +1003,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task(force, dry_run)
 
         mock_search_client().replace_all_objects.assert_not_called()
-        assert '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] 6 products found.' in info_logs.output[-1]
+        assert '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] [DRY RUN] 6 products found.' in info_logs.output[-1]
         assert any(
-            '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] [DRY_RUN] skipping algolia_client.replace_all_objects().' in record
+            '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] [DRY RUN] skipping algolia_client.replace_all_objects().' in record
             for record in info_logs.output
         )

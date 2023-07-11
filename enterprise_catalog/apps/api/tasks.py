@@ -208,7 +208,7 @@ def expiring_task_semaphore(time_delta=None):
                     },
                 )
                 raise TaskRecentlyRunError(message)
-            return task(self, *args, *kwargs)
+            return task(self, *args, **kwargs)
         return wrapped_task
     return decorator
 
@@ -406,6 +406,13 @@ def _update_full_content_metadata_program(content_keys):
     )
 
 
+def _reindex_algolia_prefix(dry_run):
+    if dry_run:
+        return '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] [DRY RUN]'
+    else:
+        return '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX]'
+
+
 def _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata):
     """
     Adds batched_metadata in algolia_products_by_object_id dict.
@@ -457,7 +464,7 @@ def _batched_metadata_with_queries(json_metadata, sorted_queries):
 
 @shared_task(base=LoggedTaskWithRetry, bind=True, default_retry_delay=UNREADY_TASK_RETRY_COUNTDOWN_SECONDS)
 @expiring_task_semaphore()
-def index_enterprise_catalog_in_algolia_task(self, force=False, dry_run=False):  # pylint: disable=unused-argument
+def index_enterprise_catalog_in_algolia_task(self, force=False, dry_run=False):
     """
     Index course and program data in Algolia with enterprise-related fields.
 
@@ -471,6 +478,9 @@ def index_enterprise_catalog_in_algolia_task(self, force=False, dry_run=False): 
         dry_run (bool): If true, does everything except call Algolia APIs.
     """
     try:
+        logger.info(
+            f'{_reindex_algolia_prefix(dry_run)} invoking task with arguments force={force}, dry_run={dry_run}.'
+        )
         if unready_tasks(update_full_content_metadata_task, ONE_HOUR).exists():
             raise self.retry(
                 exc=RequiredTaskUnreadyError(),
@@ -497,7 +507,9 @@ def index_enterprise_catalog_in_algolia_task(self, force=False, dry_run=False): 
             dry_run=dry_run,
         )
     except Exception as exep:
-        logger.exception(f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] reindex_algolia failed. Error: {exep}')
+        logger.exception(
+            f'{_reindex_algolia_prefix(dry_run)} reindex_algolia failed. Error: {exep}'
+        )
         raise exep
 
 
@@ -600,6 +612,7 @@ def _get_algolia_products_for_batch(
     program_to_courses_mapping,
     pathway_to_programs_courses_mapping,
     context_accumulator,
+    dry_run=False,
 ):
     """
     Produce a list of products to index in algolia, given a fixed length batch of content_keys.
@@ -765,7 +778,8 @@ def _get_algolia_products_for_batch(
     context_accumulator['total_algolia_products_count'] += len(algolia_products_by_object_id)
 
     logger.info(
-        f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] batch#{batch_num}: '
+        f'{_reindex_algolia_prefix(dry_run)} '
+        f'batch#{batch_num}: '
         f'{len(content_keys_batch)} content keys, '
         f'{content_metadata_to_process.count()} content metadata found, '
         f'{num_content_metadata_indexed} content metadata indexed, '
@@ -777,7 +791,7 @@ def _get_algolia_products_for_batch(
     return create_algolia_objects(algolia_products_by_object_id.values(), ALGOLIA_FIELDS)
 
 
-def _index_content_keys_in_algolia(content_keys, algolia_client):
+def _index_content_keys_in_algolia(content_keys, algolia_client, dry_run=False):
     """
     Determines list of Algolia objects to include in the Algolia index based on the
     specified content keys, and replaces all existing objects with the new ones in an atomic reindex.
@@ -794,7 +808,7 @@ def _index_content_keys_in_algolia(content_keys, algolia_client):
         algolia_client: Instance of an Algolia API client, or None if dry_run is enabled.
     """
     logger.info(
-        f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] There are {len(content_keys)} total content keys to include in the'
+        f'{_reindex_algolia_prefix(dry_run)} There are {len(content_keys)} total content keys to include in the'
         f' Algolia index.'
     )
     (
@@ -814,6 +828,7 @@ def _index_content_keys_in_algolia(content_keys, algolia_client):
             program_to_courses_mapping,
             pathway_to_programs_courses_mapping,
             context_accumulator,
+            dry_run=dry_run,
         )
         for batch_num, content_keys_batch
         in enumerate(batch(content_keys, batch_size=REINDEX_TASK_BATCH_SIZE))
@@ -832,11 +847,11 @@ def _index_content_keys_in_algolia(content_keys, algolia_client):
     #
     # See function documentation for indication that an Iterator is accepted:
     # https://github.com/algolia/algoliasearch-client-python/blob/e0a2a578464a1b01caaa84dba927b99ae8476af3/algoliasearch/search_index.py#L89
-    if algolia_client:
+    if not dry_run:
         algolia_client.replace_all_objects(algolia_products_generator)
     else:
         logger.info(
-            '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] [DRY_RUN] skipping algolia_client.replace_all_objects().'
+            f'{_reindex_algolia_prefix(dry_run)} skipping algolia_client.replace_all_objects().'
         )
         # Force evaluation of the generator to simulate algolia client reading it.
         _ = list(algolia_products_generator)
@@ -847,11 +862,11 @@ def _index_content_keys_in_algolia(content_keys, algolia_client):
         top_10_discarded_algolia_object_ids = \
             sorted(context_accumulator['discarded_algolia_object_ids'].items(), key=itemgetter(1), reverse=True)[:10]
         logger.info(
-            f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] Histogram of top 10 most frequently discarded algolia object IDs: '
+            f'{_reindex_algolia_prefix(dry_run)} Histogram of top 10 most frequently discarded algolia object IDs: '
             f'{top_10_discarded_algolia_object_ids}.'
         )
     logger.info(
-        f'[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] {context_accumulator["total_algolia_products_count"]} products found.'
+        f'{_reindex_algolia_prefix(dry_run)} {context_accumulator["total_algolia_products_count"]} products found.'
     )
 
 
@@ -861,7 +876,7 @@ def _reindex_algolia(indexable_content_keys, nonindexable_content_keys, dry_run=
     """
     # NOTE: this log message is used in a Splunk alert and should remain consistent in its language
     logger.info(
-        '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] There are %s indexable content keys, which will replace all existing'
+        f'{_reindex_algolia_prefix(dry_run)} There are %s indexable content keys, which will replace all existing'
         ' objects in the Algolia index. %s nonindexable content keys will be removed.',
         len(indexable_content_keys), len(nonindexable_content_keys),
     )
@@ -881,6 +896,7 @@ def _reindex_algolia(indexable_content_keys, nonindexable_content_keys, dry_run=
     _index_content_keys_in_algolia(
         content_keys=indexable_content_keys,
         algolia_client=algolia_client,
+        dry_run=dry_run,
     )
 
 
