@@ -137,7 +137,9 @@ def _should_index_course(course_metadata):
     Replicates the B2C index check of whether a certain course should be indexed for search.
 
     A course should only be indexed for algolia search if it has a non-indexed advertiseable course run, at least
-    one owner, and a marketing url slug.
+    one owner, a marketing url slug, and the advertisable course run has a verified upgrade deadline in the future
+    (in the case where there is *no* verified seat, or the upgrade deadline is null, we consider the deadline
+    to be some arbitrarily distant date in the future).
     The course-discovery check that the course's partner is edX is included by default as the discovery API filters
     to the request's site's partner.
     The discovery check that the course has an availability level was decided to be a duplicate check that the
@@ -164,8 +166,33 @@ def _should_index_course(course_metadata):
     if not is_course_run_active(advertised_course_run):
         return False
 
+    if _has_enroll_by_deadline_passed(course_json_metadata, advertised_course_run):
+        return False
+
     owners = course_json_metadata.get('owners') or []
     return not advertised_course_run.get('hidden') and len(owners) > 0
+
+
+def _has_enroll_by_deadline_passed(course_json_metadata, advertised_course_run):
+    """
+    Helper to determine if the enrollment deadline has passed for the given course
+    and advertised course run.  For course metadata records with a `course_type` of "course" (e.g. OCM courses),
+    this is based on the verified upgrade deadline.
+    For 2u exec ed courses, this is based on the registration deadline.
+    """
+    enroll_by_deadline_timestamp = 0
+    if course_json_metadata.get('course_type') == EXEC_ED_2U_COURSE_TYPE:
+        additional_metadata = course_json_metadata.get('additional_metadata') or {}
+        registration_deadline = additional_metadata.get('registration_deadline')
+        if registration_deadline:
+            enroll_by_deadline_timestamp = datetime.datetime.strptime(
+                registration_deadline,
+                '%Y-%m-%dT%H:%M:%S%z',
+            ).timestamp()
+    else:
+        enroll_by_deadline_timestamp = _get_verified_upgrade_deadline(advertised_course_run)
+
+    return enroll_by_deadline_timestamp < localized_utcnow().timestamp()
 
 
 def partition_course_keys_for_indexing(courses_content_metadata):
