@@ -5,4 +5,4 @@ ignore+= ,migrations, settings, wsgi.py
 const-rgx = (([A-Z_][A-Z0-9_]*)|(__.*__)|log|urlpatterns|logger|User)$
 
 [MESSAGES CONTROL]
-DISABLE+= ,invalid-name,missing-docstring,consider-using-f-string,logging-format-interpolation,useless-option-value,unknown-option-value,consider-using-dict-items,consider-iterating-dictionary
+DISABLE+= ,invalid-name,missing-docstring,consider-using-f-string,logging-format-interpolation,useless-option-value,unknown-option-value
