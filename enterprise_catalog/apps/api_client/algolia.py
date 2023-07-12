@@ -91,7 +91,7 @@ class AlgoliaSearchClient:
 
         return exists
 
-    def replace_all_objects(self, algolia_objects):  # pragma: no cover
+    def replace_all_objects(self, algolia_objects):
         """
         Clears all objects from the index and replaces them with a new set of objects. The records are
         replaced in the index without any downtime due to an atomic reindex.
@@ -109,10 +109,15 @@ class AlgoliaSearchClient:
             self.algolia_index.replace_all_objects(algolia_objects, {
                 'safe': True,  # wait for asynchronous indexing operations to complete
             })
-            logger.info('The %s Algolia index was successfully indexed.', self.ALGOLIA_INDEX_NAME)
+            logger.info(
+                'The %s Algolia index was successfully indexed with %s objects.',
+                self.ALGOLIA_INDEX_NAME,
+                len(algolia_objects),
+            )
         except AlgoliaException as exc:
             logger.exception(
-                'Could not index objects in the %s Algolia index due to an exception.',
+                'Could not index %s objects in the %s Algolia index due to an exception.',
+                len(algolia_objects),
                 self.ALGOLIA_INDEX_NAME,
             )
             raise exc
