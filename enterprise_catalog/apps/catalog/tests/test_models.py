@@ -9,7 +9,6 @@ from uuid import uuid4
 import ddt
 from django.conf import settings
 from django.test import TestCase, override_settings
-from edx_toggles.toggles.testutils import override_waffle_flag
 
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
@@ -23,9 +22,6 @@ from enterprise_catalog.apps.catalog.models import (
     update_contentmetadata_from_discovery,
 )
 from enterprise_catalog.apps.catalog.tests import factories
-from enterprise_catalog.apps.catalog.waffle import (
-    LEARNER_PORTAL_ENROLLMENT_ALL_SUBSIDIES_AND_CONTENT_TYPES_FLAG,
-)
 
 
 @ddt.ddt
@@ -324,155 +320,74 @@ class TestModels(TestCase):
     def _mock_enterprise_customer_cache(
         self,
         mock_enterprise_customer_return_value=None,
-        mock_customer_agreement_return_value=None,
-        mock_coupon_overview_return_value=None,
     ):
         """
         Helper to mock out all API client calls that would normally occur
         when ``EnterpriseCatalog.enterprise_customer`` is accessed.
         """
         path = 'enterprise_catalog.apps.api_client.enterprise_cache.'
-        with mock.patch(path + 'EnterpriseApiClient') as mock_enterprise_api_client, \
-                mock.patch(path + 'LicenseManagerApiClient') as mock_license_manager_client, \
-                mock.patch(path + 'EcommerceApiClient') as mock_ecommerce_client:
+        with mock.patch(path + 'EnterpriseApiClient') as mock_enterprise_api_client:
             mock_enterprise_api_client.return_value.get_enterprise_customer.return_value = \
                 mock_enterprise_customer_return_value
-            mock_ecommerce_client.return_value.get_coupons_overview.return_value = \
-                mock_coupon_overview_return_value
-            mock_license_manager_client.return_value.get_customer_agreement.return_value = \
-                mock_customer_agreement_return_value
             yield
 
     @ddt.data(
         {
-            'is_integrated_customer_with_subsidies_and_offer': False,
-            'is_course_in_subscriptions_catalog': True,
-            'is_course_in_coupons_catalog': True,
-            'should_direct_to_lp': True,
-            'has_learner_portal_enrollment_flag_enabled': False,
+            'is_learner_portal_enabled': True,
         },
         {
-            'is_integrated_customer_with_subsidies_and_offer': True,
-            'is_course_in_subscriptions_catalog': False,
-            'is_course_in_coupons_catalog': False,
-            'should_direct_to_lp': False,
-            'has_learner_portal_enrollment_flag_enabled': False,
+            'is_learner_portal_enabled': False,
         },
-        {
-            'is_integrated_customer_with_subsidies_and_offer': True,
-            'is_course_in_subscriptions_catalog': False,
-            'is_course_in_coupons_catalog': False,
-            'should_direct_to_lp': True,
-            'has_learner_portal_enrollment_flag_enabled': True,
-        },
-        {
-            'is_integrated_customer_with_subsidies_and_offer': True,
-            'is_course_in_subscriptions_catalog': True,
-            'is_course_in_coupons_catalog': False,
-            'should_direct_to_lp': True,
-            'has_learner_portal_enrollment_flag_enabled': False,
-        },
-        {
-            'is_integrated_customer_with_subsidies_and_offer': True,
-            'is_course_in_subscriptions_catalog': False,
-            'is_course_in_coupons_catalog': True,
-            'should_direct_to_lp': True,
-            'has_learner_portal_enrollment_flag_enabled': False,
-        }
     )
     @ddt.unpack
     def test_get_content_enrollment_url(
         self,
-        is_integrated_customer_with_subsidies_and_offer,
-        is_course_in_subscriptions_catalog,
-        is_course_in_coupons_catalog,
-        should_direct_to_lp,
-        has_learner_portal_enrollment_flag_enabled,
+        is_learner_portal_enabled,
     ):
         enterprise_uuid = uuid4()
         enterprise_slug = 'sluggy'
         content_key = 'course-key'
 
-        INTEGRATED_CUSTOMERS_WITH_SUBSIDIES_AND_OFFERS = []
-        if is_integrated_customer_with_subsidies_and_offer:
-            INTEGRATED_CUSTOMERS_WITH_SUBSIDIES_AND_OFFERS.append(str(enterprise_uuid))
+        enterprise_catalog = factories.EnterpriseCatalogFactory(enterprise_uuid=enterprise_uuid)
+        content_metadata = factories.ContentMetadataFactory(
+            content_key=content_key,
+            content_type=COURSE,
+        )
+        enterprise_catalog.catalog_query.contentmetadata_set.add(*[content_metadata])
 
-        with self.settings(
-            INTEGRATED_CUSTOMERS_WITH_SUBSIDIES_AND_OFFERS=INTEGRATED_CUSTOMERS_WITH_SUBSIDIES_AND_OFFERS
-        ), override_waffle_flag(
-            LEARNER_PORTAL_ENROLLMENT_ALL_SUBSIDIES_AND_CONTENT_TYPES_FLAG,
-            active=has_learner_portal_enrollment_flag_enabled
+        mock_enterprise_customer_return_value = {
+            'slug': enterprise_slug,
+            'enable_learner_portal': is_learner_portal_enabled,
+        }
+
+        with self._mock_enterprise_customer_cache(
+            mock_enterprise_customer_return_value,
         ):
-            enterprise_catalog = factories.EnterpriseCatalogFactory(enterprise_uuid=enterprise_uuid)
-            content_metadata = factories.ContentMetadataFactory(
-                content_key=content_key,
-                content_type=COURSE,
-            )
-            enterprise_catalog.catalog_query.contentmetadata_set.add(*[content_metadata])
+            content_enrollment_url = enterprise_catalog.get_content_enrollment_url(content_metadata)
 
-            mock_enterprise_customer_return_value = {
-                'slug': enterprise_slug,
-                'enable_learner_portal': True,
-            }
-            mock_customer_agreement_return_value = {
-                'subscriptions': [{'enterprise_catalog_uuid': enterprise_catalog.uuid}],
-            } if is_course_in_subscriptions_catalog else None
-            mock_coupon_overview_return_value = [
-                {'enterprise_catalog_uuid': enterprise_catalog.uuid},
-            ] if is_course_in_coupons_catalog else []
-
-            with self._mock_enterprise_customer_cache(
-                mock_enterprise_customer_return_value,
-                mock_customer_agreement_return_value,
-                mock_coupon_overview_return_value,
-            ):
-                content_enrollment_url = enterprise_catalog.get_content_enrollment_url(content_metadata)
-
-            if should_direct_to_lp:
-                assert settings.ENTERPRISE_LEARNER_PORTAL_BASE_URL in content_enrollment_url
-            else:
-                assert settings.LMS_BASE_URL in content_enrollment_url
+        if is_learner_portal_enabled:
+            assert settings.ENTERPRISE_LEARNER_PORTAL_BASE_URL in content_enrollment_url
+        else:
+            assert settings.LMS_BASE_URL in content_enrollment_url
 
     @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
-    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.LicenseManagerApiClient')
-    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EcommerceApiClient')
     @ddt.data(
         {
             'is_learner_portal_enabled': True,
-            'is_learner_portal_waffle_flag_enabled': False,
-            'should_expect_learner_portal_url': False,
-        },
-        {
-            'is_learner_portal_enabled': True,
-            'is_learner_portal_waffle_flag_enabled': True,
-            'should_expect_learner_portal_url': True,
         },
         {
             'is_learner_portal_enabled': False,
-            'is_learner_portal_waffle_flag_enabled': True,
-            'should_expect_learner_portal_url': False,
-        },
-        {
-            'is_learner_portal_enabled': False,
-            'is_learner_portal_waffle_flag_enabled': False,
-            'should_expect_learner_portal_url': False,
         },
     )
     @ddt.unpack
     def test_enrollment_url_exec_ed(
         self,
-        ecommerce_api_client,
-        license_manager_api_client,
         mock_enterprise_api_client,
         is_learner_portal_enabled,
-        is_learner_portal_waffle_flag_enabled,
-        should_expect_learner_portal_url,
     ):
         """
         Test that a correct enrollment URL is returned for exec ed. 2U courses.
         """
-        license_manager_api_client.get_customer_agreement.return_value = None
-        ecommerce_api_client.get_coupons_overview.return_value = []
         enterprise_catalog = factories.EnterpriseCatalogFactory()
         content_metadata = factories.ContentMetadataFactory(
             content_key='the-content-key',
@@ -495,21 +410,15 @@ class TestModels(TestCase):
         mock_enterprise_api_client.return_value.get_enterprise_customer.return_value =\
             mock_enterprise_customer_return_value
 
-        with override_waffle_flag(
-            LEARNER_PORTAL_ENROLLMENT_ALL_SUBSIDIES_AND_CONTENT_TYPES_FLAG,
-            active=is_learner_portal_waffle_flag_enabled,
-        ):
-            actual_enrollment_url = enterprise_catalog.get_content_enrollment_url(content_metadata)
+        actual_enrollment_url = enterprise_catalog.get_content_enrollment_url(content_metadata)
 
-        if should_expect_learner_portal_url:
+        if is_learner_portal_enabled:
             assert settings.ENTERPRISE_LEARNER_PORTAL_BASE_URL in actual_enrollment_url
         else:
             assert 'happy-little-sku' in actual_enrollment_url
             assert 'proxy-login' in actual_enrollment_url
 
     @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
-    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.LicenseManagerApiClient')
-    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EcommerceApiClient')
     @ddt.data(
         {'content_type': COURSE, 'course_type': EXEC_ED_2U_COURSE_TYPE, 'course_mode': 'honor',
          'sku': None, 'query_includes_ee_courses': True},
@@ -523,8 +432,6 @@ class TestModels(TestCase):
     @ddt.unpack
     def test_enrollment_url_exec_ed_is_null(
         self,
-        ecommerce_api_client,
-        license_manager_api_client,
         mock_enterprise_api_client,
         content_type,
         course_type,
@@ -539,8 +446,6 @@ class TestModels(TestCase):
         because the content_type is always "course" and the course_type is always
         the exec ed 2U course type.
         """
-        license_manager_api_client.get_customer_agreement.return_value = None
-        ecommerce_api_client.get_coupons_overview.return_value = []
         enterprise_slug = 'sluggy'
         mock_enterprise_customer_return_value = {
             'slug': enterprise_slug,

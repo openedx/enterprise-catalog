@@ -11,7 +11,6 @@ import pytz
 from django.conf import settings
 from django.db import IntegrityError
 from django.utils.text import slugify
-from edx_toggles.toggles.testutils import override_waffle_flag
 from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.settings import api_settings
@@ -43,9 +42,6 @@ from enterprise_catalog.apps.catalog.utils import (
     get_content_key,
     get_parent_content_key,
     localized_utcnow,
-)
-from enterprise_catalog.apps.catalog.waffle import (
-    LEARNER_PORTAL_ENROLLMENT_ALL_SUBSIDIES_AND_CONTENT_TYPES_FLAG,
 )
 
 
@@ -1100,19 +1096,6 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         self.enterprise_catalog.catalog_query.include_exec_ed_2u_courses = True
         self.enterprise_catalog.catalog_query.save()
 
-        self.ecommerce_patcher = mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EcommerceApiClient')
-        self.mock_ecommerce_client = self.ecommerce_patcher.start()
-        self.mock_ecommerce_client().get_coupons_overview.return_value = []
-
-        self.license_manager_patcher = mock.patch(
-            'enterprise_catalog.apps.api_client.enterprise_cache.LicenseManagerApiClient'
-        )
-        self.license_manager_client = self.license_manager_patcher.start()
-        self.license_manager_client().get_customer_agreement.return_value = None
-
-        self.addCleanup(self.ecommerce_patcher.stop)
-        self.addCleanup(self.license_manager_patcher.stop)
-
         # Delete any existing ContentMetadata records.
         ContentMetadata.objects.all().delete()
 
@@ -1476,11 +1459,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         metadata = course_runs + [course]
         self.add_metadata_to_catalog(self.enterprise_catalog, metadata)
 
-        with override_waffle_flag(
-            LEARNER_PORTAL_ENROLLMENT_ALL_SUBSIDIES_AND_CONTENT_TYPES_FLAG,
-            active=is_learner_portal_enabled,
-        ):
-            response = self.client.get(self._get_content_metadata_url(self.enterprise_catalog))
+        response = self.client.get(self._get_content_metadata_url(self.enterprise_catalog))
 
         self.maxDiff = None
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1586,19 +1565,6 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         EnterpriseCatalog.objects.all().delete()
 
         self.enterprise_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
-
-        self.ecommerce_patcher = mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EcommerceApiClient')
-        self.mock_ecommerce_client = self.ecommerce_patcher.start()
-        self.mock_ecommerce_client().get_coupons_overview.return_value = []
-
-        self.license_manager_patcher = mock.patch(
-            'enterprise_catalog.apps.api_client.enterprise_cache.LicenseManagerApiClient'
-        )
-        self.mock_license_manager_client = self.license_manager_patcher.start()
-        self.mock_license_manager_client().get_customer_agreement.return_value = None
-
-        self.addCleanup(self.ecommerce_patcher.stop)
-        self.addCleanup(self.license_manager_patcher.stop)
 
         # Set up catalog.has_learner_access permissions
         self.set_up_catalog_learner()
