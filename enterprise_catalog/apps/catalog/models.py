@@ -48,9 +48,6 @@ from enterprise_catalog.apps.catalog.utils import (
     get_parent_content_key,
     localized_utcnow,
 )
-from enterprise_catalog.apps.catalog.waffle import (
-    use_learner_portal_for_all_subsidies_content_types,
-)
 
 
 LOGGER = getLogger(__name__)
@@ -398,11 +395,7 @@ class EnterpriseCatalog(TimeStampedModel):
         if self.publish_audit_enrollment_urls:
             params['audit'] = 'true'
 
-        use_learner_portal_for_all = use_learner_portal_for_all_subsidies_content_types()
-        can_enroll_with_learner_portal = self._can_enroll_via_learner_portal(
-            content_key,
-            is_learner_portal_enabled_for_all_subsidies_content_types=use_learner_portal_for_all
-        )
+        can_enroll_with_learner_portal = self._can_enroll_via_learner_portal
 
         if content_metadata.is_exec_ed_2u_course:
             if not self.catalog_query.include_exec_ed_2u_courses:
@@ -411,10 +404,9 @@ class EnterpriseCatalog(TimeStampedModel):
             exec_ed_enroll_url, exec_ed_entitlement_sku = self._get_exec_ed_2u_enrollment_url(
                 content_metadata,
                 enterprise_slug=self.enterprise_customer.slug,
-                use_learner_portal=(can_enroll_with_learner_portal
-                                    and use_learner_portal_for_all),
+                use_learner_portal=can_enroll_with_learner_portal,
             )
-            if can_enroll_with_learner_portal and use_learner_portal_for_all:
+            if can_enroll_with_learner_portal:
                 return update_query_parameters(exec_ed_enroll_url, params)
 
             if not exec_ed_entitlement_sku:
@@ -472,52 +464,14 @@ class EnterpriseCatalog(TimeStampedModel):
             entitlement_sku,
         )
 
-    def _can_enroll_via_learner_portal(self, content_key, is_learner_portal_enabled_for_all_subsidies_content_types):
+    @property
+    def _can_enroll_via_learner_portal(self):
         """
-        Check whether the enterprise customer has the learner portal enabled. Note that enterprise
-        offers were previously only partially supported by the learner portal (i.e., it did not
-        support per-learner spend or enrollment limits). As a result, we had to avoid the learner
-        portal as an enrollment url for enterprise customers who had the learner portal enabled
-        for other subsidy types like a subscription but with at least one enterprise offer with a
-        per-learner limit.
-
-        Now, the learner portal does support all enterprise offer configurations so we no longer
-        need to check against the specific enterprise customer exclusion list via the setting
-        `INTEGRATED_CUSTOMERS_WITH_SUBSIDIES_AND_OFFERS`. To bypass the existing behavior during
-        this transition, the `use_learner_portal_for_all_subsidies_content_types` kwarg may be set
-        to True (e.g., based on a Waffle flag).
-
-        If `use_learner_portal_for_all_subsidies_content_types` is False, falls back to existing behavior
-        of checking whether the enterprise customer is in `INTEGRATED_CUSTOMERS_WITH_SUBSIDIES_AND_OFFERS`
-        settings list and, if so, check if the enterprise customer has any non-offer related catalogs (e.g.,
-        subscription license) containing the specified content key, in which case the learner portal is
-        supported.
+        Check whether the enterprise customer has the learner portal enabled.
         """
         if not self.enterprise_customer.learner_portal_enabled:
             return False
-
-        # If the waffle flag is active, we want to allow enrollment via the learner portal.
-        if is_learner_portal_enabled_for_all_subsidies_content_types:
-            return True
-
-        # Otherwise, the waffle flag is inactive; fall back to current state where we check
-        # against `settings.INTEGRATED_CUSTOMERS_WITH_SUBSIDIES_AND_OFFERS`.
-        is_integrated_customer_with_offer_and_nonoffer_subsidies = (
-            str(self.enterprise_uuid) in
-            settings.INTEGRATED_CUSTOMERS_WITH_SUBSIDIES_AND_OFFERS
-        )
-        if not is_integrated_customer_with_offer_and_nonoffer_subsidies:
-            return True
-
-        # Customers in the special `INTEGRATED_CUSTOMERS_WITH_SUBSIDIES_AND_OFFERS` list
-        # must have the content_key contained in an active catalog for this method to return True.
-        active_catalogs = EnterpriseCatalog.objects.filter(uuid__in=self.enterprise_customer.active_catalogs)
-        for catalog in active_catalogs:
-            contains_content_items = catalog.contains_content_keys([content_key])
-            if contains_content_items:
-                return True
-
-        return False
+        return True
 
     def get_xapi_activity_id(self, content_resource, content_key):
         """

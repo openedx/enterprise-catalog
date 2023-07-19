@@ -3,15 +3,9 @@ Interface to Enterprise Customer details from edx-enterprise API using a volatil
 """
 import logging
 
-import requests
 from dateutil import parser
 from django.conf import settings
 from django.core.cache import cache
-
-from enterprise_catalog.apps.api_client.ecommerce import EcommerceApiClient
-from enterprise_catalog.apps.api_client.license_manager import (
-    LicenseManagerApiClient,
-)
 
 from .constants import ENTERPRISE_CUSTOMER_CACHE_KEY_TPL
 from .enterprise import EnterpriseApiClient
@@ -53,14 +47,6 @@ class EnterpriseCustomerDetails:
         return self.customer_data.get('slug', '')
 
     @property
-    def active_catalogs(self):
-        """
-        Return catalogs associated with active coupon code and subscription catalogs for the enterprise customer.
-        """
-        catalogs = self.customer_data.get('coupons_catalogs', []) + self.customer_data.get('subscriptions_catalogs', [])
-        return list(set(catalogs))
-
-    @property
     def last_modified_date(self):
         """
         Return Enterprise Customer last modified datetime or None if unavailable.
@@ -93,38 +79,6 @@ def _get_enterprise_customer_data(uuid):
             # TODO: This check should be removed after verifying that the scenario never happens
             logger.warning('Received unexpected customer_data for enterprise customer %s', uuid)
             customer_data = {}
-
-        try:
-            ecommerce_client = EcommerceApiClient()
-            coupons_overview = ecommerce_client.get_coupons_overview(uuid)
-            coupons_catalogs = [coupon['enterprise_catalog_uuid'] for coupon in coupons_overview]
-        except requests.exceptions.RequestException as exc:
-            logger.error(
-                'Failed to fetch coupons overview for %r because %r',
-                uuid,
-                exc,
-            )
-            coupons_catalogs = []
-
-        try:
-            license_manager_client = LicenseManagerApiClient()
-            customer_agreement = license_manager_client.get_customer_agreement(uuid)
-            if customer_agreement:
-                subscriptions_catalogs = [
-                    subscription['enterprise_catalog_uuid'] for subscription in customer_agreement['subscriptions']
-                ]
-            else:
-                subscriptions_catalogs = []
-        except requests.exceptions.RequestException as exc:
-            logger.error(
-                'Failed to fetch customer agreement for %r because %r',
-                uuid,
-                exc,
-            )
-            subscriptions_catalogs = []
-
-        customer_data['coupons_catalogs'] = coupons_catalogs
-        customer_data['subscriptions_catalogs'] = subscriptions_catalogs
 
         cache.set(cache_key, customer_data, settings.ENTERPRISE_CUSTOMER_CACHE_TIMEOUT)
 
