@@ -131,7 +131,6 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
                 'uuid': self.content_key,
                 'content_type': PROGRAM,
                 'type': 'MicroMasters',
-                'hidden': True,
                 'marketing_url': f'https://marketing.url/{self.content_key}',
                 'authoring_organizations': authoring_organizations,
                 'card_image_url': self.card_image_url,
