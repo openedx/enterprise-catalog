@@ -613,34 +613,108 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'course_metadata_unpublished': self.course_metadata_unpublished,
         }
 
-    @mock.patch('enterprise_catalog.apps.api.tasks._was_recently_indexed',
-                side_effect=[
-                    False, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True
-                ])
+    @mock.patch(
+        'enterprise_catalog.apps.api.tasks._was_recently_indexed',
+        side_effect=tasks._was_recently_indexed,  # pylint: disable=protected-access
+    )
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
+    # pylint: disable=too-many-statements
     def test_index_algolia_with_all_uuids(self, mock_search_client, mock_was_recently_indexed):
         """
         Assert that the correct data is sent to Algolia index, with the expected enterprise
         catalog and enterprise customer associations.
+
+        This DAG represents the complete test environment:
+
+        ┌─────────┐┌───────────────────┐┌─────────────────────┐
+        │program-2││courserun_published││courserun_unpublished│
+        └┬────────┘└┬──┬───────────────┘└┬────────────────────┘
+        ┌▽──────────▽┐┌▽───────────────┐┌▽─────────────────┐
+        │pathway-2   ││course_published││course_unpublished│
+        └────────────┘└┬──┬─────────┬──┘└┬──────┬──────────┘
+              ┌────────▽┐┌▽────────┐│┌───▽─────┐│
+              │program-1││pathway-1│││program-3││
+              └─────────┘└─────────┘│└┬────────┘│
+                                   ┌▽─▽─────────▽┐
+                                   │  pathway-3  │
+                                   └─────────────┘
+
+        This masked DAG shows only the objects that are "indexable":
+
+        ┌────────────┐┌────────────────┐
+        │pathway-2   ││course_published│
+        └────────────┘└───┬─────────┬──┘
+                         ┌▽────────┐│┌─────────┐
+                         │pathway-1│││program-3│
+                         └─────────┘│└┬────────┘
+                                   ┌▽─▽──────────┐
+                                   │  pathway-3  │
+                                   └─────────────┘
+
+        Finally, this masked DAG shows only the objects that will be actually indexed:
+
+        ┌─────────┐
+        │program-2│
+        └┬────────┘
+        ┌▽───────────┐┌────────────────┐
+        │pathway-2   ││course_published│
+        └────────────┘└┬──┬─────────┬──┘
+              ┌────────▽┐┌▽────────┐│┌─────────┐
+              │program-1││pathway-1│││program-3│
+              └─────────┘└─────────┘│└┬────────┘
+                                   ┌▽─▽──────────┐
+                                   │  pathway-3  │
+                                   └─────────────┘
+
+        Reasons:
+
+        * non-idexable unpublished course (course_unpublished) not pulled in despite being associated with both an
+          indexable program AND a pathway.
+        * non-indexable program (program-1) pulled in because of being associated with an indexable course.
+        * non-indexable program (program-2) pulled in because of being associated with a pathway.
         """
         algolia_data = self._set_up_factory_data_for_algolia()
-        course_associated_program_metadata = ContentMetadataFactory(content_type=PROGRAM, content_key='program-1')
-        pathway_program_metadata = ContentMetadataFactory(content_type=PROGRAM, content_key='program-2')
-        pathway_metadata = ContentMetadataFactory(content_type=LEARNER_PATHWAY, content_key='pathway-1')
-        pathway_metadata2 = ContentMetadataFactory(content_type=LEARNER_PATHWAY, content_key='pathway-2')
+        program_for_main_course = ContentMetadataFactory(content_type=PROGRAM, content_key='program-1')
+        # Make the program hidden to make it "non-indexable", but ensure that it still gets indexed due to being related
+        # to an indexable course.
+        program_for_main_course.json_metadata.update({
+            'hidden': True,
+        })
+        program_for_main_course.save()
+        program_for_pathway = ContentMetadataFactory(content_type=PROGRAM, content_key='program-2')
+        program_for_pathway.catalog_queries.set([self.enterprise_catalog_query])
+        # Make the program hidden to make it "non-indexable", but ensure that it still gets indexed due to being related
+        # to an indexable pathway.
+        program_for_pathway.json_metadata.update({
+            'hidden': True,
+        })
+        program_for_pathway.save()
+        pathway_for_course = ContentMetadataFactory(content_type=LEARNER_PATHWAY, content_key='pathway-1')
+        pathway_for_courserun = ContentMetadataFactory(content_type=LEARNER_PATHWAY, content_key='pathway-2')
+
+        # Set up a program and pathway, both intended to be associated to the unpublished course to test that the course
+        # does not get indexed through association.  The pathway also needs to be associated directly with the main
+        # course so that it will actually have UUIDs and be included in the output.
+        program_for_unpublished_course = ContentMetadataFactory(content_type=PROGRAM, content_key='program-3')
+        program_for_unpublished_course.catalog_queries.set([self.enterprise_catalog_query])
+        pathway_for_unpublished_course = ContentMetadataFactory(content_type=LEARNER_PATHWAY, content_key='pathway-3')
+
         # associate program and pathway with the course
         self.course_metadata_published.associated_content_metadata.set(
-            [course_associated_program_metadata, pathway_metadata]
+            [program_for_main_course, pathway_for_course, pathway_for_unpublished_course]
         )
         # associate pathway with the course run
         self.course_run_metadata_paythway.associated_content_metadata.set(
-            [pathway_metadata2]
+            [pathway_for_courserun]
         )
         # associate pathway with the program
-        pathway_program_metadata.associated_content_metadata.set(
-            [pathway_metadata2]
+        program_for_pathway.associated_content_metadata.set(
+            [pathway_for_courserun]
         )
-        pathway_program_metadata.catalog_queries.set([self.enterprise_catalog_query])
+        # associate unpublished course with the program and pathway made for testing it.
+        self.course_metadata_unpublished.associated_content_metadata.set(
+            [program_for_unpublished_course, pathway_for_unpublished_course]
+        )
 
         with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
             tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
@@ -668,7 +742,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         })
 
         expected_algolia_program_objects = []
-        program_uuid = course_associated_program_metadata.json_metadata.get('uuid')
+        program_uuid = program_for_main_course.json_metadata.get('uuid')
         expected_algolia_program_objects.append({
             'objectID': f'program-{program_uuid}-catalog-uuids-0',
             'enterprise_catalog_uuids': [str(self.enterprise_catalog_courses.uuid)],
@@ -684,7 +758,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         })
 
         expected_algolia_program_objects2 = []
-        program_uuid = pathway_program_metadata.json_metadata.get('uuid')
+        program_uuid = program_for_pathway.json_metadata.get('uuid')
         expected_algolia_program_objects2.append({
             'objectID': f'program-{program_uuid}-catalog-uuids-0',
             'enterprise_catalog_uuids': [str(self.enterprise_catalog_courses.uuid)],
@@ -699,47 +773,88 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
         })
 
+        expected_algolia_program_objects3 = []
+        program_uuid = program_for_unpublished_course.json_metadata.get('uuid')
+        expected_algolia_program_objects3.append({
+            'objectID': f'program-{program_uuid}-catalog-uuids-0',
+            'enterprise_catalog_uuids': [str(self.enterprise_catalog_courses.uuid)],
+        })
+        expected_algolia_program_objects3.append({
+            'objectID': f'program-{program_uuid}-customer-uuids-0',
+            'enterprise_customer_uuids': [str(self.enterprise_catalog_courses.enterprise_uuid)],
+        })
+        expected_algolia_program_objects3.append({
+            'objectID': f'program-{program_uuid}-catalog-query-uuids-0',
+            'enterprise_catalog_query_uuids': [str(self.enterprise_catalog_courses.catalog_query.uuid)],
+            'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
+        })
+
         expected_algolia_pathway_objects = []
-        pathway_uuid = pathway_metadata.json_metadata.get('uuid')
+        pathway_uuid = pathway_for_course.json_metadata.get('uuid')
         expected_algolia_pathway_objects.append({
-            'key': pathway_metadata.content_key,
+            'key': pathway_for_course.content_key,
             'objectID': f'learnerpathway-{pathway_uuid}-catalog-uuids-0',
             'enterprise_catalog_uuids': [str(self.enterprise_catalog_courses.uuid)],
         })
         expected_algolia_pathway_objects.append({
-            'key': pathway_metadata.content_key,
+            'key': pathway_for_course.content_key,
             'objectID': f'learnerpathway-{pathway_uuid}-customer-uuids-0',
             'enterprise_customer_uuids': [str(self.enterprise_catalog_courses.enterprise_uuid)],
         })
         expected_algolia_pathway_objects.append({
-            'key': pathway_metadata.content_key,
+            'key': pathway_for_course.content_key,
             'objectID': f'learnerpathway-{pathway_uuid}-catalog-query-uuids-0',
             'enterprise_catalog_query_uuids': [str(self.enterprise_catalog_courses.catalog_query.uuid)],
             'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
         })
 
         expected_algolia_pathway_objects2 = []
-        pathway_uuid = pathway_metadata2.json_metadata.get('uuid')
+        pathway_uuid = pathway_for_courserun.json_metadata.get('uuid')
         expected_algolia_pathway_objects2.append({
-            'key': pathway_metadata2.content_key,
+            'key': pathway_for_courserun.content_key,
             'objectID': f'learnerpathway-{pathway_uuid}-catalog-uuids-0',
             'enterprise_catalog_uuids': [str(self.enterprise_catalog_courses.uuid)],
         })
         expected_algolia_pathway_objects2.append({
-            'key': pathway_metadata2.content_key,
+            'key': pathway_for_courserun.content_key,
             'objectID': f'learnerpathway-{pathway_uuid}-customer-uuids-0',
             'enterprise_customer_uuids': [str(self.enterprise_catalog_courses.enterprise_uuid)],
         })
         expected_algolia_pathway_objects2.append({
-            'key': pathway_metadata2.content_key,
+            'key': pathway_for_courserun.content_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-catalog-query-uuids-0',
+            'enterprise_catalog_query_uuids': [str(self.enterprise_catalog_courses.catalog_query.uuid)],
+            'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
+        })
+
+        expected_algolia_pathway_objects3 = []
+        pathway_key = pathway_for_unpublished_course.content_key
+        pathway_uuid = pathway_for_unpublished_course.json_metadata.get('uuid')
+        expected_algolia_pathway_objects3.append({
+            'key': pathway_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-catalog-uuids-0',
+            'enterprise_catalog_uuids': [str(self.enterprise_catalog_courses.uuid)],
+        })
+        expected_algolia_pathway_objects3.append({
+            'key': pathway_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-customer-uuids-0',
+            'enterprise_customer_uuids': [str(self.enterprise_catalog_courses.enterprise_uuid)],
+        })
+        expected_algolia_pathway_objects3.append({
+            'key': pathway_key,
             'objectID': f'learnerpathway-{pathway_uuid}-catalog-query-uuids-0',
             'enterprise_catalog_query_uuids': [str(self.enterprise_catalog_courses.catalog_query.uuid)],
             'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
         })
 
         expected_algolia_objects_to_index = (
-            expected_algolia_objects_to_index + expected_algolia_program_objects + expected_algolia_pathway_objects
-            + expected_algolia_program_objects2 + expected_algolia_pathway_objects2
+            expected_algolia_objects_to_index
+            + expected_algolia_program_objects
+            + expected_algolia_program_objects2
+            + expected_algolia_program_objects3
+            + expected_algolia_pathway_objects
+            + expected_algolia_pathway_objects2
+            + expected_algolia_pathway_objects3
         )
 
         # verify replace_all_objects is called with the correct Algolia object data
@@ -749,8 +864,14 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             mock_search_client().replace_all_objects.mock_calls[0].args[0], key=itemgetter('objectID')
         )
 
-        unsorted_expected_calls_args = expected_algolia_program_objects + expected_algolia_pathway_objects + \
-            expected_algolia_program_objects2 + expected_algolia_pathway_objects2
+        unsorted_expected_calls_args = (
+            expected_algolia_program_objects
+            + expected_algolia_program_objects2
+            + expected_algolia_program_objects3
+            + expected_algolia_pathway_objects
+            + expected_algolia_pathway_objects2
+            + expected_algolia_pathway_objects3
+        )
         expected_second_call_args = sorted(unsorted_expected_calls_args, key=itemgetter('objectID'))
         actual_second_call_args = sorted(
             mock_search_client().replace_all_objects.mock_calls[1].args[0], key=itemgetter('objectID')
@@ -762,18 +883,26 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         mock_was_recently_indexed.assert_has_calls([
             mock.call(self.course_metadata_published.content_key),
             mock.call(self.course_metadata_published.content_key),
-            mock.call(course_associated_program_metadata.content_key),
-            mock.call(pathway_program_metadata.content_key),
-            mock.call(pathway_metadata.content_key),
-            mock.call(pathway_metadata2.content_key),
-            mock.call(pathway_metadata2.content_key),
+            mock.call(self.course_metadata_published.content_key),
+            mock.call(program_for_main_course.content_key),
+            mock.call(program_for_pathway.content_key),
+            mock.call(pathway_for_course.content_key),
+            mock.call(pathway_for_courserun.content_key),
+            mock.call(pathway_for_courserun.content_key),
+            mock.call(program_for_unpublished_course.content_key),
+            mock.call(pathway_for_unpublished_course.content_key),
+            mock.call(pathway_for_unpublished_course.content_key),
             mock.call(self.course_metadata_published.content_key),
             mock.call(self.course_metadata_published.content_key),
-            mock.call(course_associated_program_metadata.content_key),
-            mock.call(pathway_program_metadata.content_key),
-            mock.call(pathway_metadata.content_key),
-            mock.call(pathway_metadata2.content_key),
-            mock.call(pathway_metadata2.content_key),
+            mock.call(self.course_metadata_published.content_key),
+            mock.call(program_for_main_course.content_key),
+            mock.call(program_for_pathway.content_key),
+            mock.call(pathway_for_course.content_key),
+            mock.call(pathway_for_courserun.content_key),
+            mock.call(pathway_for_courserun.content_key),
+            mock.call(program_for_unpublished_course.content_key),
+            mock.call(pathway_for_unpublished_course.content_key),
+            mock.call(pathway_for_unpublished_course.content_key),
         ])
 
     @mock.patch('enterprise_catalog.apps.api.tasks._was_recently_indexed', return_value=False)
