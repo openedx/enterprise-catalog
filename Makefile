@@ -164,8 +164,8 @@ dev.up.build: # Runs docker-compose -up -d --build
 dev.up.build-no-cache: dev.up.redis
 	docker-compose build --no-cache
 	docker-compose up -d
-	docker exec -u 0 -it enterprise-catalog.app pip install -r requirements/pip-tools.txt
-	docker exec -u 0 -it enterprise-catalog.app pip-sync -q requirements/dev.txt requirements/private.* requirements/test.txt
+	docker exec -u 0 -it enterprise.catalog.app pip install -r requirements/pip-tools.txt
+	docker exec -u 0 -it enterprise.catalog.app pip-sync -q requirements/dev.txt requirements/private.* requirements/test.txt
 
 dev.up.redis:
 	docker-compose -f $(DEVSTACK_WORKSPACE)/devstack/docker-compose.yml up -d redis
