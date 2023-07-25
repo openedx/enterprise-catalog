@@ -160,17 +160,43 @@ def _should_index_course(course_metadata):
         advertised_course_run_uuid,
     )
 
-    if advertised_course_run is None:
-        return False
+    # We define a series of no-arg functions, each of which has the property that,
+    # if it returns true, means we should *not* index this record.
+    def no_advertised_course_run_checker():
+        return advertised_course_run is None
 
-    if not is_course_run_active(advertised_course_run):
-        return False
+    def no_owners_checker():
+        return len(course_json_metadata.get('owners') or []) < 1
 
-    if _has_enroll_by_deadline_passed(course_json_metadata, advertised_course_run):
-        return False
+    def run_is_hidden_checker():
+        return bool(advertised_course_run.get('hidden'))
 
-    owners = course_json_metadata.get('owners') or []
-    return not advertised_course_run.get('hidden') and len(owners) > 0
+    def course_run_not_active_checker():
+        return not is_course_run_active(advertised_course_run)
+
+    def deadline_passed_checker():
+        return _has_enroll_by_deadline_passed(course_json_metadata, advertised_course_run)
+
+    for should_not_index_function, log_message in (
+        (no_advertised_course_run_checker, 'no advertised course run'),
+        (course_run_not_active_checker, 'no course run is active'),
+        (deadline_passed_checker, 'enroll by deadline has passed'),
+        (run_is_hidden_checker, 'advertised course run is hidden'),
+        (no_owners_checker, 'no owners exist'),
+    ):
+        # TODO: remove/simplify logging when https://2u-internal.atlassian.net/browse/ENT-7458 is resolved
+        should_not_index = should_not_index_function()
+        if 'GTx+MGT6203x' in course_metadata.content_key:
+            logger.info(
+                f'[ENT-7458] {course_metadata.content_key} {log_message} '
+                f'checker has should_not_index={should_not_index}'
+            )
+
+        if should_not_index:
+            logger.info(f'[ENT-7458] Should not index {course_metadata.content_key}, {log_message}')
+            return False
+
+    return True
 
 
 def _has_enroll_by_deadline_passed(course_json_metadata, advertised_course_run):

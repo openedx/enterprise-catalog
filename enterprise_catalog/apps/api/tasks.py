@@ -662,6 +662,11 @@ def index_content_keys_in_algolia(content_keys, algolia_client):  # pylint: disa
         # iterate over courses, programs and pathways and add their metadata to the list of objects to be indexed
         for metadata in filtered_content_metadata:
             content_key = metadata.content_key
+            # TODO: remove when https://2u-internal.atlassian.net/browse/ENT-7458 is resolved
+            if 'GTx+MGT6203x' in content_key:
+                logger.info(
+                    f'[ENT-7458] {content_key} will be added to Algolia index'
+                )
             # Check if we've indexed the course recently
             # (programs/pathways are indexed every time regardless of last indexing)
             if _was_recently_indexed(content_key) and metadata.content_type not in [PROGRAM, LEARNER_PATHWAY]:
