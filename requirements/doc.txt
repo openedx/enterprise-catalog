@@ -53,7 +53,7 @@ celery==5.3.1
     #   -r requirements/test.txt
     #   django-celery-results
     #   edx-celeryutils
-certifi==2023.5.7
+certifi==2023.7.22
     # via
     #   -r requirements/test.txt
     #   requests
@@ -66,7 +66,7 @@ charset-normalizer==3.2.0
     # via
     #   -r requirements/test.txt
     #   requests
-click==8.1.5
+click==8.1.6
     # via
     #   -r requirements/test.txt
     #   celery
@@ -93,7 +93,7 @@ click-repl==0.3.0
     # via
     #   -r requirements/test.txt
     #   celery
-code-annotations==1.3.0
+code-annotations==1.5.0
     # via
     #   -r requirements/test.txt
     #   edx-lint
@@ -115,11 +115,11 @@ defusedxml==0.7.1
     #   djangorestframework-xml
     #   python3-openid
     #   social-auth-core
-dill==0.3.6
+dill==0.3.7
     # via
     #   -r requirements/test.txt
     #   pylint
-distlib==0.3.6
+distlib==0.3.7
     # via
     #   -r requirements/test.txt
     #   virtualenv
@@ -210,11 +210,11 @@ drf-jwt==1.19.2
     # via
     #   -r requirements/test.txt
     #   edx-drf-extensions
-drf-yasg==1.21.6
+drf-yasg==1.21.7
     # via
     #   -r requirements/test.txt
     #   edx-api-doc-tools
-edx-api-doc-tools==1.6.0
+edx-api-doc-tools==1.7.0
     # via -r requirements/test.txt
 edx-auth-backends==4.1.0
     # via -r requirements/test.txt
@@ -251,9 +251,9 @@ exceptiongroup==1.1.2
     # via
     #   -r requirements/test.txt
     #   pytest
-factory-boy==3.2.1
+factory-boy==3.3.0
     # via -r requirements/test.txt
-faker==19.1.0
+faker==19.2.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -375,7 +375,7 @@ pygments==2.15.1
     #   pydata-sphinx-theme
     #   readme-renderer
     #   sphinx
-pyjwt[crypto]==2.7.0
+pyjwt[crypto]==2.8.0
     # via
     #   -r requirements/test.txt
     #   drf-jwt
@@ -568,7 +568,7 @@ tox==3.28.0
     #   tox-battery
 tox-battery==0.6.1
     # via -r requirements/test.txt
-types-pyyaml==6.0.12.10
+types-pyyaml==6.0.12.11
     # via
     #   -r requirements/test.txt
     #   responses
@@ -590,7 +590,7 @@ uritemplate==4.1.1
     # via
     #   -r requirements/test.txt
     #   drf-yasg
-urllib3==2.0.3
+urllib3==2.0.4
     # via
     #   -r requirements/test.txt
     #   requests
@@ -601,7 +601,7 @@ vine==5.0.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.24.0
+virtualenv==20.24.1
     # via
     #   -r requirements/test.txt
     #   tox
