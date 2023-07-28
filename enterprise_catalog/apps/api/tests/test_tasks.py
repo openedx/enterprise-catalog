@@ -9,6 +9,7 @@ from unittest import mock
 
 import ddt
 from celery import states
+from django.core.cache import cache as django_cache
 from django.test import TestCase
 from django_celery_results.models import TaskResult
 
@@ -546,45 +547,54 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
     Tests for `index_enterprise_catalog_in_algolia_task`
     """
 
-    @classmethod
-    def setUpTestData(cls):
-        super().setUpTestData()
-        cls.ALGOLIA_FIELDS = [
-            'key',
-            'objectID',
-            'enterprise_customer_uuids',
-            'enterprise_catalog_uuids',
-            'enterprise_catalog_query_uuids',
-            'enterprise_catalog_query_titles',
-        ]
+    ALGOLIA_FIELDS = [
+        'key',
+        'objectID',
+        'enterprise_customer_uuids',
+        'enterprise_catalog_uuids',
+        'enterprise_catalog_query_uuids',
+        'enterprise_catalog_query_titles',
+    ]
+
+    def setUp(self):
+        super().setUp()
 
         # Set up a catalog, query, and metadata for a course and course associated program
-        cls.enterprise_catalog_query = CatalogQueryFactory(uuid=SORTED_QUERY_UUID_LIST[0])
-        cls.enterprise_catalog_courses = EnterpriseCatalogFactory(catalog_query=cls.enterprise_catalog_query)
-        cls.course_metadata_published = ContentMetadataFactory(content_type=COURSE, content_key='fakeX')
-        cls.course_metadata_published.catalog_queries.set([cls.enterprise_catalog_query])
-        cls.course_metadata_unpublished = ContentMetadataFactory(content_type=COURSE, content_key='testX')
-        cls.course_metadata_unpublished.json_metadata.get('course_runs')[0].update({
+        self.enterprise_catalog_query = CatalogQueryFactory(uuid=SORTED_QUERY_UUID_LIST[0])
+        self.enterprise_catalog_courses = EnterpriseCatalogFactory(catalog_query=self.enterprise_catalog_query)
+        self.course_metadata_published = ContentMetadataFactory(content_type=COURSE, content_key='course-1')
+        self.course_metadata_published.catalog_queries.set([self.enterprise_catalog_query])
+        self.course_metadata_unpublished = ContentMetadataFactory(content_type=COURSE, content_key='course-2')
+        self.course_metadata_unpublished.json_metadata.get('course_runs')[0].update({
             'status': 'unpublished',
         })
-        cls.course_metadata_unpublished.catalog_queries.set([cls.enterprise_catalog_query])
-        cls.course_metadata_unpublished.save()
+        self.course_metadata_unpublished.catalog_queries.set([self.enterprise_catalog_query])
+        self.course_metadata_unpublished.save()
 
         # Set up new catalog, query, and metadata for a course run]
         # Testing indexing catalog queries when titles aren't present
-        cls.course_run_catalog_query = CatalogQueryFactory(uuid=SORTED_QUERY_UUID_LIST[1], title=None)
-        cls.enterprise_catalog_course_runs = EnterpriseCatalogFactory(catalog_query=cls.course_run_catalog_query)
-        cls.course_run_metadata_paythway = ContentMetadataFactory(content_type=COURSE_RUN, parent_content_key='fakeX')
+        course_run_catalog_query = CatalogQueryFactory(uuid=SORTED_QUERY_UUID_LIST[1], title=None)
+        self.enterprise_catalog_course_runs = EnterpriseCatalogFactory(catalog_query=course_run_catalog_query)
 
-        course_runs_catalog_query = cls.enterprise_catalog_course_runs.catalog_query
-        course_run_metadata_published = ContentMetadataFactory(content_type=COURSE_RUN, parent_content_key='fakeX')
-        course_run_metadata_published.catalog_queries.set([course_runs_catalog_query])
-        course_run_metadata_unpublished = ContentMetadataFactory(content_type=COURSE_RUN, parent_content_key='testX')
-        course_run_metadata_unpublished.json_metadata.update({
+        self.course_run_metadata_published = ContentMetadataFactory(
+            content_type=COURSE_RUN,
+            parent_content_key='course-1',
+        )
+        self.course_run_metadata_published.catalog_queries.set([course_run_catalog_query])
+        self.course_run_metadata_unpublished = ContentMetadataFactory(
+            content_type=COURSE_RUN,
+            parent_content_key='course-2',
+        )
+        self.course_run_metadata_unpublished.json_metadata.update({
             'status': 'unpublished',
         })
-        course_run_metadata_unpublished.catalog_queries.set([course_runs_catalog_query])
-        course_run_metadata_unpublished.save()
+        self.course_run_metadata_unpublished.catalog_queries.set([course_run_catalog_query])
+        self.course_run_metadata_unpublished.save()
+
+        # Clear cache entries containing content keys.
+        # TODO: we agreed to get rid of the logic that prevents indexing recently-indexed objects, but until then this
+        # cleanup hook is needed.
+        self.addCleanup(django_cache.clear)
 
     def _set_up_factory_data_for_algolia(self):
         expected_catalog_uuids = sorted([
@@ -638,6 +648,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         def mock_get_algolia_products_for_batch(
             batch_num,
             content_keys_batch,
+            all_indexable_content_keys,
             program_to_courses_courseruns_mapping,
             pathway_to_programs_courses_mapping,
             context_accumulator,
@@ -666,61 +677,537 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         side_effect=tasks._was_recently_indexed,  # pylint: disable=protected-access
     )
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
-    # pylint: disable=too-many-statements
-    def test_index_algolia_with_all_uuids(self, mock_search_client, mock_was_recently_indexed):
+    # pylint: disable=unused-argument
+    def test_index_algolia_published_course_to_program(self, mock_search_client, mock_was_recently_indexed):
+        """
+        Assert that only only "indexable" objects are indexed, particularly when an unpublished course is associated
+        with a program.
+
+        This DAG represents the complete test environment:
+        ┌─────────────┐         ┌────────┐
+        │*course-1    │         │course-2│
+        └┬───────────┬┘         └────────┘
+        ┌▽─────────┐┌▽────────┐
+        │*program-1││program-2│
+        └──────────┘└─────────┘
+        * = indexable
+        """
+        algolia_data = self._set_up_factory_data_for_algolia()
+
+        program_1 = ContentMetadataFactory(content_type=PROGRAM, content_key='program-1')
+        program_2 = ContentMetadataFactory(content_type=PROGRAM, content_key='program-2')
+
+        # Make program-2 hidden to make it "non-indexable". Later we will assert that it will not get indexed.
+        program_2.json_metadata.update({
+            'hidden': True,
+        })
+        program_2.save()
+
+        # Associate published course with a published program and also an unpublished program.
+        self.course_metadata_published.associated_content_metadata.set([program_1, program_2])
+
+        actual_algolia_products_sent = None
+
+        # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
+        # result into `actual_algolia_products_sent` for unit testing.
+        def mock_replace_all_objects(products_iterable):
+            nonlocal actual_algolia_products_sent
+            actual_algolia_products_sent = list(products_iterable)
+        mock_search_client().replace_all_objects.side_effect = mock_replace_all_objects
+
+        with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
+            with self.assertLogs(level='INFO') as info_logs:
+                tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
+
+        products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
+        assert ' 6 products found.' in products_found_log_records[0]
+
+        # create expected data to be added/updated in the Algolia index.
+        expected_course_1_objects_to_index = []
+        published_course_uuid = algolia_data['course_metadata_published'].json_metadata.get('uuid')
+        expected_course_1_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-catalog-uuids-0',
+            'enterprise_catalog_uuids': algolia_data['catalog_uuids'],
+        })
+        expected_course_1_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-customer-uuids-0',
+            'enterprise_customer_uuids': algolia_data['customer_uuids'],
+        })
+        expected_course_1_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-catalog-query-uuids-0',
+            'enterprise_catalog_query_uuids': sorted(algolia_data['query_uuids']),
+            'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
+        })
+
+        expected_program_1_objects_to_index = []
+        program_uuid = program_1.json_metadata.get('uuid')
+        expected_program_1_objects_to_index.append({
+            'objectID': f'program-{program_uuid}-catalog-uuids-0',
+            'enterprise_catalog_uuids': algolia_data['catalog_uuids'],
+        })
+        expected_program_1_objects_to_index.append({
+            'objectID': f'program-{program_uuid}-customer-uuids-0',
+            'enterprise_customer_uuids': algolia_data['customer_uuids'],
+        })
+        expected_program_1_objects_to_index.append({
+            'objectID': f'program-{program_uuid}-catalog-query-uuids-0',
+            'enterprise_catalog_query_uuids': sorted(algolia_data['query_uuids']),
+            'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
+        })
+
+        expected_algolia_objects_to_index = (
+            expected_course_1_objects_to_index
+            + expected_program_1_objects_to_index
+        )
+
+        # verify replace_all_objects is called with the correct Algolia object data.
+        expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
+        actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
+        assert expected_call_args == actual_call_args
+
+    @mock.patch(
+        'enterprise_catalog.apps.api.tasks._was_recently_indexed',
+        side_effect=tasks._was_recently_indexed,  # pylint: disable=protected-access
+    )
+    @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
+    # pylint: disable=unused-argument
+    def test_index_algolia_unpublished_course_to_program(self, mock_search_client, mock_was_recently_indexed):
+        """
+        Assert that only only "indexable" objects are indexed, particularly when an unpublished course is associated
+        with a program.
+
+        This DAG represents the complete test environment:
+        ┌─────────────┐          ┌─────────┐
+        │course-2     │          │*course-1│
+        └┬───────────┬┘          └─────────┘
+        ┌▽─────────┐┌▽────────┐
+        │*program-1││program-2│
+        └──────────┘└─────────┘
+        * = indexable
+        """
+        algolia_data = self._set_up_factory_data_for_algolia()
+
+        program_1 = ContentMetadataFactory(content_type=PROGRAM, content_key='program-1')
+        program_2 = ContentMetadataFactory(content_type=PROGRAM, content_key='program-2')
+
+        # Include both test programs into a catalog query so that absence of catalog queries doesn't taint the test
+        # (which would prevent indexability).
+        program_1.catalog_queries.set([self.enterprise_catalog_query])
+        program_2.catalog_queries.set([self.enterprise_catalog_query])
+
+        # Make program-2 hidden to make it "non-indexable". Later we will assert that it will not get indexed.
+        program_2.json_metadata.update({
+            'hidden': True,
+        })
+        program_2.save()
+
+        # Associate unpublished course with a published program and also an unpublished program.
+        self.course_metadata_unpublished.associated_content_metadata.set([program_1, program_2])
+
+        actual_algolia_products_sent = None
+
+        # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
+        # result into `actual_algolia_products_sent` for unit testing.
+        def mock_replace_all_objects(products_iterable):
+            nonlocal actual_algolia_products_sent
+            actual_algolia_products_sent = list(products_iterable)
+        mock_search_client().replace_all_objects.side_effect = mock_replace_all_objects
+
+        with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
+            with self.assertLogs(level='INFO') as info_logs:
+                tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
+
+        products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
+        assert ' 6 products found.' in products_found_log_records[0]
+
+        # create expected data to be added/updated in the Algolia index.
+        expected_course_1_objects_to_index = []
+        published_course_uuid = algolia_data['course_metadata_published'].json_metadata.get('uuid')
+        expected_course_1_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-catalog-uuids-0',
+            'enterprise_catalog_uuids': algolia_data['catalog_uuids'],
+        })
+        expected_course_1_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-customer-uuids-0',
+            'enterprise_customer_uuids': algolia_data['customer_uuids'],
+        })
+        expected_course_1_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-catalog-query-uuids-0',
+            'enterprise_catalog_query_uuids': sorted(algolia_data['query_uuids']),
+            'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
+        })
+
+        expected_program_1_objects_to_index = []
+        program_uuid = program_1.json_metadata.get('uuid')
+        expected_program_1_objects_to_index.append({
+            'objectID': f'program-{program_uuid}-catalog-uuids-0',
+            'enterprise_catalog_uuids': [str(self.enterprise_catalog_courses.uuid)],
+        })
+        expected_program_1_objects_to_index.append({
+            'objectID': f'program-{program_uuid}-customer-uuids-0',
+            'enterprise_customer_uuids': [str(self.enterprise_catalog_courses.enterprise_uuid)],
+        })
+        expected_program_1_objects_to_index.append({
+            'objectID': f'program-{program_uuid}-catalog-query-uuids-0',
+            'enterprise_catalog_query_uuids': [str(self.enterprise_catalog_courses.catalog_query.uuid)],
+            'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
+        })
+
+        expected_algolia_objects_to_index = (
+            expected_course_1_objects_to_index
+            + expected_program_1_objects_to_index
+        )
+
+        # verify replace_all_objects is called with the correct Algolia object data.
+        expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
+        actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
+        assert expected_call_args == actual_call_args
+
+    @mock.patch(
+        'enterprise_catalog.apps.api.tasks._was_recently_indexed',
+        side_effect=tasks._was_recently_indexed,  # pylint: disable=protected-access
+    )
+    @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
+    # pylint: disable=unused-argument
+    def test_index_algolia_published_course_to_pathway(self, mock_search_client, mock_was_recently_indexed):
+        """
+        Assert that only only "indexable" objects are indexed, particularly when a published course is associated with a
+        pathway.
+
+        This DAG represents the complete test environment:
+        ┌─────────┐   ┌────────┐
+        │*course-1│   │course-2│
+        └┬────────┘   └────────┘
+        ┌▽─────────┐
+        │*pathway-1│
+        └──────────┘
+        * = indexable
+        """
+        algolia_data = self._set_up_factory_data_for_algolia()
+
+        pathway_1 = ContentMetadataFactory(content_type=LEARNER_PATHWAY, content_key='pathway-1')
+
+        # Associate published course with a pathway.
+        self.course_metadata_published.associated_content_metadata.set([pathway_1])
+
+        actual_algolia_products_sent = None
+
+        # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
+        # result into `actual_algolia_products_sent` for unit testing.
+        def mock_replace_all_objects(products_iterable):
+            nonlocal actual_algolia_products_sent
+            actual_algolia_products_sent = list(products_iterable)
+        mock_search_client().replace_all_objects.side_effect = mock_replace_all_objects
+
+        with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
+            with self.assertLogs(level='INFO') as info_logs:
+                tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
+
+        products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
+        assert ' 6 products found.' in products_found_log_records[0]
+
+        # create expected data to be added/updated in the Algolia index.
+        expected_course_1_objects_to_index = []
+        published_course_uuid = algolia_data['course_metadata_published'].json_metadata.get('uuid')
+        expected_course_1_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-catalog-uuids-0',
+            'enterprise_catalog_uuids': algolia_data['catalog_uuids'],
+        })
+        expected_course_1_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-customer-uuids-0',
+            'enterprise_customer_uuids': algolia_data['customer_uuids'],
+        })
+        expected_course_1_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-catalog-query-uuids-0',
+            'enterprise_catalog_query_uuids': sorted(algolia_data['query_uuids']),
+            'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
+        })
+
+        expected_pathway_1_objects_to_index = []
+        pathway_uuid = pathway_1.json_metadata.get('uuid')
+        expected_pathway_1_objects_to_index.append({
+            'key': pathway_1.content_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-catalog-uuids-0',
+            'enterprise_catalog_uuids': algolia_data['catalog_uuids'],
+        })
+        expected_pathway_1_objects_to_index.append({
+            'key': pathway_1.content_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-customer-uuids-0',
+            'enterprise_customer_uuids': algolia_data['customer_uuids'],
+        })
+        expected_pathway_1_objects_to_index.append({
+            'key': pathway_1.content_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-catalog-query-uuids-0',
+            'enterprise_catalog_query_uuids': sorted(algolia_data['query_uuids']),
+            'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
+        })
+
+        expected_algolia_objects_to_index = (
+            expected_course_1_objects_to_index
+            + expected_pathway_1_objects_to_index
+        )
+
+        # verify replace_all_objects is called with the correct Algolia object data.
+        expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
+        actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
+        assert expected_call_args == actual_call_args
+
+    @mock.patch(
+        'enterprise_catalog.apps.api.tasks._was_recently_indexed',
+        side_effect=tasks._was_recently_indexed,  # pylint: disable=protected-access
+    )
+    @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
+    # pylint: disable=unused-argument
+    def test_index_algolia_unpublished_course_to_pathway(self, mock_search_client, mock_was_recently_indexed):
+        """
+        Assert that only only "indexable" objects are indexed, particularly when an unpublished course is associated
+        with a pathway.
+
+        This DAG represents the complete test environment:
+        ┌────────┐     ┌─────────┐
+        │course-2│     │*course-1│
+        └┬───────┘     └─────────┘
+        ┌▽─────────┐
+        │*pathway-1│
+        └──────────┘
+        * = indexable
+        """
+        algolia_data = self._set_up_factory_data_for_algolia()
+
+        pathway_1 = ContentMetadataFactory(content_type=LEARNER_PATHWAY, content_key='pathway-1')
+
+        # Include pathway into a catalog query so that absence of a catalog query doesn't taint the test
+        # (which would prevent indexability of the pathway).
+        pathway_1.catalog_queries.set([self.enterprise_catalog_query])
+
+        # Associate unpublished course with a pathway.
+        self.course_metadata_unpublished.associated_content_metadata.set([pathway_1])
+
+        actual_algolia_products_sent = None
+
+        # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
+        # result into `actual_algolia_products_sent` for unit testing.
+        def mock_replace_all_objects(products_iterable):
+            nonlocal actual_algolia_products_sent
+            actual_algolia_products_sent = list(products_iterable)
+        mock_search_client().replace_all_objects.side_effect = mock_replace_all_objects
+
+        with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
+            with self.assertLogs(level='INFO') as info_logs:
+                tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
+
+        products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
+        assert ' 6 products found.' in products_found_log_records[0]
+
+        # create expected data to be added/updated in the Algolia index.
+        expected_course_1_objects_to_index = []
+        published_course_uuid = algolia_data['course_metadata_published'].json_metadata.get('uuid')
+        expected_course_1_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-catalog-uuids-0',
+            'enterprise_catalog_uuids': algolia_data['catalog_uuids'],
+        })
+        expected_course_1_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-customer-uuids-0',
+            'enterprise_customer_uuids': algolia_data['customer_uuids'],
+        })
+        expected_course_1_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-catalog-query-uuids-0',
+            'enterprise_catalog_query_uuids': sorted(algolia_data['query_uuids']),
+            'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
+        })
+
+        expected_pathway_1_objects_to_index = []
+        pathway_uuid = pathway_1.json_metadata.get('uuid')
+        expected_pathway_1_objects_to_index.append({
+            'key': pathway_1.content_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-catalog-uuids-0',
+            'enterprise_catalog_uuids': [str(self.enterprise_catalog_courses.uuid)],
+        })
+        expected_pathway_1_objects_to_index.append({
+            'key': pathway_1.content_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-customer-uuids-0',
+            'enterprise_customer_uuids': [str(self.enterprise_catalog_courses.enterprise_uuid)],
+        })
+        expected_pathway_1_objects_to_index.append({
+            'key': pathway_1.content_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-catalog-query-uuids-0',
+            'enterprise_catalog_query_uuids': [str(self.enterprise_catalog_courses.catalog_query.uuid)],
+            'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
+        })
+
+        expected_algolia_objects_to_index = (
+            expected_course_1_objects_to_index
+            + expected_pathway_1_objects_to_index
+        )
+
+        # verify replace_all_objects is called with the correct Algolia object data.
+        expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
+        actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
+        assert expected_call_args == actual_call_args
+
+    @mock.patch(
+        'enterprise_catalog.apps.api.tasks._was_recently_indexed',
+        side_effect=tasks._was_recently_indexed,  # pylint: disable=protected-access
+    )
+    @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
+    # pylint: disable=unused-argument
+    def test_index_algolia_program_to_pathway(self, mock_search_client, mock_was_recently_indexed):
+        """
+        Assert that only only "indexable" objects are indexed, particularly when a hidden, and non-hidden program is
+        associated with a pathway.
+
+        This DAG represents the complete test environment:
+        ┌──────────┐┌─────────┐  ┌─────────┐┌────────┐
+        │*program-1││program-2│  │*course-1││course-2│
+        └┬─────────┘└┬────────┘  └─────────┘└────────┘
+        ┌▽───────────▽┐
+        │*pathway-1   │
+        └─────────────┘
+        * = indexable
+        """
+        algolia_data = self._set_up_factory_data_for_algolia()
+
+        program_1 = ContentMetadataFactory(content_type=PROGRAM, content_key='program-1')
+        program_2 = ContentMetadataFactory(content_type=PROGRAM, content_key='program-2')
+        pathway_1 = ContentMetadataFactory(content_type=LEARNER_PATHWAY, content_key='pathway-1')
+
+        # Include both programs into a catalog query so that absence of a catalog query doesn't taint the test
+        # (which would prevent indexability of the programs).
+        program_1.catalog_queries.set([self.enterprise_catalog_query])
+        program_1.catalog_queries.set([self.enterprise_catalog_query])
+
+        # Make program-2 hidden to make it "non-indexable". Later we will assert that it will not get indexed.
+        program_2.json_metadata.update({
+            'hidden': True,
+        })
+        program_2.save()
+
+        # Associate both programs with the pathway.
+        program_1.associated_content_metadata.set([pathway_1])
+        program_2.associated_content_metadata.set([pathway_1])
+
+        actual_algolia_products_sent = None
+
+        # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
+        # result into `actual_algolia_products_sent` for unit testing.
+        def mock_replace_all_objects(products_iterable):
+            nonlocal actual_algolia_products_sent
+            actual_algolia_products_sent = list(products_iterable)
+        mock_search_client().replace_all_objects.side_effect = mock_replace_all_objects
+
+        with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
+            with self.assertLogs(level='INFO') as info_logs:
+                tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
+
+        products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
+        assert ' 9 products found.' in products_found_log_records[0]
+
+        # create expected data to be added/updated in the Algolia index.
+        expected_course_1_objects_to_index = []
+        published_course_uuid = algolia_data['course_metadata_published'].json_metadata.get('uuid')
+        expected_course_1_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-catalog-uuids-0',
+            'enterprise_catalog_uuids': algolia_data['catalog_uuids'],
+        })
+        expected_course_1_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-customer-uuids-0',
+            'enterprise_customer_uuids': algolia_data['customer_uuids'],
+        })
+        expected_course_1_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-catalog-query-uuids-0',
+            'enterprise_catalog_query_uuids': sorted(algolia_data['query_uuids']),
+            'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
+        })
+
+        expected_program_1_objects_to_index = []
+        program_uuid = program_1.json_metadata.get('uuid')
+        expected_program_1_objects_to_index.append({
+            'objectID': f'program-{program_uuid}-catalog-uuids-0',
+            'enterprise_catalog_uuids': [str(self.enterprise_catalog_courses.uuid)],
+        })
+        expected_program_1_objects_to_index.append({
+            'objectID': f'program-{program_uuid}-customer-uuids-0',
+            'enterprise_customer_uuids': [str(self.enterprise_catalog_courses.enterprise_uuid)],
+        })
+        expected_program_1_objects_to_index.append({
+            'objectID': f'program-{program_uuid}-catalog-query-uuids-0',
+            'enterprise_catalog_query_uuids': [str(self.enterprise_catalog_courses.catalog_query.uuid)],
+            'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
+        })
+
+        expected_pathway_1_objects_to_index = []
+        pathway_uuid = pathway_1.json_metadata.get('uuid')
+        expected_pathway_1_objects_to_index.append({
+            'key': pathway_1.content_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-catalog-uuids-0',
+            'enterprise_catalog_uuids': [str(self.enterprise_catalog_courses.uuid)],
+        })
+        expected_pathway_1_objects_to_index.append({
+            'key': pathway_1.content_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-customer-uuids-0',
+            'enterprise_customer_uuids': [str(self.enterprise_catalog_courses.enterprise_uuid)],
+        })
+        expected_pathway_1_objects_to_index.append({
+            'key': pathway_1.content_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-catalog-query-uuids-0',
+            'enterprise_catalog_query_uuids': [str(self.enterprise_catalog_courses.catalog_query.uuid)],
+            'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
+        })
+
+        expected_algolia_objects_to_index = (
+            expected_course_1_objects_to_index
+            + expected_program_1_objects_to_index
+            + expected_pathway_1_objects_to_index
+        )
+
+        # verify replace_all_objects is called with the correct Algolia object data.
+        expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
+        actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
+        assert expected_call_args == actual_call_args
+
+    @mock.patch(
+        'enterprise_catalog.apps.api.tasks._was_recently_indexed',
+        side_effect=tasks._was_recently_indexed,  # pylint: disable=protected-access
+    )
+    @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
+    # pylint: disable=too-many-statements,unused-argument
+    def test_index_algolia_all_uuids(self, mock_search_client, mock_was_recently_indexed):
         """
         Assert that the correct data is sent to Algolia index, with the expected enterprise
         catalog and enterprise customer associations.
 
         This DAG represents the complete test environment:
 
-        ┌─────────┐┌───────────────────┐┌─────────────────────┐
-        │program-2││courserun_published││courserun_unpublished│
-        └┬────────┘└┬──┬───────────────┘└┬────────────────────┘
-        ┌▽──────────▽┐┌▽───────────────┐┌▽─────────────────┐
-        │pathway-2   ││course_published││course_unpublished│
-        └────────────┘└┬──┬─────────┬──┘└┬──────┬──────────┘
-              ┌────────▽┐┌▽────────┐│┌───▽─────┐│
-              │program-1││pathway-1│││program-3││
-              └─────────┘└─────────┘│└┬────────┘│
-                                   ┌▽─▽─────────▽┐
-                                   │  pathway-3  │
-                                   └─────────────┘
-
-        This masked DAG shows only the objects that are "indexable":
-
-        ┌────────────┐┌────────────────┐
-        │pathway-2   ││course_published│
-        └────────────┘└───┬─────────┬──┘
-                         ┌▽────────┐│┌─────────┐
-                         │pathway-1│││program-3│
-                         └─────────┘│└┬────────┘
-                                   ┌▽─▽──────────┐
-                                   │  pathway-3  │
-                                   └─────────────┘
-
-        Finally, this masked DAG shows only the objects that will be actually indexed:
-
-        ┌─────────┐
-        │program-2│
-        └┬────────┘
-        ┌▽───────────┐┌────────────────┐
-        │pathway-2   ││course_published│
-        └────────────┘└┬──┬─────────┬──┘
-              ┌────────▽┐┌▽────────┐│┌─────────┐
-              │program-1││pathway-1│││program-3│
-              └─────────┘└─────────┘│└┬────────┘
-                                   ┌▽─▽──────────┐
-                                   │  pathway-3  │
-                                   └─────────────┘
-
-        Reasons:
-
-        * non-idexable unpublished course (course_unpublished) not pulled in despite being associated with both an
-          indexable program AND a pathway.
-        * non-indexable program (program-1) pulled in because of being associated with an indexable course.
-        * non-indexable program (program-2) pulled in because of being associated with a pathway.
+        ┌─────────┐┌────────────────────┐┌─────────────────────┐
+        │program-2││*courserun_published││courserun_unpublished│
+        └┬────────┘└┬──┬────────────────┘└┬────────────────────┘
+        ┌▽──────────▽┐┌▽────────────────┐┌▽─────────────────┐
+        │*pathway-2  ││*course_published││course_unpublished│
+        └────────────┘└┬──┬──────────┬──┘└┬───────┬─────────┘
+              ┌────────▽┐┌▽─────────┐│┌───▽──────┐│
+              │program-1││*pathway-1│││*program-3││
+              └─────────┘└──────────┘│└┬─────────┘│
+                                    ┌▽─▽──────────▽┐
+                                    │ *pathway-3   │
+                                    └──────────────┘
+        * = indexable
         """
+        self.maxDiff = None
         algolia_data = self._set_up_factory_data_for_algolia()
         program_for_main_course = ContentMetadataFactory(content_type=PROGRAM, content_key='program-1')
         # Make the program hidden to make it "non-indexable", but ensure that it still gets indexed due to being related
@@ -740,6 +1227,10 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         pathway_for_course = ContentMetadataFactory(content_type=LEARNER_PATHWAY, content_key='pathway-1')
         pathway_for_courserun = ContentMetadataFactory(content_type=LEARNER_PATHWAY, content_key='pathway-2')
 
+        # pathway-2 is indexable, but since it is not associated with any other indexable object that is in a catalog
+        # query, it will not be indexed unless we add it directly to a catalog query.
+        pathway_for_courserun.catalog_queries.set([self.enterprise_catalog_query])
+
         # Set up a program and pathway, both intended to be associated to the unpublished course to test that the course
         # does not get indexed through association.  The pathway also needs to be associated directly with the main
         # course so that it will actually have UUIDs and be included in the output.
@@ -752,7 +1243,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             [program_for_main_course, pathway_for_course, pathway_for_unpublished_course]
         )
         # associate pathway with the course run
-        self.course_run_metadata_paythway.associated_content_metadata.set(
+        self.course_run_metadata_published.associated_content_metadata.set(
             [pathway_for_courserun]
         )
         # associate pathway with the program
@@ -764,13 +1255,13 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             [program_for_unpublished_course, pathway_for_unpublished_course]
         )
 
-        actual_algolia_products_sent_sequence = []
+        actual_algolia_products_sent = None
 
         # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
-        # result into `actual_algolia_products_sent_sequence` for unit testing.
+        # result into `actual_algolia_products_sent` for unit testing.
         def mock_replace_all_objects(products_iterable):
-            nonlocal actual_algolia_products_sent_sequence
-            actual_algolia_products_sent_sequence.append(list(products_iterable))
+            nonlocal actual_algolia_products_sent
+            actual_algolia_products_sent = list(products_iterable)
         mock_search_client().replace_all_objects.side_effect = mock_replace_all_objects
 
         with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
@@ -778,7 +1269,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] 15 products found.' in products_found_log_records[0]
+        assert ' 15 products found.' in products_found_log_records[0]
 
         # create expected data to be added/updated in the Algolia index.
         expected_algolia_objects_to_index = []
@@ -797,38 +1288,6 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'key': algolia_data['course_metadata_published'].content_key,
             'objectID': f'course-{published_course_uuid}-catalog-query-uuids-0',
             'enterprise_catalog_query_uuids': sorted(algolia_data['query_uuids']),
-            'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
-        })
-
-        expected_algolia_program_objects = []
-        program_uuid = program_for_main_course.json_metadata.get('uuid')
-        expected_algolia_program_objects.append({
-            'objectID': f'program-{program_uuid}-catalog-uuids-0',
-            'enterprise_catalog_uuids': algolia_data['catalog_uuids'],
-        })
-        expected_algolia_program_objects.append({
-            'objectID': f'program-{program_uuid}-customer-uuids-0',
-            'enterprise_customer_uuids': algolia_data['customer_uuids'],
-        })
-        expected_algolia_program_objects.append({
-            'objectID': f'program-{program_uuid}-catalog-query-uuids-0',
-            'enterprise_catalog_query_uuids': sorted(algolia_data['query_uuids']),
-            'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
-        })
-
-        expected_algolia_program_objects2 = []
-        program_uuid = program_for_pathway.json_metadata.get('uuid')
-        expected_algolia_program_objects2.append({
-            'objectID': f'program-{program_uuid}-catalog-uuids-0',
-            'enterprise_catalog_uuids': [str(self.enterprise_catalog_courses.uuid)],
-        })
-        expected_algolia_program_objects2.append({
-            'objectID': f'program-{program_uuid}-customer-uuids-0',
-            'enterprise_customer_uuids': [str(self.enterprise_catalog_courses.enterprise_uuid)],
-        })
-        expected_algolia_program_objects2.append({
-            'objectID': f'program-{program_uuid}-catalog-query-uuids-0',
-            'enterprise_catalog_query_uuids': [str(self.enterprise_catalog_courses.catalog_query.uuid)],
             'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
         })
 
@@ -892,24 +1351,22 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         expected_algolia_pathway_objects3.append({
             'key': pathway_key,
             'objectID': f'learnerpathway-{pathway_uuid}-catalog-uuids-0',
-            'enterprise_catalog_uuids': [str(self.enterprise_catalog_courses.uuid)],
+            'enterprise_catalog_uuids': algolia_data['catalog_uuids'],
         })
         expected_algolia_pathway_objects3.append({
             'key': pathway_key,
             'objectID': f'learnerpathway-{pathway_uuid}-customer-uuids-0',
-            'enterprise_customer_uuids': [str(self.enterprise_catalog_courses.enterprise_uuid)],
+            'enterprise_customer_uuids': algolia_data['customer_uuids'],
         })
         expected_algolia_pathway_objects3.append({
             'key': pathway_key,
             'objectID': f'learnerpathway-{pathway_uuid}-catalog-query-uuids-0',
-            'enterprise_catalog_query_uuids': [str(self.enterprise_catalog_courses.catalog_query.uuid)],
+            'enterprise_catalog_query_uuids': sorted(algolia_data['query_uuids']),
             'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
         })
 
         expected_algolia_objects_to_index = (
             expected_algolia_objects_to_index
-            + expected_algolia_program_objects
-            + expected_algolia_program_objects2
             + expected_algolia_program_objects3
             + expected_algolia_pathway_objects
             + expected_algolia_pathway_objects2
@@ -918,51 +1375,10 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         # verify replace_all_objects is called with the correct Algolia object data
         # on the first invocation and with programs/pathways only on the second invocation.
-        expected_first_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
-        actual_first_call_args = sorted(
-            actual_algolia_products_sent_sequence[0], key=itemgetter('objectID')
-        )
+        expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
+        actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
 
-        unsorted_expected_calls_args = (
-            expected_algolia_program_objects
-            + expected_algolia_program_objects2
-            + expected_algolia_program_objects3
-            + expected_algolia_pathway_objects
-            + expected_algolia_pathway_objects2
-            + expected_algolia_pathway_objects3
-        )
-        expected_second_call_args = sorted(unsorted_expected_calls_args, key=itemgetter('objectID'))
-        actual_second_call_args = sorted(
-            mock_search_client().replace_all_objects.mock_calls[1].args[0], key=itemgetter('objectID')
-        )
-        self.assertEqual(expected_first_call_args, actual_first_call_args)
-        self.assertEqual(expected_second_call_args, actual_second_call_args)
-
-        # Verify that we checked the cache twice, though
-        mock_was_recently_indexed.assert_has_calls([
-            mock.call(self.course_metadata_published.content_key),
-            mock.call(self.course_metadata_published.content_key),
-            mock.call(self.course_metadata_published.content_key),
-            mock.call(program_for_main_course.content_key),
-            mock.call(program_for_pathway.content_key),
-            mock.call(pathway_for_course.content_key),
-            mock.call(pathway_for_courserun.content_key),
-            mock.call(pathway_for_courserun.content_key),
-            mock.call(program_for_unpublished_course.content_key),
-            mock.call(pathway_for_unpublished_course.content_key),
-            mock.call(pathway_for_unpublished_course.content_key),
-            mock.call(self.course_metadata_published.content_key),
-            mock.call(self.course_metadata_published.content_key),
-            mock.call(self.course_metadata_published.content_key),
-            mock.call(program_for_main_course.content_key),
-            mock.call(program_for_pathway.content_key),
-            mock.call(pathway_for_course.content_key),
-            mock.call(pathway_for_courserun.content_key),
-            mock.call(pathway_for_courserun.content_key),
-            mock.call(program_for_unpublished_course.content_key),
-            mock.call(pathway_for_unpublished_course.content_key),
-            mock.call(pathway_for_unpublished_course.content_key),
-        ])
+        assert expected_call_args == actual_call_args
 
     @mock.patch('enterprise_catalog.apps.api.tasks._was_recently_indexed')
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
@@ -988,7 +1404,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             with self.assertLogs(level='INFO') as info_logs:
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
-        assert '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] 6 products found.' in info_logs.output[-1]
+        assert ' 6 products found.' in info_logs.output[-1]
 
         # create expected data to be added/updated in the Algolia index.
         expected_algolia_objects_to_index = []
@@ -1057,7 +1473,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             with self.assertLogs(level='INFO') as info_logs:
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
-        assert '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] 6 products found.' in info_logs.output[-1]
+        assert ' 6 products found.' in info_logs.output[-1]
 
         # create expected data to be added/updated in the Algolia index.
         expected_algolia_objects_to_index = []
