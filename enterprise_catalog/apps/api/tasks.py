@@ -609,6 +609,7 @@ def add_metadata_to_algolia_objects(
 def _get_algolia_products_for_batch(
     batch_num,
     content_keys_batch,
+    all_indexable_content_keys,
     program_to_courses_mapping,
     pathway_to_programs_courses_mapping,
     context_accumulator,
@@ -620,6 +621,32 @@ def _get_algolia_products_for_batch(
     The intention of this function is to produce an output object that consumes a relatively fixed amount of memory.
     Callers can also maintain a fixed memory cap by only keeping a fixed number of output objects in-memory at any given
     time.
+
+    ONLY objects that are indexable are indexed.  Past versions of this function caused programs to be indexed just by
+    touching an indexable course or pathway, but now they will only be indexed if they pass the
+    `_should_index_program()` test.
+
+    Note: course runs are not indexed despite having their UUIDs inherited.
+
+    UUIDs are inherited all the way from course runs to courses to programs to pathways.  Specifically, a given object
+    in the tree will be indexed with union of all UUIDs from every node in the sub-tree.  E.g. a pathway object will be
+    indexed with the UUIDs found on the pathway + program + course + course run beneath.
+
+    Args
+        batch_num (int): The numeric identifier of the current batch, defined by the contents of `content_keys_batch`.
+        content_keys_batch (list or str):
+            The content keys to process for this batch.  It is possible that this batch will index more objects to
+            Algolia than what is contained in `content_keys_batch`; e.g. if the batch contains a program which in turn
+            contains an indexable course, that course will be "pulled into" this batch.
+        all_indexable_content_keys (set of str):
+            All indexable content keys across all batches.  Must be a python set to support quick lookups.
+        program_to_courses_mapping (dict of str -> list of str): Mapping of programs to the courses within.
+        pathway_to_programs_courses_mapping (dict of str -> list of str):
+            Mapping of pathways to programs and courses within.
+        context_accumulator (dict):
+            An object that is passed to every batch in order to enable accumulating context and metrics that can be
+            useful for logging.
+        dry_run (bool): If true, all logic will run except sending products to Algolia.
 
     Returns:
         list of dict: Algolia products to index.
@@ -641,26 +668,26 @@ def _get_algolia_products_for_batch(
     content_metadata_no_courseruns = ContentMetadata.objects.filter(
         # All content (courses, course runs, programs, pathways) directly requested.
         Q(content_key__in=content_keys_batch)
-        # All course runs, courses, or programs contained in programs or pathways requested.
+        # All course runs, courses, or programs contained in programs or pathways requested.  In order to collect all
+        # UUIDs for a given program or pathway, all containing objects are needed too, but those may not happen to be
+        # part of the current batch.
+        # This could include non-indexable content, so they will need to be filtered out next.
         | Q(
             content_type__in=[COURSE_RUN, COURSE, PROGRAM],
             associated_content_metadata__content_type__in=[PROGRAM, LEARNER_PATHWAY],
             associated_content_metadata__content_key__in=content_keys_batch,
         )
-        # All programs, pathways to which any requested course belongs.
-        | Q(
-            content_type__in=[PROGRAM, LEARNER_PATHWAY],
-            associated_content_metadata__content_type__in=[COURSE, PROGRAM],
-            associated_content_metadata__content_key__in=content_keys_batch,
-        )
     ).prefetch_related(
         Prefetch('catalog_queries', queryset=all_catalog_queries),
     )
+    # Perform filtering of non-indexable objects in-memory because the list may be too long to shove into a SQL query.
+    content_metadata_no_courseruns = [
+        cm for cm in content_metadata_no_courseruns
+        if cm.content_key in all_indexable_content_keys
+    ]
 
     # Retrieve ContentMetadata records for any course run which is part of any course found in the previous query.
-    course_content_keys = content_metadata_no_courseruns.filter(
-        content_type=COURSE,
-    ).values_list('content_key', flat=True)
+    course_content_keys = [cm.content_key for cm in content_metadata_no_courseruns]
     content_metadata_courseruns = ContentMetadata.objects.filter(
         parent_content_key__in=course_content_keys
     ).prefetch_related(
@@ -673,7 +700,7 @@ def _get_algolia_products_for_batch(
     # requested to a pathway via an association chain of course->program->pathway.  This maybe should be added!  When it
     # is added, a related change must be made in the third pass (below) to chain
     # `pathway_to_programs_courses_mapping` and `program_to_courses_mapping` to actually collect the UUIDs.
-    content_metadata_to_process = content_metadata_no_courseruns.union(content_metadata_courseruns)
+    content_metadata_to_process = content_metadata_no_courseruns + list(content_metadata_courseruns)
 
     # First pass over the batch of content.  The goal for this pass is to collect all the UUIDs directly associated with
     # each content.  This DOES NOT capture any UUIDs indirectly related to programs or pathways via associated courses
@@ -786,7 +813,7 @@ def _get_algolia_products_for_batch(
         f'{_reindex_algolia_prefix(dry_run)} '
         f'batch#{batch_num}: '
         f'{len(content_keys_batch)} content keys, '
-        f'{content_metadata_to_process.count()} content metadata found, '
+        f'{len(content_metadata_to_process)} content metadata found, '
         f'{num_content_metadata_indexed} content metadata indexed, '
         f'{len(algolia_products_by_object_id)} generated algolia products kept, '
         f'{duplicate_algolia_records_discarded} generated algolia products discarded.'
@@ -824,12 +851,15 @@ def _index_content_keys_in_algolia(content_keys, algolia_client, dry_run=False):
         'total_algolia_products_count': 0,
         'discarded_algolia_object_ids': defaultdict(int),
     }
+    # Convert the content_keys list into a set that only takes O(1) on average to lookup.
+    all_content_keys_set = set(content_keys)
     # Produce a generator of batches of algolia products to index.  Each batch has an unpredictable, variable length.
     # Not immediately evaluated, so no memory is consumed yet.
     algolia_products_batch_generator = (
         _get_algolia_products_for_batch(
             batch_num,
             content_keys_batch,
+            all_content_keys_set,
             program_to_courses_mapping,
             pathway_to_programs_courses_mapping,
             context_accumulator,
