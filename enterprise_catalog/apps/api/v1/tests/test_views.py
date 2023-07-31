@@ -752,14 +752,14 @@ class EnterpriseCatalogWorkbookViewTests(APITestMixin):
                 "programs": [
                     "Professional Certificate"
                 ],
-                "program_titles":[
+                "program_titles": [
                     "Totally Awesome Program"
                 ],
-                "short_description":"description",
-                "subjects":[
+                "short_description": "description",
+                "subjects": [
                     "Math"
                 ],
-                "skills":[
+                "skills": [
                     {
                         "name": "Probability And Statistics",
                         "description": "description"
@@ -816,14 +816,14 @@ class EnterpriseCatalogWorkbookViewTests(APITestMixin):
                 "programs": [
 
                 ],
-                "program_titles":[
+                "program_titles": [
 
                 ],
-                "short_description":"<p>Respond to unique industry challenges",
-                "subjects":[
+                "short_description": "<p>Respond to unique industry challenges",
+                "subjects": [
                     "Business & Management"
                 ],
-                "skills":[
+                "skills": [
                     {
                         "name": "Finance",
                         "description": "",
@@ -853,9 +853,9 @@ class EnterpriseCatalogWorkbookViewTests(APITestMixin):
                 "course_runs": [
 
                 ],
-                "marketing_url":"https://www.edx.org/course/oxford-leadinaffiliate_partner",
-                "course_type":"executive-education-2u",
-                "entitlements":[
+                "marketing_url": "https://www.edx.org/course/oxford-leadinaffiliate_partner",
+                "course_type": "executive-education-2u",
+                "entitlements": [
                     {
                         "mode": "paid-executive-education",
                         "price": "2843.00",
@@ -897,7 +897,7 @@ class EnterpriseCatalogWorkbookViewTests(APITestMixin):
                         ]
                     }
                 },
-                "skill_names":[
+                "skill_names": [
                     {
                         "value": "People Management",
                         "matchLevel": "none",
