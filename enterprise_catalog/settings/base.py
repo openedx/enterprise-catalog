@@ -1,6 +1,4 @@
 import os
-import platform
-from logging.handlers import SysLogHandler
 from os.path import abspath, dirname, join
 
 from corsheaders.defaults import default_headers as corsheaders_default_headers
@@ -14,7 +12,7 @@ from enterprise_catalog.apps.catalog.constants import (
     SYSTEM_ENTERPRISE_LEARNER_ROLE,
     SYSTEM_ENTERPRISE_OPERATOR_ROLE,
 )
-from enterprise_catalog.settings.utils import get_env_setting, get_logger_config
+from enterprise_catalog.settings.utils import get_logger_config
 
 
 # PATH vars
@@ -49,9 +47,7 @@ INSTALLED_APPS = (
 
 THIRD_PARTY_APPS = (
     # API Documentation
-    'drf_yasg',
-    'edx_api_doc_tools',
-
+    'drf_spectacular',
     'corsheaders',
     'csrf.apps.CsrfAppConfig',  # Enables frontend apps to retrieve CSRF tokens
     'django_celery_results',  # Enables a Django model as the celery result backend
@@ -144,7 +140,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
-    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'PAGE_SIZE': 10,
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
 }
@@ -425,3 +421,11 @@ USE_DEPRECATED_PYTZ = True
 
 # (ENT-5968) This is temporary until offers are implemented in the learner portal
 INTEGRATED_CUSTOMERS_WITH_SUBSIDIES_AND_OFFERS = ['731b28ee-09d1-4b89-8f7b-2c8fd0939746']
+
+# DRF Spectacular settings
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Enterprise Catalog API',
+    'DESCRIPTION': 'API for querying and commanding about enterprise catalog records.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
