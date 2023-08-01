@@ -26,9 +26,6 @@ inflect<4.0.0
 # Using the same version of diff-cover which is being used currently in edx-platform to avoid this conflict.
 diff-cover==4.0.0
 
-# docker-compose wants pyyaml<6
-pyyaml<6
-
 # redis 4 client won't work with redis 3 server
 redis<4
 

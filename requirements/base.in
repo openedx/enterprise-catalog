@@ -16,6 +16,7 @@ django-simple-history
 djangorestframework
 djangorestframework-xml
 djangoql
+drf-spectacular
 edx-auth-backends
 edx-celeryutils
 edx-django-release-util
