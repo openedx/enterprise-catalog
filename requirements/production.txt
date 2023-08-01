@@ -103,8 +103,6 @@ django==3.2.20
     #   djangorestframework
     #   drf-jwt
     #   drf-spectacular
-    #   drf-yasg
-    #   edx-api-doc-tools
     #   edx-auth-backends
     #   edx-celeryutils
     #   edx-django-release-util
@@ -154,8 +152,6 @@ djangorestframework==3.14.0
     #   django-config-models
     #   drf-jwt
     #   drf-spectacular
-    #   drf-yasg
-    #   edx-api-doc-tools
     #   edx-drf-extensions
 djangorestframework-xml==2.0.0
     # via -r requirements/base.txt
@@ -164,12 +160,6 @@ drf-jwt==1.19.2
     #   -r requirements/base.txt
     #   edx-drf-extensions
 drf-spectacular==0.26.4
-    # via -r requirements/base.txt
-drf-yasg==1.21.7
-    # via
-    #   -r requirements/base.txt
-    #   edx-api-doc-tools
-edx-api-doc-tools==1.7.0
     # via -r requirements/base.txt
 edx-auth-backends==4.1.0
     # via -r requirements/base.txt
@@ -217,7 +207,6 @@ inflection==0.5.1
     # via
     #   -r requirements/base.txt
     #   drf-spectacular
-    #   drf-yasg
 jinja2==3.1.2
     # via
     #   -r requirements/base.txt
@@ -260,10 +249,7 @@ oauthlib==3.2.2
     #   requests-oauthlib
     #   social-auth-core
 packaging==23.1
-    # via
-    #   -r requirements/base.txt
-    #   drf-yasg
-    #   gunicorn
+    # via gunicorn
 pbr==5.11.1
     # via
     #   -r requirements/base.txt
@@ -325,14 +311,12 @@ pytz==2023.3
     #   -r requirements/base.txt
     #   django
     #   djangorestframework
-    #   drf-yasg
 pyyaml==6.0.1
     # via
     #   -r requirements/base.txt
     #   -r requirements/production.in
     #   code-annotations
     #   drf-spectacular
-    #   drf-yasg
     #   edx-django-release-util
 redis==3.5.3
     # via -r requirements/base.txt
@@ -419,7 +403,6 @@ uritemplate==4.1.1
     # via
     #   -r requirements/base.txt
     #   drf-spectacular
-    #   drf-yasg
 urllib3==2.0.4
     # via
     #   -r requirements/base.txt

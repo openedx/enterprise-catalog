@@ -19,7 +19,11 @@ from auth_backends.urls import oauth2_urlpatterns
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
-from edx_api_doc_tools import make_api_info, make_docs_urls
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularRedocView,
+    SpectacularSwaggerView,
+)
 
 from enterprise_catalog.apps.api import urls as api_urls
 from enterprise_catalog.apps.core import views as core_views
@@ -27,9 +31,16 @@ from enterprise_catalog.apps.core import views as core_views
 
 admin.autodiscover()
 
-api_info = make_api_info(
-    title='Enterprise Catalog API',
-    version="v1",
+spectacular_view = SpectacularAPIView(
+    api_version='v1',
+    title='enterprise-access spectacular view',
+)
+
+spec_swagger_view = SpectacularSwaggerView()
+
+spec_redoc_view = SpectacularRedocView(
+    title='Redoc view for the enterprise-access API.',
+    url_name='schema',
 )
 
 urlpatterns = [
@@ -41,9 +52,12 @@ urlpatterns = [
     # Use the same auth views for all logins, including those originating from the browseable API.
     path('auto_auth/', core_views.AutoAuth.as_view(), name='auto_auth'),
     path('health/', core_views.health, name='health'),
+    # All the API docs
+    path('api-docs/', spec_swagger_view.as_view(), name='api-docs'),
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/schema/redoc/', spec_redoc_view.as_view(url_name='schema'), name='redoc'),
+    path('api/schema/swagger-ui/', spec_swagger_view.as_view(url_name='schema'), name='swaggger-ui'),
 ]
-
-urlpatterns += make_docs_urls(api_info)
 
 if settings.DEBUG and os.environ.get('ENABLE_DJANGO_TOOLBAR', False):  # pragma: no cover
     import debug_toolbar

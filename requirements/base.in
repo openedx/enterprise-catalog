@@ -11,7 +11,6 @@ django-cors-headers
 django-crum
 django-extensions
 django-model-utils
-edx-api-doc-tools
 django-simple-history
 djangorestframework
 djangorestframework-xml
