@@ -9,7 +9,6 @@ from unittest import mock
 
 import ddt
 from celery import states
-from django.core.cache import cache as django_cache
 from django.test import TestCase
 from django_celery_results.models import TaskResult
 
@@ -591,11 +590,6 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         self.course_run_metadata_unpublished.catalog_queries.set([course_run_catalog_query])
         self.course_run_metadata_unpublished.save()
 
-        # Clear cache entries containing content keys.
-        # TODO: we agreed to get rid of the logic that prevents indexing recently-indexed objects, but until then this
-        # cleanup hook is needed.
-        self.addCleanup(django_cache.clear)
-
     def _set_up_factory_data_for_algolia(self):
         expected_catalog_uuids = sorted([
             str(self.enterprise_catalog_courses.uuid),
@@ -672,13 +666,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             {'key': 'course-v1:edX+testX+4', 'foo': 'bar'},
         ]
 
-    @mock.patch(
-        'enterprise_catalog.apps.api.tasks._was_recently_indexed',
-        side_effect=tasks._was_recently_indexed,  # pylint: disable=protected-access
-    )
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
-    # pylint: disable=unused-argument
-    def test_index_algolia_published_course_to_program(self, mock_search_client, mock_was_recently_indexed):
+    def test_index_algolia_published_course_to_program(self, mock_search_client):
         """
         Assert that only only "indexable" objects are indexed, particularly when an unpublished course is associated
         with a program.
@@ -768,13 +757,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
         assert expected_call_args == actual_call_args
 
-    @mock.patch(
-        'enterprise_catalog.apps.api.tasks._was_recently_indexed',
-        side_effect=tasks._was_recently_indexed,  # pylint: disable=protected-access
-    )
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
-    # pylint: disable=unused-argument
-    def test_index_algolia_unpublished_course_to_program(self, mock_search_client, mock_was_recently_indexed):
+    def test_index_algolia_unpublished_course_to_program(self, mock_search_client):
         """
         Assert that only only "indexable" objects are indexed, particularly when an unpublished course is associated
         with a program.
@@ -869,13 +853,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
         assert expected_call_args == actual_call_args
 
-    @mock.patch(
-        'enterprise_catalog.apps.api.tasks._was_recently_indexed',
-        side_effect=tasks._was_recently_indexed,  # pylint: disable=protected-access
-    )
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
-    # pylint: disable=unused-argument
-    def test_index_algolia_published_course_to_pathway(self, mock_search_client, mock_was_recently_indexed):
+    def test_index_algolia_published_course_to_pathway(self, mock_search_client,):
         """
         Assert that only only "indexable" objects are indexed, particularly when a published course is associated with a
         pathway.
@@ -961,13 +940,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
         assert expected_call_args == actual_call_args
 
-    @mock.patch(
-        'enterprise_catalog.apps.api.tasks._was_recently_indexed',
-        side_effect=tasks._was_recently_indexed,  # pylint: disable=protected-access
-    )
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
-    # pylint: disable=unused-argument
-    def test_index_algolia_unpublished_course_to_pathway(self, mock_search_client, mock_was_recently_indexed):
+    def test_index_algolia_unpublished_course_to_pathway(self, mock_search_client):
         """
         Assert that only only "indexable" objects are indexed, particularly when an unpublished course is associated
         with a pathway.
@@ -1057,13 +1031,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
         assert expected_call_args == actual_call_args
 
-    @mock.patch(
-        'enterprise_catalog.apps.api.tasks._was_recently_indexed',
-        side_effect=tasks._was_recently_indexed,  # pylint: disable=protected-access
-    )
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
-    # pylint: disable=unused-argument
-    def test_index_algolia_program_to_pathway(self, mock_search_client, mock_was_recently_indexed):
+    def test_index_algolia_program_to_pathway(self, mock_search_client):
         """
         Assert that only only "indexable" objects are indexed, particularly when a hidden, and non-hidden program is
         associated with a pathway.
@@ -1180,13 +1149,9 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
         assert expected_call_args == actual_call_args
 
-    @mock.patch(
-        'enterprise_catalog.apps.api.tasks._was_recently_indexed',
-        side_effect=tasks._was_recently_indexed,  # pylint: disable=protected-access
-    )
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
-    # pylint: disable=too-many-statements,unused-argument
-    def test_index_algolia_all_uuids(self, mock_search_client, mock_was_recently_indexed):
+    # pylint: disable=too-many-statements
+    def test_index_algolia_all_uuids(self, mock_search_client):
         """
         Assert that the correct data is sent to Algolia index, with the expected enterprise
         catalog and enterprise customer associations.
@@ -1380,14 +1345,12 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         assert expected_call_args == actual_call_args
 
-    @mock.patch('enterprise_catalog.apps.api.tasks._was_recently_indexed')
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
-    def test_index_algolia_with_batched_uuids(self, mock_search_client, mock_was_recently_indexed):
+    def test_index_algolia_with_batched_uuids(self, mock_search_client):
         """
         Assert that the correct data is sent to Algolia index, with the expected enterprise
         catalog, enterprise customer, and catalog query associations.
         """
-        mock_was_recently_indexed.return_value = False
         algolia_data = self._set_up_factory_data_for_algolia()
 
         actual_algolia_products_sent = None
@@ -1446,11 +1409,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         self.assertEqual(expected_algolia_objects_to_index, actual_algolia_products_sent)
         mock_search_client().replace_all_objects.assert_called_once()
 
-        mock_was_recently_indexed.assert_called_once_with(self.course_metadata_published.content_key)
-
-    @mock.patch('enterprise_catalog.apps.api.tasks._was_recently_indexed', return_value=False)
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
-    def test_index_algolia_with_important_catalog_titles(self, mock_search_client, mock_was_recently_indexed):
+    def test_index_algolia_with_important_catalog_titles(self, mock_search_client):
         """
         Assert that every Algolia batch contains all the explore UI catalog titles
         """
@@ -1517,12 +1477,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         self.assertEqual(expected_algolia_objects_to_index, actual_algolia_products_sent)
         mock_search_client().replace_all_objects.assert_called_once()
 
-        mock_was_recently_indexed.assert_called_once_with(self.course_metadata_published.content_key)
-
-    # pylint: disable=unused-argument
-    @mock.patch('enterprise_catalog.apps.api.tasks._was_recently_indexed', return_value=False)
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
-    def test_index_algolia_duplicate_content_uuids(self, mock_search_client, mock_was_recently_indexed):
+    def test_index_algolia_duplicate_content_uuids(self, mock_search_client):
         """
         When multiple ContentMetadata objects have identical content_uuid values, they result in algolia objectID
         collisions.  In this case we should check that the output logging indicates the correct records were discarded.
@@ -1558,10 +1514,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             f"('course-{self.course_metadata_published.content_uuid}-catalog-query-uuids-0', 1)"
         ) in histogram_found_log_records[0]
 
-    # pylint: disable=unused-argument
-    @mock.patch('enterprise_catalog.apps.api.tasks._was_recently_indexed', return_value=False)
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
-    def test_index_algolia_dry_run(self, mock_search_client, mock_was_recently_indexed):
+    def test_index_algolia_dry_run(self, mock_search_client):
         """
         Make sure the dry_run argument functions correctly and does not call replace_all_objects().
         """
