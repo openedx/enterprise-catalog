@@ -10,7 +10,6 @@ from operator import itemgetter
 from celery import shared_task, states
 from celery.exceptions import Ignore
 from celery_utils.logged_task import LoggedTask
-from django.core.cache import cache
 from django.db import IntegrityError
 from django.db.models import Prefetch, Q
 from django.db.utils import OperationalError
@@ -570,8 +569,6 @@ def add_metadata_to_algolia_objects(
         customer_uuids (list of str): Associated customer UUIDs.
         catalog_queries (list of tuple(str, str)): Associated catalog queries, as a list of (UUID, title) tuples.
     """
-
-    content_key = metadata.content_key
     # add enterprise-related uuids to json_metadata
     json_metadata = copy.deepcopy(metadata.json_metadata)
     json_metadata.update({
@@ -597,7 +594,6 @@ def add_metadata_to_algolia_objects(
         '{}-customer-uuids-{}',
     )
     _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata)
-    _mark_recently_indexed(content_key)
 
     # enterprise catalog queries (tuples of (query uuid, query title)), note: account for None being present
     # within the list
@@ -774,10 +770,6 @@ def _get_algolia_products_for_batch(
             logger.info(
                 f'[ENT-7458] {content_key} will be added to Algolia index'
             )
-        # Check if we've indexed the course recently
-        # (programs/pathways are indexed every time regardless of last indexing)
-        if _was_recently_indexed(metadata.content_key) and metadata.content_type not in [PROGRAM, LEARNER_PATHWAY]:
-            continue
 
         # Build all the algolia products for this single metadata record and append them to
         # `algolia_products_by_object_id`.  This function contains all the logic to create duplicate/segmented records
@@ -933,40 +925,6 @@ def _reindex_algolia(indexable_content_keys, nonindexable_content_keys, dry_run=
         algolia_client=algolia_client,
         dry_run=dry_run,
     )
-
-
-def _was_recently_indexed(content_key):
-    """
-    Helper to determine if the given ``content_key`` was recently marked
-    as having been updated in the Algolia index.
-    """
-    cache_key = _algolia_recent_update_cache_key(content_key)
-    return cache.get(cache_key, False)
-
-
-def _mark_recently_indexed(content_key):
-    """
-    Helper to mark the given ``content_key`` as having recently
-    been updated in the Algolia index.  Expires after 30 minutes.
-    This is useful because multiple metadata records of type COURSE_RUN
-    might point to a single metadata record of type COURSE, and by marking
-    a course record as recently indexed in one batch, we can avoid
-    updating it in subsequent batches.
-    """
-    cache_key = _algolia_recent_update_cache_key(content_key)
-    cache.set(cache_key, True, 60 * 30)
-
-
-def _algolia_recent_update_cache_key(content_key):
-    """
-    Helper that returns a cache key for the given content key
-    indicating that the content_key was recently updated in the Algolia index.
-    """
-    # TODO: Replacing spaces with underscores because we have some bad content keys
-    # floating around.  Ideally, there would be better data validation upstream
-    # AND we would clean up these keys across our systems.
-    # Memcached does NOT like spaces in its keys.
-    return 'algolia-recent-update-{}'.format(content_key.replace(' ', '_'))
 
 
 @shared_task(base=LoggedTaskWithRetry, bind=True)
