@@ -139,7 +139,7 @@ distlib==0.3.6
     # via
     #   -r requirements/test.txt
     #   virtualenv
-django==3.2.19
+django==3.2.20
     # via
     #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -c requirements/constraints.txt
