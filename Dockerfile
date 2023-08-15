@@ -69,11 +69,19 @@ CMD ["gunicorn", "--workers=2", "--name", "enterprise_catalog", "-c", "/edx/app/
 # bust the image cache
 COPY . /edx/app/enterprise_catalog/enterprise_catalog
 
+###############################################################
+# Create newrelic image used by the experimental docker shim. #
+###############################################################
+# TODO: remove this after we migrate to k8s since it will serve no more purpose.
 FROM app as newrelic
 RUN pip install newrelic
 CMD ["newrelic-admin", "run-program", "gunicorn", "--workers=2", "--name", "enterprise_catalog", "-c", "/edx/app/enterprise_catalog/enterprise_catalog/enterprise_catalog/docker_gunicorn_configuration.py", "--log-file", "-", "--max-requests=1000", "enterprise_catalog.wsgi:application"]
 
-# Creating image used by devstack
+#################################
+# Create image used by devstack #
+#################################
+# TODO: remove this after we migrate to k8s.  It already isn't used today, but just defer changes until absolutely
+# necessary for safety.
 FROM app as legacy_devapp
 # Dev ports
 EXPOSE 18160
