@@ -13,6 +13,7 @@ from django.test import TestCase
 from django_celery_results.models import TaskResult
 
 from enterprise_catalog.apps.api import tasks
+from enterprise_catalog.apps.api.constants import CourseMode
 from enterprise_catalog.apps.api_client.discovery_cache import (
     CatalogQueryMetadata,
 )
@@ -345,6 +346,7 @@ class FetchMissingPathwayMetadataTaskTests(TestCase):
         assert course_catalog_query.content_filter['key'] == [test_course]
 
 
+@ddt.ddt
 class UpdateFullContentMetadataTaskTests(TestCase):
     """
     Tests for the `update_full_content_metadata_task`.
@@ -356,6 +358,45 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         cls.enterprise_catalog = EnterpriseCatalogFactory()
         cls.catalog_query = cls.enterprise_catalog.catalog_query
 
+    @ddt.data(
+        # Test that it doesn't crash on empty input.
+        {
+            'seats': [],
+            'expected_seat': None,
+        },
+        # Test that the best seat type is selected (verified > professional).
+        {
+            'seats': [
+                {'type': CourseMode.PROFESSIONAL, 'sku': 'SKU-1'},
+                {'type': CourseMode.VERIFIED, 'sku': 'SKU-2'},
+            ],
+            'expected_seat': {'type': CourseMode.VERIFIED, 'sku': 'SKU-2'},
+        },
+        # Test that even if one non-"best" seat type is present, the best one is still selected.
+        {
+            'seats': [
+                {'type': CourseMode.PAID_EXECUTIVE_EDUCATION, 'sku': 'SKU-1'},
+                {'type': CourseMode.PROFESSIONAL, 'sku': 'SKU-2'},
+                {'type': CourseMode.VERIFIED, 'sku': 'SKU-3'},
+            ],
+            'expected_seat': {'type': CourseMode.VERIFIED, 'sku': 'SKU-3'},
+        },
+        # Test that even if no "best" seat types are present, one is still selected.
+        {
+            'seats': [
+                {'type': CourseMode.PAID_EXECUTIVE_EDUCATION, 'sku': 'SKU-1'},
+            ],
+            'expected_seat': {'type': CourseMode.PAID_EXECUTIVE_EDUCATION, 'sku': 'SKU-1'},
+        },
+    )
+    @ddt.unpack
+    def test_find_best_mode_seat(self, seats, expected_seat):
+        """
+        Test the behavior of _find_best_mode_seat().
+        """
+        # pylint: disable=protected-access
+        assert tasks._find_best_mode_seat(seats) == expected_seat
+
     # pylint: disable=unused-argument
     @mock.patch('enterprise_catalog.apps.api.tasks.task_recently_run', return_value=False)
     @mock.patch('enterprise_catalog.apps.api.tasks.partition_course_keys_for_indexing')
@@ -366,21 +407,44 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         """
         program_key = '02f5edeb-6604-4131-bf45-acd8df91e1f9'
         program_data = {'uuid': program_key, 'full_program_only_field': 'test_1'}
-        course_key_1 = 'fakeX'
+        course_key_1 = 'edX+fakeX'
         course_data_1 = {'key': course_key_1, 'full_course_only_field': 'test_1', 'programs': []}
-        course_key_2 = 'testX'
+        course_key_2 = 'edX+testX'
         course_data_2 = {'key': course_key_2, 'full_course_only_field': 'test_2', 'programs': [program_data]}
+
+        course_key_3 = 'edX+fooX'
+        course_run_3_uuid = str(uuid.uuid4())
+        course_data_3 = {
+            'key': course_key_3,
+            'programs': [],
+            'course_runs': [{
+                'key': f'course-v1:{course_key_3}+1',
+                'uuid': course_run_3_uuid,
+                # The task should copy these dates into net-new top level fields.
+                'start': '2023-03-01T00:00:00Z',
+                'end': '2023-03-01T00:00:00Z',
+                'seats': [
+                    {
+                        'type': CourseMode.VERIFIED,
+                        'upgrade_deadline': '2023-02-01T00:00:00Z',
+                    },
+                    {
+                        "type": str(CourseMode.PROFESSIONAL),
+                        "upgrade_deadline": '2022-02-01T00:00:00Z',
+                    },
+                ]
+            }],
+            'advertised_course_run_uuid': course_run_3_uuid,
+        }
 
         non_course_key = 'course-runX'
 
         # Mock out the data that should be returned from discovery's /api/v1/courses and /api/v1/programs endpoints
         mock_oauth_client.return_value.get.return_value.json.side_effect = [
-            {
-                'results': [course_data_1, course_data_2],  # first call will be /api/v1/courses
-            },
-            {
-                'results': [program_data],                  # second call will be to /api/v1/programs
-            }
+            # first call will be /api/v1/courses
+            {'results': [course_data_1, course_data_2, course_data_3]},
+            # second call will be to /api/v1/programs
+            {'results': [program_data]},
         ]
         mock_partition_course_keys.return_value = ([], [],)
 
@@ -388,29 +452,36 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         metadata_1.catalog_queries.set([self.catalog_query])
         metadata_2 = ContentMetadataFactory(content_type=COURSE, content_key=course_key_2)
         metadata_2.catalog_queries.set([self.catalog_query])
+        metadata_3 = ContentMetadataFactory(content_type=COURSE, content_key=course_key_3)
+        metadata_3.catalog_queries.set([self.catalog_query])
         non_course_metadata = ContentMetadataFactory(content_type=COURSE_RUN, content_key=non_course_key)
         non_course_metadata.catalog_queries.set([self.catalog_query])
 
         assert metadata_1.json_metadata != course_data_1
         assert metadata_2.json_metadata != course_data_2
+        assert metadata_3.json_metadata != course_data_3
 
         tasks.update_full_content_metadata_task.apply().get()
 
         actual_course_keys_args = mock_partition_course_keys.call_args_list[0][0][0]
-        self.assertEqual(set(actual_course_keys_args), {metadata_1, metadata_2})
+        self.assertEqual(set(actual_course_keys_args), {metadata_1, metadata_2, metadata_3})
 
-        metadata_1 = ContentMetadata.objects.get(content_key='fakeX')
-        metadata_2 = ContentMetadata.objects.get(content_key='testX')
+        metadata_1 = ContentMetadata.objects.get(content_key=course_key_1)
+        metadata_2 = ContentMetadata.objects.get(content_key=course_key_2)
+        metadata_3 = ContentMetadata.objects.get(content_key=course_key_3)
 
-        # add aggregation_key and uuid to course objects since they should now exist
-        # after merging the original json_metadata with the course metadata
-        course_data_1.update(metadata_1.json_metadata)
-        course_data_2.update(metadata_2.json_metadata)
-        course_data_1.update({'aggregation_key': 'course:fakeX'})
-        course_data_2.update({'aggregation_key': 'course:testX'})
+        assert metadata_1.json_metadata['aggregation_key'] == f'course:{course_key_1}'
+        assert metadata_1.json_metadata['full_course_only_field'] == 'test_1'
+        assert metadata_1.json_metadata['programs'] == []
 
-        assert metadata_1.json_metadata == course_data_1
-        assert metadata_2.json_metadata == course_data_2
+        assert metadata_2.json_metadata['aggregation_key'] == f'course:{course_key_2}'
+        assert metadata_2.json_metadata['full_course_only_field'] == 'test_2'
+        assert set(program_data.items()).issubset(set(metadata_2.json_metadata['programs'][0].items()))
+
+        assert metadata_3.json_metadata['aggregation_key'] == f'course:{course_key_3}'
+        assert metadata_3.json_metadata['normalized_metadata']['start_date'] == '2023-03-01T00:00:00Z'
+        assert metadata_3.json_metadata['normalized_metadata']['end_date'] == '2023-03-01T00:00:00Z'
+        assert metadata_3.json_metadata['normalized_metadata']['enroll_by_date'] == '2023-02-01T00:00:00Z'
 
         # make sure course associated program metadata has been created and linked correctly
         assert ContentMetadata.objects.filter(content_key=program_key).exists()
@@ -468,77 +539,108 @@ class UpdateFullContentMetadataTaskTests(TestCase):
     @mock.patch('enterprise_catalog.apps.api_client.base_oauth.OAuthAPIClient')
     def test_update_full_metadata_exec_ed(self, mock_oauth_client, mock_partition_course_keys, mock_task_recently_run):
         """
-        Assert that full course metadata is merged with original json_metadata for all ContentMetadata records.
-        """
+        Assert that all the fields are correctly updated in ContentMetadata records that represent Exec Ed courses.
 
-        course_run_uuid = uuid.uuid4()
-        course_run_key = 'course-v1:edX+testX+1'
-        course_run_data = {
-            'key': 'course-v1:edX+testX+1',
-            'uuid': course_run_uuid,
-            'aggregation_key': 'courserun:edX+testX',
-            'start': '2022-03-01T00:00:00Z',
-            'end': '2022-03-01T00:00:00Z',
-            'programs': [],
-        }
+        Check both things:
+        * Make sure the field normalization step caused the creation of expected net-new fields.
+        * Make sure the start/end dates are copied from the additional_metadata into the course run dict of the course.
+        """
         course_key = 'edX+testX'
+        course_run_key = 'course-v1:edX+testX+1'
+        course_run_uuid = str(uuid.uuid4())
+
+        # Simulate a course data in the response from /api/v1/courses/
         course_data = {
-            'aggregation_key': 'course:edX+testX',
-            'key': 'edX+testX',
+            'aggregation_key': f'course:{course_key}',
+            'key': course_key,
             'course_type': 'executive-education-2u',
             'course_runs': [{
                 'key': course_run_key,
                 'uuid': course_run_uuid,
+                # Use dummy 2022 dates that we will assert are overwritten.
                 'start': '2022-03-01T00:00:00Z',
-                'end': '2022-03-01T00:00:00Z'
+                'end': '2022-03-01T00:00:00Z',
             }],
             'programs': [],
             'additional_metadata': {
                 'start_date': '2023-03-01T00:00:00Z',
                 'end_date': '2023-04-09T23:59:59Z',
-            }
+                'registration_deadline': '2023-02-01T00:00:00Z',
+            },
+            'advertised_course_run_uuid': course_run_uuid,
 
+            # Intentionally exclude net-new fields that we will assert are added by the
+            # update_full_content_metadata_task.
+            #
+            # 'normalized_metadata': {
+            #     'start_date': '2023-03-01T00:00:00Z',
+            #     'end_date': '2023-04-09T23:59:59Z'
+            #     'enroll_by_date': '2023-02-01T00:00:00Z',
+            # }
         }
 
         # Mock out the data that should be returned from discovery's /api/v1/courses endpoint
         mock_oauth_client.return_value.get.return_value.json.side_effect = [
-            {'results': [course_run_data, course_data]}
+            {'results': [course_data]}
         ]
         mock_partition_course_keys.return_value = ([], [],)
 
+        # Simulate a pre-existing ContentMetadata object freshly seeded using the response from /api/v1/search/all/
         course_metadata = ContentMetadataFactory.create(
             content_type=COURSE, content_key=course_key, json_metadata={
                 'aggregation_key': 'course:edX+testX',
                 'key': 'edX+testX',
                 'course_type': EXEC_ED_2U_COURSE_TYPE,
-                'course_runs': [{'key': course_run_key}],
+                'course_runs': [{
+                    'key': course_run_key,
+                    # Use dummy 2022 dates that we will assert are overwritten.
+                    'start': '2022-03-01T00:00:00Z',
+                    'end': '2022-03-01T00:00:00Z',
+                }],
                 'programs': [],
-                'additional_metadata': {
-                    'start_date': '2023-03-01T00:00:00Z',
-                    'end_date': '2023-04-09T23:59:59Z',
-                }
+
+                # Intentionally exclude additional_metadata that we will assert is added by the
+                # update_full_content_metadata_task.
+                #
+                # 'additional_metadata': {
+                #     'start_date': '2023-03-01T00:00:00Z',
+                #     'end_date': '2023-04-09T23:59:59Z',
+                #     'registration_deadline': '2023-02-01T00:00:00Z',
+                # },
+
+                # Also `advertised_course_run_uuid` is ONLY in the output of /api/v1/courses/, not /api/v1/search/all/
+                # 'advertised_course_run_uuid': course_run_uuid,
+
+                # Intentionally exclude net-new fields that we will assert are added by the
+                # update_full_content_metadata_task.
+                #
+                # 'normalized_metadata': {
+                #     'start_date': '2023-03-01T00:00:00Z',
+                #     'end_date': '2023-04-09T23:59:59Z'
+                #     'enroll_by_date': '2023-02-01T00:00:00Z',
+                # }
             }
         )
 
         course_metadata.catalog_queries.set([self.catalog_query])
-        course_run_metadata = ContentMetadataFactory(content_type=COURSE_RUN, content_key=course_run_key)
-        course_run_metadata.catalog_queries.set([self.catalog_query])
-
-        course_run_data.update(course_run_metadata.json_metadata)
 
         tasks.update_full_content_metadata_task.apply().get()
 
-        self.assertEqual(ContentMetadata.objects.count(), 2)
+        assert ContentMetadata.objects.count() == 1
+
+        # Make sure the field normalization step caused the creation of expected net-new fields.
         course_cm = ContentMetadata.objects.get(content_key=course_key)
-        self.assertEqual(course_cm.content_type, COURSE)
-        for runs in course_cm.json_metadata.get('course_runs'):
-            if runs.get('uuid') == course_run_uuid:
-                self.assertEqual(runs.get('start'), '2023-03-01T00:00:00Z')
-                self.assertEqual(runs.get('end'), '2023-04-09T23:59:59Z')
-        course_run_cm = ContentMetadata.objects.get(content_key=course_run_key)
-        self.assertEqual(course_run_cm.content_type, COURSE_RUN)
-        self.assertEqual(course_run_cm.json_metadata.get('start'), '2023-03-01T00:00:00Z')
-        self.assertEqual(course_run_cm.json_metadata.get('end'), '2023-04-09T23:59:59Z')
+        assert course_cm.content_type == COURSE
+        assert course_cm.json_metadata['normalized_metadata']['start_date'] == '2023-03-01T00:00:00Z'
+        assert course_cm.json_metadata['normalized_metadata']['end_date'] == '2023-04-09T23:59:59Z'
+        assert course_cm.json_metadata['normalized_metadata']['enroll_by_date'] == '2023-02-01T00:00:00Z'
+
+        # Make sure the start/end dates are copied from the additional_metadata into the course run dict of the course.
+        # This checks that the dummy 2022 dates are overwritten.
+        course_run_json = course_cm.json_metadata.get('course_runs')[0]
+        assert course_run_json['uuid'] == course_run_uuid
+        assert course_run_json['start'] == '2023-03-01T00:00:00Z'
+        assert course_run_json['end'] == '2023-04-09T23:59:59Z'
 
 
 class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):

@@ -16,6 +16,7 @@ from django.db.utils import OperationalError
 from django_celery_results.models import TaskResult
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
+from enterprise_catalog.apps.api.constants import CourseMode
 from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 from enterprise_catalog.apps.catalog.algolia_utils import (
     ALGOLIA_FIELDS,
@@ -61,6 +62,16 @@ UNREADY_TASK_RETRY_COUNTDOWN_SECONDS = 60 * 5
 
 # ENT-4980 every batch "shard" record in Algolia should have all of these that pertain to the course
 EXPLORE_CATALOG_TITLES = ['A la carte', 'Business', 'Education']
+
+# The closer a mode is to the beginning of this list, the more likely a seat with that mode will be used to find the
+# upgrade deadline for the course (and course run).
+BEST_MODE_ORDER = [
+    CourseMode.VERIFIED,
+    CourseMode.PROFESSIONAL,
+    CourseMode.NO_ID_PROFESSIONAL_MODE,
+    CourseMode.UNPAID_EXECUTIVE_EDUCATION,
+    CourseMode.AUDIT,
+]
 
 
 def _fetch_courses_by_keys(course_keys):
@@ -253,6 +264,68 @@ def update_full_content_metadata_task(self, force=False):  # pylint: disable=unu
     _update_full_content_metadata_program(content_keys)
 
 
+def _find_best_mode_seat(seats):
+    """
+    Find the seat with the "best" course mode.  See BEST_MODE_ORDER to find which modes are best.
+    """
+    sort_key_for_mode = {mode: index for (index, mode) in enumerate(BEST_MODE_ORDER)}
+
+    def sort_key(seat):
+        """
+        Get a sort key (int) for a seat dictionary based on the position of its mode in the BEST_MODE_ORDER list.
+
+        Modes not found in the BEST_MODE_ORDER list get sorted to the end of the list.
+        """
+        mode = seat['type']
+        return sort_key_for_mode.get(mode, len(sort_key_for_mode))
+
+    sorted_seats = sorted(seats, key=sort_key)
+    if sorted_seats:
+        return sorted_seats[0]
+    return None
+
+
+def _normalize_course_metadata(course_metadata_record):
+    """
+    Add normalized metadata keys with values calculated by normalizing existing keys. This will be helpful for
+    downstream consumers which no longer will need to do their own independent normalization.
+
+    At the time of writing, output normalized metadata keys incldue:
+
+    * normalized_metadata.start_date: When the course starts
+    * normalized_metadata.end_date: When the course ends
+    * normalized_metadata.enroll_by_date: The deadline for enrollment
+
+    Note that course-type-specific definitions of each of these keys may be more nuanced.
+    """
+    json_meta = course_metadata_record.json_metadata
+    normalized_metadata = {}
+
+    # For each content type, find the values that correspond to the desired output key.
+    if course_metadata_record.is_exec_ed_2u_course:
+        # First case covers Exec Ed courses.
+        additional_metdata = json_meta.get('additional_metadata', {})
+        normalized_metadata['start_date'] = additional_metdata.get('start_date')
+        normalized_metadata['end_date'] = additional_metdata.get('end_date')
+        normalized_metadata['enroll_by_date'] = additional_metdata.get('registration_deadline')
+    else:
+        # Else case covers OCM courses.
+        advertised_course_run_uuid = json_meta.get('advertised_course_run_uuid')
+        advertised_course_run = _get_course_run_by_uuid(json_meta, advertised_course_run_uuid)
+        if advertised_course_run is not None:
+            normalized_metadata['start_date'] = advertised_course_run.get('start')
+            normalized_metadata['end_date'] = advertised_course_run.get('end')
+            all_seats = advertised_course_run.get('seats', [])
+            seat = _find_best_mode_seat(all_seats)
+            if seat:
+                normalized_metadata['enroll_by_date'] = seat.get('upgrade_deadline')
+            else:
+                logger.info(f"No Seat Found for course run '{advertised_course_run.get('key')}'. Seats: {all_seats}")
+
+    # Add normalized values to net-new keys:
+    json_meta['normalized_metadata'] = normalized_metadata
+
+
 def _update_full_content_metadata_course(content_keys):
     """
     Given content_keys, finds the associated ContentMetadata records with a type of course and looks up the full
@@ -296,8 +369,12 @@ def _update_full_content_metadata_course(content_keys):
             if not metadata_record:
                 logger.error('Could not find ContentMetadata record for content_key %s.', content_key)
                 continue
-            # exec ed updates the start/end dates in additional metadata, so we have to manually
-            # move that over to our variables that we use
+
+            # Merge the full metadata from discovery's /api/v1/courses into the local metadata object.
+            metadata_record.json_metadata.update(course_metadata_dict)
+
+            # Exec ed provides the start/end dates in additional_metadata, so we should copy those over to the keys that
+            # we use (inside the advertised course run).
             if metadata_record.is_exec_ed_2u_course:
                 json_meta = metadata_record.json_metadata
                 start_date = json_meta.get('additional_metadata', {}).get('start_date')
@@ -306,13 +383,10 @@ def _update_full_content_metadata_course(content_keys):
                 for run in json_meta.get('course_runs'):
                     if run.get('uuid') == course_run_uuid:
                         run.update({'start': start_date, 'end': end_date})
-                course_run = _get_course_run_by_uuid(json_meta, course_run_uuid)
-                if course_run is not None:
-                    course_run_meta = metadata_by_key.get(course_run.get('key'))
-                    if hasattr(course_run_meta, 'json_metadata'):
-                        course_run_meta.json_metadata.update({'start': start_date, 'end': end_date})
-                        modified_content_metadata_records.append(course_run_meta)
-            metadata_record.json_metadata.update(course_metadata_dict)
+
+            # Perform more steps to normalize and move keys around for more consistency across content types.
+            _normalize_course_metadata(metadata_record)
+
             modified_content_metadata_records.append(metadata_record)
             program_content_keys = create_course_associated_programs(course_metadata_dict['programs'], metadata_record)
             _update_full_content_metadata_program(program_content_keys)
