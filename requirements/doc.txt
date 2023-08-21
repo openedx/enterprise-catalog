@@ -71,7 +71,7 @@ charset-normalizer==3.2.0
     # via
     #   -r requirements/test.txt
     #   requests
-click==8.1.6
+click==8.1.7
     # via
     #   -r requirements/test.txt
     #   celery
@@ -169,7 +169,7 @@ django-crum==0.7.9
     #   edx-django-utils
     #   edx-rbac
     #   edx-toggles
-django-dynamic-fixture==3.1.2
+django-dynamic-fixture==3.1.3
     # via -r requirements/test.txt
 django-extensions==3.2.3
     # via -r requirements/test.txt
@@ -229,7 +229,7 @@ edx-django-utils==5.7.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==8.8.0
+edx-drf-extensions==8.9.0
     # via
     #   -r requirements/test.txt
     #   edx-rbac
@@ -247,7 +247,7 @@ edx-rest-api-client==5.6.0
     # via -r requirements/test.txt
 edx-toggles==5.1.0
     # via -r requirements/test.txt
-exceptiongroup==1.1.2
+exceptiongroup==1.1.3
     # via
     #   -r requirements/test.txt
     #   pytest
@@ -328,7 +328,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.0
     # via -r requirements/test.txt
-newrelic==8.10.0
+newrelic==8.10.1
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
@@ -465,7 +465,7 @@ pyyaml==6.0.1
     #   drf-spectacular
     #   edx-django-release-util
     #   responses
-readme-renderer==40.0
+readme-renderer==41.0
     # via -r requirements/doc.in
 redis==3.5.3
     # via
@@ -590,7 +590,7 @@ tox==3.28.0
     #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -r requirements/test.txt
     #   tox-battery
-tox-battery==0.6.1
+tox-battery==0.6.2
     # via -r requirements/test.txt
 types-pyyaml==6.0.12.11
     # via
