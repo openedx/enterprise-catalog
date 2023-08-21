@@ -38,7 +38,7 @@ cffi==1.15.1
     #   pynacl
 charset-normalizer==3.2.0
     # via requests
-click==8.1.6
+click==8.1.7
     # via
     #   celery
     #   click-didyoumean
@@ -149,7 +149,7 @@ edx-django-utils==5.7.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==8.8.0
+edx-drf-extensions==8.9.0
     # via
     #   -r requirements/base.in
     #   edx-rbac
@@ -187,7 +187,7 @@ monotonic==1.6
     # via analytics-python
 mysqlclient==2.2.0
     # via -r requirements/base.in
-newrelic==8.10.0
+newrelic==8.10.1
     # via edx-django-utils
 oauthlib==3.2.2
     # via

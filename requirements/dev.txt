@@ -78,7 +78,7 @@ charset-normalizer==3.2.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   requests
-click==8.1.6
+click==8.1.7
     # via
     #   -r requirements/pip-tools.txt
     #   -r requirements/quality.txt
@@ -207,7 +207,7 @@ django-crum==0.7.9
     #   edx-toggles
 django-debug-toolbar==4.2.0
     # via -r requirements/dev.in
-django-dynamic-fixture==3.1.2
+django-dynamic-fixture==3.1.3
     # via -r requirements/test.txt
 django-extensions==3.2.3
     # via
@@ -280,7 +280,7 @@ edx-django-utils==5.7.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==8.8.0
+edx-drf-extensions==8.9.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -309,7 +309,7 @@ edx-toggles==5.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-exceptiongroup==1.1.2
+exceptiongroup==1.1.3
     # via
     #   -r requirements/test.txt
     #   pytest
@@ -415,7 +415,7 @@ mysqlclient==2.2.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-newrelic==8.10.0
+newrelic==8.10.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -709,7 +709,7 @@ tox==3.28.0
     #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -r requirements/test.txt
     #   tox-battery
-tox-battery==0.6.1
+tox-battery==0.6.2
     # via -r requirements/test.txt
 types-pyyaml==6.0.12.11
     # via
