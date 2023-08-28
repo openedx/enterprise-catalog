@@ -191,7 +191,7 @@ edx-django-utils==5.7.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==8.9.0
+edx-drf-extensions==8.9.1
     # via
     #   -r requirements/base.txt
     #   edx-rbac
@@ -199,7 +199,7 @@ edx-lint==5.2.5
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/quality.in
-edx-opaque-keys==2.4.0
+edx-opaque-keys==2.5.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
@@ -262,7 +262,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.0
     # via -r requirements/base.txt
-newrelic==8.10.1
+newrelic==8.11.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -441,6 +441,7 @@ typing-extensions==4.7.1
     #   -r requirements/base.txt
     #   asgiref
     #   astroid
+    #   edx-opaque-keys
     #   kombu
     #   pylint
 tzdata==2023.3
