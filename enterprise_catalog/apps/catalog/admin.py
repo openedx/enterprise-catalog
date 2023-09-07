@@ -85,10 +85,12 @@ class CatalogQueryAdmin(UnchangeableMixin):
         'content_filter_hash',
     )
 
+    @admin.display(
+        description='Content Filter'
+    )
     def get_content_filter(self, obj):
         return obj.pretty_print_content_filter()
 
-    get_content_filter.short_description = 'Content Filter'
 
     form = CatalogQueryForm
 
@@ -112,11 +114,12 @@ class EnterpriseCatalogAdmin(UnchangeableMixin):
         'catalog_query__content_filter_hash__exact'
     )
 
+    @admin.display(
+        description='Catalog Query'
+    )
     def get_catalog_query(self, obj):
         link = reverse("admin:catalog_catalogquery_change", args=[obj.catalog_query.id])
         return format_html('<a href="{}">{}</a>', link, obj.catalog_query.pretty_print_content_filter())
-
-    get_catalog_query.short_description = 'Catalog Query'
 
 
 @admin.register(EnterpriseCatalogRoleAssignment)
@@ -130,6 +133,9 @@ class EnterpriseCatalogRoleAssignmentAdmin(UserRoleAssignmentAdmin):
         'enterprise_id',
     )
 
+    @admin.display(
+        description='User'
+    )
     def get_username(self, obj):
         return obj.user.username
 
@@ -142,8 +148,6 @@ class EnterpriseCatalogRoleAssignmentAdmin(UserRoleAssignmentAdmin):
 
     fields = ('user', 'role', 'enterprise_id', 'applies_to_all_contexts')
     form = EnterpriseCatalogRoleAssignmentAdminForm
-
-    get_username.short_description = 'User'
 
 
 admin.site.register(CatalogUpdateCommandConfig, ConfigurationModelAdmin)
