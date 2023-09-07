@@ -369,7 +369,11 @@ MEDIA_STORAGE_BACKEND = {
 }
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SOCIAL_AUTH_REDIRECT_IS_HTTPS = False
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": 'django.contrib.staticfiles.storage.StaticFilesStorage',
+    },
+}
 
 # How long we keep API Client data in cache. (seconds)
 ONE_HOUR = 60 * 60
