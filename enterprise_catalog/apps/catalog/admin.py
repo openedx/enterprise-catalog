@@ -90,8 +90,6 @@ class CatalogQueryAdmin(UnchangeableMixin):
     )
     def get_content_filter(self, obj):
         return obj.pretty_print_content_filter()
-
-
     form = CatalogQueryForm
 
 
