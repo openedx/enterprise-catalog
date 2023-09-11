@@ -11,14 +11,14 @@ Context
 
 Course metadata is structured dependent on its course type. That is, certain attributes within the course metadata (e.g., dates) exist on a course run for Open Courses and within an ``additional_metadata`` field for Executive Education courses. This data discrepency makes it challenging for both business logic within the enterprise-catalog service and for downstream consumers of the service to reason about the data appropriately based on the course type. As a result, this could lead to misinterpretting whether dates are correct for a particular course as it's not evident which date sources should be used depending on which course type we're working with.
 
-In the enterprise-catalog service, there is business logic that detects when dealing with an Executive Education course type and replaces the dates defined in the course run associated with the ``advertised_course_run_uuid`` with the dates defined on the top-level course record's ``additional_metadata`` attribute. While this ensures a consistent schema when reading dates across course types, it's not immediately evident that this business logic takes place; it's all too easy to assume the dates in the ``advertised_course_run_uuid`` are incorrect for Executive Education courses (need implicit knowledge about the enterprise-catalog service).
+In the enterprise-catalog service, there is business logic that detects when dealing with an Executive Education course type and replaces the dates defined in the course run associated with the ``advertised_course_run_uuid`` with the dates defined on the top-level course record's ``additional_metadata`` attribute. While this ensures a consistent schema when reading dates across course types, it's not immediately evident that this business logic exists; it's all too easy to assume the dates in the ``advertised_course_run_uuid`` are incorrect for Executive Education courses (need implicit knowledge about the enterprise-catalog service).
 
 Decision
 --------
 
-To mitigate these concernbs, we introduced a ``normalized_metadata`` attribute on the JSON object stored for each ``ContentMetadata`` object in the database. Its purpose is to be a consistent schema across all course types (e.g., Open Courses and Executive Education) to improve clarity and reduce confusion around where certain metadata such as start/end dates should be pulled.
+To mitigate these concerns, we introduced a ``normalized_metadata`` attribute on the JSON object stored for each ``ContentMetadata`` object in the database. Its purpose is to be a consistent schema across all course types (e.g., Open Courses and Executive Education) to improve clarity and reduce confusion around where certain metadata such as start/end dates should be pulled.
 
-The ``normalized_metadata`` attribute will be exposed on all CRUD APIs in enterprise-catalog when surfacing JSON metadata about a course. The ``normalized_metadata`` attribute will also be indexed in Algolia such that the already-transformed course metadata is available to clients such as micro-frontends when displaying search results.
+The ``normalized_metadata`` attribute will be exposed on all CRUD API responses in enterprise-catalog when surfacing JSON metadata about a course. The ``normalized_metadata`` attribute will also be indexed in Algolia such that the already-transformed course metadata is available to clients such as micro-frontends when displaying search results.
 
 
 Consequences
