@@ -78,6 +78,9 @@ ALGOLIA_FIELDS = [
     'learning_type',
     'learning_type_v2',
     'additional_metadata',
+    # transformed metadata to consistent schema across all course
+    # types (e.g., start date, end date, enroll by date).
+    'normalized_metadata',
 ]
 
 # default configuration for the index
