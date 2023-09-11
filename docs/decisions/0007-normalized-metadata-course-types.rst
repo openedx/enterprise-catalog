@@ -4,7 +4,7 @@ Normalized metadata across course types
 Status
 ------
 
-Accepted
+Accepted (September 2023)
 
 Context
 -------
