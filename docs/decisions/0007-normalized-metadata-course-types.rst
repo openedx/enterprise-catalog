@@ -28,7 +28,7 @@ By adding ``normalized_metadata``, we are introducing some conflicting strategie
 
 Similarly, when we update the ``ContentMetadata`` records with full metadata from course-discovery for Executive Education courses, we still override the dates for the advertised course run from the dates specified in ``additional_metadata``. While this mostly leads to being able to pull dates from the advertised course run across both Open Courses and Executive Education courses, it leads to confusion around whether the dates have been transformed and their accuracy since this business logic is not necessarily evident to consumers.
 
-The decision to introduce a ``normalized_metadata`` attribute does not intend to immediately change existing business logic as described above. That is, this decision intends to be additive only such that these other places can be adapted incrementally over time as consuming clients and users likely rely on the current structure of these data today.
+The decision to introduce a ``normalized_metadata`` attribute does not intend to immediately change existing business logic as described above. That is, this decision intends to be additive only such that the current business logic can adapted incrementally over time as consuming clients and users likely rely on the current structure of these data today where can can't change existing behavior.
 
 
 Alternatives considered
