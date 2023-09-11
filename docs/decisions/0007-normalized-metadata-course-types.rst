@@ -11,7 +11,7 @@ Context
 
 Course metadata is structured dependent on its course type. That is, certain attributes within the course metadata (e.g., dates) exist on a course run for Open Courses and within an ``additional_metadata`` field for Executive Education courses. This data discrepency makes it challenging for both business logic within the enterprise-catalog service and for downstream consumers of the service to reason about the data appropriately based on the course type. As a result, this could lead to misinterpretting whether dates are correct for a particular course as it's not evident which date sources should be used depending on which course type we're working with.
 
-In the enterprise-catalog service, there is business logic that detects when dealing with an Executive Education course type and replaces the dates defined in the course run associated with the ``advertised_course_run_uuid`` with the dates defined on the top-level course record's ``additional_metadata`` attribute. While this ensures a consistent schema when reading dates across course types, it's not immediately evident that this business logic exists; it's all too easy to assume the dates in the ``advertised_course_run_uuid`` are incorrect for Executive Education courses (need implicit knowledge about the enterprise-catalog service).
+In the enterprise-catalog service, there is business logic that detects when dealing with an Executive Education course type and replaces the dates defined in the course run associated with the ``advertised_course_run_uuid`` with the dates defined on the top-level course record's ``additional_metadata`` attribute. While this ensures a consistent schema when reading dates across course types, it's not immediately evident that this business logic exists; it's all too easy to assume the dates in the ``advertised_course_run_uuid`` are incorrect for Executive Education courses (i.e., you need implicit knowledge about the enterprise-catalog service), where you would need to pull dates from the `additional_metadata` attribute instead.
 
 Decision
 --------
@@ -28,7 +28,7 @@ By adding ``normalized_metadata``, we are introducing some conflicting strategie
 
 Similarly, when we update the ``ContentMetadata`` records with full metadata from course-discovery for Executive Education courses, we still override the dates for the advertised course run from the dates specified in ``additional_metadata``. While this mostly leads to being able to pull dates from the advertised course run across both Open Courses and Executive Education courses, it leads to confusion around whether the dates have been transformed and their accuracy since this business logic is not necessarily evident to consumers.
 
-The decision to introduce a ``normalized_metadata`` attribute does not intend to immediately change existing business logic as described above. That is, this decision intends to be additive only such that the current business logic can adapted incrementally over time as consuming clients and users likely rely on the current structure of these data today where can can't change existing behavior.
+The decision to introduce a ``normalized_metadata`` attribute does not intend to immediately change existing business logic as described above. That is, this decision intends to be additive only such that the current business logic can adapted incrementally over time as consuming clients and users likely rely on the current structure of these data today where we can't change existing behavior quite yet.
 
 
 Alternatives considered
