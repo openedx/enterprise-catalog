@@ -34,6 +34,7 @@ backports-zoneinfo[tzdata]==0.2.1
     # via
     #   -r requirements/base.txt
     #   celery
+    #   django
     #   kombu
 billiard==4.1.0
     # via
@@ -111,8 +112,6 @@ dill==0.3.7
 distlib==0.3.7
     # via virtualenv
     # via
-    #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
-    #   -c requirements/constraints.txt
     #   -r requirements/base.txt
     #   django-celery-results
     #   django-clearcache
@@ -161,10 +160,8 @@ django-model-utils==4.3.1
     #   -r requirements/base.txt
     #   edx-celeryutils
     #   edx-rbac
-django-simple-history==3.0.0
-    # via
-    #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
-    #   -r requirements/base.txt
+django-simple-history==3.4.0
+    # via -r requirements/base.txt
 django-waffle==4.0.0
     # via
     #   -r requirements/base.txt
@@ -293,6 +290,7 @@ oauthlib==3.2.2
     #   social-auth-core
 packaging==23.1
     # via
+    #   pyproject-api
     #   pytest
     #   tox
 pbr==5.11.1
@@ -306,6 +304,7 @@ pkgutil-resolve-name==1.3.10
 platformdirs==3.10.0
     # via
     #   pylint
+    #   tox
     #   virtualenv
 pluggy==1.3.0
     # via
@@ -387,7 +386,6 @@ python3-openid==3.2.0
 pytz==2023.3.post1
     # via
     #   -r requirements/base.txt
-    #   django
     #   djangorestframework
 pyyaml==6.0.1
     # via
@@ -476,13 +474,13 @@ tomli==2.0.1
     # via
     #   coverage
     #   pylint
+    #   pyproject-api
     #   pytest
     #   tox
 tomlkit==0.12.1
     # via pylint
 tox==3.28.0
     # via
-    #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -r requirements/test.in
     #   tox-battery
 tox-battery==0.6.2
@@ -528,10 +526,10 @@ wrapt==1.15.0
     # via astroid
 xlsxwriter==3.1.4
     # via -r requirements/base.txt
-zipp==3.17.0
+zipp==1.2.0
     # via
+    #   -c requirements/constraints.txt
     #   -r requirements/base.txt
-    #   importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
