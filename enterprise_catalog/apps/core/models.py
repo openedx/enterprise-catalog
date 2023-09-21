@@ -16,6 +16,10 @@ class User(AbstractUser):
     """
     full_name = models.CharField(_('Full Name'), max_length=255, blank=True, null=True)
 
+    # this avoids a  migration which otherwise would come with Django 3.2 upgrade
+    # See, https://docs.djangoproject.com/en/3.2/releases/3.1/#abstractuser-first-name-max-length-increased-to-150
+    first_name = models.CharField(_('first name'), max_length=30, blank=True)
+
     @property
     def access_token(self):
         """
