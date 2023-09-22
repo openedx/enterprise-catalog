@@ -34,7 +34,7 @@ billiard==4.1.0
     # via
     #   -r requirements/base.txt
     #   celery
-celery==5.3.1
+celery==5.3.4
     # via
     #   -r requirements/base.txt
     #   django-celery-results
@@ -77,7 +77,7 @@ code-annotations==1.5.0
     # via
     #   -r requirements/base.txt
     #   edx-toggles
-cryptography==41.0.3
+cryptography==41.0.4
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -88,7 +88,7 @@ defusedxml==0.7.1
     #   djangorestframework-xml
     #   python3-openid
     #   social-auth-core
-django==3.2.20
+django==3.2.21
     # via
     #   -r requirements/base.txt
     #   django-celery-results
@@ -117,7 +117,7 @@ django-celery-results==2.5.1
     # via -r requirements/base.txt
 django-clearcache==1.2.1
     # via -r requirements/base.txt
-django-config-models==2.5.0
+django-config-models==2.5.1
     # via -r requirements/base.txt
 django-cors-headers==4.2.0
     # via -r requirements/base.txt
@@ -174,11 +174,11 @@ edx-django-utils==5.7.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==8.9.1
+edx-drf-extensions==8.10.0
     # via
     #   -r requirements/base.txt
     #   edx-rbac
-edx-opaque-keys==2.5.0
+edx-opaque-keys==2.5.1
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
@@ -188,7 +188,7 @@ edx-rest-api-client==5.6.0
     # via -r requirements/base.txt
 edx-toggles==5.1.0
     # via -r requirements/base.txt
-gevent==23.7.0
+gevent==23.9.1
     # via -r requirements/production.in
 greenlet==2.0.2
     # via gevent
@@ -198,7 +198,7 @@ idna==3.4
     # via
     #   -r requirements/base.txt
     #   requests
-importlib-resources==5.1.3
+importlib-resources==6.1.0
     # via
     #   -r requirements/base.txt
     #   jsonschema
@@ -217,7 +217,7 @@ jsonfield==3.1.0
     #   edx-celeryutils
 jsonfield2==4.0.0.post0
     # via -r requirements/base.txt
-jsonschema==4.19.0
+jsonschema==4.19.1
     # via
     #   -r requirements/base.txt
     #   drf-spectacular
@@ -225,7 +225,7 @@ jsonschema-specifications==2023.7.1
     # via
     #   -r requirements/base.txt
     #   jsonschema
-kombu==5.3.1
+kombu==5.3.2
     # via
     #   -r requirements/base.txt
     #   celery
@@ -239,7 +239,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.0
     # via -r requirements/base.txt
-newrelic==8.11.0
+newrelic==9.0.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -282,6 +282,8 @@ pyjwt[crypto]==2.8.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
+pymemcache==4.0.0
+    # via -r requirements/base.txt
 pymongo==3.13.0
     # via
     #   -r requirements/base.txt
@@ -295,7 +297,6 @@ python-dateutil==2.8.2
     #   -r requirements/base.txt
     #   analytics-python
     #   celery
-    #   edx-drf-extensions
 python-memcached==1.59
     # via -r requirements/production.in
 python-slugify==8.0.1
@@ -306,7 +307,7 @@ python3-openid==3.2.0
     # via
     #   -r requirements/base.txt
     #   social-auth-core
-pytz==2023.3
+pytz==2023.3.post1
     # via
     #   -r requirements/base.txt
     #   django
@@ -339,7 +340,7 @@ requests-oauthlib==1.3.1
     # via
     #   -r requirements/base.txt
     #   social-auth-core
-rpds-py==0.9.2
+rpds-py==0.10.3
     # via
     #   -r requirements/base.txt
     #   jsonschema
@@ -358,7 +359,6 @@ six==1.16.0
     #   analytics-python
     #   edx-auth-backends
     #   edx-django-release-util
-    #   edx-drf-extensions
     #   edx-rbac
     #   python-dateutil
     #   python-memcached
@@ -366,7 +366,7 @@ slumber==0.7.1
     # via
     #   -r requirements/base.txt
     #   edx-rest-api-client
-social-auth-app-django==5.2.0
+social-auth-app-django==5.3.0
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends
@@ -389,7 +389,7 @@ text-unidecode==1.3
     # via
     #   -r requirements/base.txt
     #   python-slugify
-typing-extensions==4.7.1
+typing-extensions==4.8.0
     # via
     #   -r requirements/base.txt
     #   asgiref
@@ -404,7 +404,7 @@ uritemplate==4.1.1
     # via
     #   -r requirements/base.txt
     #   drf-spectacular
-urllib3==2.0.4
+urllib3==2.0.5
     # via
     #   -r requirements/base.txt
     #   requests
@@ -418,10 +418,12 @@ wcwidth==0.2.6
     # via
     #   -r requirements/base.txt
     #   prompt-toolkit
-xlsxwriter==3.1.2
+xlsxwriter==3.1.4
     # via -r requirements/base.txt
-zipp==1.2.0
-    # via -r requirements/base.txt
+zipp==3.17.0
+    # via
+    #   -r requirements/base.txt
+    #   importlib-resources
 zope-event==5.0
     # via gevent
 zope-interface==6.0
