@@ -51,7 +51,7 @@ billiard==4.1.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   celery
-celery==5.3.1
+celery==5.3.4
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
@@ -112,11 +112,11 @@ code-annotations==1.5.0
     #   -r requirements/test.txt
     #   edx-lint
     #   edx-toggles
-coverage[toml]==7.3.0
+coverage[toml]==7.3.1
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==41.0.3
+cryptography==41.0.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -140,7 +140,7 @@ distlib==0.3.7
     # via
     #   -r requirements/test.txt
     #   virtualenv
-django==3.2.20
+django==3.2.21
     # via
     #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -c requirements/constraints.txt
@@ -176,7 +176,7 @@ django-clearcache==1.2.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-django-config-models==2.5.0
+django-config-models==2.5.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -191,7 +191,7 @@ django-crum==0.7.9
     #   edx-django-utils
     #   edx-rbac
     #   edx-toggles
-django-dynamic-fixture==4.0.0
+django-dynamic-fixture==4.0.1
     # via -r requirements/test.txt
 django-extensions==3.2.3
     # via
@@ -264,7 +264,7 @@ edx-django-utils==5.7.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==8.9.1
+edx-drf-extensions==8.10.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -274,7 +274,7 @@ edx-lint==5.2.5
     #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-edx-opaque-keys==2.5.0
+edx-opaque-keys==2.5.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -297,11 +297,11 @@ exceptiongroup==1.1.3
     #   pytest
 factory-boy==3.3.0
     # via -r requirements/test.txt
-faker==19.3.1
+faker==19.6.2
     # via
     #   -r requirements/test.txt
     #   factory-boy
-filelock==3.12.2
+filelock==3.12.4
     # via
     #   -r requirements/test.txt
     #   tox
@@ -311,7 +311,7 @@ idna==3.4
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   requests
-importlib-resources==5.1.3
+importlib-resources==6.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -345,7 +345,7 @@ jsonfield2==4.0.0.post0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-jsonschema==4.19.0
+jsonschema==4.19.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -355,7 +355,7 @@ jsonschema-specifications==2023.7.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   jsonschema
-kombu==5.3.1
+kombu==5.3.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -384,7 +384,7 @@ mysqlclient==2.2.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-newrelic==8.11.0
+newrelic==9.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -483,6 +483,10 @@ pylint-plugin-utils==0.8.2
     #   -r requirements/test.txt
     #   pylint-celery
     #   pylint-django
+pymemcache==4.0.0
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
 pymongo==3.13.0
     # via
     #   -r requirements/quality.txt
@@ -493,7 +497,7 @@ pynacl==1.5.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-django-utils
-pytest==7.4.0
+pytest==7.4.2
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -508,7 +512,6 @@ python-dateutil==2.8.2
     #   -r requirements/test.txt
     #   analytics-python
     #   celery
-    #   edx-drf-extensions
     #   faker
 python-slugify==8.0.1
     # via
@@ -520,7 +523,7 @@ python3-openid==3.2.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   social-auth-core
-pytz==2023.3
+pytz==2023.3.post1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -564,7 +567,7 @@ requests-oauthlib==1.3.1
     #   social-auth-core
 responses==0.23.3
     # via -r requirements/test.txt
-rpds-py==0.9.2
+rpds-py==0.10.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -590,7 +593,6 @@ six==1.16.0
     #   analytics-python
     #   edx-auth-backends
     #   edx-django-release-util
-    #   edx-drf-extensions
     #   edx-lint
     #   edx-rbac
     #   python-dateutil
@@ -604,7 +606,7 @@ snowballstemmer==2.2.0
     # via
     #   -r requirements/quality.txt
     #   pydocstyle
-social-auth-app-django==5.2.0
+social-auth-app-django==5.3.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -656,7 +658,7 @@ types-pyyaml==6.0.12.11
     # via
     #   -r requirements/test.txt
     #   responses
-typing-extensions==4.7.1
+typing-extensions==4.8.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -677,7 +679,7 @@ uritemplate==4.1.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   drf-spectacular
-urllib3==2.0.4
+urllib3==2.0.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -690,7 +692,7 @@ vine==5.0.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.24.3
+virtualenv==20.24.5
     # via
     #   -r requirements/test.txt
     #   tox
@@ -704,14 +706,15 @@ wrapt==1.15.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   astroid
-xlsxwriter==3.1.2
+xlsxwriter==3.1.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-zipp==1.2.0
+zipp==3.17.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+    #   importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools

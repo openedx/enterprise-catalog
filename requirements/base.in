@@ -24,13 +24,14 @@ edx_rbac
 edx-rest-api-client
 edx-toggles
 mysqlclient
+pymemcache
 pytz
 jsonfield2
 celery
 redis
 rules
 simplejson
-zipp<2.0
+zipp
 algoliasearch
 social-auth-app-django
 xlsxwriter
