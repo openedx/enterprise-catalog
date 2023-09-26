@@ -132,7 +132,7 @@ djangorestframework-xml==2.0.0
     # via -r requirements/base.in
 drf-jwt==1.19.2
     # via edx-drf-extensions
-drf-spectacular==0.26.4
+drf-spectacular==0.26.5
     # via -r requirements/base.in
 edx-auth-backends==4.2.0
     # via -r requirements/base.in
@@ -184,7 +184,7 @@ monotonic==1.6
     # via analytics-python
 mysqlclient==2.2.0
     # via -r requirements/base.in
-newrelic==9.0.0
+newrelic==9.1.0
     # via edx-django-utils
 oauthlib==3.2.2
     # via
@@ -307,9 +307,9 @@ vine==5.0.0
     #   kombu
 wcwidth==0.2.6
     # via prompt-toolkit
-xlsxwriter==3.1.4
+xlsxwriter==3.1.5
     # via -r requirements/base.in
-zipp==1.2.0
+zipp==3.17.0
     # via
-    #   -c requirements/constraints.txt
     #   -r requirements/base.in
+    #   importlib-resources

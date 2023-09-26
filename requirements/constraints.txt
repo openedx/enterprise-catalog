@@ -28,5 +28,3 @@ redis<4
 edx-lint<5.3
 pylint<2.15
 astroid<2.12
-
-zipp<2.0
