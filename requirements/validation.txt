@@ -238,7 +238,7 @@ drf-jwt==1.19.2
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-drf-extensions
-drf-spectacular==0.26.4
+drf-spectacular==0.26.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -309,7 +309,7 @@ idna==3.4
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   requests
-importlib-resources==6.1.0
+importlib-resources==5.1.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -382,7 +382,7 @@ mysqlclient==2.2.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-newrelic==9.0.0
+newrelic==9.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -650,7 +650,7 @@ tox==3.28.0
     #   tox-battery
 tox-battery==0.6.2
     # via -r requirements/test.txt
-types-pyyaml==6.0.12.11
+types-pyyaml==6.0.12.12
     # via
     #   -r requirements/test.txt
     #   responses
@@ -702,16 +702,15 @@ wrapt==1.15.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   astroid
-xlsxwriter==3.1.4
+xlsxwriter==3.1.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-zipp==3.17.0
+zipp==1.2.0
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-    #   importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
