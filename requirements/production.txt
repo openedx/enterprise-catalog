@@ -29,7 +29,6 @@ backports-zoneinfo[tzdata]==0.2.1
     # via
     #   -r requirements/base.txt
     #   celery
-    #   django
     #   kombu
 billiard==4.1.0
     # via
@@ -89,7 +88,7 @@ defusedxml==0.7.1
     #   djangorestframework-xml
     #   python3-openid
     #   social-auth-core
-django==4.2.5
+django==3.2.21
     # via
     #   -r requirements/base.txt
     #   django-celery-results
@@ -137,7 +136,7 @@ django-model-utils==4.3.1
     #   -r requirements/base.txt
     #   edx-celeryutils
     #   edx-rbac
-django-simple-history==3.4.0
+django-simple-history==3.0.0
     # via -r requirements/base.txt
 django-waffle==4.0.0
     # via
@@ -311,6 +310,7 @@ python3-openid==3.2.0
 pytz==2023.3.post1
     # via
     #   -r requirements/base.txt
+    #   django
     #   djangorestframework
 pyyaml==6.0.1
     # via
