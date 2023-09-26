@@ -111,7 +111,7 @@ dill==0.3.7
 distlib==0.3.7
     # via virtualenv
     # via
-    #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
+    #   -c requirements/common_constraints.txt
     #   -c requirements/constraints.txt
     #   -r requirements/base.txt
     #   django-celery-results
@@ -161,10 +161,8 @@ django-model-utils==4.3.1
     #   -r requirements/base.txt
     #   edx-celeryutils
     #   edx-rbac
-django-simple-history==3.0.0
-    # via
-    #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
-    #   -r requirements/base.txt
+django-simple-history==3.4.0
+    # via -r requirements/base.txt
 django-waffle==4.0.0
     # via
     #   -r requirements/base.txt
@@ -482,7 +480,7 @@ tomlkit==0.12.1
     # via pylint
 tox==3.28.0
     # via
-    #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
+    #   -c requirements/common_constraints.txt
     #   -r requirements/test.in
     #   tox-battery
 tox-battery==0.6.2
