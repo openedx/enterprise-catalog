@@ -62,10 +62,27 @@ class CatalogQueryMetadata:
             catalog_query_data = client.get_metadata_by_query(catalog_query)
             if not catalog_query_data:
                 catalog_query_data = []
+
             # cache.add() will not attempt to update the cache if the key specified is already present
             # this is fine here, because we know we just encountered a cache miss on our key.
             # add() returns a boolean letting us know if it stored anything in the cache
-            cache_add_success = cache.add(cache_key, catalog_query_data, settings.DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT)
+            # Debugging: force ignore_exc off to see what exception is getting raise
+            # on the cache adds.
+            if hasattr(cache, '_options'):
+                cache._options['ignore_exc'] = False  # pylint: disable=protected-access
+            cache_add_success = False
+            try:
+                cache_add_success = cache.add(
+                    cache_key,
+                    catalog_query_data,
+                    settings.DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT,
+                )
+            except Exception as exc:  # pylint: disable=broad-except
+                LOGGER.exception('Cache add fail %s', exc)
+            finally:
+                if hasattr(cache, '_options'):
+                    cache._options['ignore_exc'] = True  # pylint: disable=protected-access
+
             if cache_add_success:
                 LOGGER.info(
                     'CatalogQueryDetails: CACHED CatalogQuery metadata with id %s for %s sec',
