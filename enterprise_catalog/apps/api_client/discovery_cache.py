@@ -14,6 +14,8 @@ from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 
 LOGGER = getLogger(__name__)
 
+_CACHE_MISS = object()
+
 
 class CatalogQueryMetadata:
     """
@@ -52,16 +54,24 @@ class CatalogQueryMetadata:
                 Empty dictionary if no data found in cache or from API.
         """
         cache_key = DISCOVERY_CATALOG_QUERY_CACHE_KEY_TPL.format(id=self.catalog_query.id)
-        catalog_query_data = cache.get(cache_key)
-        if not catalog_query_data:
+        catalog_query_data = cache.get(cache_key, _CACHE_MISS)
+        if catalog_query_data is not _CACHE_MISS:
+            LOGGER.info('Cache HIT for CatalogQuery id=%s', self.catalog_query.id)
+        else:
             client = DiscoveryApiClient()
             catalog_query_data = client.get_metadata_by_query(catalog_query)
             if not catalog_query_data:
                 catalog_query_data = []
-            cache.set(cache_key, catalog_query_data, settings.DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT)
-            LOGGER.info(
-                'CatalogQueryDetails: CACHED CatalogQuery metadata with id %s for %s sec',
-                self.catalog_query.id,
-                settings.DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT,
-            )
+            # cache.add() will not attempt to update the cache if the key specified is already present
+            # this is fine here, because we know we just encountered a cache miss on our key.
+            # add() returns a boolean letting us know if it stored anything in the cache
+            cache_add_success = cache.add(cache_key, catalog_query_data, settings.DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT)
+            if cache_add_success:
+                LOGGER.info(
+                    'CatalogQueryDetails: CACHED CatalogQuery metadata with id %s for %s sec',
+                    self.catalog_query.id,
+                    settings.DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT,
+                )
+            else:
+                LOGGER.info('Cache ADD FAIL for CatalogQuery id=%s', self.catalog_query.id)
         return catalog_query_data
