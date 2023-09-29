@@ -3,6 +3,7 @@ import logging
 from django.core.management.base import BaseCommand
 
 from enterprise_catalog.apps.catalog import filters
+from enterprise_catalog.apps.catalog.constants import COURSE
 from enterprise_catalog.apps.catalog.models import (
     ContentMetadata,
     EnterpriseCatalog,
@@ -22,7 +23,7 @@ class Command(BaseCommand):
         Cook it.
         """
         logger.info('compare_catalog_queries_to_filters starting...')
-        for content_metadata in ContentMetadata.objects.all():
+        for content_metadata in ContentMetadata.objects.filter(content_type=COURSE):
             for enterprise_catalog in EnterpriseCatalog.objects.all():
                 discovery_included = content_metadata in enterprise_catalog.content_metadata
                 match = filters.does_query_match_content(
