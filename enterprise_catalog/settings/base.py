@@ -429,3 +429,7 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }
+
+
+# disable indexing on history_date
+SIMPLE_HISTORY_DATE_INDEX = False
