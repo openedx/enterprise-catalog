@@ -60,12 +60,12 @@ certifi==2023.7.22
     # via
     #   -r requirements/test.txt
     #   requests
-cffi==1.15.1
+cffi==1.16.0
     # via
     #   -r requirements/test.txt
     #   cryptography
     #   pynacl
-charset-normalizer==3.2.0
+charset-normalizer==3.3.0
     # via
     #   -r requirements/test.txt
     #   requests
@@ -212,7 +212,7 @@ drf-jwt==1.19.2
     # via
     #   -r requirements/test.txt
     #   edx-drf-extensions
-drf-spectacular==0.26.4
+drf-spectacular==0.26.5
     # via -r requirements/test.txt
 edx-auth-backends==4.2.0
     # via -r requirements/test.txt
@@ -326,7 +326,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.0
     # via -r requirements/test.txt
-newrelic==9.0.0
+newrelic==9.1.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
@@ -337,7 +337,7 @@ oauthlib==3.2.2
     #   -r requirements/test.txt
     #   requests-oauthlib
     #   social-auth-core
-packaging==23.1
+packaging==23.2
     # via
     #   -r requirements/test.txt
     #   pydata-sphinx-theme
@@ -590,7 +590,7 @@ tox==3.28.0
     #   tox-battery
 tox-battery==0.6.2
     # via -r requirements/test.txt
-types-pyyaml==6.0.12.11
+types-pyyaml==6.0.12.12
     # via
     #   -r requirements/test.txt
     #   responses
@@ -628,7 +628,7 @@ virtualenv==20.24.5
     # via
     #   -r requirements/test.txt
     #   tox
-wcwidth==0.2.6
+wcwidth==0.2.8
     # via
     #   -r requirements/test.txt
     #   prompt-toolkit
@@ -636,7 +636,7 @@ wrapt==1.15.0
     # via
     #   -r requirements/test.txt
     #   astroid
-xlsxwriter==3.1.4
+xlsxwriter==3.1.6
     # via -r requirements/test.txt
 zipp==3.17.0
     # via

@@ -43,12 +43,12 @@ certifi==2023.7.22
     # via
     #   -r requirements/base.txt
     #   requests
-cffi==1.15.1
+cffi==1.16.0
     # via
     #   -r requirements/base.txt
     #   cryptography
     #   pynacl
-charset-normalizer==3.2.0
+charset-normalizer==3.3.0
     # via
     #   -r requirements/base.txt
     #   requests
@@ -159,7 +159,7 @@ drf-jwt==1.19.2
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-drf-spectacular==0.26.4
+drf-spectacular==0.26.5
     # via -r requirements/base.txt
 edx-auth-backends==4.2.0
     # via -r requirements/base.txt
@@ -239,7 +239,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.0
     # via -r requirements/base.txt
-newrelic==9.0.0
+newrelic==9.1.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -248,7 +248,7 @@ oauthlib==3.2.2
     #   -r requirements/base.txt
     #   requests-oauthlib
     #   social-auth-core
-packaging==23.1
+packaging==23.2
     # via gunicorn
 pbr==5.11.1
     # via
@@ -414,11 +414,11 @@ vine==5.0.0
     #   amqp
     #   celery
     #   kombu
-wcwidth==0.2.6
+wcwidth==0.2.8
     # via
     #   -r requirements/base.txt
     #   prompt-toolkit
-xlsxwriter==3.1.4
+xlsxwriter==3.1.6
     # via -r requirements/base.txt
 zipp==3.17.0
     # via
