@@ -69,16 +69,7 @@ class CatalogQueryMetadata:
             # Debugging: force ignore_exc off to see what exception is getting raise
             # on the cache adds.
             if hasattr(cache, '_options'):
-                # Access and invalidate the @cached_property _cache attribute.
-                # This will force the django memcached.py backend to recompute
-                # a pymemcache client for us with updated options.
-                # See Django's `BaseMemcachedCache` implementation.
-
-                # pylint: disable=protected-access
-                _ = cache._cache
-                del cache._cache
-                cache._options['ignore_exc'] = False
-                LOGGER.info('Cache instance options %s', cache._options)
+                cache._options['ignore_exc'] = False  # pylint: disable=protected-access
             cache_add_success = False
             try:
                 cache_add_success = cache.add(
@@ -87,16 +78,10 @@ class CatalogQueryMetadata:
                     settings.DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT,
                 )
             except Exception as exc:  # pylint: disable=broad-except
-                LOGGER.exception('Cache add did not succeed %s', exc)
+                LOGGER.exception('Cache add fail %s', exc)
             finally:
                 if hasattr(cache, '_options'):
-                    # pylint: disable=protected-access
-                    cache._options['ignore_exc'] = True
-                    # Access and invalidate as above, so the next
-                    # user of django.core.cache.cache has the expected
-                    # set of options from Django settings.
-                    _ = cache._cache
-                    del cache._cache
+                    cache._options['ignore_exc'] = True  # pylint: disable=protected-access
 
             if cache_add_success:
                 LOGGER.info(
