@@ -20,4 +20,4 @@ class Command(BaseCommand):
         Compare the Enterprise Catalog Query results to our own Catalog Filter vai task
         """
         logger.info("compare_catalog_queries_to_filters queuing task...")
-        compare_catalog_queries_to_filters_task.s()
+        compare_catalog_queries_to_filters_task.apply_async()
