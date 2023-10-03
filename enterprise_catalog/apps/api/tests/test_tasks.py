@@ -717,39 +717,38 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'course_metadata_unpublished': self.course_metadata_unpublished,
         }
 
-    @mock.patch('django.conf.settings.ENABLE_ENT_7729_ONLY_SHOW_COMPLETE_PROGRAMS', True)
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
-    def test_index_algolia_partial_program(self, mock_search_client):
+    def test_index_algolia_program_common_uuids_only(self, mock_search_client):
         """
         Assert that when a program contains multiple courses, that program only inherits the UUIDs common to all
         contained courses.
 
         This DAG represents the complete test environment:
-        ┌────────────┐┌────────────┐┌────────────┐
-        │*course-1   ││*course-2   ││*course-3   │
-        │------------││------------││------------│
-        │in catalog-1││            ││            │
-        │in catalog-2││in catalog-2││            │
-        │in catalog-3││in catalog-3││in catalog-3│
-        │            ││in catalog-4││in catalog-4│
-        │            ││            ││in catalog-5│
-        └┬───────────┘└┬───────────┘└┬───────────┘
-        ┌▽─────────────▽─────────────▽───────────┐
-        │*program-1                              │
-        │----------------------------------------│
-        │(should inherit catalog-3 only)         │
-        └────────────────────────────────────────┘
+        ┌──────────────┐┌──────────────┐┌──────────────┐
+        │*test-course-1││*test-course-2││*test-course-3│
+        │--------------││--------------││--------------│
+        │in catalog-1  ││              ││              │
+        │in catalog-2  ││in catalog-2  ││              │
+        │in catalog-3  ││in catalog-3  ││in catalog-3  │
+        │              ││in catalog-4  ││in catalog-4  │
+        │              ││              ││in catalog-5  │
+        └┬─────────────┘└┬─────────────┘└┬─────────────┘
+        ┌▽───────────────▽───────────────▽─────────────┐
+        │*program-1                                    │
+        │----------------------------------------------│
+        │(should inherit catalog-3 only)               │
+        └──────────────────────────────────────────────┘
         * = indexable
         """
         program_1 = ContentMetadataFactory(content_type=PROGRAM, content_key='program-1')
-        course_1 = ContentMetadataFactory(content_type=COURSE, content_key='test-course-1')
-        course_2 = ContentMetadataFactory(content_type=COURSE, content_key='test-course-2')
-        course_3 = ContentMetadataFactory(content_type=COURSE, content_key='test-course-3')
+        test_course_1 = ContentMetadataFactory(content_type=COURSE, content_key='test-course-1')
+        test_course_2 = ContentMetadataFactory(content_type=COURSE, content_key='test-course-2')
+        test_course_3 = ContentMetadataFactory(content_type=COURSE, content_key='test-course-3')
 
-        # Associate all three courses with the program.
-        course_1.associated_content_metadata.set([program_1])
-        course_2.associated_content_metadata.set([program_1])
-        course_3.associated_content_metadata.set([program_1])
+        # Associate three main test courses with the program.
+        test_course_1.associated_content_metadata.set([program_1])
+        test_course_2.associated_content_metadata.set([program_1])
+        test_course_3.associated_content_metadata.set([program_1])
 
         # Create all 5 test catalogs.
         catalog_queries = [CatalogQueryFactory(uuid=uuid.uuid4()) for _ in range(5)]
@@ -759,13 +758,13 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         ]
 
         # Associate the 5 catalogs to the 3 courses in a staggering fashion.
-        course_1.catalog_queries.set(catalog_queries[0:3])
-        course_2.catalog_queries.set(catalog_queries[1:4])
-        course_3.catalog_queries.set(catalog_queries[2:5])
+        test_course_1.catalog_queries.set(catalog_queries[0:3])
+        test_course_2.catalog_queries.set(catalog_queries[1:4])
+        test_course_3.catalog_queries.set(catalog_queries[2:5])
 
-        course_1.save()
-        course_2.save()
-        course_3.save()
+        test_course_1.save()
+        test_course_2.save()
+        test_course_3.save()
 
         actual_algolia_products_sent = []
 
@@ -808,55 +807,56 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         )
         assert expected_program_call_args == actual_program_call_args
 
-    @mock.patch('django.conf.settings.ENABLE_ENT_7729_ONLY_SHOW_COMPLETE_PROGRAMS', False)
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
-    def test_index_algolia_partial_program_disabled(self, mock_search_client):
+    def test_index_algolia_program_unindexable_content(self, mock_search_client):
         """
-        Assert that when a program contains multiple courses, that program inherits all the UUIDs from contained
-        courses. This is the old behavior prior to ENT-7729.  Remove this unit test as part of that ticket.
+        Assert that when a program contains ANY unindexable courses, that program is not indexed for any catalog
+        (nuance: IFF no catalog declares the program directly).
 
         This DAG represents the complete test environment:
-        ┌────────────┐┌────────────┐┌────────────┐
-        │*course-1   ││*course-2   ││*course-3   │
-        │------------││------------││------------│
-        │in catalog-1││            ││            │
-        │in catalog-2││in catalog-2││            │
-        │in catalog-3││in catalog-3││in catalog-3│
-        │            ││in catalog-4││in catalog-4│
-        │            ││            ││in catalog-5│
-        └┬───────────┘└┬───────────┘└┬───────────┘
-        ┌▽─────────────▽─────────────▽───────────┐
-        │*program-1                              │
-        │----------------------------------------│
-        │(should inherit all catalogs)           │
-        └────────────────────────────────────────┘
+        ┌──────────────┐┌──────────────┐┌──────────────┐
+        │*test-course-1││*test-course-2││*test-course-3│
+        │--------------││--------------││--------------│
+        │in catalog-1  ││              ││              │
+        │in catalog-2  ││in catalog-2  ││              │
+        │in catalog-3  ││in catalog-3  ││in catalog-3  │
+        │              ││in catalog-4  ││in catalog-4  │┌────────┐
+        │              ││              ││in catalog-5  ││course-2│
+        └┬─────────────┘└┬─────────────┘└┬─────────────┘└─┬──────┘
+        ┌▽───────────────▽───────────────▽────────────────▽┐
+        │*program-1                                        │
+        │--------------------------------------------------│
+        │(program should not be indexed)                   │
+        └──────────────────────────────────────────────────┘
         * = indexable
         """
         program_1 = ContentMetadataFactory(content_type=PROGRAM, content_key='program-1')
-        course_1 = ContentMetadataFactory(content_type=COURSE, content_key='test-course-1')
-        course_2 = ContentMetadataFactory(content_type=COURSE, content_key='test-course-2')
-        course_3 = ContentMetadataFactory(content_type=COURSE, content_key='test-course-3')
+        test_course_1 = ContentMetadataFactory(content_type=COURSE, content_key='test-course-1')
+        test_course_2 = ContentMetadataFactory(content_type=COURSE, content_key='test-course-2')
+        test_course_3 = ContentMetadataFactory(content_type=COURSE, content_key='test-course-3')
 
-        # Associate all three courses with the program.
-        course_1.associated_content_metadata.set([program_1])
-        course_2.associated_content_metadata.set([program_1])
-        course_3.associated_content_metadata.set([program_1])
+        # Associate three main test courses with the program.
+        test_course_1.associated_content_metadata.set([program_1])
+        test_course_2.associated_content_metadata.set([program_1])
+        test_course_3.associated_content_metadata.set([program_1])
+        # Also throw in the unpublished (unindexable) course to cause the program to fail to be indexed.
+        self.course_metadata_unpublished.associated_content_metadata.set([program_1])
 
         # Create all 5 test catalogs.
         catalog_queries = [CatalogQueryFactory(uuid=uuid.uuid4()) for _ in range(5)]
-        catalogs = [
+        _ = [
             EnterpriseCatalogFactory(catalog_query=query)
             for query in catalog_queries
         ]
 
         # Associate the 5 catalogs to the 3 courses in a staggering fashion.
-        course_1.catalog_queries.set(catalog_queries[0:3])
-        course_2.catalog_queries.set(catalog_queries[1:4])
-        course_3.catalog_queries.set(catalog_queries[2:5])
+        test_course_1.catalog_queries.set(catalog_queries[0:3])
+        test_course_2.catalog_queries.set(catalog_queries[1:4])
+        test_course_3.catalog_queries.set(catalog_queries[2:5])
 
-        course_1.save()
-        course_2.save()
-        course_3.save()
+        test_course_1.save()
+        test_course_2.save()
+        test_course_3.save()
 
         actual_algolia_products_sent = []
 
@@ -872,32 +872,11 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert ' 15 products found.' in products_found_log_records[0]
+        assert ' 12 products found.' in products_found_log_records[0]
 
-        # create expected data to be added/updated in the Algolia index.
-        expected_program_1_objects_to_index = []
+        # assert the program was not indexed.
         program_uuid = program_1.json_metadata.get('uuid')
-        expected_program_1_objects_to_index.append({
-            'objectID': f'program-{program_uuid}-catalog-uuids-0',
-            'enterprise_catalog_uuids': sorted([str(catalog.uuid) for catalog in catalogs]),
-        })
-        expected_program_1_objects_to_index.append({
-            'objectID': f'program-{program_uuid}-customer-uuids-0',
-            'enterprise_customer_uuids': sorted([str(catalog.enterprise_uuid) for catalog in catalogs]),
-        })
-        expected_program_1_objects_to_index.append({
-            'objectID': f'program-{program_uuid}-catalog-query-uuids-0',
-            'enterprise_catalog_query_uuids': sorted([str(catalog_query.uuid) for catalog_query in catalog_queries]),
-            'enterprise_catalog_query_titles': sorted([catalog_query.title for catalog_query in catalog_queries]),
-        })
-
-        # verify replace_all_objects is called with the correct Algolia object data.
-        expected_program_call_args = sorted(expected_program_1_objects_to_index, key=itemgetter('objectID'))
-        actual_program_call_args = sorted(
-            [product for product in actual_algolia_products_sent if program_uuid in product['objectID']],
-            key=itemgetter('objectID'),
-        )
-        assert expected_program_call_args == actual_program_call_args
+        assert all(program_uuid not in product['objectID'] for product in actual_algolia_products_sent)
 
     def test_index_content_keys_in_algolia(self):
         """

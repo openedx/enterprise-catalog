@@ -10,7 +10,6 @@ from operator import itemgetter
 from celery import shared_task, states
 from celery.exceptions import Ignore
 from celery_utils.logged_task import LoggedTask
-from django.conf import settings
 from django.db import IntegrityError
 from django.db.models import Prefetch, Q
 from django.db.utils import OperationalError
@@ -591,6 +590,9 @@ def _precalculate_content_mappings():
     """
     Precalculate various mappings between different types of related content.
 
+    NOTE: this method is naive, and does not take into account the indexability of content.  I.e. it will happily tell
+    you that courses A, B, and C are part of program P even though courses B and C have already ended.
+
     Returns:
         2-tuple(dict):
             - First element: Mapping of program content_key to list of course run and course ContentMetadata objects.
@@ -694,15 +696,18 @@ def _get_algolia_products_for_batch(
     Callers can also maintain a fixed memory cap by only keeping a fixed number of output objects in-memory at any given
     time.
 
-    ONLY objects that are indexable are indexed.  Past versions of this function caused programs to be indexed just by
-    touching an indexable course or pathway, but now they will only be indexed if they pass the
-    `_should_index_program()` test.
+    Business logic notes:
 
-    Note: course runs are not indexed despite having their UUIDs inherited.
-
-    UUIDs are inherited all the way from course runs to courses to programs to pathways.  Specifically, a given object
-    in the tree will be indexed with union of all UUIDs from every node in the sub-tree.  E.g. a pathway object will be
-    indexed with the UUIDs found on the pathway + program + course + course run beneath.
+    * ONLY objects that are indexable are indexed.
+    * Course runs are never indexed, but they still contribute their catalog/customer UUIDs to higher level objects
+      (courses, programs, pathways).
+    * UUIDs are inherited all the way from course runs to courses to programs to pathways.  Specifically, a given object
+      in the tree will be indexed with union of all UUIDs from every node in the sub-tree.  E.g. a pathway object will
+      be indexed with the UUIDs found on the pathway + program + course + course run beneath.
+    * If a course is part of a program, but only the program is in a given catalog, that catalog will only be indexed as
+      part of the program. That means the program will only be searchable via the catalog or customer of that catalog,
+      but not the containing course, possibly hiding content from search results that are actually accessible. It might
+      be worth re-assessing this logic to determine if it's correct.
 
     Args
         batch_num (int): The numeric identifier of the current batch, defined by the contents of `content_keys_batch`.
@@ -801,35 +806,29 @@ def _get_algolia_products_for_batch(
     # Second pass.  This time the goal is to capture indirect relationships on programs:
     #  * For each program:
     #    - Absorb all UUIDs associated with every associated course.
-    if settings.ENABLE_ENT_7729_ONLY_SHOW_COMPLETE_PROGRAMS:
-        for program_metadata in content_metadata_to_process:
-            if program_metadata.content_type != PROGRAM:
-                continue
-            program_content_key = program_metadata.content_key
-            catalog_uuids_for_courses_of_program = [
-                catalog_uuids_by_key[course_metadata.content_key]
-                for course_metadata in program_to_courses_mapping[program_content_key]
-            ]
-            common_catalogs = set()
-            if catalog_uuids_for_courses_of_program:
-                common_catalogs = set.intersection(*catalog_uuids_for_courses_of_program)
-            for course_metadata in program_to_courses_mapping[program_content_key]:
-                catalog_queries_by_key[program_content_key].update(
-                    catalog_query_uuid_by_catalog_uuid[catalog_uuid] for catalog_uuid in common_catalogs
-                )
-                catalog_uuids_by_key[program_content_key].update(common_catalogs)
-                customer_uuids_by_key[program_content_key].update(
-                    customer_uuid_by_catalog_uuid[catalog_uuid] for catalog_uuid in common_catalogs
-                )
-    else:  # Old deprecated code in this else block. Remove as part of ENT-7729.
-        for metadata in content_metadata_to_process:
-            if metadata.content_type != PROGRAM:
-                continue
-            program_content_key = metadata.content_key
-            for metadata in program_to_courses_mapping[program_content_key]:
-                catalog_queries_by_key[program_content_key].update(catalog_queries_by_key[metadata.content_key])
-                catalog_uuids_by_key[program_content_key].update(catalog_uuids_by_key[metadata.content_key])
-                customer_uuids_by_key[program_content_key].update(customer_uuids_by_key[metadata.content_key])
+    for program_metadata in content_metadata_to_process:
+        if program_metadata.content_type != PROGRAM:
+            continue
+        program_content_key = program_metadata.content_key
+        # Create a list of lists of catalog UUIDs, each sub-list representing the catalog UUIDs for one course of
+        # the program. Note: since this loops over ALL courses of a program, it may encounter a non-indexable
+        # course; for these courses, we will not find any catalogs and contribute an empty sub-list. The end result
+        # is that if a program contains any non-indexable content, no common catalogs will be found.
+        catalog_uuids_for_all_courses_of_program = [
+            catalog_uuids_by_key[course_metadata.content_key]
+            for course_metadata in program_to_courses_mapping[program_content_key]
+        ]
+        common_catalogs = set()
+        if catalog_uuids_for_all_courses_of_program:
+            common_catalogs = set.intersection(*catalog_uuids_for_all_courses_of_program)
+        for course_metadata in program_to_courses_mapping[program_content_key]:
+            catalog_queries_by_key[program_content_key].update(
+                catalog_query_uuid_by_catalog_uuid[catalog_uuid] for catalog_uuid in common_catalogs
+            )
+            catalog_uuids_by_key[program_content_key].update(common_catalogs)
+            customer_uuids_by_key[program_content_key].update(
+                customer_uuid_by_catalog_uuid[catalog_uuid] for catalog_uuid in common_catalogs
+            )
 
     # Third pass.  This time the goal is to capture indirect relationships on pathways:
     #  * For each pathway:
