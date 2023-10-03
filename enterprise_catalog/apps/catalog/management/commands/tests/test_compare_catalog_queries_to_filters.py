@@ -20,4 +20,4 @@ class CompareCatalogQueriesToFiltersCommandTests(TestCase):
         """
         call_command(self.command_name)
         compare_catalog_queries_to_filters_task()
-        mock_compare_catalog_queries_to_filters_task.s.assert_called_once()
+        mock_compare_catalog_queries_to_filters_task.apply_async.assert_called_once()
