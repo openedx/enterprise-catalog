@@ -384,6 +384,27 @@ class QueryFilterTests(TestCase):
         content_metadata = json.loads(content_metadata_json)
         assert not filters.does_query_match_content(query_data, content_metadata)
 
+    def test_exceptional_gt_key(self):
+        """
+        A non-matching query using an gt key.
+        """
+        query_json = """
+        {
+            "content_type":"course",
+            "first_enrollable_paid_seat_price__gt":"301"
+        }
+        """
+
+        content_metadata_json = """
+        {
+            "content_type": "course"
+        }
+        """
+
+        query_data = json.loads(query_json)
+        content_metadata = json.loads(content_metadata_json)
+        assert not filters.does_query_match_content(query_data, content_metadata)
+
     def test_exact_list(self):
         """
         A matching query using a list exact key (aka include)
