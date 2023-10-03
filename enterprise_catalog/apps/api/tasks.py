@@ -839,12 +839,6 @@ def _get_algolia_products_for_batch(
     )
     num_content_metadata_indexed = 0
     for metadata in content_metadata_to_index:
-        # TODO: remove when https://2u-internal.atlassian.net/browse/ENT-7458 is resolved
-        if 'GTx+MGT6203x' in content_key:
-            logger.info(
-                f'[ENT-7458] {content_key} will be added to Algolia index'
-            )
-
         # Build all the algolia products for this single metadata record and append them to
         # `algolia_products_by_object_id`.  This function contains all the logic to create duplicate/segmented records
         # with non-overlapping UUID list fields to keep the product size below a fixed limit controlled by
