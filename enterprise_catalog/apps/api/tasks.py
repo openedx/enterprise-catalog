@@ -10,6 +10,7 @@ from operator import itemgetter
 from celery import shared_task, states
 from celery.exceptions import Ignore
 from celery_utils.logged_task import LoggedTask
+from django.conf import settings
 from django.db import IntegrityError
 from django.db.models import Prefetch, Q
 from django.db.utils import OperationalError
@@ -676,6 +677,7 @@ def add_metadata_to_algolia_objects(
     _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata)
 
 
+# pylint: disable=too-many-statements
 def _get_algolia_products_for_batch(
     batch_num,
     content_keys_batch,
@@ -726,6 +728,9 @@ def _get_algolia_products_for_batch(
     catalog_uuids_by_key = defaultdict(set)
     customer_uuids_by_key = defaultdict(set)
     catalog_queries_by_key = defaultdict(set)
+
+    catalog_query_uuid_by_catalog_uuid = defaultdict(set)
+    customer_uuid_by_catalog_uuid = defaultdict(set)
 
     # Create a shared convenience queryset to prefetch catalogs for all metadata lookups below.
     all_catalog_queries = CatalogQuery.objects.prefetch_related('enterprise_catalogs')
@@ -789,18 +794,42 @@ def _get_algolia_products_for_batch(
             for catalog in associated_catalogs:
                 catalog_uuids_by_key[content_key].add(str(catalog.uuid))
                 customer_uuids_by_key[content_key].add(str(catalog.enterprise_uuid))
+                # Cache UUIDs related to each catalog.
+                catalog_query_uuid_by_catalog_uuid[str(catalog.uuid)] = (str(catalog_query.uuid), catalog_query.title)
+                customer_uuid_by_catalog_uuid[str(catalog.uuid)] = str(catalog.enterprise_uuid)
 
     # Second pass.  This time the goal is to capture indirect relationships on programs:
     #  * For each program:
     #    - Absorb all UUIDs associated with every associated course.
-    for metadata in content_metadata_to_process:
-        if metadata.content_type != PROGRAM:
-            continue
-        program_content_key = metadata.content_key
-        for metadata in program_to_courses_mapping[program_content_key]:
-            catalog_queries_by_key[program_content_key].update(catalog_queries_by_key[metadata.content_key])
-            catalog_uuids_by_key[program_content_key].update(catalog_uuids_by_key[metadata.content_key])
-            customer_uuids_by_key[program_content_key].update(customer_uuids_by_key[metadata.content_key])
+    if settings.ENABLE_ENT_7729_ONLY_SHOW_COMPLETE_PROGRAMS:
+        for program_metadata in content_metadata_to_process:
+            if program_metadata.content_type != PROGRAM:
+                continue
+            program_content_key = program_metadata.content_key
+            catalog_uuids_for_courses_of_program = [
+                catalog_uuids_by_key[course_metadata.content_key]
+                for course_metadata in program_to_courses_mapping[program_content_key]
+            ]
+            common_catalogs = set()
+            if catalog_uuids_for_courses_of_program:
+                common_catalogs = set.intersection(*catalog_uuids_for_courses_of_program)
+            for course_metadata in program_to_courses_mapping[program_content_key]:
+                catalog_queries_by_key[program_content_key].update(
+                    catalog_query_uuid_by_catalog_uuid[catalog_uuid] for catalog_uuid in common_catalogs
+                )
+                catalog_uuids_by_key[program_content_key].update(common_catalogs)
+                customer_uuids_by_key[program_content_key].update(
+                    customer_uuid_by_catalog_uuid[catalog_uuid] for catalog_uuid in common_catalogs
+                )
+    else:  # Old deprecated code in this else block. Remove as part of ENT-7729.
+        for metadata in content_metadata_to_process:
+            if metadata.content_type != PROGRAM:
+                continue
+            program_content_key = metadata.content_key
+            for metadata in program_to_courses_mapping[program_content_key]:
+                catalog_queries_by_key[program_content_key].update(catalog_queries_by_key[metadata.content_key])
+                catalog_uuids_by_key[program_content_key].update(catalog_uuids_by_key[metadata.content_key])
+                customer_uuids_by_key[program_content_key].update(customer_uuids_by_key[metadata.content_key])
 
     # Third pass.  This time the goal is to capture indirect relationships on pathways:
     #  * For each pathway:
@@ -839,12 +868,6 @@ def _get_algolia_products_for_batch(
     )
     num_content_metadata_indexed = 0
     for metadata in content_metadata_to_index:
-        # TODO: remove when https://2u-internal.atlassian.net/browse/ENT-7458 is resolved
-        if 'GTx+MGT6203x' in content_key:
-            logger.info(
-                f'[ENT-7458] {content_key} will be added to Algolia index'
-            )
-
         # Build all the algolia products for this single metadata record and append them to
         # `algolia_products_by_object_id`.  This function contains all the logic to create duplicate/segmented records
         # with non-overlapping UUID list fields to keep the product size below a fixed limit controlled by

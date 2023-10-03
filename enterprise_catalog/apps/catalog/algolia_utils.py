@@ -187,16 +187,9 @@ def _should_index_course(course_metadata):
         (run_is_hidden_checker, 'advertised course run is hidden'),
         (no_owners_checker, 'no owners exist'),
     ):
-        # TODO: remove/simplify logging when https://2u-internal.atlassian.net/browse/ENT-7458 is resolved
         should_not_index = should_not_index_function()
-        if 'GTx+MGT6203x' in course_metadata.content_key:
-            logger.info(
-                f'[ENT-7458] {course_metadata.content_key} {log_message} '
-                f'checker has should_not_index={should_not_index}'
-            )
-
         if should_not_index:
-            logger.info(f'[ENT-7458] Should not index {course_metadata.content_key}, {log_message}')
+            logger.info(f'Not indexing {course_metadata.content_key}, reason: {log_message}')
             return False
 
     return True
