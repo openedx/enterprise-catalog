@@ -20,9 +20,7 @@ from enterprise_catalog.apps.api.v1.utils import (
     get_most_recent_modified_time,
     update_query_parameters,
 )
-from enterprise_catalog.apps.api_client.discovery_cache import (
-    CatalogQueryMetadata,
-)
+from enterprise_catalog.apps.api_client.discovery import CatalogQueryMetadata
 from enterprise_catalog.apps.api_client.enterprise_cache import (
     EnterpriseCustomerDetails,
 )
