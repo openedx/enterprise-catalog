@@ -24,8 +24,6 @@ root = lambda *x: join(abspath(PROJECT_ROOT), *x)
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('ENTERPRISE_CATALOG_SECRET_KEY', 'insecure-secret-key')
 
-DEFAULT_HASHING_ALGORITHM = "sha1"
-
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -158,6 +156,11 @@ USE_L10N = True
 
 USE_TZ = True
 
+# Django 4.0+ uses zoneinfo if this is not set. We can remove this and
+# migrate to zoneinfo after Django 4.2 upgrade. See more on following url
+# https://docs.djangoproject.com/en/4.2/releases/4.0/#zoneinfo-default-timezone-implementation
+USE_DEPRECATED_PYTZ = True
+
 LOCALE_PATHS = (
     root('conf', 'locale'),
 )
@@ -223,6 +226,7 @@ LANGUAGE_COOKIE_NAME = 'openedx-language-preference'
 
 CSRF_COOKIE_SECURE = False
 CSRF_TRUSTED_ORIGINS = []
+CSRF_TRUSTED_ORIGINS_WITH_SCHEME = [] # just for Django 4.2 upgrade
 
 # AUTHENTICATION CONFIGURATION
 LOGIN_URL = '/login/'
@@ -436,3 +440,4 @@ SPECTACULAR_SETTINGS = {
 #
 # Enable this on stage first.
 ENABLE_ENT_7729_ONLY_SHOW_COMPLETE_PROGRAMS = False
+

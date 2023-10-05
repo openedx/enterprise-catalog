@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         python-version: [py38]
-        django-version: [django32, django42]
+        django-version: [django42]
 
     steps:
     - uses: actions/checkout@v2
@@ -27,5 +27,5 @@ jobs:
       run: |
         docker exec -e TOXENV=${{ matrix.python-version }}-${{ matrix.django-version }} -u root enterprise.catalog.app /edx/app/enterprise_catalog/enterprise_catalog/validate.sh
     - name: Code Coverage
-      if: matrix.python-version == 'py38' && matrix.django-version=='django32'
+      if: matrix.python-version == 'py38' && matrix.django-version=='django42'
       uses: codecov/codecov-action@v1

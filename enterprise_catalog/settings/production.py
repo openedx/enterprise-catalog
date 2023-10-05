@@ -1,4 +1,5 @@
 from os import environ
+import django
 import yaml
 
 from enterprise_catalog.settings.base import *
@@ -63,3 +64,6 @@ CELERY_RESULT_BACKEND = 'django-db'
 
 for override, value in DB_OVERRIDES.items():
     DATABASES['default'][override] = value
+
+if django.VERSION[0] >= 4:  # for greater than django 3.2 use schemes.
+    CSRF_TRUSTED_ORIGINS = CSRF_TRUSTED_ORIGINS_WITH_SCHEME
