@@ -44,7 +44,7 @@ class TestModels(TestCase):
         self.assertEqual(content_metadata.is_exec_ed_2u_course, expected_value)
 
     @override_settings(DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT=0)
-    @mock.patch('enterprise_catalog.apps.api_client.discovery_cache.DiscoveryApiClient')
+    @mock.patch('enterprise_catalog.apps.api_client.discovery.DiscoveryApiClient')
     def test_2U_exec_ed_content_inclusion_logic(self, mock_client):
         """
         Test that we exclude 2u exec ed courses from the create content metadata task unless the query provided allows
@@ -86,7 +86,7 @@ class TestModels(TestCase):
         self.assertEqual(ContentMetadata.objects.count(), 3)
 
     @override_settings(DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT=0)
-    @mock.patch('enterprise_catalog.apps.api_client.discovery_cache.DiscoveryApiClient')
+    @mock.patch('enterprise_catalog.apps.api_client.discovery.DiscoveryApiClient')
     def test_product_source_content_inclusion_logic(self, mock_client):
         """
         Test that we exclude 2u exec ed courses from the create content metadata task unless the query provided allows
@@ -133,7 +133,7 @@ class TestModels(TestCase):
         self.assertEqual(ContentMetadata.objects.count(), 3)
 
     @override_settings(DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT=0)
-    @mock.patch('enterprise_catalog.apps.api_client.discovery_cache.DiscoveryApiClient')
+    @mock.patch('enterprise_catalog.apps.api_client.discovery.DiscoveryApiClient')
     def test_contentmetadata_update_from_discovery(self, mock_client):
         """
         update_contentmetadata_from_discovery should update or create ContentMetadata
@@ -219,7 +219,7 @@ class TestModels(TestCase):
         assert program_cm in associated_metadata
 
     @override_settings(DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT=0)
-    @mock.patch('enterprise_catalog.apps.api_client.discovery_cache.DiscoveryApiClient')
+    @mock.patch('enterprise_catalog.apps.api_client.discovery.DiscoveryApiClient')
     def test_contentmetadata_update_from_discovery_ignore_exec_ed(self, mock_client):
         """
         update_contentmetadata_from_discovery should update or create ContentMetadata

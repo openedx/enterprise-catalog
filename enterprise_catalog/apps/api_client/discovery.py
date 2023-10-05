@@ -238,3 +238,43 @@ class DiscoveryApiClient(BaseOAuthClient):
             )
 
         return programs
+
+
+class CatalogQueryMetadata:
+    """
+    Metadata for a given CatalogQuery from the Discovery API.
+
+    """
+    def __init__(self, catalog_query):
+        """
+        Initialize a Catalog Query details instance and load data from
+        the Discovery API client.
+
+        Arguments:
+            catalog_query (CatalogQuery): Catalog Query to retrieve metadata for
+        """
+        self.catalog_query = catalog_query
+        self.catalog_query_data = self._get_catalog_query_metadata(catalog_query)
+
+    @property
+    def metadata(self):
+        """
+        Return catalog query metadata (will be an empty dict if unavailable)
+        """
+        return self.catalog_query_data
+
+    def _get_catalog_query_metadata(self, catalog_query):
+        """
+        Retrieve JSON data containing Catalog Query metadata for the given catalog_query_id
+        by making a call to Discovery API Client.
+
+        Arguments:
+            catalog_query (CatalogQuery): Catalog Query object
+
+        Returns:
+            customer_data (dict): Enterprise Customer details OR
+                Empty dictionary if no data found from API.
+        """
+        client = DiscoveryApiClient()
+        catalog_query_data = client.get_metadata_by_query(catalog_query)
+        return catalog_query_data

@@ -14,9 +14,7 @@ from django_celery_results.models import TaskResult
 
 from enterprise_catalog.apps.api import tasks
 from enterprise_catalog.apps.api.constants import CourseMode
-from enterprise_catalog.apps.api_client.discovery_cache import (
-    CatalogQueryMetadata,
-)
+from enterprise_catalog.apps.api_client.discovery import CatalogQueryMetadata
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
     COURSE_RUN,
