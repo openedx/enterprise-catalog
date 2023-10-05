@@ -71,22 +71,26 @@ def field_comparison(query_value, content_value, comparison_kind):
     compre the fields based on the comparison kind
     python 3.10 has match (like switch)
     """
-    if comparison_kind == 'exact':
-        return content_value == query_value
-    elif comparison_kind == 'not':
-        return content_value != query_value
-    elif comparison_kind == 'exclude':
-        return content_value != query_value
-    elif comparison_kind == 'gt':
-        return float(content_value) > float(query_value)
-    elif comparison_kind == 'gte':
-        return float(content_value) >= float(query_value)
-    elif comparison_kind == 'lt':
-        return float(content_value) < float(query_value)
-    elif comparison_kind == 'lte':
-        return float(content_value) <= float(query_value)
-    else:
-        raise QueryFilterException(f'invalid comparison kind "{comparison_kind}"')
+    try:
+        if comparison_kind == 'exact':
+            return content_value == query_value
+        elif comparison_kind == 'not':
+            return content_value != query_value
+        elif comparison_kind == 'exclude':
+            return content_value != query_value
+        elif comparison_kind == 'gt':
+            return float(content_value) > float(query_value)
+        elif comparison_kind == 'gte':
+            return float(content_value) >= float(query_value)
+        elif comparison_kind == 'lt':
+            return float(content_value) < float(query_value)
+        elif comparison_kind == 'lte':
+            return float(content_value) <= float(query_value)
+        else:
+            raise QueryFilterException(f'invalid comparison kind "{comparison_kind}"')
+    except TypeError:
+        # if content_value or query_value are None float() cannot parse
+        return False
 
 
 def does_query_match_content(query_dict, content_metadata_dict):
