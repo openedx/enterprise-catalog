@@ -45,7 +45,6 @@ backports-zoneinfo[tzdata]==0.2.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   celery
-    #   django
     #   kombu
 billiard==4.1.0
     # via
@@ -64,13 +63,13 @@ certifi==2023.7.22
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   requests
-cffi==1.15.1
+cffi==1.16.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   cryptography
     #   pynacl
-charset-normalizer==3.2.0
+charset-normalizer==3.3.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -113,7 +112,7 @@ code-annotations==1.5.0
     #   -r requirements/test.txt
     #   edx-lint
     #   edx-toggles
-coverage[toml]==7.3.1
+coverage[toml]==7.3.2
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -141,8 +140,9 @@ distlib==0.3.7
     # via
     #   -r requirements/test.txt
     #   virtualenv
-django==4.2.5
+django==3.2.22
     # via
+    #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   django-celery-results
@@ -206,8 +206,9 @@ django-model-utils==4.3.1
     #   -r requirements/test.txt
     #   edx-celeryutils
     #   edx-rbac
-django-simple-history==3.4.0
+django-simple-history==3.0.0
     # via
+    #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
 django-waffle==4.0.0
@@ -393,7 +394,7 @@ oauthlib==3.2.2
     #   -r requirements/test.txt
     #   requests-oauthlib
     #   social-auth-core
-packaging==23.1
+packaging==23.2
     # via
     #   -r requirements/test.txt
     #   pytest
@@ -408,7 +409,7 @@ pkgutil-resolve-name==1.3.10
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   jsonschema
-platformdirs==3.10.0
+platformdirs==3.11.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -525,6 +526,7 @@ pytz==2023.3.post1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+    #   django
     #   djangorestframework
 pyyaml==6.0.1
     # via
@@ -564,7 +566,7 @@ requests-oauthlib==1.3.1
     #   social-auth-core
 responses==0.23.3
     # via -r requirements/test.txt
-rpds-py==0.10.3
+rpds-py==0.10.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -579,7 +581,7 @@ semantic-version==2.10.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-drf-extensions
-simplejson==3.19.1
+simplejson==3.19.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -646,6 +648,7 @@ tomlkit==0.12.1
     #   pylint
 tox==3.28.0
     # via
+    #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -r requirements/test.txt
     #   tox-battery
 tox-battery==0.6.2
@@ -675,7 +678,7 @@ uritemplate==4.1.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   drf-spectacular
-urllib3==2.0.5
+urllib3==2.0.6
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -692,7 +695,7 @@ virtualenv==20.24.5
     # via
     #   -r requirements/test.txt
     #   tox
-wcwidth==0.2.6
+wcwidth==0.2.8
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -702,7 +705,7 @@ wrapt==1.15.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   astroid
-xlsxwriter==3.1.5
+xlsxwriter==3.1.6
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
