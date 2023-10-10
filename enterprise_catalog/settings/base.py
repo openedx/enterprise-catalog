@@ -433,11 +433,3 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }
-
-# (ENT-7729) When indexing programs in Algolia, only attach catalog query/catalog/customer UUIDs common to all content
-# within the program.  This should have the outcome of only showing completely accessible programs in the catalog search
-# page: https://enterprise.edx.org/<customer>/search
-#
-# Enable this on stage first.
-ENABLE_ENT_7729_ONLY_SHOW_COMPLETE_PROGRAMS = False
-
