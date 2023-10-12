@@ -264,7 +264,8 @@ def _should_index_program(program_metadata):
 
     return program_json_metadata.get('marketing_url')\
         and program_json_metadata.get('type')\
-        and not program_json_metadata.get('hidden')
+        and not program_json_metadata.get('hidden')\
+        and program_json_metadata.get('status') == 'active'
 
 
 def partition_program_keys_for_indexing(programs_content_metadata):
