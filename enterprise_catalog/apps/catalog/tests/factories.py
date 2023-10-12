@@ -135,6 +135,7 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
                 'marketing_url': f'https://marketing.url/{self.content_key}',
                 'authoring_organizations': authoring_organizations,
                 'card_image_url': self.card_image_url,
+                'status': 'active',
             })
         elif self.content_type == LEARNER_PATHWAY:
             json_metadata.update({
