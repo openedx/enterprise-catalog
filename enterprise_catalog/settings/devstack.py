@@ -81,7 +81,7 @@ CORS_ORIGIN_WHITELIST = [
 
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
         'LOCATION': 'enterprise.catalog.memcached:11211',
     }
 }
