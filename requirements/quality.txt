@@ -33,8 +33,8 @@ backoff==1.10.0
 backports-zoneinfo[tzdata]==0.2.1
     # via
     #   -r requirements/base.txt
+    #   backports-zoneinfo
     #   celery
-    #   django
     #   kombu
 billiard==4.1.0
     # via
@@ -50,12 +50,12 @@ certifi==2023.7.22
     # via
     #   -r requirements/base.txt
     #   requests
-cffi==1.15.1
+cffi==1.16.0
     # via
     #   -r requirements/base.txt
     #   cryptography
     #   pynacl
-charset-normalizer==3.2.0
+charset-normalizer==3.3.1
     # via
     #   -r requirements/base.txt
     #   requests
@@ -102,8 +102,9 @@ defusedxml==0.7.1
     #   social-auth-core
 dill==0.3.7
     # via pylint
-django==4.2.5
+django==3.2.22
     # via
+    #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -r requirements/base.txt
     #   django-celery-results
     #   django-clearcache
@@ -133,7 +134,7 @@ django-clearcache==1.2.1
     # via -r requirements/base.txt
 django-config-models==2.5.1
     # via -r requirements/base.txt
-django-cors-headers==4.2.0
+django-cors-headers==4.3.0
     # via -r requirements/base.txt
 django-crum==0.7.9
     # via
@@ -150,8 +151,10 @@ django-model-utils==4.3.1
     #   -r requirements/base.txt
     #   edx-celeryutils
     #   edx-rbac
-django-simple-history==3.4.0
-    # via -r requirements/base.txt
+django-simple-history==3.0.0
+    # via
+    #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
+    #   -r requirements/base.txt
 django-waffle==4.0.0
     # via
     #   -r requirements/base.txt
@@ -188,7 +191,7 @@ edx-django-utils==5.7.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==8.10.0
+edx-drf-extensions==8.12.0
     # via
     #   -r requirements/base.txt
     #   edx-rbac
@@ -202,7 +205,7 @@ edx-opaque-keys==2.5.1
     #   edx-drf-extensions
 edx-rbac==1.8.0
     # via -r requirements/base.txt
-edx-rest-api-client==5.6.0
+edx-rest-api-client==5.6.1
     # via -r requirements/base.txt
 edx-toggles==5.1.0
     # via -r requirements/base.txt
@@ -259,7 +262,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.0
     # via -r requirements/base.txt
-newrelic==9.1.0
+newrelic==9.1.1
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -276,7 +279,7 @@ pkgutil-resolve-name==1.3.10
     # via
     #   -r requirements/base.txt
     #   jsonschema
-platformdirs==3.10.0
+platformdirs==3.11.0
     # via pylint
 ply==3.11
     # via
@@ -286,11 +289,11 @@ prompt-toolkit==3.0.39
     # via
     #   -r requirements/base.txt
     #   click-repl
-psutil==5.9.5
+psutil==5.9.6
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
-pycodestyle==2.11.0
+pycodestyle==2.11.1
     # via -r requirements/quality.in
 pycparser==2.21
     # via
@@ -305,6 +308,7 @@ pyjwt[crypto]==2.8.0
     #   edx-auth-backends
     #   edx-drf-extensions
     #   edx-rest-api-client
+    #   pyjwt
     #   social-auth-core
 pylint==2.14.5
     # via
@@ -315,7 +319,7 @@ pylint==2.14.5
     #   pylint-plugin-utils
 pylint-celery==0.3
     # via edx-lint
-pylint-django==2.5.3
+pylint-django==2.5.4
     # via edx-lint
 pylint-plugin-utils==0.8.2
     # via
@@ -347,6 +351,7 @@ python3-openid==3.2.0
 pytz==2023.3.post1
     # via
     #   -r requirements/base.txt
+    #   django
     #   djangorestframework
 pyyaml==6.0.1
     # via
@@ -377,7 +382,7 @@ requests-oauthlib==1.3.1
     # via
     #   -r requirements/base.txt
     #   social-auth-core
-rpds-py==0.10.3
+rpds-py==0.10.6
     # via
     #   -r requirements/base.txt
     #   jsonschema
@@ -388,7 +393,7 @@ semantic-version==2.10.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-simplejson==3.19.1
+simplejson==3.19.2
     # via -r requirements/base.txt
 six==1.16.0
     # via
@@ -405,7 +410,7 @@ slumber==0.7.1
     #   edx-rest-api-client
 snowballstemmer==2.2.0
     # via pydocstyle
-social-auth-app-django==5.3.0
+social-auth-app-django==5.4.0
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends
@@ -449,7 +454,7 @@ uritemplate==4.1.1
     # via
     #   -r requirements/base.txt
     #   drf-spectacular
-urllib3==2.0.5
+urllib3==2.0.7
     # via
     #   -r requirements/base.txt
     #   requests
@@ -459,13 +464,13 @@ vine==5.0.0
     #   amqp
     #   celery
     #   kombu
-wcwidth==0.2.6
+wcwidth==0.2.8
     # via
     #   -r requirements/base.txt
     #   prompt-toolkit
 wrapt==1.15.0
     # via astroid
-xlsxwriter==3.1.5
+xlsxwriter==3.1.9
     # via -r requirements/base.txt
 zipp==3.17.0
     # via
