@@ -154,6 +154,9 @@ class EnterpriseCustomerViewSet(BaseViewSet):
             enterprise_uuid=self.kwargs.get('enterprise_uuid')
         ))
         content_identifier = self.kwargs.get('content_identifier')
+        serializer_context = {
+            'skip_customer_fetch': bool(self.request.query_params.get('skip_customer_fetch', '').lower()),
+        }
 
         try:
             # Search for matching metadata if the value of the requested
@@ -164,7 +167,7 @@ class EnterpriseCustomerViewSet(BaseViewSet):
                 if content_with_uuid:
                     return ContentMetadataSerializer(
                         content_with_uuid.first(),
-                        context={'enterprise_catalog': catalog},
+                        context={'enterprise_catalog': catalog, **serializer_context},
                     )
         except ValueError:
             # Otherwise, search for matching metadata as a content key
@@ -173,7 +176,7 @@ class EnterpriseCustomerViewSet(BaseViewSet):
                 if content_with_key:
                     return ContentMetadataSerializer(
                         content_with_key.first(),
-                        context={'enterprise_catalog': catalog},
+                        context={'enterprise_catalog': catalog, **serializer_context},
                     )
         # If we've made it here without finding a matching ContentMetadata record,
         # assume no matching record exists and raise a 404.
@@ -183,7 +186,16 @@ class EnterpriseCustomerViewSet(BaseViewSet):
     def content_metadata(self, customer_uuid, content_identifier, **kwargs):  # pylint: disable=unused-argument
         """
         Get endpoint for `/api/v1/enterprise-customer/{customer uuid}/content-metadata/{content identifier}`.
-        Accepts both content uuids and content keys for the specific content metadata record requested
+        Accepts both content uuids and content keys for the specific content metadata record requested.
+
+        Accepts an optional `skip_customer_fetch` query parameter.
+        If present and truthy, including this param will cause
+        the serialized content metadata to not fetch related enterprise customer
+        details from the edx-enterprise REST API.  Thus the presence of this
+        query param means that the serialized 'content_last_modified' time
+        will not take into account the *customer* modified time.  Additionally,
+        it means that no 'enrollment_url' fields will be present in the serialied
+        response.
         """
         serializer = self.get_metadata_item_serializer()
         return Response(serializer.data)

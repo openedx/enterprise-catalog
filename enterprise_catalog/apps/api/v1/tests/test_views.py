@@ -2175,19 +2175,32 @@ class EnterpriseCustomerContentMetadataViewSetTests(APITestMixin):
 
         self.addCleanup(self.customer_details_patcher.stop)
 
-    def test_content_metadata_get_item_with_content_key(self):
+    @ddt.data(True, False)
+    def test_content_metadata_get_item_with_content_key(self, skip_customer_fetch):
         """
         Test the base success case for the `content-metadata` view using a content key as an identifier
         """
-        response = self.client.get(urljoin(self.url, f"{self.content_key_1}/"))
+        self.mock_customer_details.reset_mock()
+        query_params = ''
+        if skip_customer_fetch:
+            query_params = '?skip_customer_fetch=1'
+        response = self.client.get(urljoin(self.url, f"{self.content_key_1}/") + query_params)
         assert response.status_code == 200
         expected_data = ContentMetadataSerializer(
             self.first_content_metadata,
-            context={'enterprise_catalog': self.enterprise_catalog},
+            context={
+                'enterprise_catalog': self.enterprise_catalog,
+                'skip_customer_fetch': skip_customer_fetch,
+            },
         ).data
         actual_data = response.json()
         for payload_key in ['key', 'uuid']:
             assert actual_data[payload_key] == expected_data[payload_key]
+
+        if skip_customer_fetch:
+            self.assertFalse(self.mock_customer_details.called)
+        else:
+            self.assertTrue(self.mock_customer_details.called)
 
     def test_content_metadata_get_item_with_content_key_in_multiple_catalogs(self):
         """
