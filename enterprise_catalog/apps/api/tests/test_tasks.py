@@ -54,6 +54,7 @@ class TestTaskResultFunctions(TestCase):
     """
     Tests for functions in tasks.py that rely upon `django-celery_results.models.TaskResult`.
     """
+
     def setUp(self):
         """
         Delete all TaskResult objects, make a new single result object.
@@ -421,6 +422,7 @@ class UpdateFullContentMetadataTaskTests(TestCase):
                 # The task should copy these dates into net-new top level fields.
                 'start': '2023-03-01T00:00:00Z',
                 'end': '2023-03-01T00:00:00Z',
+                'first_enrollable_paid_seat_price': 90,
                 'seats': [
                     {
                         'type': CourseMode.VERIFIED,
@@ -480,6 +482,7 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         assert metadata_3.json_metadata['normalized_metadata']['start_date'] == '2023-03-01T00:00:00Z'
         assert metadata_3.json_metadata['normalized_metadata']['end_date'] == '2023-03-01T00:00:00Z'
         assert metadata_3.json_metadata['normalized_metadata']['enroll_by_date'] == '2023-02-01T00:00:00Z'
+        assert metadata_3.json_metadata['normalized_metadata']['content_price'] == 90
 
         # make sure course associated program metadata has been created and linked correctly
         assert ContentMetadata.objects.filter(content_key=program_key).exists()
@@ -565,6 +568,11 @@ class UpdateFullContentMetadataTaskTests(TestCase):
                 'end_date': '2023-04-09T23:59:59Z',
                 'registration_deadline': '2023-02-01T00:00:00Z',
             },
+            'entitlements': [
+                {
+                    'price': 2900,
+                },
+            ],
             'advertised_course_run_uuid': course_run_uuid,
 
             # Intentionally exclude net-new fields that we will assert are added by the
@@ -574,6 +582,7 @@ class UpdateFullContentMetadataTaskTests(TestCase):
             #     'start_date': '2023-03-01T00:00:00Z',
             #     'end_date': '2023-04-09T23:59:59Z'
             #     'enroll_by_date': '2023-02-01T00:00:00Z',
+            #     'content_price': 2900,
             # }
         }
 
@@ -616,6 +625,7 @@ class UpdateFullContentMetadataTaskTests(TestCase):
                 #     'start_date': '2023-03-01T00:00:00Z',
                 #     'end_date': '2023-04-09T23:59:59Z'
                 #     'enroll_by_date': '2023-02-01T00:00:00Z',
+                #     'content_price': 2900,
                 # }
             }
         )
@@ -632,6 +642,7 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         assert course_cm.json_metadata['normalized_metadata']['start_date'] == '2023-03-01T00:00:00Z'
         assert course_cm.json_metadata['normalized_metadata']['end_date'] == '2023-04-09T23:59:59Z'
         assert course_cm.json_metadata['normalized_metadata']['enroll_by_date'] == '2023-02-01T00:00:00Z'
+        assert course_cm.json_metadata['normalized_metadata']['content_price'] == 2900
 
         # Make sure the start/end dates are copied from the additional_metadata into the course run dict of the course.
         # This checks that the dummy 2022 dates are overwritten.
@@ -1624,7 +1635,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         mock_search_client().replace_all_objects.side_effect = mock_replace_all_objects
 
         with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_UUID_BATCH_SIZE', 1), \
-             mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
+                mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
             with self.assertLogs(level='INFO') as info_logs:
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
@@ -1689,8 +1700,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         mock_search_client().replace_all_objects.side_effect = mock_replace_all_objects
 
         with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_UUID_BATCH_SIZE', 1), \
-             mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS), \
-             mock.patch('enterprise_catalog.apps.api.tasks.EXPLORE_CATALOG_TITLES', explore_titles):
+                mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS), \
+                mock.patch('enterprise_catalog.apps.api.tasks.EXPLORE_CATALOG_TITLES', explore_titles):
             with self.assertLogs(level='INFO') as info_logs:
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
@@ -1763,7 +1774,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         mock_search_client().replace_all_objects.side_effect = mock_replace_all_objects
 
         with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS), \
-             mock.patch('enterprise_catalog.apps.api.tasks.REINDEX_TASK_BATCH_SIZE', 1):
+                mock.patch('enterprise_catalog.apps.api.tasks.REINDEX_TASK_BATCH_SIZE', 1):
             with self.assertLogs(level='INFO') as info_logs:
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
@@ -1781,8 +1792,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         Make sure the dry_run argument functions correctly and does not call replace_all_objects().
         """
         with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_UUID_BATCH_SIZE', 1), \
-             mock.patch('enterprise_catalog.apps.api.tasks.REINDEX_TASK_BATCH_SIZE', 10), \
-             mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
+                mock.patch('enterprise_catalog.apps.api.tasks.REINDEX_TASK_BATCH_SIZE', 10), \
+                mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
             with self.assertLogs(level='INFO') as info_logs:
                 # For some reason in order to call a celery task in-memory you must pass kwargs as args.
                 force = False
