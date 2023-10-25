@@ -220,8 +220,11 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
         """
         catalog_modified = None
         customer_modified = None
-        if enterprise_catalog := self.context.get('enterprise_catalog'):
+        enterprise_catalog = self.context.get('enterprise_catalog')
+
+        if enterprise_catalog:
             catalog_modified = enterprise_catalog.modified
+        if enterprise_catalog and not self.context.get('skip_customer_fetch'):
             customer_modified = enterprise_catalog.enterprise_customer.last_modified_date
 
         content_type = instance.content_type
@@ -255,7 +258,9 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
 
         if content_type in (COURSE, COURSE_RUN):
             if enterprise_catalog:
-                json_metadata['enrollment_url'] = enterprise_catalog.get_content_enrollment_url(instance)
+                json_metadata['enrollment_url'] = None
+                if not self.context.get('skip_customer_fetch'):
+                    json_metadata['enrollment_url'] = enterprise_catalog.get_content_enrollment_url(instance)
                 json_metadata['xapi_activity_id'] = enterprise_catalog.get_xapi_activity_id(
                     content_resource=content_type,
                     content_key=content_key,
@@ -267,7 +272,7 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
                 # for exec-ed-2u content, because enrollment fulfillment for such content
                 # is controlled via Entitlements, which are tied directly to Courses
                 # (as opposed to Seats, which are tied to Course Runs).
-                if not instance.is_exec_ed_2u_course:
+                if not instance.is_exec_ed_2u_course and not self.context.get('skip_customer_fetch'):
                     self._add_course_run_enrollment_urls(instance, serialized_course_runs)
         elif content_type == PROGRAM:
             # We want this to be null, because we have no notion
