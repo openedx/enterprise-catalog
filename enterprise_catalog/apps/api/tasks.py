@@ -305,11 +305,12 @@ def _normalize_course_metadata(course_metadata_record):
     if course_metadata_record.is_exec_ed_2u_course:
         # First case covers Exec Ed courses.
         additional_metadata = json_meta.get('additional_metadata', {})
-        entitlements = json_meta.get('entitlements', [])
         normalized_metadata['start_date'] = additional_metadata.get('start_date')
         normalized_metadata['end_date'] = additional_metadata.get('end_date')
         normalized_metadata['enroll_by_date'] = additional_metadata.get('registration_deadline')
-        normalized_metadata['content_price'] = entitlements[0]['price']
+        for entitlement in json_meta.get('entitlements', []):
+            if entitlement.get('mode') == CourseMode.PAID_EXECUTIVE_EDUCATION:
+                normalized_metadata['content_price'] = entitlement.get('price')
     else:
         # Else case covers OCM courses.
         advertised_course_run_uuid = json_meta.get('advertised_course_run_uuid')

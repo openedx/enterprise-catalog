@@ -571,6 +571,7 @@ class UpdateFullContentMetadataTaskTests(TestCase):
             'entitlements': [
                 {
                     'price': 2900,
+                    'mode': 'paid-executive-education',
                 },
             ],
             'advertised_course_run_uuid': course_run_uuid,
