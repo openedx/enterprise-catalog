@@ -781,6 +781,11 @@ def _should_allow_metadata(metadata_entry, catalog_query=None):
     """
     entry_product_source = _fetch_product_source(metadata_entry)
     if entry_product_source is not None and entry_product_source.lower() not in CONTENT_PRODUCT_SOURCE_ALLOW_LIST:
+        LOGGER.warning(
+            '(ENT-7893.a) catalog query %s disallows metadata not in source allow list %s',
+            catalog_query,
+            metadata_entry.get('key'),
+        )
         return False
     # make sure to exclude exec ed course runs
     content_type = get_content_type(metadata_entry)
@@ -789,6 +794,11 @@ def _should_allow_metadata(metadata_entry, catalog_query=None):
             if seat_types := metadata_entry.get('seat_types'):
                 for seat_type in seat_types:
                     if 'executive-education' in seat_type:
+                        LOGGER.warning(
+                            '(ENT-7893.b) catalog query %s disallows exec ed course run metadata %s',
+                            catalog_query,
+                            metadata_entry.get('key'),
+                        )
                         return False
     if content_type != 'course':
         return True
@@ -797,8 +807,16 @@ def _should_allow_metadata(metadata_entry, catalog_query=None):
     if entry_course_type is None or entry_course_type in CONTENT_COURSE_TYPE_ALLOW_LIST:
         return True
     # check if the content is allowed by the customer's query preferences
-    if catalog_query and catalog_query.include_exec_ed_2u_courses and entry_course_type == EXEC_ED_2U_COURSE_TYPE:
-        return True
+    if catalog_query and entry_course_type == EXEC_ED_2U_COURSE_TYPE:
+        if catalog_query.include_exec_ed_2u_courses:
+            return True
+        else:
+            LOGGER.warning(
+                '(ENT-7893.c) catalog query %s disallows exec ed course metadata %s',
+                catalog_query,
+                metadata_entry.get('key'),
+            )
+            return False
     return False
 
 
