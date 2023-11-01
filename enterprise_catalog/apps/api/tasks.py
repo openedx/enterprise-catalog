@@ -632,6 +632,7 @@ def add_metadata_to_algolia_objects(
     catalog_uuids,
     customer_uuids,
     catalog_queries,
+    academy_uuids,
 ):
     """
     Convert ContentMetadata objects into Algolia products and accumulate results into `algolia_products_by_object_id`.
@@ -673,6 +674,16 @@ def add_metadata_to_algolia_objects(
         customer_uuids,
         'enterprise_customer_uuids',
         '{}-customer-uuids-{}',
+    )
+    _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata)
+
+    # academy uuids
+    academy_uuids = sorted(list(academy_uuids))
+    batched_metadata = _batched_metadata(
+        json_metadata,
+        academy_uuids,
+        'academy_uuids',
+        '{}-academy-uuids-{}',
     )
     _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata)
 
@@ -737,9 +748,11 @@ def _get_algolia_products_for_batch(
     catalog_uuids_by_key = defaultdict(set)
     customer_uuids_by_key = defaultdict(set)
     catalog_queries_by_key = defaultdict(set)
+    academy_uuids_by_key = defaultdict(set)
 
     catalog_query_uuid_by_catalog_uuid = defaultdict(set)
     customer_uuid_by_catalog_uuid = defaultdict(set)
+    academy_uuids_by_catalog_uuid = defaultdict(set)
 
     # Create a shared convenience queryset to prefetch catalogs for all metadata lookups below.
     all_catalog_queries = CatalogQuery.objects.prefetch_related('enterprise_catalogs')
@@ -806,6 +819,10 @@ def _get_algolia_products_for_batch(
                 # Cache UUIDs related to each catalog.
                 catalog_query_uuid_by_catalog_uuid[str(catalog.uuid)] = (str(catalog_query.uuid), catalog_query.title)
                 customer_uuid_by_catalog_uuid[str(catalog.uuid)] = str(catalog.enterprise_uuid)
+                associated_academies = catalog.academies.all()
+                for academy in associated_academies:
+                    academy_uuids_by_key[content_key].add(str(academy.uuid))
+                    academy_uuids_by_catalog_uuid[str(catalog.uuid)].add(str(academy.uuid))
 
     # Second pass.  This time the goal is to capture indirect relationships on programs:
     #  * For each program:
@@ -833,6 +850,10 @@ def _get_algolia_products_for_batch(
             customer_uuids_by_key[program_content_key].update(
                 customer_uuid_by_catalog_uuid[catalog_uuid] for catalog_uuid in common_catalogs
             )
+            for catalog_uuid in common_catalogs:
+                academy_uuids_by_key[program_content_key].update(
+                    academy_uuids_by_catalog_uuid[catalog_uuid]
+                )
 
     # Third pass.  This time the goal is to capture indirect relationships on pathways:
     #  * For each pathway:
@@ -847,6 +868,7 @@ def _get_algolia_products_for_batch(
             catalog_queries_by_key[pathway_content_key].update(catalog_queries_by_key[metadata.content_key])
             catalog_uuids_by_key[pathway_content_key].update(catalog_uuids_by_key[metadata.content_key])
             customer_uuids_by_key[pathway_content_key].update(customer_uuids_by_key[metadata.content_key])
+            academy_uuids_by_key[pathway_content_key].update(academy_uuids_by_key[metadata.content_key])
 
             # Extra disabled logic to additionally absorb UUIDs from courses linked to this pathway indirectly via a
             # program (chain of association is course -> program -> pathway).  This doesn't work because
@@ -881,6 +903,7 @@ def _get_algolia_products_for_batch(
             catalog_uuids_by_key[metadata.content_key],
             customer_uuids_by_key[metadata.content_key],
             catalog_queries_by_key[metadata.content_key],
+            academy_uuids_by_key[metadata.content_key],
         )
 
         num_content_metadata_indexed += 1
