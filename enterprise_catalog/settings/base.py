@@ -64,6 +64,7 @@ PROJECT_APPS = (
     'enterprise_catalog.apps.catalog',
     'enterprise_catalog.apps.curation',
     'enterprise_catalog.apps.api',
+    'enterprise_catalog.apps.academy',
 )
 
 INSTALLED_APPS += THIRD_PARTY_APPS
