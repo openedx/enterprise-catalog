@@ -44,6 +44,7 @@ backports-zoneinfo[tzdata]==0.2.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+    #   backports-zoneinfo
     #   celery
     #   django
     #   kombu
@@ -68,13 +69,13 @@ certifi==2023.7.22
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   requests
-cffi==1.15.1
+cffi==1.16.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   cryptography
     #   pynacl
-charset-normalizer==3.2.0
+charset-normalizer==3.3.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -119,11 +120,12 @@ code-annotations==1.5.0
     #   -r requirements/test.txt
     #   edx-lint
     #   edx-toggles
-coverage[toml]==7.3.1
+coverage[toml]==7.3.2
     # via
     #   -r requirements/test.txt
+    #   coverage
     #   pytest-cov
-cryptography==41.0.4
+cryptography==41.0.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -153,8 +155,9 @@ distlib==0.3.7
     # via
     #   -r requirements/test.txt
     #   virtualenv
-django==4.2.5
+django==4.2.7
     # via
+    #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   django-celery-results
@@ -193,7 +196,7 @@ django-config-models==2.5.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-django-cors-headers==4.2.0
+django-cors-headers==4.3.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -224,6 +227,7 @@ django-model-utils==4.3.1
     #   edx-rbac
 django-simple-history==3.4.0
     # via
+    #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
 django-waffle==4.0.0
@@ -278,12 +282,12 @@ edx-django-utils==5.7.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==8.10.0
+edx-drf-extensions==8.13.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-rbac
-edx-i18n-tools==1.2.0
+edx-i18n-tools==1.3.0
     # via -r requirements/dev.in
 edx-lint==5.2.5
     # via
@@ -299,7 +303,7 @@ edx-rbac==1.8.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-edx-rest-api-client==5.6.0
+edx-rest-api-client==5.6.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -313,11 +317,11 @@ exceptiongroup==1.1.3
     #   pytest
 factory-boy==3.3.0
     # via -r requirements/test.txt
-faker==19.6.2
+faker==19.13.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
-filelock==3.12.4
+filelock==3.13.1
     # via
     #   -r requirements/test.txt
     #   tox
@@ -377,7 +381,7 @@ jsonfield2==4.0.0.post0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-jsonschema==4.19.1
+jsonschema==4.19.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -397,6 +401,8 @@ lazy-object-proxy==1.9.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   astroid
+lxml==4.9.3
+    # via edx-i18n-tools
 markupsafe==2.1.3
     # via
     #   -r requirements/quality.txt
@@ -416,7 +422,7 @@ mysqlclient==2.2.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-newrelic==9.1.0
+newrelic==9.1.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -427,7 +433,7 @@ oauthlib==3.2.2
     #   -r requirements/test.txt
     #   requests-oauthlib
     #   social-auth-core
-packaging==23.1
+packaging==23.2
     # via
     #   -r requirements/pip-tools.txt
     #   -r requirements/test.txt
@@ -449,7 +455,7 @@ pkgutil-resolve-name==1.3.10
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   jsonschema
-platformdirs==3.10.0
+platformdirs==3.11.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -473,7 +479,7 @@ prompt-toolkit==3.0.39
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   click-repl
-psutil==5.9.5
+psutil==5.9.6
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -482,7 +488,7 @@ py==1.11.0
     # via
     #   -r requirements/test.txt
     #   tox
-pycodestyle==2.11.0
+pycodestyle==2.11.1
     # via -r requirements/quality.txt
 pycparser==2.21
     # via
@@ -501,6 +507,7 @@ pyjwt[crypto]==2.8.0
     #   edx-auth-backends
     #   edx-drf-extensions
     #   edx-rest-api-client
+    #   pyjwt
     #   social-auth-core
 pylint==2.14.5
     # via
@@ -516,7 +523,7 @@ pylint-celery==0.3
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-lint
-pylint-django==2.5.3
+pylint-django==2.5.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -545,14 +552,14 @@ pyproject-hooks==1.0.0
     # via
     #   -r requirements/pip-tools.txt
     #   build
-pytest==7.4.2
+pytest==7.4.3
     # via
     #   -r requirements/test.txt
     #   pytest-cov
     #   pytest-django
 pytest-cov==4.1.0
     # via -r requirements/test.txt
-pytest-django==4.5.2
+pytest-django==4.6.0
     # via -r requirements/test.txt
 python-dateutil==2.8.2
     # via
@@ -619,7 +626,7 @@ responses==0.23.3
     # via
     #   -r requirements/dev.in
     #   -r requirements/test.txt
-rpds-py==0.10.3
+rpds-py==0.10.6
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -634,7 +641,7 @@ semantic-version==2.10.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-drf-extensions
-simplejson==3.19.1
+simplejson==3.19.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -659,12 +666,12 @@ snowballstemmer==2.2.0
     # via
     #   -r requirements/quality.txt
     #   pydocstyle
-social-auth-app-django==5.3.0
+social-auth-app-django==5.4.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-auth-backends
-social-auth-core==4.4.2
+social-auth-core==4.5.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -700,13 +707,14 @@ tomli==2.0.1
     #   pyproject-hooks
     #   pytest
     #   tox
-tomlkit==0.12.1
+tomlkit==0.12.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pylint
 tox==3.28.0
     # via
+    #   -c requirements/common_constraints.txt
     #   -r requirements/test.txt
     #   tox-battery
 tox-battery==0.6.2
@@ -736,7 +744,7 @@ uritemplate==4.1.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   drf-spectacular
-urllib3==2.0.5
+urllib3==2.0.7
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -749,16 +757,16 @@ vine==5.0.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.24.5
+virtualenv==20.24.6
     # via
     #   -r requirements/test.txt
     #   tox
-wcwidth==0.2.6
+wcwidth==0.2.9
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   prompt-toolkit
-wheel==0.41.2
+wheel==0.41.3
     # via
     #   -r requirements/pip-tools.txt
     #   pip-tools
@@ -767,7 +775,7 @@ wrapt==1.15.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   astroid
-xlsxwriter==3.1.5
+xlsxwriter==3.1.9
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
