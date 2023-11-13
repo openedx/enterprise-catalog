@@ -4,6 +4,7 @@ from re import search
 from django.db import IntegrityError, models
 from rest_framework import serializers, status
 
+from enterprise_catalog.apps.academy.models import Academy, Tag
 from enterprise_catalog.apps.api.v1.utils import (
     get_enterprise_utm_context,
     get_most_recent_modified_time,
@@ -392,3 +393,25 @@ class EnterpriseCurationConfigSerializer(serializers.ModelSerializer):
             }
             for highlight_set in catalog_highlight_sets
         ]
+
+
+class TagsSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the `Tag` model.
+    """
+    class Meta:
+        model = Tag
+        fields = '__all__'
+
+
+class AcademySerializer(serializers.ModelSerializer):
+    """
+    Serializer for the `Academy` model.
+    """
+    enterprise_catalogs = EnterpriseCatalogSerializer(many=True)
+    tags = TagsSerializer(many=True)
+
+    class Meta:
+        model = Academy
+        fields = '__all__'
+        lookup_field = 'uuid'
