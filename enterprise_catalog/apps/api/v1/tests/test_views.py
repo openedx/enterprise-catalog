@@ -10,12 +10,14 @@ import ddt
 import pytz
 from django.conf import settings
 from django.db import IntegrityError
+from django.utils.http import urlencode
 from django.utils.text import slugify
 from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.settings import api_settings
 from six.moves.urllib.parse import quote_plus
 
+from enterprise_catalog.apps.academy.tests.factories import AcademyFactory
 from enterprise_catalog.apps.api.v1.serializers import ContentMetadataSerializer
 from enterprise_catalog.apps.api.v1.tests.mixins import APITestMixin
 from enterprise_catalog.apps.api.v1.utils import is_any_course_run_active
@@ -2312,3 +2314,55 @@ class EnterpriseCustomerContentMetadataViewSetTests(APITestMixin):
         """
         response = self.client.delete(urljoin(self.url, f"{self.content_key_1}/"))
         assert response.status_code == 405
+
+
+@ddt.ddt
+class AcademiesViewSetTests(APITestMixin):
+    """
+    Tests for the AcademyViewSet.
+    """
+    def setUp(self):
+        super().setUp()
+        self.set_up_catalog_learner()
+        self.academy1 = AcademyFactory()
+        self.academy2 = AcademyFactory()
+        self.enterprise_catalog_query = CatalogQueryFactory(uuid=uuid.uuid4())
+        self.enterprise_catalog1 = EnterpriseCatalogFactory(catalog_query=self.enterprise_catalog_query)
+        self.enterprise_catalog1.academies.add(self.academy1)
+        self.enterprise_catalog2 = EnterpriseCatalogFactory(catalog_query=self.enterprise_catalog_query)
+        self.enterprise_catalog2.academies.add(self.academy2)
+
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
+    def test_list_for_academies(self, mock_client):  # pylint: disable=unused-argument
+        """
+        Verify the viewset returns enterprise specific academies
+        """
+        params = {
+            'enterprise_customer': str(self.enterprise_catalog2.enterprise_customer.uuid)
+        }
+        url = reverse('api:v1:academies-list') + '?{}'.format(urlencode(params))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 1)
+        results = response.data['results']
+        self.assertEqual(uuid.UUID(results[0]['uuid']), self.academy2.uuid)
+
+    def test_retrieve_for_academies(self):
+        """
+        Verify the viewset retrieves an academy
+        """
+        url = reverse('api:v1:academies-detail', kwargs={
+            'uuid': self.academy2.uuid,
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(uuid.UUID(response.data['uuid']), self.academy2.uuid)
+
+    def test_list_with_missing_enterprise_customer(self):
+        """
+        Verify the viewset returns no records when enterprise customer is missing in params
+        """
+        url = reverse('api:v1:academies-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 0)
