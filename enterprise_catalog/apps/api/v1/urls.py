@@ -4,6 +4,9 @@ URL definitions for enterprise catalog API version 1.
 from django.urls import path, re_path
 from rest_framework.routers import DefaultRouter
 
+from enterprise_catalog.apps.api.v1.views.academies import (
+    AcademiesReadOnlyViewSet,
+)
 from enterprise_catalog.apps.api.v1.views.catalog_csv import CatalogCsvView
 from enterprise_catalog.apps.api.v1.views.catalog_csv_data import (
     CatalogCsvDataView,
@@ -53,6 +56,7 @@ router.register(r'enterprise-curations', EnterpriseCurationConfigReadOnlyViewSet
 router.register(r'enterprise-curations-admin', EnterpriseCurationConfigViewSet, basename='enterprise-curations-admin')
 router.register(r'highlight-sets', HighlightSetReadOnlyViewSet, basename='highlight-sets')
 router.register(r'highlight-sets-admin', HighlightSetViewSet, basename='highlight-sets-admin')
+router.register(r'academies', AcademiesReadOnlyViewSet, basename='academies')
 
 urlpatterns = [
     path('enterprise-catalogs/catalog_csv_data', CatalogCsvDataView.as_view(),
@@ -66,6 +70,12 @@ urlpatterns = [
          ),
     path('enterprise-catalogs/catalog_workbook', CatalogWorkbookView.as_view(),
          name='catalog-workbook'
+         ),
+    path('academies', AcademiesReadOnlyViewSet.as_view({'get': 'list'}),
+         name='academies-list'
+         ),
+    path('academies/<uuid:uuid>/', AcademiesReadOnlyViewSet.as_view({'get': 'retrieve'}),
+         name='academies-detail'
          ),
     re_path(
         r'^enterprise-catalogs/(?P<uuid>[\S]+)/get_content_metadata',
