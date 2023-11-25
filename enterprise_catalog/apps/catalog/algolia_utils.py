@@ -38,6 +38,7 @@ ALGOLIA_FIELDS = [
     'enterprise_catalog_query_uuids',
     'enterprise_customer_uuids',
     'academy_uuids',
+    'academy_tags',
     'full_description',
     'key',  # for links to Course about pages from the Learner Portal search page
     'uuid',
@@ -105,6 +106,7 @@ ALGOLIA_INDEX_SETTINGS = {
         'enterprise_catalog_query_uuids',
         'enterprise_customer_uuids',
         'academy_uuids',
+        'academy_tags',
         'language',
         'level_type',
         'program_type',
