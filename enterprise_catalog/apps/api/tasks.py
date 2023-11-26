@@ -770,7 +770,11 @@ def _get_algolia_products_for_batch(
     academy_tags_by_catalog_uuid = defaultdict(set)
 
     # Create a shared convenience queryset to prefetch catalogs for all metadata lookups below.
-    all_catalog_queries = CatalogQuery.objects.prefetch_related('enterprise_catalogs')
+    all_catalog_queries = CatalogQuery.objects.prefetch_related(
+        'enterprise_catalogs',
+        'enterprise_catalogs__academies',
+        'enterprise_catalogs__academies__tags',
+    )
 
     # Retrieve ContentMetadata records for:
     # * Course runs, courses, programs and learner pathways that are directly requested, and
@@ -827,13 +831,15 @@ def _get_algolia_products_for_batch(
         for catalog_query in associated_catalog_queries:
             catalog_queries_by_key[content_key].add((str(catalog_query.uuid), catalog_query.title))
             # This line is possible thanks to `all_catalog_queries` with the prefectch_related() above.
-            associated_catalogs = catalog_query.enterprise_catalogs.prefetch_related('academies').all()
+            associated_catalogs = catalog_query.enterprise_catalogs.all()
             for catalog in associated_catalogs:
                 catalog_uuids_by_key[content_key].add(str(catalog.uuid))
                 customer_uuids_by_key[content_key].add(str(catalog.enterprise_uuid))
                 # Cache UUIDs related to each catalog.
-                catalog_query_uuid_by_catalog_uuid[str(catalog.uuid)].add((str(catalog_query.uuid), catalog_query.title))
-                customer_uuid_by_catalog_uuid[str(catalog.uuid)] = str(catalog.enterprise_uuid)
+                catalog_query_uuid_by_catalog_uuid[str(catalog.uuid)].add(
+                    (str(catalog_query.uuid), catalog_query.title)
+                )
+                customer_uuid_by_catalog_uuid[str(catalog.uuid)].add(str(catalog.enterprise_uuid))
                 associated_academies = catalog.academies.all()
                 for academy in associated_academies:
                     associated_academy_tags = academy.tags.all()
@@ -842,7 +848,6 @@ def _get_algolia_products_for_batch(
                     for tag in associated_academy_tags:
                         academy_tags_by_key[content_key].add(str(tag.title))
                         academy_tags_by_catalog_uuid[str(catalog.uuid)].add(str(tag.title))
-
 
     # Second pass.  This time the goal is to capture indirect relationships on programs:
     #  * For each program:
