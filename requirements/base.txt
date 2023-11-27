@@ -6,12 +6,14 @@
 #
 algoliasearch==3.0.0
     # via -r requirements/base.in
-amqp==5.1.1
+amqp==5.2.0
     # via kombu
 analytics-python==1.4.post1
     # via -r requirements/base.in
 asgiref==3.7.2
-    # via django
+    # via
+    #   django
+    #   django-cors-headers
 attrs==23.1.0
     # via
     #   jsonschema
@@ -23,15 +25,15 @@ backports-zoneinfo[tzdata]==0.2.1
     #   celery
     #   django
     #   kombu
-billiard==4.1.0
+billiard==4.2.0
     # via celery
-celery==5.3.4
+celery==5.3.6
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.in
     #   django-celery-results
     #   edx-celeryutils
-certifi==2023.7.22
+certifi==2023.11.17
     # via requests
 cffi==1.16.0
     # via
@@ -96,7 +98,7 @@ django-clearcache==1.2.1
     # via -r requirements/base.in
 django-config-models==2.5.1
     # via -r requirements/base.in
-django-cors-headers==4.3.0
+django-cors-headers==4.3.1
     # via -r requirements/base.in
 django-crum==0.7.9
     # via
@@ -143,13 +145,13 @@ edx-celeryutils==1.2.3
     # via -r requirements/base.in
 edx-django-release-util==1.3.0
     # via -r requirements/base.in
-edx-django-utils==5.7.0
+edx-django-utils==5.8.0
     # via
     #   django-config-models
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==8.13.0
+edx-drf-extensions==8.13.1
     # via
     #   -r requirements/base.in
     #   edx-rbac
@@ -161,9 +163,9 @@ edx-rest-api-client==5.6.1
     # via -r requirements/base.in
 edx-toggles==5.1.0
     # via -r requirements/base.in
-idna==3.4
+idna==3.6
     # via requests
-importlib-resources==6.1.0
+importlib-resources==6.1.1
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -175,11 +177,11 @@ jsonfield==3.1.0
     # via edx-celeryutils
 jsonfield2==4.0.0.post0
     # via -r requirements/base.in
-jsonschema==4.19.2
+jsonschema==4.20.0
     # via drf-spectacular
-jsonschema-specifications==2023.7.1
+jsonschema-specifications==2023.11.1
     # via jsonschema
-kombu==5.3.2
+kombu==5.3.4
     # via celery
 markupsafe==2.1.3
     # via jinja2
@@ -187,19 +189,19 @@ monotonic==1.6
     # via analytics-python
 mysqlclient==2.2.0
     # via -r requirements/base.in
-newrelic==9.1.1
+newrelic==9.2.0
     # via edx-django-utils
 oauthlib==3.2.2
     # via
     #   requests-oauthlib
     #   social-auth-core
-pbr==5.11.1
+pbr==6.0.0
     # via stevedore
 pkgutil-resolve-name==1.3.10
     # via jsonschema
 ply==3.11
     # via djangoql
-prompt-toolkit==3.0.39
+prompt-toolkit==3.0.41
     # via click-repl
 psutil==5.9.6
     # via edx-django-utils
@@ -240,7 +242,7 @@ redis==3.5.3
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.in
-referencing==0.30.2
+referencing==0.31.0
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -255,7 +257,7 @@ requests==2.31.0
     #   social-auth-core
 requests-oauthlib==1.3.1
     # via social-auth-core
-rpds-py==0.10.6
+rpds-py==0.13.1
     # via
     #   jsonschema
     #   referencing
@@ -302,14 +304,14 @@ tzdata==2023.3
     #   celery
 uritemplate==4.1.1
     # via drf-spectacular
-urllib3==2.0.7
+urllib3==2.1.0
     # via requests
-vine==5.0.0
+vine==5.1.0
     # via
     #   amqp
     #   celery
     #   kombu
-wcwidth==0.2.9
+wcwidth==0.2.12
     # via prompt-toolkit
 xlsxwriter==3.1.9
     # via -r requirements/base.in
