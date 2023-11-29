@@ -46,6 +46,7 @@ RUN locale-gen en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
+ENV DJANGO_SETTINGS_MODULE enterprise_access.settings.production
 
 # Prod ports
 EXPOSE 8160
