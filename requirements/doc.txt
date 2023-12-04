@@ -10,7 +10,7 @@ alabaster==0.7.13
     # via sphinx
 algoliasearch==3.0.0
     # via -r requirements/test.txt
-amqp==5.1.1
+amqp==5.2.0
     # via
     #   -r requirements/test.txt
     #   kombu
@@ -20,6 +20,7 @@ asgiref==3.7.2
     # via
     #   -r requirements/test.txt
     #   django
+    #   django-cors-headers
 astroid==2.11.7
     # via
     #   -c requirements/constraints.txt
@@ -48,17 +49,17 @@ backports-zoneinfo[tzdata]==0.2.1
     #   kombu
 beautifulsoup4==4.12.2
     # via pydata-sphinx-theme
-billiard==4.1.0
+billiard==4.2.0
     # via
     #   -r requirements/test.txt
     #   celery
-celery==5.3.4
+celery==5.3.6
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/test.txt
     #   django-celery-results
     #   edx-celeryutils
-certifi==2023.7.22
+certifi==2023.11.17
     # via
     #   -r requirements/test.txt
     #   requests
@@ -108,12 +109,12 @@ coverage[toml]==7.3.2
     #   -r requirements/test.txt
     #   coverage
     #   pytest-cov
-cryptography==41.0.5
+cryptography==41.0.7
     # via
     #   -r requirements/test.txt
     #   pyjwt
     #   social-auth-core
-ddt==1.6.0
+ddt==1.7.0
     # via -r requirements/test.txt
 defusedxml==0.7.1
     # via
@@ -161,7 +162,7 @@ django-clearcache==1.2.1
     # via -r requirements/test.txt
 django-config-models==2.5.1
     # via -r requirements/test.txt
-django-cors-headers==4.3.0
+django-cors-headers==4.3.1
     # via -r requirements/test.txt
 django-crum==0.7.9
     # via
@@ -222,14 +223,14 @@ edx-celeryutils==1.2.3
     # via -r requirements/test.txt
 edx-django-release-util==1.3.0
     # via -r requirements/test.txt
-edx-django-utils==5.7.0
+edx-django-utils==5.9.0
     # via
     #   -r requirements/test.txt
     #   django-config-models
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==8.13.0
+edx-drf-extensions==9.0.0
     # via
     #   -r requirements/test.txt
     #   edx-rbac
@@ -247,13 +248,13 @@ edx-rest-api-client==5.6.1
     # via -r requirements/test.txt
 edx-toggles==5.1.0
     # via -r requirements/test.txt
-exceptiongroup==1.1.3
+exceptiongroup==1.2.0
     # via
     #   -r requirements/test.txt
     #   pytest
 factory-boy==3.3.0
     # via -r requirements/test.txt
-faker==19.13.0
+faker==20.1.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -262,15 +263,15 @@ filelock==3.13.1
     #   -r requirements/test.txt
     #   tox
     #   virtualenv
-idna==3.4
+idna==3.6
     # via
     #   -r requirements/test.txt
     #   requests
 imagesize==1.4.1
     # via sphinx
-importlib-metadata==6.8.0
+importlib-metadata==7.0.0
     # via sphinx
-importlib-resources==6.1.0
+importlib-resources==6.1.1
     # via
     #   -r requirements/test.txt
     #   jsonschema
@@ -298,15 +299,15 @@ jsonfield==3.1.0
     #   edx-celeryutils
 jsonfield2==4.0.0.post0
     # via -r requirements/test.txt
-jsonschema==4.19.2
+jsonschema==4.20.0
     # via
     #   -r requirements/test.txt
     #   drf-spectacular
-jsonschema-specifications==2023.7.1
+jsonschema-specifications==2023.11.2
     # via
     #   -r requirements/test.txt
     #   jsonschema
-kombu==5.3.2
+kombu==5.3.4
     # via
     #   -r requirements/test.txt
     #   celery
@@ -328,7 +329,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.0
     # via -r requirements/test.txt
-newrelic==9.1.1
+newrelic==9.2.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
@@ -346,7 +347,7 @@ packaging==23.2
     #   pytest
     #   sphinx
     #   tox
-pbr==5.11.1
+pbr==6.0.0
     # via
     #   -r requirements/test.txt
     #   stevedore
@@ -356,6 +357,7 @@ pkgutil-resolve-name==1.3.10
     #   jsonschema
 platformdirs==3.11.0
     # via
+    #   -c requirements/common_constraints.txt
     #   -r requirements/test.txt
     #   pylint
     #   virtualenv
@@ -368,7 +370,7 @@ ply==3.11
     # via
     #   -r requirements/test.txt
     #   djangoql
-prompt-toolkit==3.0.39
+prompt-toolkit==3.0.41
     # via
     #   -r requirements/test.txt
     #   click-repl
@@ -384,9 +386,9 @@ pycparser==2.21
     # via
     #   -r requirements/test.txt
     #   cffi
-pydata-sphinx-theme==0.14.3
+pydata-sphinx-theme==0.14.4
     # via sphinx-book-theme
-pygments==2.16.1
+pygments==2.17.2
     # via
     #   accessible-pygments
     #   doc8
@@ -440,7 +442,7 @@ pytest==7.4.3
     #   pytest-django
 pytest-cov==4.1.0
     # via -r requirements/test.txt
-pytest-django==4.6.0
+pytest-django==4.7.0
     # via -r requirements/test.txt
 python-dateutil==2.8.2
     # via
@@ -474,7 +476,7 @@ redis==3.5.3
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/test.txt
-referencing==0.30.2
+referencing==0.31.1
     # via
     #   -r requirements/test.txt
     #   jsonschema
@@ -495,11 +497,11 @@ requests-oauthlib==1.3.1
     # via
     #   -r requirements/test.txt
     #   social-auth-core
-responses==0.23.3
+responses==0.24.1
     # via -r requirements/test.txt
 restructuredtext-lint==1.4.0
     # via doc8
-rpds-py==0.10.6
+rpds-py==0.13.2
     # via
     #   -r requirements/test.txt
     #   jsonschema
@@ -532,7 +534,7 @@ social-auth-app-django==5.4.0
     # via
     #   -r requirements/test.txt
     #   edx-auth-backends
-social-auth-core==4.5.0
+social-auth-core==4.5.1
     # via
     #   -r requirements/test.txt
     #   edx-auth-backends
@@ -581,21 +583,16 @@ tomli==2.0.1
     #   pylint
     #   pytest
     #   tox
-tomlkit==0.12.2
+tomlkit==0.12.3
     # via
     #   -r requirements/test.txt
     #   pylint
 tox==3.28.0
     # via
-    #   -c requirements/common_constraints.txt
     #   -r requirements/test.txt
     #   tox-battery
 tox-battery==0.6.2
     # via -r requirements/test.txt
-types-pyyaml==6.0.12.12
-    # via
-    #   -r requirements/test.txt
-    #   responses
 typing-extensions==4.8.0
     # via
     #   -r requirements/test.txt
@@ -615,26 +612,26 @@ uritemplate==4.1.1
     # via
     #   -r requirements/test.txt
     #   drf-spectacular
-urllib3==2.0.7
+urllib3==2.1.0
     # via
     #   -r requirements/test.txt
     #   requests
     #   responses
-vine==5.0.0
+vine==5.1.0
     # via
     #   -r requirements/test.txt
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.24.6
+virtualenv==20.25.0
     # via
     #   -r requirements/test.txt
     #   tox
-wcwidth==0.2.9
+wcwidth==0.2.12
     # via
     #   -r requirements/test.txt
     #   prompt-toolkit
-wrapt==1.15.0
+wrapt==1.16.0
     # via
     #   -r requirements/test.txt
     #   astroid
