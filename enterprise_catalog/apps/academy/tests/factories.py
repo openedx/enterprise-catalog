@@ -16,6 +16,8 @@ class TagFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Tag
 
+    title = FuzzyText(length=32)
+
 
 class AcademyFactory(factory.django.DjangoModelFactory):
     """
