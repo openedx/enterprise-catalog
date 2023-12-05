@@ -12,6 +12,7 @@ from celery import states
 from django.test import TestCase
 from django_celery_results.models import TaskResult
 
+from enterprise_catalog.apps.academy.tests.factories import AcademyFactory
 from enterprise_catalog.apps.api import tasks
 from enterprise_catalog.apps.api.constants import CourseMode
 from enterprise_catalog.apps.api_client.discovery import CatalogQueryMetadata
@@ -661,6 +662,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
     ALGOLIA_FIELDS = [
         'key',
         'objectID',
+        'academy_uuids',
+        'academy_tags',
         'enterprise_customer_uuids',
         'enterprise_catalog_uuids',
         'enterprise_catalog_query_uuids',
@@ -671,8 +674,10 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         super().setUp()
 
         # Set up a catalog, query, and metadata for a course and course associated program
+        self.academy = AcademyFactory()
         self.enterprise_catalog_query = CatalogQueryFactory(uuid=SORTED_QUERY_UUID_LIST[0])
         self.enterprise_catalog_courses = EnterpriseCatalogFactory(catalog_query=self.enterprise_catalog_query)
+        self.enterprise_catalog_courses.academies.add(self.academy)
         self.course_metadata_published = ContentMetadataFactory(content_type=COURSE, content_key='course-1')
         self.course_metadata_published.catalog_queries.set([self.enterprise_catalog_query])
         self.course_metadata_unpublished = ContentMetadataFactory(content_type=COURSE, content_key='course-2')
@@ -711,6 +716,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             str(self.enterprise_catalog_courses.enterprise_uuid),
             str(self.enterprise_catalog_course_runs.enterprise_uuid),
         ])
+        expected_academy_uuids = [str(self.academy.uuid)]
+        expected_academy_tags = sorted([tag.title for tag in self.academy.tags.all()])
         expected_queries = sorted([(
             str(self.enterprise_catalog_courses.catalog_query.uuid),
             self.enterprise_catalog_courses.catalog_query.title,
@@ -723,11 +730,19 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         return {
             'catalog_uuids': expected_catalog_uuids,
             'customer_uuids': expected_customer_uuids,
+            'academy_uuids': expected_academy_uuids,
+            'academy_tags': expected_academy_tags,
             'query_uuids': query_uuids,
             'query_titles': query_titles,
             'course_metadata_published': self.course_metadata_published,
             'course_metadata_unpublished': self.course_metadata_unpublished,
         }
+
+    def _sort_tags_in_algolia_object_list(self, algolia_obj):
+        for obj in algolia_obj:
+            if obj.get('academy_tags'):
+                obj['academy_tags'] = sorted(obj['academy_tags'])
+        return algolia_obj
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
     def test_index_algolia_program_common_uuids_only(self, mock_search_client):
@@ -792,7 +807,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert ' 15 products found.' in products_found_log_records[0]
+        assert ' 17 products found.' in products_found_log_records[0]
 
         # create expected data to be added/updated in the Algolia index.
         expected_program_1_objects_to_index = []
@@ -884,7 +899,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert ' 12 products found.' in products_found_log_records[0]
+        # count should be "9 products found", 5 additional products are from the test course in self.setUp()
+        assert ' 14 products found.' in products_found_log_records[0]
 
         # assert the program was not indexed.
         program_uuid = program_1.json_metadata.get('uuid')
@@ -982,7 +998,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert ' 6 products found.' in products_found_log_records[0]
+        assert ' 10 products found.' in products_found_log_records[0]
 
         # create expected data to be added/updated in the Algolia index.
         expected_course_1_objects_to_index = []
@@ -996,6 +1012,16 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'key': algolia_data['course_metadata_published'].content_key,
             'objectID': f'course-{published_course_uuid}-customer-uuids-0',
             'enterprise_customer_uuids': algolia_data['customer_uuids'],
+        })
+        expected_course_1_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-academy-uuids-0',
+            'academy_uuids': algolia_data['academy_uuids'],
+        })
+        expected_course_1_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-academy-tags-0',
+            'academy_tags': algolia_data['academy_tags'],
         })
         expected_course_1_objects_to_index.append({
             'key': algolia_data['course_metadata_published'].content_key,
@@ -1015,6 +1041,14 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'enterprise_customer_uuids': algolia_data['customer_uuids'],
         })
         expected_program_1_objects_to_index.append({
+            'objectID': f'program-{program_uuid}-academy-uuids-0',
+            'academy_uuids': algolia_data['academy_uuids'],
+        })
+        expected_program_1_objects_to_index.append({
+            'objectID': f'program-{program_uuid}-academy-tags-0',
+            'academy_tags': algolia_data['academy_tags'],
+        })
+        expected_program_1_objects_to_index.append({
             'objectID': f'program-{program_uuid}-catalog-query-uuids-0',
             'enterprise_catalog_query_uuids': sorted(algolia_data['query_uuids']),
             'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
@@ -1028,7 +1062,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # verify replace_all_objects is called with the correct Algolia object data.
         expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
         actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
-        assert expected_call_args == actual_call_args
+        assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
     def test_index_algolia_unpublished_course_to_program(self, mock_search_client):
@@ -1078,7 +1112,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert ' 6 products found.' in products_found_log_records[0]
+        assert ' 10 products found.' in products_found_log_records[0]
 
         # create expected data to be added/updated in the Algolia index.
         expected_course_1_objects_to_index = []
@@ -1092,6 +1126,16 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'key': algolia_data['course_metadata_published'].content_key,
             'objectID': f'course-{published_course_uuid}-customer-uuids-0',
             'enterprise_customer_uuids': algolia_data['customer_uuids'],
+        })
+        expected_course_1_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-academy-uuids-0',
+            'academy_uuids': algolia_data['academy_uuids'],
+        })
+        expected_course_1_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-academy-tags-0',
+            'academy_tags': algolia_data['academy_tags'],
         })
         expected_course_1_objects_to_index.append({
             'key': algolia_data['course_metadata_published'].content_key,
@@ -1111,6 +1155,14 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'enterprise_customer_uuids': [str(self.enterprise_catalog_courses.enterprise_uuid)],
         })
         expected_program_1_objects_to_index.append({
+            'objectID': f'program-{program_uuid}-academy-uuids-0',
+            'academy_uuids': [str(self.enterprise_catalog_courses.academies.first().uuid)],
+        })
+        expected_program_1_objects_to_index.append({
+            'objectID': f'program-{program_uuid}-academy-tags-0',
+            'academy_tags': sorted([tag.title for tag in self.enterprise_catalog_courses.academies.first().tags.all()]),
+        })
+        expected_program_1_objects_to_index.append({
             'objectID': f'program-{program_uuid}-catalog-query-uuids-0',
             'enterprise_catalog_query_uuids': [str(self.enterprise_catalog_courses.catalog_query.uuid)],
             'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
@@ -1124,7 +1176,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # verify replace_all_objects is called with the correct Algolia object data.
         expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
         actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
-        assert expected_call_args == actual_call_args
+        assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
     def test_index_algolia_published_course_to_pathway(self, mock_search_client,):
@@ -1162,7 +1214,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert ' 6 products found.' in products_found_log_records[0]
+        assert ' 10 products found.' in products_found_log_records[0]
 
         # create expected data to be added/updated in the Algolia index.
         expected_course_1_objects_to_index = []
@@ -1176,6 +1228,16 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'key': algolia_data['course_metadata_published'].content_key,
             'objectID': f'course-{published_course_uuid}-customer-uuids-0',
             'enterprise_customer_uuids': algolia_data['customer_uuids'],
+        })
+        expected_course_1_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-academy-uuids-0',
+            'academy_uuids': algolia_data['academy_uuids'],
+        })
+        expected_course_1_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-academy-tags-0',
+            'academy_tags': algolia_data['academy_tags'],
         })
         expected_course_1_objects_to_index.append({
             'key': algolia_data['course_metadata_published'].content_key,
@@ -1198,6 +1260,16 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         })
         expected_pathway_1_objects_to_index.append({
             'key': pathway_1.content_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-academy-uuids-0',
+            'academy_uuids': algolia_data['academy_uuids'],
+        })
+        expected_pathway_1_objects_to_index.append({
+            'key': pathway_1.content_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-academy-tags-0',
+            'academy_tags': algolia_data['academy_tags'],
+        })
+        expected_pathway_1_objects_to_index.append({
+            'key': pathway_1.content_key,
             'objectID': f'learnerpathway-{pathway_uuid}-catalog-query-uuids-0',
             'enterprise_catalog_query_uuids': sorted(algolia_data['query_uuids']),
             'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
@@ -1211,7 +1283,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # verify replace_all_objects is called with the correct Algolia object data.
         expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
         actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
-        assert expected_call_args == actual_call_args
+        assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
     def test_index_algolia_unpublished_course_to_pathway(self, mock_search_client):
@@ -1253,7 +1325,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert ' 6 products found.' in products_found_log_records[0]
+        assert ' 10 products found.' in products_found_log_records[0]
 
         # create expected data to be added/updated in the Algolia index.
         expected_course_1_objects_to_index = []
@@ -1267,6 +1339,16 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'key': algolia_data['course_metadata_published'].content_key,
             'objectID': f'course-{published_course_uuid}-customer-uuids-0',
             'enterprise_customer_uuids': algolia_data['customer_uuids'],
+        })
+        expected_course_1_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-academy-uuids-0',
+            'academy_uuids': algolia_data['academy_uuids'],
+        })
+        expected_course_1_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-academy-tags-0',
+            'academy_tags': algolia_data['academy_tags'],
         })
         expected_course_1_objects_to_index.append({
             'key': algolia_data['course_metadata_published'].content_key,
@@ -1289,6 +1371,16 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         })
         expected_pathway_1_objects_to_index.append({
             'key': pathway_1.content_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-academy-uuids-0',
+            'academy_uuids': [str(self.enterprise_catalog_courses.academies.first().uuid)],
+        })
+        expected_pathway_1_objects_to_index.append({
+            'key': pathway_1.content_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-academy-tags-0',
+            'academy_tags': sorted([tag.title for tag in self.enterprise_catalog_courses.academies.first().tags.all()]),
+        })
+        expected_pathway_1_objects_to_index.append({
+            'key': pathway_1.content_key,
             'objectID': f'learnerpathway-{pathway_uuid}-catalog-query-uuids-0',
             'enterprise_catalog_query_uuids': [str(self.enterprise_catalog_courses.catalog_query.uuid)],
             'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
@@ -1302,7 +1394,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # verify replace_all_objects is called with the correct Algolia object data.
         expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
         actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
-        assert expected_call_args == actual_call_args
+        assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
     def test_index_algolia_program_to_pathway(self, mock_search_client):
@@ -1354,7 +1446,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert ' 9 products found.' in products_found_log_records[0]
+        assert ' 15 products found.' in products_found_log_records[0]
 
         # create expected data to be added/updated in the Algolia index.
         expected_course_1_objects_to_index = []
@@ -1368,6 +1460,16 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'key': algolia_data['course_metadata_published'].content_key,
             'objectID': f'course-{published_course_uuid}-customer-uuids-0',
             'enterprise_customer_uuids': algolia_data['customer_uuids'],
+        })
+        expected_course_1_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-academy-uuids-0',
+            'academy_uuids': algolia_data['academy_uuids'],
+        })
+        expected_course_1_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-academy-tags-0',
+            'academy_tags': algolia_data['academy_tags'],
         })
         expected_course_1_objects_to_index.append({
             'key': algolia_data['course_metadata_published'].content_key,
@@ -1385,6 +1487,14 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         expected_program_1_objects_to_index.append({
             'objectID': f'program-{program_uuid}-customer-uuids-0',
             'enterprise_customer_uuids': [str(self.enterprise_catalog_courses.enterprise_uuid)],
+        })
+        expected_program_1_objects_to_index.append({
+            'objectID': f'program-{program_uuid}-academy-uuids-0',
+            'academy_uuids': [str(self.enterprise_catalog_courses.academies.first().uuid)],
+        })
+        expected_program_1_objects_to_index.append({
+            'objectID': f'program-{program_uuid}-academy-tags-0',
+            'academy_tags': sorted([tag.title for tag in self.enterprise_catalog_courses.academies.first().tags.all()]),
         })
         expected_program_1_objects_to_index.append({
             'objectID': f'program-{program_uuid}-catalog-query-uuids-0',
@@ -1406,6 +1516,16 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         })
         expected_pathway_1_objects_to_index.append({
             'key': pathway_1.content_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-academy-uuids-0',
+            'academy_uuids': [str(self.enterprise_catalog_courses.academies.first().uuid)],
+        })
+        expected_pathway_1_objects_to_index.append({
+            'key': pathway_1.content_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-academy-tags-0',
+            'academy_tags': sorted([tag.title for tag in self.enterprise_catalog_courses.academies.first().tags.all()]),
+        })
+        expected_pathway_1_objects_to_index.append({
+            'key': pathway_1.content_key,
             'objectID': f'learnerpathway-{pathway_uuid}-catalog-query-uuids-0',
             'enterprise_catalog_query_uuids': [str(self.enterprise_catalog_courses.catalog_query.uuid)],
             'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
@@ -1420,7 +1540,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # verify replace_all_objects is called with the correct Algolia object data.
         expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
         actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
-        assert expected_call_args == actual_call_args
+        assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
     # pylint: disable=too-many-statements
@@ -1507,7 +1627,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert ' 15 products found.' in products_found_log_records[0]
+        assert ' 25 products found.' in products_found_log_records[0]
 
         # create expected data to be added/updated in the Algolia index.
         expected_algolia_objects_to_index = []
@@ -1521,6 +1641,16 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'key': algolia_data['course_metadata_published'].content_key,
             'objectID': f'course-{published_course_uuid}-customer-uuids-0',
             'enterprise_customer_uuids': algolia_data['customer_uuids'],
+        })
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-academy-uuids-0',
+            'academy_uuids': algolia_data['academy_uuids'],
+        })
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-academy-tags-0',
+            'academy_tags': algolia_data['academy_tags'],
         })
         expected_algolia_objects_to_index.append({
             'key': algolia_data['course_metadata_published'].content_key,
@@ -1538,6 +1668,14 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         expected_algolia_program_objects3.append({
             'objectID': f'program-{program_uuid}-customer-uuids-0',
             'enterprise_customer_uuids': [str(self.enterprise_catalog_courses.enterprise_uuid)],
+        })
+        expected_algolia_program_objects3.append({
+            'objectID': f'program-{program_uuid}-academy-uuids-0',
+            'academy_uuids': [str(self.enterprise_catalog_courses.academies.first().uuid)],
+        })
+        expected_algolia_program_objects3.append({
+            'objectID': f'program-{program_uuid}-academy-tags-0',
+            'academy_tags': sorted([tag.title for tag in self.enterprise_catalog_courses.academies.first().tags.all()]),
         })
         expected_algolia_program_objects3.append({
             'objectID': f'program-{program_uuid}-catalog-query-uuids-0',
@@ -1559,6 +1697,16 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         })
         expected_algolia_pathway_objects.append({
             'key': pathway_for_course.content_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-academy-uuids-0',
+            'academy_uuids': algolia_data['academy_uuids'],
+        })
+        expected_algolia_pathway_objects.append({
+            'key': pathway_for_course.content_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-academy-tags-0',
+            'academy_tags': algolia_data['academy_tags'],
+        })
+        expected_algolia_pathway_objects.append({
+            'key': pathway_for_course.content_key,
             'objectID': f'learnerpathway-{pathway_uuid}-catalog-query-uuids-0',
             'enterprise_catalog_query_uuids': sorted(algolia_data['query_uuids']),
             'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
@@ -1575,6 +1723,16 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'key': pathway_for_courserun.content_key,
             'objectID': f'learnerpathway-{pathway_uuid}-customer-uuids-0',
             'enterprise_customer_uuids': [str(self.enterprise_catalog_courses.enterprise_uuid)],
+        })
+        expected_algolia_pathway_objects2.append({
+            'key': pathway_for_courserun.content_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-academy-uuids-0',
+            'academy_uuids': [str(self.enterprise_catalog_courses.academies.first().uuid)],
+        })
+        expected_algolia_pathway_objects2.append({
+            'key': pathway_for_courserun.content_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-academy-tags-0',
+            'academy_tags': sorted([tag.title for tag in self.enterprise_catalog_courses.academies.first().tags.all()]),
         })
         expected_algolia_pathway_objects2.append({
             'key': pathway_for_courserun.content_key,
@@ -1598,6 +1756,16 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         })
         expected_algolia_pathway_objects3.append({
             'key': pathway_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-academy-uuids-0',
+            'academy_uuids': algolia_data['academy_uuids'],
+        })
+        expected_algolia_pathway_objects3.append({
+            'key': pathway_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-academy-tags-0',
+            'academy_tags': algolia_data['academy_tags'],
+        })
+        expected_algolia_pathway_objects3.append({
+            'key': pathway_key,
             'objectID': f'learnerpathway-{pathway_uuid}-catalog-query-uuids-0',
             'enterprise_catalog_query_uuids': sorted(algolia_data['query_uuids']),
             'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
@@ -1615,8 +1783,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # on the first invocation and with programs/pathways only on the second invocation.
         expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
         actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
-
-        assert expected_call_args == actual_call_args
+        assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
     def test_index_algolia_with_batched_uuids(self, mock_search_client):
@@ -1640,7 +1807,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             with self.assertLogs(level='INFO') as info_logs:
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
-        assert ' 6 products found.' in info_logs.output[-1]
+        assert ' 9 products found.' in info_logs.output[-1]
 
         # create expected data to be added/updated in the Algolia index.
         expected_algolia_objects_to_index = []
@@ -1667,6 +1834,21 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         })
         expected_algolia_objects_to_index.append({
             'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-academy-uuids-0',
+            'academy_uuids': [algolia_data['academy_uuids'][0]],
+        })
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-academy-tags-0',
+            'academy_tags': [algolia_data['academy_tags'][0]],
+        })
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-academy-tags-1',
+            'academy_tags': [algolia_data['academy_tags'][1]],
+        })
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
             'objectID': f'course-{published_course_uuid}-catalog-query-uuids-0',
             'enterprise_catalog_query_uuids': [algolia_data['query_uuids'][0]],
             'enterprise_catalog_query_titles': [algolia_data['query_titles'][0]],
@@ -1677,7 +1859,6 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'enterprise_catalog_query_uuids': [algolia_data['query_uuids'][1]],
             'enterprise_catalog_query_titles': [],
         })
-
         # verify replace_all_objects is called with the correct Algolia object data
         self.assertEqual(expected_algolia_objects_to_index, actual_algolia_products_sent)
         mock_search_client().replace_all_objects.assert_called_once()
@@ -1706,7 +1887,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             with self.assertLogs(level='INFO') as info_logs:
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
-        assert ' 6 products found.' in info_logs.output[-1]
+        assert ' 9 products found.' in info_logs.output[-1]
 
         # create expected data to be added/updated in the Algolia index.
         expected_algolia_objects_to_index = []
@@ -1730,6 +1911,21 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'key': algolia_data['course_metadata_published'].content_key,
             'objectID': f'course-{published_course_uuid}-customer-uuids-1',
             'enterprise_customer_uuids': [algolia_data['customer_uuids'][1]],
+        })
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-academy-uuids-0',
+            'academy_uuids': [algolia_data['academy_uuids'][0]],
+        })
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-academy-tags-0',
+            'academy_tags': [algolia_data['academy_tags'][0]],
+        })
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-academy-tags-1',
+            'academy_tags': [algolia_data['academy_tags'][1]],
         })
         expected_algolia_objects_to_index.append({
             'key': algolia_data['course_metadata_published'].content_key,
@@ -1802,7 +1998,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task(force, dry_run)
 
         mock_search_client().replace_all_objects.assert_not_called()
-        assert '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] [DRY RUN] 6 products found.' in info_logs.output[-1]
+        assert '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] [DRY RUN] 9 products found.' in info_logs.output[-1]
         assert any(
             '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] [DRY RUN] skipping algolia_client.replace_all_objects().' in record
             for record in info_logs.output
