@@ -89,7 +89,7 @@ defusedxml==0.7.1
     #   djangorestframework-xml
     #   python3-openid
     #   social-auth-core
-django==4.2.5
+django==4.2.7
     # via
     #   -r requirements/base.txt
     #   django-celery-results
