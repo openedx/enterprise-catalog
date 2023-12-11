@@ -16,6 +16,10 @@ amqp==5.2.0
     #   kombu
 analytics-python==1.4.post1
     # via -r requirements/test.txt
+annotated-types==0.6.0
+    # via
+    #   -r requirements/test.txt
+    #   pydantic
 asgiref==3.7.2
     # via
     #   -r requirements/test.txt
@@ -59,6 +63,10 @@ celery==5.3.6
     #   -r requirements/test.txt
     #   django-celery-results
     #   edx-celeryutils
+cerberus==1.3.5
+    # via
+    #   -r requirements/test.txt
+    #   plette
 certifi==2023.11.17
     # via
     #   -r requirements/test.txt
@@ -129,8 +137,9 @@ dill==0.3.7
 distlib==0.3.7
     # via
     #   -r requirements/test.txt
+    #   requirementslib
     #   virtualenv
-django==4.2.7
+django==4.2.8
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/test.txt
@@ -191,7 +200,7 @@ django-waffle==4.0.0
     #   edx-django-utils
     #   edx-drf-extensions
     #   edx-toggles
-djangoql==0.17.1
+djangoql==0.18.0
     # via -r requirements/test.txt
 djangorestframework==3.14.0
     # via
@@ -204,6 +213,10 @@ djangorestframework-xml==2.0.0
     # via -r requirements/test.txt
 doc8==1.1.1
     # via -r requirements/doc.in
+docopt==0.6.2
+    # via
+    #   -r requirements/test.txt
+    #   pipreqs
 docutils==0.19
     # via
     #   doc8
@@ -230,7 +243,7 @@ edx-django-utils==5.9.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==9.0.0
+edx-drf-extensions==9.0.1
     # via
     #   -r requirements/test.txt
     #   edx-rbac
@@ -284,7 +297,7 @@ iniconfig==2.0.0
     # via
     #   -r requirements/test.txt
     #   pytest
-isort==5.12.0
+isort==5.13.0
     # via
     #   -r requirements/test.txt
     #   pylint
@@ -329,11 +342,11 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.0
     # via -r requirements/test.txt
-newrelic==9.2.0
+newrelic==9.3.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
-nh3==0.2.14
+nh3==0.2.15
     # via readme-renderer
 oauthlib==3.2.2
     # via
@@ -351,16 +364,33 @@ pbr==6.0.0
     # via
     #   -r requirements/test.txt
     #   stevedore
+pep517==0.13.1
+    # via
+    #   -r requirements/test.txt
+    #   requirementslib
+pip-api==0.0.30
+    # via
+    #   -r requirements/test.txt
+    #   isort
+pipreqs==0.4.13
+    # via
+    #   -r requirements/test.txt
+    #   isort
 pkgutil-resolve-name==1.3.10
     # via
     #   -r requirements/test.txt
     #   jsonschema
-platformdirs==3.11.0
+platformdirs==4.1.0
     # via
-    #   -c requirements/common_constraints.txt
     #   -r requirements/test.txt
     #   pylint
+    #   requirementslib
     #   virtualenv
+plette[validation]==0.4.4
+    # via
+    #   -r requirements/test.txt
+    #   plette
+    #   requirementslib
 pluggy==1.3.0
     # via
     #   -r requirements/test.txt
@@ -386,6 +416,14 @@ pycparser==2.21
     # via
     #   -r requirements/test.txt
     #   cffi
+pydantic==2.5.2
+    # via
+    #   -r requirements/test.txt
+    #   requirementslib
+pydantic-core==2.14.5
+    # via
+    #   -r requirements/test.txt
+    #   pydantic
 pydata-sphinx-theme==0.14.4
     # via sphinx-book-theme
 pygments==2.17.2
@@ -476,7 +514,7 @@ redis==3.5.3
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/test.txt
-referencing==0.31.1
+referencing==0.32.0
     # via
     #   -r requirements/test.txt
     #   jsonschema
@@ -489,14 +527,20 @@ requests==2.31.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   requests-oauthlib
+    #   requirementslib
     #   responses
     #   slumber
     #   social-auth-core
     #   sphinx
+    #   yarg
 requests-oauthlib==1.3.1
     # via
     #   -r requirements/test.txt
     #   social-auth-core
+requirementslib==3.0.0
+    # via
+    #   -r requirements/test.txt
+    #   isort
 responses==0.24.1
     # via -r requirements/test.txt
 restructuredtext-lint==1.4.0
@@ -580,27 +624,33 @@ tomli==2.0.1
     #   -r requirements/test.txt
     #   coverage
     #   doc8
+    #   pep517
     #   pylint
     #   pytest
     #   tox
 tomlkit==0.12.3
     # via
     #   -r requirements/test.txt
+    #   plette
     #   pylint
+    #   requirementslib
 tox==3.28.0
     # via
     #   -r requirements/test.txt
     #   tox-battery
 tox-battery==0.6.2
     # via -r requirements/test.txt
-typing-extensions==4.8.0
+typing-extensions==4.9.0
     # via
     #   -r requirements/test.txt
+    #   annotated-types
     #   asgiref
     #   astroid
     #   edx-opaque-keys
     #   faker
     #   kombu
+    #   pydantic
+    #   pydantic-core
     #   pydata-sphinx-theme
     #   pylint
 tzdata==2023.3
@@ -637,6 +687,10 @@ wrapt==1.16.0
     #   astroid
 xlsxwriter==3.1.9
     # via -r requirements/test.txt
+yarg==0.1.9
+    # via
+    #   -r requirements/test.txt
+    #   pipreqs
 zipp==3.17.0
     # via
     #   -r requirements/test.txt
@@ -644,4 +698,5 @@ zipp==3.17.0
     #   importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
+# pip
 # setuptools
