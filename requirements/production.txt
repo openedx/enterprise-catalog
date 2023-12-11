@@ -91,7 +91,7 @@ defusedxml==0.7.1
     #   djangorestframework-xml
     #   python3-openid
     #   social-auth-core
-django==4.2.7
+django==4.2.8
     # via
     #   -r requirements/base.txt
     #   django-celery-results
@@ -147,7 +147,7 @@ django-waffle==4.0.0
     #   edx-django-utils
     #   edx-drf-extensions
     #   edx-toggles
-djangoql==0.17.1
+djangoql==0.18.0
     # via -r requirements/base.txt
 djangorestframework==3.14.0
     # via
@@ -177,7 +177,7 @@ edx-django-utils==5.9.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==9.0.0
+edx-drf-extensions==9.0.1
     # via
     #   -r requirements/base.txt
     #   edx-rbac
@@ -242,7 +242,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.0
     # via -r requirements/base.txt
-newrelic==9.2.0
+newrelic==9.3.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -324,7 +324,7 @@ pyyaml==6.0.1
     #   edx-django-release-util
 redis==3.5.3
     # via -r requirements/base.txt
-referencing==0.31.1
+referencing==0.32.0
     # via
     #   -r requirements/base.txt
     #   jsonschema
