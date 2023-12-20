@@ -74,7 +74,7 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
     title = factory.Faker('lexify', text=f'{FAKE_CONTENT_TITLE_PREFIX} ??????????')
 
     # model fields
-    content_key = factory.Sequence(lambda n: f'{str(n).zfill(5)}_metadata_item')
+    content_key = factory.Faker('bothify', text='??????????+####')
     content_uuid = factory.LazyFunction(uuid4)
     content_type = factory.Iterator([COURSE_RUN, COURSE, PROGRAM, LEARNER_PATHWAY])
     parent_content_key = None
