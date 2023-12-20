@@ -783,7 +783,7 @@ def _should_allow_metadata(metadata_entry, catalog_query=None):
     if entry_product_source is not None and entry_product_source.lower() not in CONTENT_PRODUCT_SOURCE_ALLOW_LIST:
         LOGGER.warning(
             '(ENT-7893.a) catalog query %s disallows metadata not in source allow list %s',
-            catalog_query,
+            catalog_query.id,
             metadata_entry.get('key'),
         )
         return False
@@ -796,7 +796,7 @@ def _should_allow_metadata(metadata_entry, catalog_query=None):
                     if 'executive-education' in seat_type:
                         LOGGER.warning(
                             '(ENT-7893.b) catalog query %s disallows exec ed course run metadata %s',
-                            catalog_query,
+                            catalog_query.id,
                             metadata_entry.get('key'),
                         )
                         return False
@@ -813,7 +813,7 @@ def _should_allow_metadata(metadata_entry, catalog_query=None):
         else:
             LOGGER.warning(
                 '(ENT-7893.c) catalog query %s disallows exec ed course metadata %s',
-                catalog_query,
+                catalog_query.id,
                 metadata_entry.get('key'),
             )
             return False
