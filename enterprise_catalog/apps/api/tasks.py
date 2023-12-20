@@ -355,6 +355,9 @@ def _update_full_content_metadata_course(content_keys):
 
         # Build a dictionary of the metadata that corresponds to the fetched keys to avoid a query for every course
         fetched_course_keys = [course['key'] for course in full_course_dicts]
+
+        reviews_for_courses_dict = DiscoveryApiClient().get_course_reviews(fetched_course_keys)
+
         metadata_records_for_fetched_keys = ContentMetadata.objects.filter(
             content_key__in=fetched_course_keys,
         )
@@ -384,15 +387,22 @@ def _update_full_content_metadata_course(content_keys):
                 start_date = json_meta.get('additional_metadata', {}).get('start_date')
                 end_date = json_meta.get('additional_metadata', {}).get('end_date')
                 course_run_uuid = json_meta.get('advertised_course_run_uuid')
-                for run in json_meta.get('course_runs'):
+                for run in json_meta.get('course_runs', []):
                     if run.get('uuid') == course_run_uuid:
                         run.update({'start': start_date, 'end': end_date})
 
             # Perform more steps to normalize and move keys around for more consistency across content types.
             _normalize_course_metadata(metadata_record)
 
+            if review := reviews_for_courses_dict.get(content_key):
+                metadata_record.json_metadata['reviews_count'] = review.get('reviews_count')
+                metadata_record.json_metadata['avg_course_rating'] = review.get('avg_course_rating')
+
             modified_content_metadata_records.append(metadata_record)
-            program_content_keys = create_course_associated_programs(course_metadata_dict['programs'], metadata_record)
+            program_content_keys = create_course_associated_programs(
+                course_metadata_dict.get('programs', []),
+                metadata_record,
+            )
             _update_full_content_metadata_program(program_content_keys)
 
         ContentMetadata.objects.bulk_update(
