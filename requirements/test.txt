@@ -98,7 +98,7 @@ code-annotations==1.5.0
     #   edx-toggles
 colorama==0.4.6
     # via tox
-coverage[toml]==7.3.2
+coverage[toml]==7.3.4
     # via
     #   -r requirements/test.in
     #   pytest-cov
@@ -117,7 +117,7 @@ defusedxml==0.7.1
     #   social-auth-core
 dill==0.3.7
     # via pylint
-distlib==0.3.7
+distlib==0.3.8
     # via virtualenv
     # via
     #   -c requirements/constraints.txt
@@ -173,7 +173,7 @@ django-simple-history==3.4.0
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.txt
-django-waffle==4.0.0
+django-waffle==4.1.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -194,7 +194,7 @@ drf-jwt==1.19.2
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-drf-spectacular==0.26.5
+drf-spectacular==0.27.0
     # via -r requirements/base.txt
 edx-auth-backends==4.2.0
     # via -r requirements/base.txt
@@ -231,7 +231,7 @@ exceptiongroup==1.2.0
     # via pytest
 factory-boy==3.3.0
     # via -r requirements/test.in
-faker==20.1.0
+faker==21.0.0
     # via factory-boy
 filelock==3.13.1
     # via
@@ -252,7 +252,7 @@ inflection==0.5.1
     #   drf-spectacular
 iniconfig==2.0.0
     # via pytest
-isort==5.12.0
+isort==5.13.2
     # via pylint
 jinja2==3.1.2
     # via
@@ -276,7 +276,7 @@ kombu==5.3.4
     # via
     #   -r requirements/base.txt
     #   celery
-lazy-object-proxy==1.9.0
+lazy-object-proxy==1.10.0
     # via astroid
 markupsafe==2.1.3
     # via
@@ -288,7 +288,7 @@ monotonic==1.6
     # via
     #   -r requirements/base.txt
     #   analytics-python
-mysqlclient==2.2.0
+mysqlclient==2.2.1
     # via -r requirements/base.txt
 newrelic==9.3.0
     # via
@@ -325,11 +325,11 @@ ply==3.11
     # via
     #   -r requirements/base.txt
     #   djangoql
-prompt-toolkit==3.0.41
+prompt-toolkit==3.0.43
     # via
     #   -r requirements/base.txt
     #   click-repl
-psutil==5.9.6
+psutil==5.9.7
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -432,7 +432,7 @@ requests-oauthlib==1.3.1
     #   social-auth-core
 responses==0.24.1
     # via -r requirements/test.in
-rpds-py==0.13.2
+rpds-py==0.15.2
     # via
     #   -r requirements/base.txt
     #   jsonschema
@@ -492,11 +492,12 @@ tomlkit==0.12.3
     # via pylint
 tox==4.11.4
     # via -r requirements/test.in
-typing-extensions==4.8.0
+typing-extensions==4.9.0
     # via
     #   -r requirements/base.txt
     #   asgiref
     #   astroid
+    #   drf-spectacular
     #   edx-opaque-keys
     #   faker
     #   kombu

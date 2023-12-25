@@ -32,7 +32,7 @@ attrs==23.1.0
     #   -r requirements/test.txt
     #   jsonschema
     #   referencing
-babel==2.13.1
+babel==2.14.0
     # via
     #   pydata-sphinx-theme
     #   sphinx
@@ -116,7 +116,7 @@ colorama==0.4.6
     # via
     #   -r requirements/test.txt
     #   tox
-coverage[toml]==7.3.2
+coverage[toml]==7.3.4
     # via
     #   -r requirements/test.txt
     #   coverage
@@ -138,7 +138,7 @@ dill==0.3.7
     # via
     #   -r requirements/test.txt
     #   pylint
-distlib==0.3.7
+distlib==0.3.8
     # via
     #   -r requirements/test.txt
     #   virtualenv
@@ -197,7 +197,7 @@ django-simple-history==3.4.0
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/test.txt
-django-waffle==4.0.0
+django-waffle==4.1.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
@@ -227,7 +227,7 @@ drf-jwt==1.19.2
     # via
     #   -r requirements/test.txt
     #   edx-drf-extensions
-drf-spectacular==0.26.5
+drf-spectacular==0.27.0
     # via -r requirements/test.txt
 edx-auth-backends==4.2.0
     # via -r requirements/test.txt
@@ -266,7 +266,7 @@ exceptiongroup==1.2.0
     #   pytest
 factory-boy==3.3.0
     # via -r requirements/test.txt
-faker==20.1.0
+faker==21.0.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -281,7 +281,7 @@ idna==3.6
     #   requests
 imagesize==1.4.1
     # via sphinx
-importlib-metadata==7.0.0
+importlib-metadata==7.0.1
     # via sphinx
 importlib-resources==6.1.1
     # via
@@ -296,7 +296,7 @@ iniconfig==2.0.0
     # via
     #   -r requirements/test.txt
     #   pytest
-isort==5.12.0
+isort==5.13.2
     # via
     #   -r requirements/test.txt
     #   pylint
@@ -323,7 +323,7 @@ kombu==5.3.4
     # via
     #   -r requirements/test.txt
     #   celery
-lazy-object-proxy==1.9.0
+lazy-object-proxy==1.10.0
     # via
     #   -r requirements/test.txt
     #   astroid
@@ -339,7 +339,7 @@ monotonic==1.6
     # via
     #   -r requirements/test.txt
     #   analytics-python
-mysqlclient==2.2.0
+mysqlclient==2.2.1
     # via -r requirements/test.txt
 newrelic==9.3.0
     # via
@@ -383,11 +383,11 @@ ply==3.11
     # via
     #   -r requirements/test.txt
     #   djangoql
-prompt-toolkit==3.0.41
+prompt-toolkit==3.0.43
     # via
     #   -r requirements/test.txt
     #   click-repl
-psutil==5.9.6
+psutil==5.9.7
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
@@ -514,7 +514,7 @@ responses==0.24.1
     # via -r requirements/test.txt
 restructuredtext-lint==1.4.0
     # via doc8
-rpds-py==0.13.2
+rpds-py==0.15.2
     # via
     #   -r requirements/test.txt
     #   jsonschema
@@ -602,11 +602,12 @@ tomlkit==0.12.3
     #   pylint
 tox==4.11.4
     # via -r requirements/test.txt
-typing-extensions==4.8.0
+typing-extensions==4.9.0
     # via
     #   -r requirements/test.txt
     #   asgiref
     #   astroid
+    #   drf-spectacular
     #   edx-opaque-keys
     #   faker
     #   kombu
