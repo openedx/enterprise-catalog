@@ -116,3 +116,48 @@ class AlgoliaSearchClient:
                 self.ALGOLIA_INDEX_NAME,
             )
             raise exc
+
+    def get_all_objects_associated_with_aggregation_key(self, aggregation_key):
+        """
+        Returns an array of Algolia object IDs associated with the given aggregation key.
+        """
+        objects = []
+        if not self.index_exists():
+            # index must exist to continue, nothing left to do
+            return objects
+        try:
+            index_browse_iterator = self.algolia_index.browse_objects({
+                "attributesToRetrieve": ["objectID"],
+                "filters": f"aggregation_key:'{aggregation_key}'",
+            })
+            for hit in index_browse_iterator:
+                objects.append(hit['objectID'])
+        except AlgoliaException as exc:
+            logger.exception(
+                'Could not retrieve objects associated with aggregation key %s due to an exception.',
+                aggregation_key,
+            )
+            raise exc
+        return objects
+
+    def remove_objects(self, object_ids):
+        """
+        Removes objects from the Algolia index.
+        """
+        if not self.index_exists():
+            # index must exist to continue, nothing left to do
+            return
+
+        try:
+            self.algolia_index.delete_objects(object_ids)
+            logger.info(
+                'The following objects were successfully removed from the %s Algolia index: %s',
+                self.ALGOLIA_INDEX_NAME,
+                object_ids,
+            )
+        except AlgoliaException as exc:
+            logger.exception(
+                'Could not remove objects from the %s Algolia index due to an exception.',
+                self.ALGOLIA_INDEX_NAME,
+            )
+            raise exc
