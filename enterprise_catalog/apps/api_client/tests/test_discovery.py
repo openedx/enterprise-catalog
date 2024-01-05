@@ -5,6 +5,9 @@ import requests
 from django.test import TestCase
 from simplejson import JSONDecodeError
 
+from enterprise_catalog.apps.api_client.constants import (
+    DISCOVERY_COURSE_REVIEWS_ENDPOINT,
+)
 from enterprise_catalog.apps.catalog.tests.factories import CatalogQueryFactory
 
 from ..discovery import DiscoveryApiClient
@@ -116,3 +119,100 @@ class TestDiscoveryApiClient(TestCase):
 
         expected_response = []
         self.assertEqual(actual_response, expected_response)
+
+    @mock.patch('enterprise_catalog.apps.api_client.discovery.time.sleep')
+    @mock.patch('enterprise_catalog.apps.api_client.discovery.LOGGER')
+    @mock.patch('enterprise_catalog.apps.api_client.base_oauth.OAuthAPIClient')
+    def test_retrieve_course_reviews_with_successful_response(
+        self,
+        mock_oauth_client,
+        mock_logger,
+        mock_sleep
+    ):
+        """
+        Test _retrieve_course_reviews method with successful response.
+        """
+        mock_response = mock.Mock()
+        mock_response.status_code = 200
+        mock_response_json = {
+            "count": 2,
+            "next": None,
+            "previous": None,
+            "results": [
+                {
+                    "course_key": "edX+DemoX",
+                    "reviews_count": 150,
+                    "avg_course_rating": "0.830000",
+                    "confident_learners_percentage": "0.800000",
+                    "most_common_goal": "Learn valuable skills",
+                    "most_common_goal_learners_percentage": "0.400000",
+                    "total_enrollments": 300
+                },
+                {
+                    "course_key": "edX+E2E-101",
+                    "reviews_count": 150,
+                    "avg_course_rating": "0.830000",
+                    "confident_learners_percentage": "0.800000",
+                    "most_common_goal": "Learn valuable skills",
+                    "most_common_goal_learners_percentage": "0.400000",
+                    "total_enrollments": 300
+                }
+            ]
+        }
+        mock_response.json.return_value = mock_response_json
+        mock_oauth_client.return_value.get.return_value = mock_response
+
+        request_params = {'page': 1}
+        client = DiscoveryApiClient()
+        response = client.get_course_reviews()
+
+        assert mock_logger.info.called
+        mock_oauth_client.return_value.get.assert_called_with(
+            DISCOVERY_COURSE_REVIEWS_ENDPOINT,
+            params=request_params,
+            timeout=client.HTTP_TIMEOUT,
+        )
+        self.assertEqual(response, {
+            "edX+DemoX": {
+                "course_key": "edX+DemoX",
+                "reviews_count": 150,
+                "avg_course_rating": "0.830000",
+                "confident_learners_percentage": "0.800000",
+                "most_common_goal": "Learn valuable skills",
+                "most_common_goal_learners_percentage": "0.400000",
+                "total_enrollments": 300
+            },
+            "edX+E2E-101": {
+                "course_key": "edX+E2E-101",
+                "reviews_count": 150,
+                "avg_course_rating": "0.830000",
+                "confident_learners_percentage": "0.800000",
+                "most_common_goal": "Learn valuable skills",
+                "most_common_goal_learners_percentage": "0.400000",
+                "total_enrollments": 300
+            }
+        })
+        assert mock_sleep.not_called()
+
+    @mock.patch('enterprise_catalog.apps.api_client.discovery.time.sleep')
+    @mock.patch('enterprise_catalog.apps.api_client.discovery.LOGGER')
+    @mock.patch('enterprise_catalog.apps.api_client.base_oauth.OAuthAPIClient')
+    def test_retrieve_course_reviews_with_failed_response(self, mock_oauth_client, mock_logger, mock_sleep):
+        """
+        Test _retrieve_course_reviews method with failed response.
+        """
+        mock_oauth_client.return_value.get.side_effect = requests.exceptions.RequestException('error')
+
+        request_params = {'page': 1}
+        client = DiscoveryApiClient()
+        with self.assertRaises(requests.exceptions.RequestException):
+            client.get_course_reviews()
+
+        assert mock_logger.info.called
+        mock_oauth_client.return_value.get.assert_called_with(
+            DISCOVERY_COURSE_REVIEWS_ENDPOINT,
+            params=request_params,
+            timeout=client.HTTP_TIMEOUT,
+        )
+        assert mock_logger.exception.called
+        assert mock_sleep.called

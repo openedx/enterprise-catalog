@@ -10,6 +10,7 @@ from django.conf import settings
 
 from .base_oauth import BaseOAuthClient
 from .constants import (
+    DISCOVERY_COURSE_REVIEWS_ENDPOINT,
     DISCOVERY_COURSES_ENDPOINT,
     DISCOVERY_OFFSET_SIZE,
     DISCOVERY_PROGRAMS_ENDPOINT,
@@ -79,6 +80,75 @@ class DiscoveryApiClient(BaseOAuthClient):
                     raise exception
                 break
         return response.json()
+
+    def _retrieve_course_reviews(self, request_params):
+        """
+        Makes a request to discovery's /api/v1/course_review/ paginated endpoint
+        """
+        page = request_params.get('page', 1)
+        LOGGER.info(f'Retrieving course reviews from course-discovery for page {page}...')
+        attempts = 0
+        while True:
+            attempts = attempts + 1
+            successful = True
+            exception = None
+            try:
+                response = self.client.get(
+                    DISCOVERY_COURSE_REVIEWS_ENDPOINT,
+                    params=request_params,
+                    timeout=self.HTTP_TIMEOUT,
+                )
+                successful = response.status_code < 400
+                elapsed_seconds = response.elapsed.total_seconds()
+                LOGGER.info(
+                    f'Retrieved course review results from course-discovery for page {page} in '
+                    f'retrieve_course_reviews_seconds={elapsed_seconds} seconds.'
+                )
+            except requests.exceptions.RequestException as err:
+                exception = err
+                LOGGER.exception(f'Error while retrieving course review results from course-discovery for page {page}')
+                successful = False
+            if attempts <= self.MAX_RETRIES and not successful:
+                sleep_seconds = self._calculate_backoff(attempts)
+                LOGGER.warning(
+                    f'failed request detected from {DISCOVERY_SEARCH_ALL_ENDPOINT}, '
+                    'backing-off before retrying, '
+                    f'sleeping {sleep_seconds} seconds...'
+                )
+                time.sleep(sleep_seconds)
+            else:
+                if exception:
+                    raise exception
+                break
+        return response.json()
+
+    def get_course_reviews(self, course_keys=None):
+        """
+        Return results from the discovery service's /course_review endpoint as an object of key = course key, value =
+        course review. If course_keys is specified, only return results for those course keys.
+        """
+        page = 1
+        results = []
+        request_params = {'page': page}
+        try:
+            response = self._retrieve_course_reviews(request_params)
+            results += response.get('results', [])
+            # Traverse all pages and concatenate results
+            while response.get('next'):
+                page += 1
+                response = self._retrieve_course_reviews(request_params)
+                results += response.get('results', [])
+        except Exception as exc:
+            LOGGER.exception(f'Could not retrieve course reviews from course-discovery (page {page}) {exc}')
+            raise exc
+
+        results = {
+            result.get('course_key'): result for result in results if (
+                course_keys is None or result.get('course_key') in course_keys
+            )
+        }
+
+        return results
 
     def get_metadata_by_query(self, catalog_query):
         """

@@ -83,6 +83,8 @@ ALGOLIA_FIELDS = [
     # transformed metadata to consistent schema across all course
     # types (e.g., start date, end date, enroll by date).
     'normalized_metadata',
+    'reviews_count',
+    'avg_course_rating',
 ]
 
 # default configuration for the index
@@ -1141,6 +1143,32 @@ def get_learning_type_v2(content):
     return content.get('content_type')
 
 
+def get_reviews_count(content):
+    """
+    Gets the content's reviews count
+
+    Arguments:
+        course (dict): a dictionary representing a piece of content
+
+    Returns:
+        int: the reviews count of the course.
+    """
+    return content.get('reviews_count')
+
+
+def get_avg_course_rating(content):
+    """
+    Gets the content's average course rating
+
+    Arguments:
+        course (dict): a dictionary representing a piece of content
+
+    Returns:
+        float: the average course rating of the course.
+    """
+    return content.get('avg_course_rating')
+
+
 def _algolia_object_from_product(product, algolia_fields):
     """
     Transforms a course or program into an Algolia object.
@@ -1174,6 +1202,8 @@ def _algolia_object_from_product(product, algolia_fields):
             'prerequisites': get_course_prerequisites(searchable_product),
             'learning_type': get_learning_type(searchable_product),
             'learning_type_v2': get_learning_type_v2(searchable_product),
+            'reviews_count': get_reviews_count(searchable_product),
+            'avg_course_rating': get_avg_course_rating(searchable_product),
         })
     elif searchable_product.get('content_type') == PROGRAM:
         searchable_product.update({
