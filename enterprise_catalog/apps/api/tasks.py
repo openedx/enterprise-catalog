@@ -784,6 +784,7 @@ def _get_algolia_products_for_batch(
         'enterprise_catalogs',
         'enterprise_catalogs__academies',
         'enterprise_catalogs__academies__tags',
+        'enterprise_catalogs__academies__tags__content_metadata',
     )
 
     # Retrieve ContentMetadata records for:
@@ -831,7 +832,7 @@ def _get_algolia_products_for_batch(
     # First pass over the batch of content.  The goal for this pass is to collect all the UUIDs directly associated with
     # each content.  This DOES NOT capture any UUIDs indirectly related to programs or pathways via associated courses
     # or programs.
-    for metadata in content_metadata_to_process:
+    for metadata in content_metadata_to_process:  # pylint: disable=too-many-nested-blocks
         if metadata.content_type in (COURSE, PROGRAM, LEARNER_PATHWAY):
             content_key = metadata.content_key
         else:
@@ -856,8 +857,9 @@ def _get_algolia_products_for_batch(
                     academy_uuids_by_key[content_key].add(str(academy.uuid))
                     academy_uuids_by_catalog_uuid[str(catalog.uuid)].add(str(academy.uuid))
                     for tag in associated_academy_tags:
-                        academy_tags_by_key[content_key].add(str(tag.title))
-                        academy_tags_by_catalog_uuid[str(catalog.uuid)].add(str(tag.title))
+                        if tag.content_metadata.filter(content_key=content_key):
+                            academy_tags_by_key[content_key].add(str(tag.title))
+                            academy_tags_by_catalog_uuid[str(catalog.uuid)].add(str(tag.title))
 
     # Second pass.  This time the goal is to capture indirect relationships on programs:
     #  * For each program:

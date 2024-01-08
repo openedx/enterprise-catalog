@@ -4,7 +4,9 @@ import factory
 from factory.fuzzy import FuzzyText
 
 from enterprise_catalog.apps.academy.models import Academy, Tag
+from enterprise_catalog.apps.catalog.constants import COURSE
 from enterprise_catalog.apps.catalog.tests.factories import (
+    ContentMetadataFactory,
     EnterpriseCatalogFactory,
 )
 
@@ -17,6 +19,12 @@ class TagFactory(factory.django.DjangoModelFactory):
         model = Tag
 
     title = FuzzyText(length=32)
+
+    @factory.post_generation
+    def content_metadata(self, create, extracted, **kwargs):  # pylint: disable=unused-argument
+        content_metadata1 = ContentMetadataFactory.create(content_type=COURSE)
+        content_metadata2 = ContentMetadataFactory.create(content_type=COURSE)
+        self.content_metadata.set([content_metadata1, content_metadata2])  # pylint: disable=no-member
 
 
 class AcademyFactory(factory.django.DjangoModelFactory):

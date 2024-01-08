@@ -8,7 +8,10 @@ from django.utils.translation import gettext as _
 from model_utils.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
 
-from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
+from enterprise_catalog.apps.catalog.models import (
+    ContentMetadata,
+    EnterpriseCatalog,
+)
 
 
 class Tag(models.Model):
@@ -19,6 +22,7 @@ class Tag(models.Model):
     """
     title = models.CharField(max_length=255, help_text=_('Tag title'))
     description = models.TextField(help_text=_('Tag description.'))
+    content_metadata = models.ManyToManyField(ContentMetadata, related_name='tags')
 
     class Meta:
         verbose_name = _('Tag')
