@@ -144,7 +144,7 @@ cryptography==41.0.7
     #   -r requirements/test.txt
     #   pyjwt
     #   social-auth-core
-ddt==1.7.0
+ddt==1.7.1
     # via
     #   -r requirements/dev.in
     #   -r requirements/test.txt
@@ -168,7 +168,7 @@ distlib==0.3.8
     # via
     #   -r requirements/test.txt
     #   virtualenv
-django==4.2.8
+django==4.2.9
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
@@ -295,7 +295,7 @@ edx-django-utils==5.9.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==9.0.1
+edx-drf-extensions==9.1.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -414,7 +414,7 @@ lazy-object-proxy==1.10.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   astroid
-lxml==5.0.0
+lxml==5.0.1
     # via edx-i18n-tools
 markupsafe==2.1.3
     # via
@@ -614,7 +614,7 @@ redis==3.5.3
     #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-referencing==0.32.0
+referencing==0.32.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -767,7 +767,7 @@ virtualenv==20.25.0
     # via
     #   -r requirements/test.txt
     #   tox
-wcwidth==0.2.12
+wcwidth==0.2.13
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt

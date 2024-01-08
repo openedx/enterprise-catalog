@@ -91,7 +91,7 @@ defusedxml==0.7.1
     #   djangorestframework-xml
     #   python3-openid
     #   social-auth-core
-django==4.2.8
+django==4.2.9
     # via
     #   -r requirements/base.txt
     #   django-celery-results
@@ -177,7 +177,7 @@ edx-django-utils==5.9.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==9.0.1
+edx-drf-extensions==9.1.1
     # via
     #   -r requirements/base.txt
     #   edx-rbac
@@ -324,7 +324,7 @@ pyyaml==6.0.1
     #   edx-django-release-util
 redis==3.5.3
     # via -r requirements/base.txt
-referencing==0.32.0
+referencing==0.32.1
     # via
     #   -r requirements/base.txt
     #   jsonschema
@@ -417,7 +417,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-wcwidth==0.2.12
+wcwidth==0.2.13
     # via
     #   -r requirements/base.txt
     #   prompt-toolkit
