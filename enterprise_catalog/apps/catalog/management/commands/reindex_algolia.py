@@ -30,6 +30,13 @@ class Command(BaseCommand):
             default=False,
             help='Generate algolia products to index, but do not actually send them to algolia for indexing.',
         )
+        parser.add_argument(
+            '--no-async',
+            dest='no_async',
+            action='store_true',
+            default=False,
+            help='Run the task synchronously (without celery).',
+        )
 
     def handle(self, *args, **options):
         """
@@ -39,7 +46,10 @@ class Command(BaseCommand):
         try:
             force_task_execution = options.get('force', False)
             dry_run = options.get('dry_run', False)
-            if options.get('no_async'):
+            if options.get('no_async', False):
+                logger.info(
+                    'index_enterprise_catalog_in_algolia_task launching synchronously.'
+                )
                 # For some reason in order to call a celery task in-memory you must pass kwargs as args.
                 index_enterprise_catalog_in_algolia_task(force_task_execution, dry_run)
             else:
