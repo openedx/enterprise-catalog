@@ -14,6 +14,7 @@ class TagAdmin(admin.ModelAdmin):
     """
     list_display = ('id', 'title', )
     search_fields = ('title', )
+    filter_horizontal = ('content_metadata',)
 
 
 @admin.register(Academy)
@@ -23,3 +24,4 @@ class AcademyAdmin(SimpleHistoryAdmin):
     """
     list_display = ('uuid', 'title', 'created', 'modified', )
     search_fields = ('title', 'short_description', 'long_description', )
+    filter_horizontal = ('enterprise_catalogs', 'tags', )
