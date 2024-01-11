@@ -346,6 +346,10 @@ CELERY_TASK_STORE_ERRORS_EVEN_IF_IGNORED = True
 # see https://github.com/celery/django-celery-results/issues/326
 # on CELERY_RESULT_EXTENDED
 CELERY_RESULT_EXTENDED = True
+# these settings allow recovery when autoscaling ends up killing a task
+# see https://stackoverflow.com/a/45059806
+CELERY_ACKS_LATE = True
+CELERY_TASK_REJECT_ON_WORKER_LOST = True
 
 # Celery task time limits.
 # Tasks will be asked to quit after 15 minutes...
