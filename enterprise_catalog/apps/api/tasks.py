@@ -253,10 +253,6 @@ def update_full_content_metadata_task(self, force=False):  # pylint: disable=unu
     Args:
         force (bool): If true, forces execution of task and ignores time since last run.
     """
-    if unready_tasks(update_catalog_metadata_task, ONE_HOUR).exists():
-        raise self.retry(
-            exc=RequiredTaskUnreadyError(),
-        )
 
     content_keys = [metadata.content_key for metadata in ContentMetadata.objects.filter(content_type=COURSE)]
     _update_full_content_metadata_course(content_keys)
@@ -551,7 +547,7 @@ def _batched_metadata_with_queries(json_metadata, sorted_queries):
 
 @shared_task(base=LoggedTaskWithRetry, bind=True, default_retry_delay=UNREADY_TASK_RETRY_COUNTDOWN_SECONDS)
 @expiring_task_semaphore()
-def index_enterprise_catalog_in_algolia_task(self, force=False, dry_run=False):
+def index_enterprise_catalog_in_algolia_task(self, force=False, dry_run=False):  # pylint: disable=unused-argument
     """
     Index course and program data in Algolia with enterprise-related fields.
 
@@ -568,10 +564,6 @@ def index_enterprise_catalog_in_algolia_task(self, force=False, dry_run=False):
         logger.info(
             f'{_reindex_algolia_prefix(dry_run)} invoking task with arguments force={force}, dry_run={dry_run}.'
         )
-        if unready_tasks(update_full_content_metadata_task, ONE_HOUR).exists():
-            raise self.retry(
-                exc=RequiredTaskUnreadyError(),
-            )
         courses_content_metadata = ContentMetadata.objects.filter(content_type=COURSE)
         indexable_course_keys, nonindexable_course_keys = partition_course_keys_for_indexing(
             courses_content_metadata,
