@@ -136,6 +136,7 @@ class DiscoveryApiClient(BaseOAuthClient):
             # Traverse all pages and concatenate results
             while response.get('next'):
                 page += 1
+                request_params.update({'page': page})
                 response = self._retrieve_course_reviews(request_params)
                 results += response.get('results', [])
         except Exception as exc:
