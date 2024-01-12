@@ -50,8 +50,9 @@ class Command(BaseCommand):
                 logger.info(
                     'index_enterprise_catalog_in_algolia_task launching synchronously.'
                 )
-                # For some reason in order to call a celery task in-memory you must pass kwargs as args.
-                index_enterprise_catalog_in_algolia_task(force_task_execution, dry_run)
+                index_enterprise_catalog_in_algolia_task.apply(
+                    kwargs={'force': force_task_execution, 'dry_run': dry_run}
+                )
             else:
                 index_enterprise_catalog_in_algolia_task.apply_async(
                     kwargs={'force': force_task_execution, 'dry_run': dry_run}
