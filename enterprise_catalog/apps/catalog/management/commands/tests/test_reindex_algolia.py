@@ -45,7 +45,7 @@ class ReindexAlgoliaCommandTests(TestCase):
             'no_async': True,
         }
         call_command(self.command_name)
-        mock_task.assert_called_once_with(False, False)  # force=False, dry_run=False
+        mock_task.apply.assert_called_once_with(kwargs={'force': False, 'dry_run': False})  # force=False, dry_run=False
         mock_task.apply_async.assert_not_called()
 
     @mock.patch(PATH_PREFIX + 'index_enterprise_catalog_in_algolia_task')
