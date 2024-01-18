@@ -209,6 +209,15 @@ class HighlightedContent(TimeStampedModel):
         return self.content_metadata.json_metadata.get('title')  # pylint: disable=no-member
 
     @property
+    def course_run_statuses(self):
+        """
+        Returns the status of the associated ContentMetadata.
+        """
+        if not self.content_metadata:
+            return None
+        return self.content_metadata.json_metadata.get('course_run_statuses')  # pylint: disable=no-member
+
+    @property
     def card_image_url(self):
         """
         Returns the image URL from the raw metadata of the associated ContentMetadata object.
