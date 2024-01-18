@@ -313,6 +313,7 @@ class HighlightedContentSerializer(serializers.ModelSerializer):
             'title',
             'card_image_url',
             'authoring_organizations',
+            'course_run_statuses',
         ]
 
     def get_aggregation_key(self, obj):
