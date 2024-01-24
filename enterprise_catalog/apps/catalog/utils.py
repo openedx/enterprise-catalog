@@ -8,6 +8,7 @@ from logging import getLogger
 from urllib.parse import urljoin
 
 from django.conf import settings
+from django.db.models import Q
 from edx_rbac.utils import feature_roles_from_jwt
 from edx_rest_framework_extensions.auth.jwt.authentication import (
     get_decoded_jwt_from_auth,
@@ -114,3 +115,26 @@ def enterprise_proxy_login_url(slug, next_url=None):
     if next_url:
         url += f'&next={next_url}'
     return url
+
+
+def batch_by_pk(ModelClass, extra_filter=Q(), batch_size=10000):
+    """
+    yield per batch efficiently
+    using limit/offset does a lot of table scanning to reach higher offsets
+    this scanning can be slow on very large tables
+    if you order by pk, you can use the pk as a pivot rather than offset
+    this utilizes the index, which is faster than scanning to reach offset
+    Example usage:
+    course_only_filter = Q(content_type='course')
+    for items_batch in batch_by_pk(ContentMetadata, extra_filter=course_only_filter):
+        for item in items_batch:
+            ...
+    """
+    qs = ModelClass.objects.filter(extra_filter).order_by('pk')[:batch_size]
+    while qs.exists():
+        yield qs
+        # qs.last() doesn't work here because we've already sliced
+        # loop through so we eventually grab the last one
+        for item in qs:
+            start_pk = item.pk
+        qs = ModelClass.objects.filter(pk__gt=start_pk).filter(extra_filter).order_by('pk')[:batch_size]
