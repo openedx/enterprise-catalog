@@ -19,6 +19,7 @@ drf-spectacular
 edx-auth-backends
 edx-celeryutils
 edx-django-release-util
+edx-django-utils
 edx-drf-extensions
 edx_rbac
 edx-rest-api-client
