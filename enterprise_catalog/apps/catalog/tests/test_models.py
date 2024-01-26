@@ -45,48 +45,6 @@ class TestModels(TestCase):
 
     @override_settings(DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT=0)
     @mock.patch('enterprise_catalog.apps.api_client.discovery.DiscoveryApiClient')
-    def test_2U_exec_ed_content_inclusion_logic(self, mock_client):
-        """
-        Test that we exclude 2u exec ed courses from the create content metadata task unless the query provided allows
-        for it
-        """
-        exec_ed_2u_course_metadata = OrderedDict([
-            ('aggregation_key', 'course:edX+testX'),
-            ('key', 'edX+testX'),
-            ('title', 'test course'),
-            ('course_type', 'executive-education-2u'),
-        ])
-        exec_ed_2u_course_run_metadata = OrderedDict([
-            ('aggregation_key', 'courserun:TheEconomist+CAB'),
-            ('key', 'course-v1:edX+testX'),
-            ('title', 'test course run'),
-            ('content_type', 'courserun'),
-            ('seat_types', ['unpaid-executive-education']),
-        ])
-        edx_course_metadata = OrderedDict([
-            ('aggregation_key', 'course:edX+testX2'),
-            ('key', 'edX+testX2'),
-            ('title', 'ayylmao'),
-            ('course_type', 'professional'),
-        ])
-        mock_client.return_value.get_metadata_by_query.return_value = [
-            exec_ed_2u_course_metadata,
-            exec_ed_2u_course_run_metadata,
-            edx_course_metadata,
-        ]
-        catalog = factories.EnterpriseCatalogFactory()
-        self.assertEqual(ContentMetadata.objects.count(), 0)
-        update_contentmetadata_from_discovery(catalog.catalog_query)
-        mock_client.assert_called_once()
-        self.assertEqual(ContentMetadata.objects.count(), 1)
-
-        catalog.catalog_query.include_exec_ed_2u_courses = True
-        catalog.catalog_query.save()
-        update_contentmetadata_from_discovery(catalog.catalog_query)
-        self.assertEqual(ContentMetadata.objects.count(), 3)
-
-    @override_settings(DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT=0)
-    @mock.patch('enterprise_catalog.apps.api_client.discovery.DiscoveryApiClient')
     def test_product_source_content_inclusion_logic(self, mock_client):
         """
         Test that we exclude 2u exec ed courses from the create content metadata task unless the query provided allows
@@ -417,53 +375,3 @@ class TestModels(TestCase):
         else:
             assert 'happy-little-sku' in actual_enrollment_url
             assert 'proxy-login' in actual_enrollment_url
-
-    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
-    @ddt.data(
-        {'content_type': COURSE, 'course_type': EXEC_ED_2U_COURSE_TYPE, 'course_mode': 'honor',
-         'sku': None, 'query_includes_ee_courses': True},
-        {'content_type': COURSE, 'course_type': EXEC_ED_2U_COURSE_TYPE, 'course_mode': 'honor',
-         'sku': '123456', 'query_includes_ee_courses': True},
-        {'content_type': COURSE, 'course_type': EXEC_ED_2U_COURSE_TYPE, 'course_mode': EXEC_ED_2U_ENTITLEMENT_MODE,
-         'sku': None, 'query_includes_ee_courses': True},
-        {'content_type': COURSE, 'course_type': EXEC_ED_2U_COURSE_TYPE, 'course_mode': EXEC_ED_2U_ENTITLEMENT_MODE,
-         'sku': '123456', 'query_includes_ee_courses': False},
-    )
-    @ddt.unpack
-    def test_enrollment_url_exec_ed_is_null(
-        self,
-        mock_enterprise_api_client,
-        content_type,
-        course_type,
-        course_mode,
-        sku,
-        query_includes_ee_courses
-    ):
-        """
-        Tests for all scenarios when a null value should be
-        returned as the enrollment URL for exec ed 2U courses.
-        The content_metadata object below is always an exec ed 2U course,
-        because the content_type is always "course" and the course_type is always
-        the exec ed 2U course type.
-        """
-        enterprise_slug = 'sluggy'
-        mock_enterprise_customer_return_value = {
-            'slug': enterprise_slug,
-        }
-        mock_enterprise_api_client.return_value.get_enterprise_customer.return_value =\
-            mock_enterprise_customer_return_value
-
-        enterprise_catalog = factories.EnterpriseCatalogFactory()
-        content_metadata = factories.ContentMetadataFactory(
-            content_key='the-content-key',
-            content_type=content_type
-        )
-        content_metadata.json_metadata['course_type'] = course_type
-        if course_mode:
-            content_metadata.json_metadata['entitlements'] = [{'mode': course_mode}]
-        if sku:
-            content_metadata.json_metadata['entitlements'][0]['sku'] = sku
-
-        enterprise_catalog.catalog_query.contentmetadata_set.add(*[content_metadata])
-        enterprise_catalog.catalog_query.include_exec_ed_2u_courses = query_includes_ee_courses
-        self.assertIsNone(enterprise_catalog.get_content_enrollment_url(content_metadata))
