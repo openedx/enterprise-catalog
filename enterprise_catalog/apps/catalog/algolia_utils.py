@@ -388,15 +388,18 @@ def get_course_bayesian_average(course):
     Using the global average review value to calculate an individual course's bayesian average review value.
     https://www.algolia.com/doc/guides/managing-results/must-do/custom-ranking/how-to/bayesian-average/
     """
-    total_avg = get_global_course_review_avg()
-    avg_review = course.get('avg_course_rating')
-    ratings_count = course.get('reviews_count')
-    if avg_review is not None and ratings_count is not None:
-        return (
-            (avg_review * ratings_count) + (total_avg * COURSE_REVIEW_BAYESIAN_CONFIDENCE_NUMBER)
-        ) / (ratings_count + COURSE_REVIEW_BAYESIAN_CONFIDENCE_NUMBER)
-    else:
+    if course.get('avg_course_rating') is None:
         return 0
+
+    if course.get('reviews_count') is None:
+        return 0
+
+    total_avg = float(get_global_course_review_avg())
+    avg_review = float(course.get('avg_course_rating'))
+    ratings_count = float(course.get('reviews_count'))
+    return (
+        (avg_review * ratings_count) + (total_avg * COURSE_REVIEW_BAYESIAN_CONFIDENCE_NUMBER)
+    ) / (ratings_count + COURSE_REVIEW_BAYESIAN_CONFIDENCE_NUMBER)
 
 
 def get_course_language(course):
