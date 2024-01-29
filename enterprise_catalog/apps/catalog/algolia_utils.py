@@ -4,10 +4,17 @@ import logging
 import time
 
 from dateutil import parser
+from django.core.cache import cache
+from django.db.models import Q
 from django.utils.translation import gettext as _
 
 from enterprise_catalog.apps.api.v1.utils import is_course_run_active
 from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
+from enterprise_catalog.apps.api_client.constants import (
+    COURSE_REVIEW_BASE_AVG_REVIEW_SCORE,
+    COURSE_REVIEW_BAYESIAN_CONFIDENCE_NUMBER,
+    DISCOVERY_AVERAGE_COURSE_REVIEW_CACHE_KEY,
+)
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
     EXEC_ED_2U_COURSE_TYPE,
@@ -17,7 +24,7 @@ from enterprise_catalog.apps.catalog.constants import (
     PROGRAM_TYPES_MAP,
 )
 from enterprise_catalog.apps.catalog.models import ContentMetadata
-from enterprise_catalog.apps.catalog.utils import localized_utcnow
+from enterprise_catalog.apps.catalog.utils import batch_by_pk, localized_utcnow
 
 
 logger = logging.getLogger(__name__)
@@ -85,6 +92,7 @@ ALGOLIA_FIELDS = [
     'normalized_metadata',
     'reviews_count',
     'avg_course_rating',
+    'course_bayesian_average',
 ]
 
 # default configuration for the index
@@ -137,6 +145,7 @@ ALGOLIA_INDEX_SETTINGS = {
     'customRanking': [
         'asc(visible_via_association)',
         'asc(created)',
+        'desc(course_bayesian_average)',
         'desc(recent_enrollment_count)',
     ],
 }
@@ -329,6 +338,65 @@ def get_algolia_object_id(content_type, uuid):
     if uuid:
         return f'{content_type}-{uuid}'
     return None
+
+
+def set_global_course_review_avg():
+    """
+    Retrieve all course reviews from the ContentMetadata records in the database, calculate the average review value
+    and set the value to py-cache.
+    """
+    rolling_rating_sum = 0.0
+    total_number_reviews = 0
+    course_only_filter = Q(content_type='course')
+    # only courses have course reviews
+    for items_batch in batch_by_pk(ContentMetadata, extra_filter=course_only_filter):
+        for item in items_batch:
+            if not item.json_metadata.get('avg_course_rating') or not item.json_metadata.get('reviews_count'):
+                continue
+
+            reviews_count = float(item.json_metadata.get('reviews_count'))
+            avg_rating = int(item.json_metadata.get('avg_course_rating'))
+            logger.info(
+                f"set_global_course_review_avg found {reviews_count} course reviews for course: {item.content_key} "
+                f"with avg score of {avg_rating}"
+            )
+            rolling_rating_sum += avg_rating * reviews_count
+            total_number_reviews += reviews_count
+
+    if rolling_rating_sum == 0 or total_number_reviews == 0:
+        logger.warning("set_global_course_review_avg came up with no ratings, somehow.")
+        return
+
+    total_average_course_rating = rolling_rating_sum / total_number_reviews
+
+    cache.set(
+        DISCOVERY_AVERAGE_COURSE_REVIEW_CACHE_KEY,
+        total_average_course_rating,
+    )
+
+
+def get_global_course_review_avg():
+    """
+    Fetch the calculated global course review average from py-cache
+    """
+    cache_key = DISCOVERY_AVERAGE_COURSE_REVIEW_CACHE_KEY
+    return cache.get(cache_key, COURSE_REVIEW_BASE_AVG_REVIEW_SCORE)
+
+
+def get_course_bayesian_average(course):
+    """
+    Using the global average review value to calculate an individual course's bayesian average review value.
+    https://www.algolia.com/doc/guides/managing-results/must-do/custom-ranking/how-to/bayesian-average/
+    """
+    total_avg = get_global_course_review_avg()
+    avg_review = course.get('avg_course_rating')
+    ratings_count = course.get('reviews_count')
+    if avg_review is not None and ratings_count is not None:
+        return (
+            (avg_review * ratings_count) + (total_avg * COURSE_REVIEW_BAYESIAN_CONFIDENCE_NUMBER)
+        ) / (ratings_count + COURSE_REVIEW_BAYESIAN_CONFIDENCE_NUMBER)
+    else:
+        return 0
 
 
 def get_course_language(course):
@@ -1204,6 +1272,7 @@ def _algolia_object_from_product(product, algolia_fields):
             'learning_type_v2': get_learning_type_v2(searchable_product),
             'reviews_count': get_reviews_count(searchable_product),
             'avg_course_rating': get_avg_course_rating(searchable_product),
+            'course_bayesian_average': get_course_bayesian_average(searchable_product),
         })
     elif searchable_product.get('content_type') == PROGRAM:
         searchable_product.update({
