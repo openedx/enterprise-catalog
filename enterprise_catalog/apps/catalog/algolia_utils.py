@@ -368,7 +368,7 @@ def set_global_course_review_avg():
         return
 
     total_average_course_rating = rolling_rating_sum / total_number_reviews
-
+    logger.info(f"set_global_course_review_avg saving average course rating value: {total_average_course_rating}")
     cache.set(
         DISCOVERY_AVERAGE_COURSE_REVIEW_CACHE_KEY,
         total_average_course_rating,

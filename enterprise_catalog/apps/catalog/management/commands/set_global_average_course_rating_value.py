@@ -19,5 +19,10 @@ class Command(BaseCommand):
         """
         Fetch ContentMetadata records, read the course review values and save the average to py-cache.
         """
-        logger.info("compare_catalog_queries_to_filters queuing task...")
-        set_global_course_review_avg()
+        logger.info("starting set_global_average_course_rating_value task.")
+        try:
+            set_global_course_review_avg()
+        except Exception as exc:
+            logger.warning(
+                f'set_global_average_course_rating_value task failed with exception: {exc}'
+            )
