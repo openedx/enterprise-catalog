@@ -76,6 +76,11 @@ class ContentMetadataAdmin(UnchangeableMixin):
 @admin.register(CatalogQuery)
 class CatalogQueryAdmin(UnchangeableMixin):
     """ Admin configuration for the custom CatalogQuery model. """
+    fields = (
+        'uuid',
+        'title',
+        'content_filter',
+    )
     list_display = (
         'uuid',
         'content_filter_hash',
