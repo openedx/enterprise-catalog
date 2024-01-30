@@ -346,7 +346,7 @@ def set_global_course_review_avg():
     and set the value to py-cache.
     """
     rolling_rating_sum = 0.0
-    total_number_reviews = 0
+    total_number_reviews = 0.0
     course_only_filter = Q(content_type='course')
     # only courses have course reviews
     for items_batch in batch_by_pk(ContentMetadata, extra_filter=course_only_filter):
@@ -355,12 +355,12 @@ def set_global_course_review_avg():
                 continue
 
             reviews_count = float(item.json_metadata.get('reviews_count'))
-            avg_rating = int(item.json_metadata.get('avg_course_rating'))
+            avg_rating = float(item.json_metadata.get('avg_course_rating'))
             logger.info(
                 f"set_global_course_review_avg found {reviews_count} course reviews for course: {item.content_key} "
                 f"with avg score of {avg_rating}"
             )
-            rolling_rating_sum += avg_rating * reviews_count
+            rolling_rating_sum += (avg_rating * reviews_count)
             total_number_reviews += reviews_count
 
     if rolling_rating_sum == 0 or total_number_reviews == 0:
