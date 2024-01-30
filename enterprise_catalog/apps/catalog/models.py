@@ -396,9 +396,6 @@ class EnterpriseCatalog(TimeStampedModel):
         can_enroll_with_learner_portal = self._can_enroll_via_learner_portal
 
         if content_metadata.is_exec_ed_2u_course:
-            if not self.catalog_query.include_exec_ed_2u_courses:
-                return None
-
             exec_ed_enroll_url, exec_ed_entitlement_sku = self._get_exec_ed_2u_enrollment_url(
                 content_metadata,
                 enterprise_slug=self.enterprise_customer.slug,
@@ -789,34 +786,12 @@ def _should_allow_metadata(metadata_entry, catalog_query=None):
         return False
     # make sure to exclude exec ed course runs
     content_type = get_content_type(metadata_entry)
-    if not catalog_query or not catalog_query.include_exec_ed_2u_courses:
-        if content_type == 'courserun':
-            if seat_types := metadata_entry.get('seat_types'):
-                for seat_type in seat_types:
-                    if 'executive-education' in seat_type:
-                        LOGGER.warning(
-                            '(ENT-7893.b) catalog query %s disallows exec ed course run metadata %s',
-                            catalog_query.id,
-                            metadata_entry.get('key'),
-                        )
-                        return False
     if content_type != 'course':
         return True
     entry_course_type = metadata_entry.get('course_type')
     # allowing None here accounts for pre-existing tests, dirty prod data
     if entry_course_type is None or entry_course_type in CONTENT_COURSE_TYPE_ALLOW_LIST:
         return True
-    # check if the content is allowed by the customer's query preferences
-    if catalog_query and entry_course_type == EXEC_ED_2U_COURSE_TYPE:
-        if catalog_query.include_exec_ed_2u_courses:
-            return True
-        else:
-            LOGGER.warning(
-                '(ENT-7893.c) catalog query %s disallows exec ed course metadata %s',
-                catalog_query.id,
-                metadata_entry.get('key'),
-            )
-            return False
     return False
 
 
