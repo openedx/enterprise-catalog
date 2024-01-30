@@ -349,7 +349,7 @@ def set_global_course_review_avg():
     total_number_reviews = 0.0
     course_only_filter = Q(content_type='course')
     # only courses have course reviews
-    for items_batch in batch_by_pk(ContentMetadata, extra_filter=course_only_filter):
+    for items_batch in batch_by_pk(ContentMetadata, batch_size=25, extra_filter=course_only_filter):
         for item in items_batch:
             if not item.json_metadata.get('avg_course_rating') or not item.json_metadata.get('reviews_count'):
                 continue
