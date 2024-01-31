@@ -25,8 +25,6 @@ EXEC_ED_2U_ENTITLEMENT_MODE = 'paid-executive-education'
 # ContentMetadata allow/block lists
 
 # deliberate omissions:
-# 'executive-education'
-# 'executive-education-2u'
 # 'bootcamp-2u'
 # 'empty'
 
@@ -42,6 +40,7 @@ CONTENT_COURSE_TYPE_ALLOW_LIST = {
     'honor',
     'verified-honor',
     'credit-verified-honor',
+    'executive-education-2u',
 }
 
 # deliberate omissions:
