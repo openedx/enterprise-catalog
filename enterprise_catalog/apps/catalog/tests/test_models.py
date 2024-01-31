@@ -19,6 +19,7 @@ from enterprise_catalog.apps.catalog.constants import (
 )
 from enterprise_catalog.apps.catalog.models import (
     ContentMetadata,
+    _should_allow_metadata,
     update_contentmetadata_from_discovery,
 )
 from enterprise_catalog.apps.catalog.tests import factories
@@ -42,6 +43,22 @@ class TestModels(TestCase):
         )
         content_metadata.json_metadata['course_type'] = course_type
         self.assertEqual(content_metadata.is_exec_ed_2u_course, expected_value)
+
+    @ddt.data(
+        {'content_type': COURSE, 'course_type': 'SOME-OTHER-TYPE', 'expected_value': False},
+        {'content_type': COURSE, 'course_type': EXEC_ED_2U_COURSE_TYPE, 'expected_value': True},
+    )
+    @ddt.unpack
+    def test__should_allow_metadata(self, content_type, course_type, expected_value):
+        """
+        Ensure that specific course_type values are allowed/disallowed
+        """
+        content_metadata = factories.ContentMetadataFactory(
+            content_key='edX+testX',
+            content_type=content_type,
+        )
+        content_metadata.json_metadata['course_type'] = course_type
+        self.assertEqual(_should_allow_metadata(content_metadata.json_metadata), expected_value)
 
     @override_settings(DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT=0)
     @mock.patch('enterprise_catalog.apps.api_client.discovery.DiscoveryApiClient')
@@ -184,29 +201,30 @@ class TestModels(TestCase):
         objects from the discovery service /search/all api call.
         this test should filter out content which does not meet our course_type criteria
         """
-        # this course SHOULD appear in the catalog we save
+        audit_course_metadata_key = f'edX+auditX-{str(uuid4())}'
         audit_course_metadata = OrderedDict([
-            ('aggregation_key', 'course:edX+testX'),
-            ('key', 'edX+testX'),
+            ('aggregation_key', f'course:{audit_course_metadata_key}'),
+            ('key', audit_course_metadata_key),
             ('title', 'test course'),
             ('course_type', 'audit'),
         ])
-        # this course SHOULD NOT appear in the catalog we save
+        exec_ed_course_metadata_key = f'edX+exedEdX-{str(uuid4())}'
         exec_ed_course_metadata = OrderedDict([
-            ('aggregation_key', 'course:edX+testX'),
-            ('key', 'edX+testX'),
+            ('aggregation_key', f'course:{exec_ed_course_metadata_key}'),
+            ('key', exec_ed_course_metadata_key),
             ('title', 'test course'),
             ('course_type', 'executive-education-2u'),
         ])
         course_run_metadata = OrderedDict([
-            ('aggregation_key', 'courserun:edX+testX'),
-            ('key', 'course-v1:edX+testX+1'),
+            ('aggregation_key', f'courserun:{audit_course_metadata_key}'),
+            ('key', f'course-v1:{audit_course_metadata_key}+1'),
             ('title', 'test course run'),
         ])
+        program_metadata_uuid = str(uuid4())
         program_metadata = OrderedDict([
-            ('aggregation_key', 'program:1df0af94-79e9-4966-8d0c-e25985831ef5'),
+            ('aggregation_key', f'program:{program_metadata_uuid}'),
             ('title', 'test program'),
-            ('uuid', 'ebffde14-b432-4615-9609-b09a7ab57331'),
+            ('uuid', program_metadata_uuid),
         ])
         mock_client.return_value.get_metadata_by_query.return_value = [
             audit_course_metadata,
@@ -219,7 +237,7 @@ class TestModels(TestCase):
         self.assertEqual(ContentMetadata.objects.count(), 0)
         update_contentmetadata_from_discovery(catalog.catalog_query)
         mock_client.assert_called_once()
-        self.assertEqual(ContentMetadata.objects.count(), 3)
+        self.assertEqual(ContentMetadata.objects.count(), 4)
 
         associated_metadata = catalog.content_metadata
 
@@ -254,7 +272,7 @@ class TestModels(TestCase):
         }
         course_cm.save()
         update_contentmetadata_from_discovery(catalog.catalog_query)
-        self.assertEqual(ContentMetadata.objects.count(), 3)  # assert all ContentMetadata objects are preserved
+        self.assertEqual(ContentMetadata.objects.count(), 4)  # assert all ContentMetadata objects are preserved
         course_cm = ContentMetadata.objects.get(content_key=audit_course_metadata['key'])
         # assert json_metadata is updated to include fields plucked from /search/all metadata.
         self.assertEqual(
@@ -267,7 +285,7 @@ class TestModels(TestCase):
         # themselves.
         mock_client.return_value.get_metadata_by_query.return_value = [program_metadata]
         update_contentmetadata_from_discovery(catalog.catalog_query)
-        self.assertEqual(ContentMetadata.objects.count(), 3)
+        self.assertEqual(ContentMetadata.objects.count(), 4)
 
         associated_metadata = catalog.content_metadata
         assert course_cm not in associated_metadata
