@@ -38,7 +38,7 @@ class CatalogQueryFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = CatalogQuery
 
-    content_filter = factory.Dict({'content_type': factory.Faker('words', nb=3)})
+    content_filter = factory.Dict({'content_type': factory.Faker('words', nb=6)})
     title = FuzzyText(length=100)
 
 
