@@ -709,6 +709,20 @@ def add_metadata_to_algolia_objects(
     _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata)
 
 
+def get_algolia_objects_from_course_content_metadata(content_metadata):
+    content_key = content_metadata.content_key
+    context_accumulator = {
+        'total_algolia_products_count': 0,
+        'discarded_algolia_object_ids': defaultdict(int),
+    }
+    algolia_product = _get_algolia_products_for_batch(0, [content_key], {content_key}, {}, {}, context_accumulator)
+    logger.info(
+        f"get_algolia_objects_from_course_content_metadata created algolia object: {algolia_product} for course: "
+        f"{content_key} with context: {context_accumulator}"
+    )
+    return algolia_product
+
+
 # pylint: disable=too-many-statements
 def _get_algolia_products_for_batch(
     batch_num,
@@ -966,7 +980,6 @@ def _get_algolia_products_for_batch(
         f'{len(algolia_products_by_object_id)} generated algolia products kept, '
         f'{duplicate_algolia_records_discarded} generated algolia products discarded.'
     )
-
     # extract only the fields we care about.
     return create_algolia_objects(algolia_products_by_object_id.values(), ALGOLIA_FIELDS)
 
@@ -1026,7 +1039,7 @@ def _index_content_keys_in_algolia(content_keys, algolia_client, dry_run=False):
     )
 
     # Feed the un-evaluated flat iterable of algolia products into the 3rd party library function.  As of this writing,
-    # this library function will chunk the interable again using a default batch size of 1000.
+    # this library function will chunk the iterable again using a default batch size of 1000.
     #
     # See function documentation for indication that an Iterator is accepted:
     # https://github.com/algolia/algoliasearch-client-python/blob/e0a2a578464a1b01caaa84dba927b99ae8476af3/algoliasearch/search_index.py#L89
