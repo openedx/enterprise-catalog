@@ -752,6 +752,80 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 obj['academy_tags'] = sorted(obj['academy_tags'])
         return algolia_obj
 
+    def test_get_algolia_objects_from_course_metadata(self):
+        """
+        Test that the ``get_algolia_objects_from_course_content_metadata`` method generates a set of algolia objects to
+        index from a single course content metadata object
+        """
+        test_course = ContentMetadataFactory(content_type=COURSE, content_key='test-course-1')
+        # Create all 5 test catalogs.
+        catalog_queries = [CatalogQueryFactory(uuid=uuid.uuid4()) for _ in range(3)]
+        catalogs = [
+            EnterpriseCatalogFactory(catalog_query=query)
+            for query in catalog_queries
+        ]
+
+        test_course.catalog_queries.set(catalog_queries[0:3])
+
+        algolia_objects = tasks.get_algolia_objects_from_course_content_metadata(test_course)
+        # Should look something like-
+        #  [{'advertised_course_run': {'availability': 'current',
+        #                             'end': None,
+        #                             'key': 'course-v1:edX+DemoX',
+        #                             'max_effort': None,
+        #                             'min_effort': None,
+        #                             'pacing_type': None,
+        #                             'start': None,
+        #                             'upgrade_deadline': 32503680000.0,
+        #                             'weeks_to_complete': None},
+        #   'aggregation_key': 'course:test-course-1',
+        #   'availability': ['Available Now'],
+        #   'card_image_url': 'https://picsum.photos/540/209.jpg',
+        #   'content_type': 'course',
+        #   'course_bayesian_average': 0,
+        #   'course_runs': [{'availability': 'current',
+        #                    'end': None,
+        #                    'key': 'course-v1:edX+DemoX',
+        #                    'max_effort': None,
+        #                    'min_effort': None,
+        #                    'pacing_type': None,
+        #                    'start': None,
+        #                    'upgrade_deadline': 32503680000.0,
+        #                    'weeks_to_complete': None}],
+        #   'enterprise_catalog_uuids': ['0bdd57b7-b1cb-4775-b0dc-3cf49ff7d7f2',
+        #                                '2b861d68-06d7-415b-9baa-b5f496fafa1a',
+        #                                'add4b32e-8b32-4cb3-8de6-956210377330'],
+        #   'key': 'test-course-1',
+        #   'learning_type': 'course',
+        #   'learning_type_v2': 'course',
+        #   'marketing_url': 'https://marketing.url/test-course-1',
+        #   'objectID': 'course-be9a029e-8990-4f94-bf24-770fece63344-catalog-uuids-0',
+        #   'partners': [{'logo_image_url': 'https://dummyimage.com/265x132.jpg',
+        #                 'name': 'Partner Name'}],
+        #   'program_titles': [],
+        #   'programs': [],
+        #   'skill_names': [],
+        #   'skills': [],
+        #   'subjects': [],
+        #   'title': 'Fake Content Title UItWeUluIK',
+        #   'upcoming_course_runs': 0,
+        #   'uuid': 'be9a029e-8990-4f94-bf24-770fece63344'}, ... ]
+        for algo_object in algolia_objects:
+            assert algo_object.get('key') == test_course.content_key
+            assert algo_object.get('uuid') == test_course.json_metadata.get('uuid')
+
+            if object_catalogs := algo_object.get('enterprise_catalog_uuids'):
+                assert set(object_catalogs) == {str(catalog.uuid) for catalog in catalogs}
+
+            if object_customers := algo_object.get('enterprise_customer_uuids'):
+                assert set(object_customers) == {str(catalog.enterprise_uuid) for catalog in catalogs}
+
+            if object_queries := algo_object.get('enterprise_catalog_query_uuids'):
+                assert set(object_queries) == {str(query.uuid) for query in catalog_queries}
+
+            if object_queries_titles := algo_object.get('enterprise_catalog_query_titles'):
+                assert set(object_queries_titles) == {str(query.title) for query in catalog_queries}
+
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
     def test_index_algolia_program_common_uuids_only(self, mock_search_client):
         """
