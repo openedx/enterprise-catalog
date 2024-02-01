@@ -81,6 +81,7 @@ class CatalogQueryAdmin(UnchangeableMixin):
         'title',
         'content_filter',
     )
+    readonly_fields = ('uuid',)
     list_display = (
         'uuid',
         'content_filter_hash',
