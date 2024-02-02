@@ -79,7 +79,15 @@ class DiscoveryApiClient(BaseOAuthClient):
                 if exception:
                     raise exception
                 break
-        return response.json()
+        try:
+            return response.json()
+        except requests.exceptions.JSONDecodeError as err:
+            LOGGER.exception(
+                f'Invalid JSON while retrieving results from course-discovery for page {page}, '
+                f'resonse status code: {response.status_code}, '
+                f'response body: {response.text}'
+            )
+            raise err
 
     def _retrieve_course_reviews(self, request_params):
         """
@@ -120,7 +128,15 @@ class DiscoveryApiClient(BaseOAuthClient):
                 if exception:
                     raise exception
                 break
-        return response.json()
+        try:
+            return response.json()
+        except requests.exceptions.JSONDecodeError as err:
+            LOGGER.exception(
+                f'Invalid JSON while retrieving course review results from course-discovery for page {page}, '
+                f'resonse status code: {response.status_code}, '
+                f'response body: {response.text}'
+            )
+            raise err
 
     def get_course_reviews(self, course_keys=None):
         """
