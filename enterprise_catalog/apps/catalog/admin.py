@@ -63,6 +63,7 @@ class ContentMetadataAdmin(UnchangeableMixin):
         'associated_content_metadata',
         'catalog_queries',
         'get_catalog',
+        'modified',
     )
 
     @admin.display(description='Enterprise Catalogs')
