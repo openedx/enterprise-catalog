@@ -135,7 +135,8 @@ def fetch_catalog_types(hit):
     CATALOG_TYPES = [
         'A la carte',
         'Business',
-        'Education'
+        'Education',
+        'Subscription'
     ]
 
     return [catalog for catalog in CATALOG_TYPES if catalog in hit.get('enterprise_catalog_query_titles')]
