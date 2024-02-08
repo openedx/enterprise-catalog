@@ -2366,3 +2366,50 @@ class AcademiesViewSetTests(APITestMixin):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 0)
+
+
+@ddt.ddt
+class ContentMetadataViewTests(APITestMixin):
+    """
+    Tests for the readonly ContentMetadata viewset.
+    """
+    def setUp(self):
+        super().setUp()
+        self.set_up_staff()
+        self.content_metadata_object = ContentMetadataFactory(
+            content_type='course'
+        )
+
+    def test_list_success(self):
+        """
+        Test a successful, expected api response for the metadata list endpoint
+        """
+        url = reverse('api:v1:content-metadata-list')
+        response = self.client.get(url)
+        response_json = response.json()
+        assert len(response_json.get('results')) == 1
+        assert response_json.get('results')[0].get("key") == self.content_metadata_object.content_key
+
+    def test_list_with_content_keys(self):
+        """
+        Test a successful, expected api response for the metadata list endpoint with a supplied content keys query
+        param
+        """
+        url = reverse('api:v1:content-metadata-list') + f"?content_keys={self.content_metadata_object.content_key}"
+        response = self.client.get(url)
+        response_json = response.json()
+        assert len(response_json.get('results')) == 1
+        assert response_json.get('results')[0].get("key") == self.content_metadata_object.content_key
+        assert response_json.get('results')[0].get("course_runs")[0].get('start') == '2024-02-12T11:00:00Z'
+
+    def test_get_success(self):
+        """
+        Test a successful, expected api response for the metadata fetch endpoint
+        """
+        url = reverse(
+            'api:v1:content-metadata-detail',
+            kwargs={'pk': self.content_metadata_object.id}
+        )
+        response = self.client.get(url)
+        response_json = response.json()
+        assert response_json.get('title') == self.content_metadata_object.json_metadata.get('title')

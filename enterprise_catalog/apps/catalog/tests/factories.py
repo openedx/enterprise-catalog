@@ -101,6 +101,32 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
                 'is_enrollable': True,
                 'is_marketable': True,
                 'availability': 'current',
+                'seats': [
+                    {
+                        'type': 'audit',
+                        'price': '0.00',
+                        'currency': 'USD',
+                        'upgrade_deadline': None,
+                        'upgrade_deadline_override': None,
+                        'credit_provider': None,
+                        'credit_hours': None,
+                        'sku': '175338C',
+                        'bulk_sku': None
+                    },
+                    {
+                        'type': 'verified',
+                        'price': '50.00',
+                        'currency': 'USD',
+                        'upgrade_deadline': '2026-01-26T23:59:59Z',
+                        'upgrade_deadline_override': None,
+                        'credit_provider': None,
+                        'credit_hours': None,
+                        'sku': 'F46BB55',
+                        'bulk_sku': 'C72C608'
+                    }
+                ],
+                'start': '2024-02-12T11:00:00Z',
+                'end': '2026-02-05T11:00:00Z',
             }]
             json_metadata.update({
                 'content_type': COURSE,
