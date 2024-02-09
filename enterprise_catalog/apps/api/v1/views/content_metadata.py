@@ -1,3 +1,4 @@
+from django.db.models import Q
 from edx_rest_framework_extensions.auth.jwt.authentication import (
     JwtAuthentication,
 )
@@ -26,10 +27,10 @@ class ContentMetadataView(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self, **kwargs):
         """
-        Returns all content metadata objects filtered by an optional request query param ``content_keys`` (LIST).
+        Returns all content metadata objects filtered by an optional request query param (LIST) ``content_identifiers``
         """
-        content_filter = kwargs.get('content_keys')
+        content_filter = kwargs.get('content_identifiers')
         queryset = self.queryset
         if content_filter:
-            return queryset.filter(content_key__in=content_filter)
+            return queryset.filter(Q(content_key__in=content_filter) | Q(uuid__in=content_filter))
         return queryset
