@@ -2395,7 +2395,8 @@ class ContentMetadataViewTests(APITestMixin):
         Test a successful, expected api response for the metadata list endpoint with a supplied content keys query
         param
         """
-        url = reverse('api:v1:content-metadata-list') + f"?content_keys={self.content_metadata_object.content_key}"
+        query_param_string = f"?content_identifiers={self.content_metadata_object.content_key}"
+        url = reverse('api:v1:content-metadata-list') + query_param_string
         response = self.client.get(url)
         response_json = response.json()
         assert len(response_json.get('results')) == 1
@@ -2413,3 +2414,15 @@ class ContentMetadataViewTests(APITestMixin):
         response = self.client.get(url)
         response_json = response.json()
         assert response_json.get('title') == self.content_metadata_object.json_metadata.get('title')
+
+    def test_filter_list_by_uuid(self):
+        """
+        Test that the list content_identifiers query param accepts uuids
+        """
+        query_param_string = f"?content_identifiers={self.content_metadata_object.content_uuid}"
+        url = reverse('api:v1:content-metadata-list') + query_param_string
+        response = self.client.get(url)
+        response_json = response.json()
+        assert len(response_json.get('results')) == 1
+        assert response_json.get('results')[0].get("key") == self.content_metadata_object.content_key
+        assert response_json.get('results')[0].get("course_runs")[0].get('start') == '2024-02-12T11:00:00Z'
