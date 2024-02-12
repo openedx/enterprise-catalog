@@ -4,6 +4,8 @@ Utility functions for manipulating content metadata.
 
 from logging import getLogger
 
+from enterprise_catalog.apps.catalog.utils import get_content_key
+
 from .constants import FORCE_INCLUSION_METADATA_TAG_KEY
 
 
@@ -17,7 +19,7 @@ def tansform_force_included_courses(courses):
     """
     results = []
     for course_metadata in courses:
-        results += transform_course_metadata_to_visible(course_metadata)
+        results.append(transform_course_metadata_to_visible(course_metadata))
     return results
 
 
@@ -27,6 +29,10 @@ def transform_course_metadata_to_visible(course_metadata):
     so that it is visible/available/published in our metadata
     ENT-8212
     """
+    content_key = get_content_key(course_metadata)
+    LOGGER.info(
+        f'transform_course_metadata_to_visible on content_key: {content_key}'
+    )
     course_metadata[FORCE_INCLUSION_METADATA_TAG_KEY] = True
     advertised_course_run_uuid = course_metadata.get('advertised_course_run_uuid')
     course_run_statuses = []
