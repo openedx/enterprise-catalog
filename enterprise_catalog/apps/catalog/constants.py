@@ -102,6 +102,8 @@ PROGRAM_TYPES_MAP = {
     'Certificación Profesional': 'Certificación Profesional',
 }
 
+FORCE_INCLUSION_METADATA_TAG_KEY = 'enterprise_force_included'
+
 
 def json_serialized_course_modes():
     """
