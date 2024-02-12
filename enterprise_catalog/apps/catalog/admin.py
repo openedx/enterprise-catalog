@@ -119,6 +119,14 @@ class EnterpriseCatalogAdmin(UnchangeableMixin):
         'catalog_query__content_filter_hash__exact'
     )
 
+    autocomplete_fields = (
+        'catalog_query',
+    )
+
+    list_select_related = (
+        'catalog_query',
+    )
+
     @admin.display(
         description='Catalog Query'
     )
