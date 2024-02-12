@@ -8,6 +8,15 @@ import requests
 from celery.exceptions import SoftTimeLimitExceeded
 from django.conf import settings
 
+from enterprise_catalog.apps.catalog.constants import (
+    DISCOVERY_COURSE_KEY_BATCH_SIZE,
+    DISCOVERY_PROGRAM_KEY_BATCH_SIZE,
+)
+from enterprise_catalog.apps.catalog.content_metadata_utils import (
+    tansform_force_included_courses,
+)
+from enterprise_catalog.apps.catalog.utils import batch
+
 from .base_oauth import BaseOAuthClient
 from .constants import (
     DISCOVERY_COURSE_REVIEWS_ENDPOINT,
@@ -209,6 +218,17 @@ class DiscoveryApiClient(BaseOAuthClient):
             )
             raise exc
 
+        try:
+            # NOTE johnnagro this ONLY supports courses at the moment (NOT programs, leanerpathways, etc)
+            if forced_aggregation_keys := catalog_query.content_filter.get('enterprise_force_include_aggregation_keys'):
+                forced_courses = self.fetch_courses_by_keys(forced_aggregation_keys)
+                results += tansform_force_included_courses(forced_courses)
+        except Exception as exc:
+            LOGGER.exception(
+                f'unable to add unlisted courses for catalog_id: {catalog_query.id}'
+            )
+            raise exc
+
         return results
 
     def _retrieve_courses(self, offset, request_params):
@@ -323,6 +343,48 @@ class DiscoveryApiClient(BaseOAuthClient):
                 request_params,
                 exc,
             )
+
+        return programs
+
+    def fetch_courses_by_keys(self, course_keys):
+        """
+        Fetches course data from discovery's /api/v1/courses endpoint for the provided course keys.
+
+        Args:
+            course_keys (list of str): Content keys for Course ContentMetadata objects.
+        Returns:
+            list of dict: Returns a list of dictionaries where each dictionary represents the course
+            data from discovery.
+        """
+        courses = []
+
+        # Batch the course keys into smaller chunks so that we don't send too big of a request to discovery
+        batched_course_keys = batch(course_keys, batch_size=DISCOVERY_COURSE_KEY_BATCH_SIZE)
+        for course_keys_chunk in batched_course_keys:
+            # Discovery expects the keys param to be in the format ?keys=course1,course2,...
+            query_params = {'keys': ','.join(course_keys_chunk)}
+            courses.extend(self.get_courses(query_params=query_params))
+
+        return courses
+
+    def fetch_programs_by_keys(self, program_keys):
+        """
+        Fetches program data from discovery's /api/v1/programs endpoint for the provided program keys.
+
+        Args:
+            program_keys (list of str): Content keys for Program ContentMetadata objects.
+        Returns:
+            list of dict: Returns a list of dictionaries where each dictionary represents the program
+            data from discovery.
+        """
+        programs = []
+
+        # Batch the program keys into smaller chunks so that we don't send too big of a request to discovery
+        batched_program_keys = batch(program_keys, batch_size=DISCOVERY_PROGRAM_KEY_BATCH_SIZE)
+        for program_keys_chunk in batched_program_keys:
+            # Discovery expects the uuids param to be in the format ?uuids=program1,program2,...
+            query_params = {'uuids': ','.join(program_keys_chunk)}
+            programs.extend(self.get_programs(query_params=query_params))
 
         return programs
 

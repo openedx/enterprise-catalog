@@ -34,12 +34,14 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
     COURSE_RUN,
-    DISCOVERY_COURSE_KEY_BATCH_SIZE,
-    DISCOVERY_PROGRAM_KEY_BATCH_SIZE,
+    FORCE_INCLUSION_METADATA_TAG_KEY,
     LEARNER_PATHWAY,
     PROGRAM,
     REINDEX_TASK_BATCH_SIZE,
     TASK_BATCH_SIZE,
+)
+from enterprise_catalog.apps.catalog.content_metadata_utils import (
+    transform_course_metadata_to_visible,
 )
 from enterprise_catalog.apps.catalog.models import (
     CatalogQuery,
@@ -83,17 +85,7 @@ def _fetch_courses_by_keys(course_keys):
     Returns:
         list of dict: Returns a list of dictionaries where each dictionary represents the course data from discovery.
     """
-    courses = []
-    discovery_client = DiscoveryApiClient()
-
-    # Batch the course keys into smaller chunks so that we don't send too big of a request to discovery
-    batched_course_keys = batch(course_keys, batch_size=DISCOVERY_COURSE_KEY_BATCH_SIZE)
-    for course_keys_chunk in batched_course_keys:
-        # Discovery expects the keys param to be in the format ?keys=course1,course2,...
-        query_params = {'keys': ','.join(course_keys_chunk)}
-        courses.extend(discovery_client.get_courses(query_params=query_params))
-
-    return courses
+    return DiscoveryApiClient().fetch_courses_by_keys(course_keys)
 
 
 def _fetch_programs_by_keys(program_keys):
@@ -105,17 +97,7 @@ def _fetch_programs_by_keys(program_keys):
     Returns:
         list of dict: Returns a list of dictionaries where each dictionary represents the program data from discovery.
     """
-    programs = []
-    discovery_client = DiscoveryApiClient()
-
-    # Batch the program keys into smaller chunks so that we don't send too big of a request to discovery
-    batched_program_keys = batch(program_keys, batch_size=DISCOVERY_PROGRAM_KEY_BATCH_SIZE)
-    for program_keys_chunk in batched_program_keys:
-        # Discovery expects the uuids param to be in the format ?uuids=program1,program2,...
-        query_params = {'uuids': ','.join(program_keys_chunk)}
-        programs.extend(discovery_client.get_programs(query_params=query_params))
-
-    return programs
+    return DiscoveryApiClient().fetch_programs_by_keys(program_keys)
 
 
 def unready_tasks(celery_task, time_delta):
@@ -393,6 +375,10 @@ def _update_full_content_metadata_course(content_keys):
             if review := reviews_for_courses_dict.get(content_key):
                 metadata_record.json_metadata['reviews_count'] = review.get('reviews_count')
                 metadata_record.json_metadata['avg_course_rating'] = review.get('avg_course_rating')
+
+            # johnnagro ENT-8212 need to retransform after full pull
+            if metadata_record.json_metadata.get(FORCE_INCLUSION_METADATA_TAG_KEY):
+                metadata_record.json_metadata = transform_course_metadata_to_visible(metadata_record.json_metadata)
 
             modified_content_metadata_records.append(metadata_record)
             program_content_keys = create_course_associated_programs(
