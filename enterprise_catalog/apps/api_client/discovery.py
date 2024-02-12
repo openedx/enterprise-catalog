@@ -221,6 +221,10 @@ class DiscoveryApiClient(BaseOAuthClient):
         try:
             # NOTE johnnagro this ONLY supports courses at the moment (NOT programs, leanerpathways, etc)
             if forced_aggregation_keys := catalog_query.content_filter.get('enterprise_force_include_aggregation_keys'):
+                LOGGER.info(
+                    'get_metadata_by_query enterprise_force_include_aggregation_keys seen'
+                    f'attempting to force-include: {forced_aggregation_keys}'
+                )
                 forced_courses = self.fetch_courses_by_keys(forced_aggregation_keys)
                 results += tansform_force_included_courses(forced_courses)
         except Exception as exc:
