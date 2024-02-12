@@ -91,7 +91,7 @@ defusedxml==0.7.1
     #   djangorestframework-xml
     #   python3-openid
     #   social-auth-core
-django==4.2.9
+django==4.2.10
     # via
     #   -r requirements/base.txt
     #   django-celery-results
@@ -134,7 +134,7 @@ django-extensions==3.2.3
     # via -r requirements/base.txt
 django-log-request-id==2.1.0
     # via -r requirements/base.txt
-django-model-utils==4.3.1
+django-model-utils==4.4.0
     # via
     #   -r requirements/base.txt
     #   edx-celeryutils
@@ -177,7 +177,7 @@ edx-django-utils==5.10.1
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==10.1.0
+edx-drf-extensions==10.2.0
     # via
     #   -r requirements/base.txt
     #   edx-rbac
@@ -240,7 +240,7 @@ monotonic==1.6
     # via
     #   -r requirements/base.txt
     #   analytics-python
-mysqlclient==2.2.3
+mysqlclient==2.2.4
     # via -r requirements/base.txt
 newrelic==9.6.0
     # via
@@ -303,7 +303,7 @@ python-dateutil==2.8.2
     #   celery
 python-memcached==1.62
     # via -r requirements/production.in
-python-slugify==8.0.3
+python-slugify==8.0.4
     # via
     #   -r requirements/base.txt
     #   code-annotations
@@ -398,7 +398,7 @@ typing-extensions==4.9.0
     #   drf-spectacular
     #   edx-opaque-keys
     #   kombu
-tzdata==2023.4
+tzdata==2024.1
     # via
     #   -r requirements/base.txt
     #   backports-zoneinfo

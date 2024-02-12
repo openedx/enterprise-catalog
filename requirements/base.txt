@@ -66,7 +66,7 @@ defusedxml==0.7.1
     #   djangorestframework-xml
     #   python3-openid
     #   social-auth-core
-django==4.2.9
+django==4.2.10
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.in
@@ -110,7 +110,7 @@ django-extensions==3.2.3
     # via -r requirements/base.in
 django-log-request-id==2.1.0
     # via -r requirements/base.in
-django-model-utils==4.3.1
+django-model-utils==4.4.0
     # via
     #   -r requirements/base.in
     #   edx-celeryutils
@@ -152,7 +152,7 @@ edx-django-utils==5.10.1
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==10.1.0
+edx-drf-extensions==10.2.0
     # via
     #   -r requirements/base.in
     #   edx-rbac
@@ -188,7 +188,7 @@ markupsafe==2.1.5
     # via jinja2
 monotonic==1.6
     # via analytics-python
-mysqlclient==2.2.3
+mysqlclient==2.2.4
     # via -r requirements/base.in
 newrelic==9.6.0
     # via edx-django-utils
@@ -226,7 +226,7 @@ python-dateutil==2.8.2
     # via
     #   analytics-python
     #   celery
-python-slugify==8.0.3
+python-slugify==8.0.4
     # via code-annotations
 python3-openid==3.2.0
     # via social-auth-core
@@ -300,7 +300,7 @@ typing-extensions==4.9.0
     #   drf-spectacular
     #   edx-opaque-keys
     #   kombu
-tzdata==2023.4
+tzdata==2024.1
     # via
     #   backports-zoneinfo
     #   celery

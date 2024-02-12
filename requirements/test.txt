@@ -164,7 +164,7 @@ django-extensions==3.2.3
     # via -r requirements/base.txt
 django-log-request-id==2.1.0
     # via -r requirements/base.txt
-django-model-utils==4.3.1
+django-model-utils==4.4.0
     # via
     #   -r requirements/base.txt
     #   edx-celeryutils
@@ -209,7 +209,7 @@ edx-django-utils==5.10.1
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==10.1.0
+edx-drf-extensions==10.2.0
     # via
     #   -r requirements/base.txt
     #   edx-rbac
@@ -231,7 +231,7 @@ exceptiongroup==1.2.0
     # via pytest
 factory-boy==3.3.0
     # via -r requirements/test.in
-faker==22.6.0
+faker==23.1.0
     # via factory-boy
 filelock==3.13.1
     # via
@@ -288,7 +288,7 @@ monotonic==1.6
     # via
     #   -r requirements/base.txt
     #   analytics-python
-mysqlclient==2.2.3
+mysqlclient==2.2.4
     # via -r requirements/base.txt
 newrelic==9.6.0
     # via
@@ -387,7 +387,7 @@ python-dateutil==2.8.2
     #   analytics-python
     #   celery
     #   faker
-python-slugify==8.0.3
+python-slugify==8.0.4
     # via
     #   -r requirements/base.txt
     #   code-annotations
@@ -502,7 +502,7 @@ typing-extensions==4.9.0
     #   faker
     #   kombu
     #   pylint
-tzdata==2023.4
+tzdata==2024.1
     # via
     #   -r requirements/base.txt
     #   backports-zoneinfo
