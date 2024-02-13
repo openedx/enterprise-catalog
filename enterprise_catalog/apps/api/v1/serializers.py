@@ -288,6 +288,10 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
         child course run and adds it to the serialized representation of the
         course run record in `serialized_course_runs`.
         """
+        # Early guard in case the context has no catalog
+        if not self.context.get('enterprise_catalog'):
+            return
+
         urls_by_course_run_key = {}
         for course_run in ContentMetadata.get_child_records(course_instance):
             urls_by_course_run_key[course_run.content_key] = \
