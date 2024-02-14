@@ -2377,7 +2377,8 @@ class ContentMetadataViewTests(APITestMixin):
         super().setUp()
         self.set_up_staff()
         self.content_metadata_object = ContentMetadataFactory(
-            content_type='course'
+            content_type='course',
+            content_uuid=uuid.uuid4(),
         )
 
     def test_list_success(self):
@@ -2395,7 +2396,10 @@ class ContentMetadataViewTests(APITestMixin):
         Test a successful, expected api response for the metadata list endpoint with a supplied content keys query
         param
         """
-        query_param_string = f"?content_identifiers={self.content_metadata_object.content_key}"
+        ContentMetadataFactory(content_type='course')
+        junk_identifier = urlencode({'content_identifiers': 'edx+101'})
+        encoded_key = urlencode({'content_identifiers': self.content_metadata_object.content_key})
+        query_param_string = f"?{encoded_key}&{junk_identifier}"
         url = reverse('api:v1:content-metadata-list') + query_param_string
         response = self.client.get(url)
         response_json = response.json()
