@@ -34,12 +34,10 @@ def transform_course_metadata_to_visible(course_metadata):
         f'transform_course_metadata_to_visible on content_key: {content_key}'
     )
     course_metadata[FORCE_INCLUSION_METADATA_TAG_KEY] = True
-    advertised_course_run_uuid = course_metadata.get('advertised_course_run_uuid')
     course_run_statuses = []
     for course_run in course_metadata.get('course_runs', []):
-        if course_run.get('uuid') == advertised_course_run_uuid:
-            course_run['status'] = 'published'
-            course_run['availability'] = 'Current'
+        course_run['status'] = 'published'
+        course_run['availability'] = 'Current'
         course_run_statuses.append(course_run.get('status'))
     course_metadata['course_run_statuses'] = course_run_statuses
     return course_metadata
