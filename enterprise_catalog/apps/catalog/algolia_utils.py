@@ -475,13 +475,15 @@ def get_course_partners(course):
     """
     partners = []
     owners = course.get('owners') or []
+    org_name_override = course.get('organization_short_code_override')
+    logo_override = course.get('organization_logo_override_url')
 
     for owner in owners:
         partner_name = owner.get('name')
         if partner_name:
             partner_metadata = {
-                'name': partner_name,
-                'logo_image_url': owner.get('logo_image_url'),
+                'name': org_name_override or partner_name,
+                'logo_image_url': logo_override or owner.get('logo_image_url'),
             }
             partners.append(partner_metadata)
 

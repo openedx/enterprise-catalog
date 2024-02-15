@@ -235,6 +235,25 @@ class AlgoliaUtilsTests(TestCase):
                 },
             ],
         ),
+        (
+            {
+                'owners': [
+                    {
+                        'name': 'Test Org Name',
+                        'logo_image_url': 'https://fake.image1',
+                        'ignored_attr': None,
+                    },
+                ],
+                'organization_short_code_override': 'Org Name Override',
+                'organization_logo_override_url': 'https://fake.image2',
+            },
+            [
+                {
+                    'name': 'Org Name Override',
+                    'logo_image_url': 'https://fake.image2',
+                },
+            ]
+        )
     )
     @ddt.unpack
     def test_get_course_partners(self, course_metadata, expected_partners):
