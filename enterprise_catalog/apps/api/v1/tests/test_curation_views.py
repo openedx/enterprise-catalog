@@ -215,6 +215,17 @@ class EnterpriseCurationConfigReadOnlyViewSetTests(CurationAPITestBase):
         expected_highlighted_content_uuids = [str(hc.uuid) for hc in self.highlighted_content_list_one]
         assert highlighted_content_uuids == expected_highlighted_content_uuids
 
+    def test_archive_content_count(self):
+        """
+        Test that the count of archived content is serialized correctly.
+        """
+        url = reverse('api:v1:enterprise-curations-detail', kwargs={'uuid': str(self.curation_config_one.uuid)})
+        self.set_up_catalog_learner()
+
+        response = self.client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()['highlight_sets'][0]['archived_content_count'] == 0
+
     def test_selected_card_image_url_is_first(self):
         """
         Test that the `card_image_url` of the highlight set is that of the first highlighted content.
