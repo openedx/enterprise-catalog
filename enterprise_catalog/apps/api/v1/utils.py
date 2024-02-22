@@ -104,3 +104,15 @@ def get_most_recent_modified_time(content_modified, catalog_modified=None, custo
     if customer_modified:
         content_modified = max([content_modified, customer_modified])
     return content_modified
+
+
+def get_archived_content_count(highlighted_content):
+    """
+    Helper function to get the count of archived content from a highlight set
+    """
+    archived_content_count = 0
+    for content in highlighted_content:
+        course_run_statuses = content.course_run_statuses
+        if course_run_statuses and all(status in ('archived', 'unpublished') for status in course_run_statuses):
+            archived_content_count += 1
+    return archived_content_count
