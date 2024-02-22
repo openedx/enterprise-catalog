@@ -6,6 +6,7 @@ from rest_framework import serializers, status
 
 from enterprise_catalog.apps.academy.models import Academy, Tag
 from enterprise_catalog.apps.api.v1.utils import (
+    get_archived_content_count,
     get_enterprise_utm_context,
     get_most_recent_modified_time,
     is_any_course_run_active,
@@ -395,6 +396,7 @@ class EnterpriseCurationConfigSerializer(serializers.ModelSerializer):
                 'highlighted_content_uuids': [
                     item.uuid for item in highlight_set.highlighted_content.order_by('created')
                 ],
+                'archived_content_count': get_archived_content_count(highlight_set.highlighted_content.all()),
             }
             for highlight_set in catalog_highlight_sets
         ]
