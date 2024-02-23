@@ -186,10 +186,12 @@ dev.destroy: dev.down # Kills containers and destroys volumes. If you get an err
 dev.stop: # Stops containers so they can be restarted
 	docker-compose stop
 
-dev.backup: dev.up
+dev.backup:
+	docker-compose up -d mysql
 	docker run --rm --volumes-from enterprise.catalog.mysql -v $$(pwd)/.dev/backups:/backup debian:jessie tar zcvf /backup/mysql.tar.gz /var/lib/mysql
 
-dev.restore: dev.up
+dev.restore:
+	dev-compose up -d mysql
 	docker run --rm --volumes-from enterprise.catalog.mysql -v $$(pwd)/.dev/backups:/backup debian:jessie tar zxvf /backup/mysql.tar.gz
 
 mysql-client:  # Opens mysql client in the mysql container shell
