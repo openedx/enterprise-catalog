@@ -165,7 +165,7 @@ dev.migrate: # Migrates databases. Application and DB server must be up for this
 dev.up: dev.up.redis # Starts all containers
 	docker-compose up -d
 
-dev.up.build: # Runs docker-compose -up -d --build
+dev.up.build: dev.up.redis # Runs docker-compose -up -d --build
 	docker-compose up -d --build
 
 dev.up.build-no-cache: dev.up.redis
@@ -187,12 +187,16 @@ dev.stop: # Stops containers so they can be restarted
 	docker-compose stop
 
 dev.backup:
+	docker-compose stop app worker
 	docker-compose up -d mysql
-	docker run --rm --volumes-from enterprise.catalog.mysql -v $$(pwd)/.dev/backups:/backup debian:jessie tar zcvf /backup/mysql.tar.gz /var/lib/mysql
+	sleep 10 # let mysql process get fully warmed up
+	docker compose exec mysql mysqldump --all-databases > .dev/enterprise_catalog_all.sql
 
 dev.restore:
-	dev-compose up -d mysql
-	docker run --rm --volumes-from enterprise.catalog.mysql -v $$(pwd)/.dev/backups:/backup debian:jessie tar zxvf /backup/mysql.tar.gz
+	docker-compose stop app worker
+	docker-compose up -d mysql
+	sleep 10 # let mysql process get fully warmed up
+	docker compose exec -T mysql mysql < .dev/enterprise_catalog_all.sql
 
 mysql-client:  # Opens mysql client in the mysql container shell
 	docker-compose exec -u 0 mysql env TERM=$(TERM) mysql enterprise_catalog
@@ -208,6 +212,9 @@ mysql-client:  # Opens mysql client in the mysql container shell
 
 %-attach: ## Attach terminal I/O to the specified service container
 	docker attach enterprise.catalog.$*
+
+dev.static:
+	docker-compose exec -u 0 app python3 manage.py collectstatic --noinput
 
 docker_build: ## Builds with the latest enterprise catalog
 	docker build . --target app -t openedx/enterprise-catalog:latest
