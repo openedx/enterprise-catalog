@@ -286,31 +286,25 @@ def _normalize_course_metadata(course_metadata_record):
     """
     json_meta = course_metadata_record.json_metadata
     normalized_metadata = {}
-    # For each content type, find the values that correspond to the desired output key.
-    if course_metadata_record.is_exec_ed_2u_course:
-        # First case covers Exec Ed courses.
-        additional_metadata = json_meta.get('additional_metadata', {})
-        normalized_metadata['start_date'] = additional_metadata.get('start_date')
-        normalized_metadata['end_date'] = additional_metadata.get('end_date')
-        normalized_metadata['enroll_by_date'] = additional_metadata.get('registration_deadline')
-        for entitlement in json_meta.get('entitlements', []):
-            if entitlement.get('mode') == CourseMode.PAID_EXECUTIVE_EDUCATION:
-                normalized_metadata['content_price'] = entitlement.get('price') or DEFAULT_NORMALIZED_PRICE
-    else:
-        # Else case covers OCM courses.
-        advertised_course_run_uuid = json_meta.get('advertised_course_run_uuid')
-        advertised_course_run = _get_course_run_by_uuid(json_meta, advertised_course_run_uuid)
-        if advertised_course_run is not None:
-            normalized_metadata['start_date'] = advertised_course_run.get('start')
-            normalized_metadata['end_date'] = advertised_course_run.get('end')
-            normalized_metadata['content_price'] = \
-                advertised_course_run.get('first_enrollable_paid_seat_price') or DEFAULT_NORMALIZED_PRICE
+
+    advertised_course_run_uuid = json_meta.get('advertised_course_run_uuid')
+    advertised_course_run = _get_course_run_by_uuid(json_meta, advertised_course_run_uuid)
+
+    if advertised_course_run is not None:
+        normalized_metadata['start_date'] = advertised_course_run.get('start')
+        normalized_metadata['end_date'] = advertised_course_run.get('end')
+        normalized_metadata['content_price'] = advertised_course_run.get('first_enrollable_paid_seat_price') \
+            or DEFAULT_NORMALIZED_PRICE
+        if enrollment_end := advertised_course_run.get('enrollment_end'):
+            normalized_metadata['enroll_by_date'] = enrollment_end
+        else:
             all_seats = advertised_course_run.get('seats', [])
             seat = _find_best_mode_seat(all_seats)
             if seat:
                 normalized_metadata['enroll_by_date'] = seat.get('upgrade_deadline')
             else:
-                logger.info(f"No Seat Found for course run '{advertised_course_run.get('key')}'. Seats: {all_seats}")
+                logger.info(f"No enrollment end or seat found for course run + \
+                    '{advertised_course_run.get('key')}'. Seats: {all_seats}")
 
     # Add normalized values to net-new keys:
     json_meta['normalized_metadata'] = normalized_metadata
@@ -365,17 +359,6 @@ def _update_full_content_metadata_course(content_keys, dry_run=False):
 
             # Merge the full metadata from discovery's /api/v1/courses into the local metadata object.
             metadata_record.json_metadata.update(course_metadata_dict)
-
-            # Exec ed provides the start/end dates in additional_metadata, so we should copy those over to the keys that
-            # we use (inside the advertised course run).
-            if metadata_record.is_exec_ed_2u_course:
-                json_meta = metadata_record.json_metadata
-                start_date = json_meta.get('additional_metadata', {}).get('start_date')
-                end_date = json_meta.get('additional_metadata', {}).get('end_date')
-                course_run_uuid = json_meta.get('advertised_course_run_uuid')
-                for run in json_meta.get('course_runs', []):
-                    if run.get('uuid') == course_run_uuid:
-                        run.update({'start': start_date, 'end': end_date})
 
             # Perform more steps to normalize and move keys around for more consistency across content types.
             _normalize_course_metadata(metadata_record)

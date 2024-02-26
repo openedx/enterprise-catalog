@@ -242,7 +242,13 @@ def course_hit_to_row(hit):
 
 
 def fetch_and_format_registration_date(obj):
-    enroll_by_date = obj.get('registration_deadline')
+    """
+    Args:
+        obj: CourseRun object
+    Returns:
+        string: date to register by
+    """
+    enroll_by_date = obj.get('end')
     stripped_enroll_by = enroll_by_date.split("T")[0]
     formatted_enroll_by = None
     try:
@@ -264,18 +270,12 @@ def exec_ed_course_to_row(hit):
         csv_row.append(hit['partners'][0]['name'])
     else:
         csv_row.append(None)
-    if hit.get('additional_metadata'):
-        start_date = None
-        additional_md = hit['additional_metadata']
-        if additional_md.get('start_date'):
-            start_date = parser.parse(additional_md['start_date']).strftime(DATE_FORMAT)
-        csv_row.append(start_date)
 
-        end_date = None
-        if additional_md.get('end_date'):
-            end_date = parser.parse(additional_md['end_date']).strftime(DATE_FORMAT)
-        csv_row.append(end_date)
-        formatted_enroll_by = fetch_and_format_registration_date(additional_md)
+    adv_course_run = hit.get('advertised_course_run', {})
+    if (start_date := adv_course_run.get('start'), end_date := adv_course_run.get('end')) and start_date and end_date:
+        csv_row.append(start_date and parser.parse(start_date).strftime(DATE_FORMAT))
+        csv_row.append(end_date and parser.parse(end_date).strftime(DATE_FORMAT))
+        formatted_enroll_by = fetch_and_format_registration_date(adv_course_run)
     else:
         csv_row.append(None)  # no start date
         csv_row.append(None)  # no end date
@@ -283,7 +283,6 @@ def exec_ed_course_to_row(hit):
 
     csv_row.append(formatted_enroll_by)
 
-    adv_course_run = hit.get('advertised_course_run', {})
     key = adv_course_run.get('key')
 
     price = float(hit['entitlements'][0]['price'])
