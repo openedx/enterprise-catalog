@@ -17,6 +17,7 @@ asgiref==3.7.2
     #   -r requirements/base.txt
     #   django
     #   django-cors-headers
+    #   django-simple-history
 attrs==23.2.0
     # via
     #   -r requirements/base.txt
@@ -29,7 +30,6 @@ backoff==1.10.0
 backports-zoneinfo[tzdata]==0.2.1
     # via
     #   -r requirements/base.txt
-    #   backports-zoneinfo
     #   celery
     #   django
     #   kombu
@@ -80,7 +80,7 @@ code-annotations==1.6.0
     # via
     #   -r requirements/base.txt
     #   edx-toggles
-cryptography==42.0.2
+cryptography==42.0.5
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -91,7 +91,7 @@ defusedxml==0.7.1
     #   djangorestframework-xml
     #   python3-openid
     #   social-auth-core
-django==4.2.9
+django==4.2.10
     # via
     #   -r requirements/base.txt
     #   django-celery-results
@@ -134,12 +134,12 @@ django-extensions==3.2.3
     # via -r requirements/base.txt
 django-log-request-id==2.1.0
     # via -r requirements/base.txt
-django-model-utils==4.3.1
+django-model-utils==4.4.0
     # via
     #   -r requirements/base.txt
     #   edx-celeryutils
     #   edx-rbac
-django-simple-history==3.4.0
+django-simple-history==3.5.0
     # via -r requirements/base.txt
 django-waffle==4.1.0
     # via
@@ -177,7 +177,7 @@ edx-django-utils==5.10.1
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==10.1.0
+edx-drf-extensions==10.2.0
     # via
     #   -r requirements/base.txt
     #   edx-rbac
@@ -191,7 +191,7 @@ edx-rest-api-client==5.6.1
     # via -r requirements/base.txt
 edx-toggles==5.1.1
     # via -r requirements/base.txt
-gevent==23.9.1
+gevent==24.2.1
     # via -r requirements/production.in
 greenlet==3.0.3
     # via gevent
@@ -201,7 +201,7 @@ idna==3.6
     # via
     #   -r requirements/base.txt
     #   requests
-importlib-resources==6.1.1
+importlib-resources==6.1.2
     # via
     #   -r requirements/base.txt
     #   jsonschema
@@ -240,9 +240,9 @@ monotonic==1.6
     # via
     #   -r requirements/base.txt
     #   analytics-python
-mysqlclient==2.2.3
+mysqlclient==2.2.4
     # via -r requirements/base.txt
-newrelic==9.6.0
+newrelic==9.7.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -284,7 +284,6 @@ pyjwt[crypto]==2.8.0
     #   edx-auth-backends
     #   edx-drf-extensions
     #   edx-rest-api-client
-    #   pyjwt
     #   social-auth-core
 pymemcache==4.0.0
     # via -r requirements/base.txt
@@ -303,7 +302,7 @@ python-dateutil==2.8.2
     #   celery
 python-memcached==1.62
     # via -r requirements/production.in
-python-slugify==8.0.3
+python-slugify==8.0.4
     # via
     #   -r requirements/base.txt
     #   code-annotations
@@ -343,7 +342,7 @@ requests-oauthlib==1.3.1
     # via
     #   -r requirements/base.txt
     #   social-auth-core
-rpds-py==0.17.1
+rpds-py==0.18.0
     # via
     #   -r requirements/base.txt
     #   jsonschema
@@ -372,7 +371,7 @@ social-auth-app-django==5.4.0
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends
-social-auth-core==4.5.2
+social-auth-core==4.5.3
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends
@@ -381,7 +380,7 @@ sqlparse==0.4.4
     # via
     #   -r requirements/base.txt
     #   django
-stevedore==5.1.0
+stevedore==5.2.0
     # via
     #   -r requirements/base.txt
     #   code-annotations
@@ -391,14 +390,14 @@ text-unidecode==1.3
     # via
     #   -r requirements/base.txt
     #   python-slugify
-typing-extensions==4.9.0
+typing-extensions==4.10.0
     # via
     #   -r requirements/base.txt
     #   asgiref
     #   drf-spectacular
     #   edx-opaque-keys
     #   kombu
-tzdata==2023.4
+tzdata==2024.1
     # via
     #   -r requirements/base.txt
     #   backports-zoneinfo
@@ -407,7 +406,7 @@ uritemplate==4.1.1
     # via
     #   -r requirements/base.txt
     #   drf-spectacular
-urllib3==2.2.0
+urllib3==2.2.1
     # via
     #   -r requirements/base.txt
     #   requests
@@ -421,7 +420,7 @@ wcwidth==0.2.13
     # via
     #   -r requirements/base.txt
     #   prompt-toolkit
-xlsxwriter==3.1.9
+xlsxwriter==3.2.0
     # via -r requirements/base.txt
 zipp==3.17.0
     # via
@@ -429,7 +428,7 @@ zipp==3.17.0
     #   importlib-resources
 zope-event==5.0
     # via gevent
-zope-interface==6.1
+zope-interface==6.2
     # via gevent
 
 # The following packages are considered to be unsafe in a requirements file:
