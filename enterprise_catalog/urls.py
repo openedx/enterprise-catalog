@@ -25,6 +25,7 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
+from enterprise_catalog.apps.ai_curation.api import urls as ai_curation_urls
 from enterprise_catalog.apps.api import urls as api_urls
 from enterprise_catalog.apps.core import views as core_views
 
@@ -49,6 +50,7 @@ urlpatterns = [
     path('admin/clearcache/', include('clearcache.urls')),
     path('admin/', admin.site.urls),
     path('api/', include(api_urls), name='api'),
+    path('api/', include(ai_curation_urls), name='api'),
     # Use the same auth views for all logins, including those originating from the browseable API.
     path('auto_auth/', core_views.AutoAuth.as_view(), name='auto_auth'),
     path('health/', core_views.health, name='health'),
