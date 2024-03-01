@@ -116,7 +116,7 @@ ALGOLIA_INDEX_SETTINGS = {
         'enterprise_catalog_query_uuids',
         'enterprise_customer_uuids',
         'academy_uuids',
-        'academy_tags',
+        'searchable(academy_tags)',
         'language',
         'level_type',
         'program_type',
