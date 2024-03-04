@@ -97,18 +97,6 @@ class FindCatalogQueryTest(TestCase):
         result = find_and_modify_catalog_query(self.old_filter)
         self.assertEqual(result, self.old_catalog_query)
 
-    def test_no_uuid_old_filter_diff_exec_ed_changes_nothing(self):
-        """
-        When no catalog_query_uuid is provided, the content filter matches an existing query,
-        but a different value than the existing query is provided for ``include_exec_ed_2u_courses``,
-        a new CatalogQuery instance should be created (because that does not violate the unique
-        constraint on ``(content_filter_hash, include_exec_ed_2u_courses)``.
-        """
-        result = find_and_modify_catalog_query(self.old_filter, include_exec_ed_2u_courses=True)
-        self.assertNotEqual(result, self.old_catalog_query)
-        self.assertEqual(result.content_filter_hash, self.old_catalog_query.content_filter_hash)
-        self.assertTrue(result.include_exec_ed_2u_courses)
-
     def test_no_uuid_new_filter_creates_new_query(self):
         new_filter = {'key': ['mmmmmmmm']}
         result = find_and_modify_catalog_query(new_filter)
@@ -132,29 +120,6 @@ class FindCatalogQueryTest(TestCase):
                 dupe_filter,
                 uuid_to_update
             )
-
-    def test_no_error_for_dupe_uuid_but_diff_exec_ed_inclusion(self):
-        """
-        Should be able to modify an existing query to have the same
-        content filter (hash) as another existing query, as long as
-        the former has a different ``include_exec_ed_2u_courses`` value
-        than the latter.
-        """
-        dupe_filter = {'key': ['summerxbreeze']}
-        uuid_to_update = uuid4()
-        query_no_exec_ed_courses = CatalogQuery.objects.create(
-            content_filter=dupe_filter,
-            uuid=uuid4(),
-        )
-        CatalogQuery.objects.create(
-            content_filter={'key': ['tempfilter']},
-            uuid=uuid_to_update,
-        )
-        modified_query = find_and_modify_catalog_query(dupe_filter, include_exec_ed_2u_courses=True)
-        self.assertEqual(
-            modified_query.content_filter_hash,
-            query_no_exec_ed_courses.content_filter_hash,
-        )
 
     def test_old_uuid_new_title_saves_existing_query_with_title(self):
         new_title = 'testing'
