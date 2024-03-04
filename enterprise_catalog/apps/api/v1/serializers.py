@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 
 def find_and_modify_catalog_query(
-        content_filter, catalog_query_uuid=None, query_title=None, include_exec_ed_2u_courses=False
+        content_filter, catalog_query_uuid=None, query_title=None
 ):
     """
     This method aims to make sure UUID, query title and content_filter in the catalog service
@@ -47,8 +47,6 @@ def find_and_modify_catalog_query(
             - If not provided, we should be receiving a "direct" content filter.
         query_title(str): query title created in LMS Django Admin.
             - Can be null.
-        include_exec_ed_2u_courses(bool): Whether exec. ed. courses are allowed to be included in a catalog query.
-            - Defaults to False.
     Returns:
         a CatalogQuery object.
     """
@@ -59,7 +57,6 @@ def find_and_modify_catalog_query(
             catalog_query_from_uuid.content_filter = content_filter
             catalog_query_from_uuid.title = query_title
             catalog_query_from_uuid.content_filter_hash = hashed_content_filter
-            catalog_query_from_uuid.include_exec_ed_2u_courses = include_exec_ed_2u_courses
             try:
                 catalog_query_from_uuid.save()
             except IntegrityError as exc:
@@ -73,14 +70,12 @@ def find_and_modify_catalog_query(
         else:
             content_filter_from_hash, _ = CatalogQuery.objects.update_or_create(
                 content_filter_hash=hashed_content_filter,
-                include_exec_ed_2u_courses=include_exec_ed_2u_courses,
                 defaults={'content_filter': content_filter, 'uuid': catalog_query_uuid, 'title': query_title}
             )
             return content_filter_from_hash
     else:
         content_filter_from_hash, _ = CatalogQuery.objects.get_or_create(
             content_filter_hash=hashed_content_filter,
-            include_exec_ed_2u_courses=include_exec_ed_2u_courses,
             defaults={'content_filter': content_filter, 'title': query_title}
         )
 
@@ -100,8 +95,6 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
     catalog_modified = serializers.DateTimeField(source='modified', required=False)
     content_last_modified = serializers.SerializerMethodField()
     query_title = serializers.CharField(allow_null=True, required=False)
-    # TODO: we should disallow null after rolling out edx-enterprise changes.
-    include_exec_ed_2u_courses = serializers.BooleanField(allow_null=True, required=False)
 
     class Meta:
         model = EnterpriseCatalog
@@ -117,7 +110,6 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
             'content_last_modified',
             'catalog_modified',
             'query_title',
-            'include_exec_ed_2u_courses',
         ]
 
     def get_content_last_modified(self, obj):
@@ -127,13 +119,11 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
         content_filter = validated_data.pop('content_filter')
         catalog_query_uuid = validated_data.pop('catalog_query_uuid', None)
         query_title = validated_data.pop('query_title', None)
-        include_exec_ed_2u_courses = validated_data.pop('include_exec_ed_2u_courses', False)
 
         catalog_query = find_and_modify_catalog_query(
             content_filter,
             catalog_query_uuid,
             query_title,
-            include_exec_ed_2u_courses,
         )
 
         try:
@@ -157,25 +147,18 @@ class EnterpriseCatalogSerializer(serializers.ModelSerializer):
         default_content_filter = None
         default_query_title = None
         default_query_uuid = None
-        default_include_exec_ed_2u_courses = False
         if instance.catalog_query:
             default_content_filter = instance.catalog_query.content_filter
             default_query_title = instance.catalog_query.title if hasattr(instance.catalog_query, 'title') else None
             default_query_uuid = str(instance.catalog_query.uuid)
-            default_include_exec_ed_2u_courses = instance.catalog_query.include_exec_ed_2u_courses
 
         content_filter = validated_data.get('content_filter', default_content_filter)
         query_title = validated_data.get('query_title', default_query_title)
         catalog_query_uuid = validated_data.pop('catalog_query_uuid', default_query_uuid)
-        include_exec_ed_2u_courses = validated_data.pop(
-            'include_exec_ed_2u_courses',
-            default_include_exec_ed_2u_courses,
-        )
         instance.catalog_query = find_and_modify_catalog_query(
             content_filter,
             catalog_query_uuid,
             query_title,
-            include_exec_ed_2u_courses,
         )
         return super().update(instance, validated_data)
 
