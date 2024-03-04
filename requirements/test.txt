@@ -42,7 +42,7 @@ billiard==4.2.0
     # via
     #   -r requirements/base.txt
     #   celery
-cachetools==5.3.2
+cachetools==5.3.3
     # via tox
 celery==5.3.6
     # via
@@ -107,7 +107,7 @@ cryptography==42.0.5
     #   -r requirements/base.txt
     #   pyjwt
     #   social-auth-core
-ddt==1.7.1
+ddt==1.7.2
     # via -r requirements/test.in
 defusedxml==0.7.1
     # via
@@ -120,6 +120,7 @@ dill==0.3.8
 distlib==0.3.8
     # via virtualenv
     # via
+    #   -c requirements/common_constraints.txt
     #   -c requirements/constraints.txt
     #   -r requirements/base.txt
     #   django-celery-results
@@ -231,7 +232,7 @@ exceptiongroup==1.2.0
     # via pytest
 factory-boy==3.3.0
     # via -r requirements/test.in
-faker==23.2.1
+faker==23.3.0
     # via factory-boy
 filelock==3.13.1
     # via
@@ -372,7 +373,7 @@ pynacl==1.5.0
     #   edx-django-utils
 pyproject-api==1.6.1
     # via tox
-pytest==8.0.2
+pytest==8.1.0
     # via
     #   pytest-cov
     #   pytest-django
@@ -380,7 +381,7 @@ pytest-cov==4.1.0
     # via -r requirements/test.in
 pytest-django==4.8.0
     # via -r requirements/test.in
-python-dateutil==2.8.2
+python-dateutil==2.9.0.post0
     # via
     #   -r requirements/base.txt
     #   analytics-python
@@ -487,7 +488,7 @@ tomli==2.0.1
     #   pyproject-api
     #   pytest
     #   tox
-tomlkit==0.12.3
+tomlkit==0.12.4
     # via pylint
 tox==4.13.0
     # via -r requirements/test.in
