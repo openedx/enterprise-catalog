@@ -73,6 +73,7 @@ class CatalogQuery(TimeStampedModel):
         null=True,
         max_length=32,
         editable=False,
+        unique=True,
     )
 
     uuid = models.UUIDField(
