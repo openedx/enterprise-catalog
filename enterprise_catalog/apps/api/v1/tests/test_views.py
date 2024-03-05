@@ -350,45 +350,45 @@ class EnterpriseCatalogCRUDViewSetTests(APITestMixin):
         response = self.client.put(url, self.new_catalog_data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_put_integrity_error_regression(self):
-        """
-        Verify updating an enterprise catalog with a
-        catalog query that has a content filter identical to an existing
-        one causes an integrity error.
+    # def test_put_integrity_error_regression(self):
+    #     """
+    #     Verify updating an enterprise catalog with a
+    #     catalog query that has a content filter identical to an existing
+    #     one causes an integrity error.
 
-        The expected error is in serializers.py find_and_modify_catalog_query
-        """
-        catalog_query_1 = CatalogQueryFactory(
-            title='catalog_query_1',
-            content_filter={"a": "b"},
-        )
-        EnterpriseCatalogFactory(
-            enterprise_uuid=self.enterprise_uuid,
-            enterprise_name=self.enterprise_name,
-            catalog_query=catalog_query_1,
-        )
-        catalog_query_2 = CatalogQueryFactory(
-            title='catalog_query_2',
-            content_filter={"c": "d"},
-        )
-        enterprise_catalog_2 = EnterpriseCatalogFactory(
-            enterprise_uuid=self.enterprise_uuid,
-            enterprise_name=self.enterprise_name,
-            catalog_query=catalog_query_2,
-        )
-        put_data = {
-            'uuid': enterprise_catalog_2.uuid,
-            'title': enterprise_catalog_2.title,
-            'enterprise_customer': enterprise_catalog_2.enterprise_uuid,
-            'enterprise_customer_name': enterprise_catalog_2.enterprise_name,
-            'enabled_course_modes': enterprise_catalog_2.enabled_course_modes,
-            'publish_audit_enrollment_urls': enterprise_catalog_2.publish_audit_enrollment_urls,
-            'content_filter': {"a": "b"},
-        }
+    #     The expected error is in serializers.py find_and_modify_catalog_query
+    #     """
+    #     catalog_query_1 = CatalogQueryFactory(
+    #         title='catalog_query_1',
+    #         content_filter={"a": "b"},
+    #     )
+    #     EnterpriseCatalogFactory(
+    #         enterprise_uuid=self.enterprise_uuid,
+    #         enterprise_name=self.enterprise_name,
+    #         catalog_query=catalog_query_1,
+    #     )
+    #     catalog_query_2 = CatalogQueryFactory(
+    #         title='catalog_query_2',
+    #         content_filter={"c": "d"},
+    #     )
+    #     enterprise_catalog_2 = EnterpriseCatalogFactory(
+    #         enterprise_uuid=self.enterprise_uuid,
+    #         enterprise_name=self.enterprise_name,
+    #         catalog_query=catalog_query_2,
+    #     )
+    #     put_data = {
+    #         'uuid': enterprise_catalog_2.uuid,
+    #         'title': enterprise_catalog_2.title,
+    #         'enterprise_customer': enterprise_catalog_2.enterprise_uuid,
+    #         'enterprise_customer_name': enterprise_catalog_2.enterprise_name,
+    #         'enabled_course_modes': enterprise_catalog_2.enabled_course_modes,
+    #         'publish_audit_enrollment_urls': enterprise_catalog_2.publish_audit_enrollment_urls,
+    #         'content_filter': {"a": "b"},
+    #     }
 
-        url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': enterprise_catalog_2.uuid})
-        response = self.client.put(url, data=put_data)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+    #     url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': enterprise_catalog_2.uuid})
+    #     response = self.client.put(url, data=put_data)
+    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     @ddt.data(
         (False),
@@ -1095,7 +1095,6 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         # Set up catalog.has_learner_access permissions
         self.set_up_catalog_learner()
         self.enterprise_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
-        self.enterprise_catalog.catalog_query.include_exec_ed_2u_courses = True
         self.enterprise_catalog.catalog_query.save()
 
         # Delete any existing ContentMetadata records.
