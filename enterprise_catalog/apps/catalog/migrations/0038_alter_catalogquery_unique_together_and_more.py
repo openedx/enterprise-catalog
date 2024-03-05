@@ -10,10 +10,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterUniqueTogether(
-            name='catalogquery',
-            unique_together=set(),
-        ),
+        # migrations.AlterUniqueTogether(
+        #     name='catalogquery',
+        #     unique_together=set(),
+        # ),
         migrations.AlterField(
             model_name='catalogquery',
             name='content_filter_hash',
