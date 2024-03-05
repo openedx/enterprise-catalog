@@ -1095,6 +1095,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         # Set up catalog.has_learner_access permissions
         self.set_up_catalog_learner()
         self.enterprise_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
+        self.enterprise_catalog.catalog_query.include_exec_ed_2u_courses = True
         self.enterprise_catalog.catalog_query.save()
 
         # Delete any existing ContentMetadata records.
