@@ -377,7 +377,6 @@ class TestModels(TestCase):
             }],
         })
         enterprise_catalog.catalog_query.contentmetadata_set.add(*[content_metadata])
-        enterprise_catalog.catalog_query.include_exec_ed_2u_courses = True
         enterprise_slug = 'sluggy'
         mock_enterprise_customer_return_value = {
             'slug': enterprise_slug,
