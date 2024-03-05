@@ -87,23 +87,23 @@ class CatalogQuery(TimeStampedModel):
         max_length=100
     )
 
-    include_exec_ed_2u_courses = models.BooleanField(
-        null=True,
-        blank=True,
-        help_text=_(
-            "Specifies whether the catalog is allowed to include exec ed (2U) courses.  This means that, "
-            "when the content_filter specifies that 'course' content types should be included in the catalog, "
-            "executive-education-2u course types won't be excluded from the content of the associated catalog."
-        ),
-    )
+    # include_exec_ed_2u_courses = models.BooleanField(
+    #     null=True,
+    #     blank=True,
+    #     help_text=_(
+    #         "Specifies whether the catalog is allowed to include exec ed (2U) courses.  This means that, "
+    #         "when the content_filter specifies that 'course' content types should be included in the catalog, "
+    #         "executive-education-2u course types won't be excluded from the content of the associated catalog."
+    #     ),
+    # )
 
     class Meta:
         verbose_name = _("Catalog Query")
         verbose_name_plural = _("Catalog Queries")
         app_label = 'catalog'
-        unique_together = (
-            ('content_filter_hash', 'include_exec_ed_2u_courses'),
-        )
+        # unique_together = (
+        #     ('content_filter_hash', 'include_exec_ed_2u_courses'),
+        # )
 
     def save(self, *args, **kwargs):
         self.content_filter_hash = get_content_filter_hash(self.content_filter)
