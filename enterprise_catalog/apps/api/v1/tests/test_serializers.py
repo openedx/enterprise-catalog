@@ -102,24 +102,24 @@ class FindCatalogQueryTest(TestCase):
         result = find_and_modify_catalog_query(new_filter)
         self.assertEqual(result.content_filter, new_filter)
 
-    # def test_validation_error_raised_on_duplication(self):
-    #     dupe_filter = {'key': ['summerxbreeze']}
-    #     uuid_to_update = uuid4()
-    #     CatalogQuery.objects.create(
-    #         content_filter=dupe_filter,
-    #         uuid=uuid4()
-    #     )
-    #     CatalogQuery.objects.create(
-    #         content_filter={'key': ['tempfilter']},
-    #         uuid=uuid_to_update
-    #     )
-    #     with transaction.atomic():
-    #         self.assertRaises(
-    #             serializers.ValidationError,
-    #             find_and_modify_catalog_query,
-    #             dupe_filter,
-    #             uuid_to_update
-    #         )
+    def test_validation_error_raised_on_duplication(self):
+        dupe_filter = {'key': ['summerxbreeze']}
+        uuid_to_update = uuid4()
+        CatalogQuery.objects.create(
+            content_filter=dupe_filter,
+            uuid=uuid4()
+        )
+        CatalogQuery.objects.create(
+            content_filter={'key': ['tempfilter']},
+            uuid=uuid_to_update
+        )
+        with transaction.atomic():
+            self.assertRaises(
+                serializers.ValidationError,
+                find_and_modify_catalog_query,
+                dupe_filter,
+                uuid_to_update
+            )
 
     def test_old_uuid_new_title_saves_existing_query_with_title(self):
         new_title = 'testing'
