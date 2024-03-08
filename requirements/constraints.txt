@@ -38,3 +38,5 @@ edx-lint<5.3
 pylint<2.15
 astroid<2.12
 
+# To avoid any breaking changes
+openai<=1.13.3

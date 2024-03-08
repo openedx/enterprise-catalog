@@ -12,6 +12,15 @@ amqp==5.2.0
     #   kombu
 analytics-python==1.4.post1
     # via -r requirements/base.txt
+annotated-types==0.6.0
+    # via
+    #   -r requirements/base.txt
+    #   pydantic
+anyio==4.3.0
+    # via
+    #   -r requirements/base.txt
+    #   httpx
+    #   openai
 asgiref==3.7.2
     # via
     #   -r requirements/base.txt
@@ -45,6 +54,8 @@ celery==5.3.6
 certifi==2024.2.2
     # via
     #   -r requirements/base.txt
+    #   httpcore
+    #   httpx
     #   requests
 cffi==1.16.0
     # via
@@ -91,7 +102,11 @@ defusedxml==0.7.1
     #   djangorestframework-xml
     #   python3-openid
     #   social-auth-core
-django==4.2.10
+distro==1.9.0
+    # via
+    #   -r requirements/base.txt
+    #   openai
+django==4.2.11
     # via
     #   -r requirements/base.txt
     #   django-celery-results
@@ -170,7 +185,7 @@ edx-celeryutils==1.2.5
     # via -r requirements/base.txt
 edx-django-release-util==1.3.0
     # via -r requirements/base.txt
-edx-django-utils==5.10.1
+edx-django-utils==5.11.0
     # via
     #   -r requirements/base.txt
     #   django-config-models
@@ -191,17 +206,35 @@ edx-rest-api-client==5.6.1
     # via -r requirements/base.txt
 edx-toggles==5.1.1
     # via -r requirements/base.txt
+exceptiongroup==1.2.0
+    # via
+    #   -r requirements/base.txt
+    #   anyio
 gevent==24.2.1
     # via -r requirements/production.in
 greenlet==3.0.3
     # via gevent
 gunicorn==21.2.0
     # via -r requirements/production.in
+h11==0.14.0
+    # via
+    #   -r requirements/base.txt
+    #   httpcore
+httpcore==1.0.4
+    # via
+    #   -r requirements/base.txt
+    #   httpx
+httpx==0.27.0
+    # via
+    #   -r requirements/base.txt
+    #   openai
 idna==3.6
     # via
     #   -r requirements/base.txt
+    #   anyio
+    #   httpx
     #   requests
-importlib-resources==6.1.2
+importlib-resources==6.3.0
     # via
     #   -r requirements/base.txt
     #   jsonschema
@@ -242,7 +275,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.4
     # via -r requirements/base.txt
-newrelic==9.7.0
+newrelic==9.7.1
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -251,7 +284,9 @@ oauthlib==3.2.2
     #   -r requirements/base.txt
     #   requests-oauthlib
     #   social-auth-core
-packaging==23.2
+openai==1.13.3
+    # via -r requirements/base.txt
+packaging==24.0
     # via gunicorn
 pbr==6.0.0
     # via
@@ -277,6 +312,14 @@ pycparser==2.21
     # via
     #   -r requirements/base.txt
     #   cffi
+pydantic==2.6.4
+    # via
+    #   -r requirements/base.txt
+    #   openai
+pydantic-core==2.16.3
+    # via
+    #   -r requirements/base.txt
+    #   pydantic
 pyjwt[crypto]==2.8.0
     # via
     #   -r requirements/base.txt
@@ -295,7 +338,7 @@ pynacl==1.5.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
-python-dateutil==2.8.2
+python-dateutil==2.9.0.post0
     # via
     #   -r requirements/base.txt
     #   analytics-python
@@ -338,7 +381,7 @@ requests==2.31.0
     #   requests-oauthlib
     #   slumber
     #   social-auth-core
-requests-oauthlib==1.3.1
+requests-oauthlib==1.4.0
     # via
     #   -r requirements/base.txt
     #   social-auth-core
@@ -367,6 +410,12 @@ slumber==0.7.1
     # via
     #   -r requirements/base.txt
     #   edx-rest-api-client
+sniffio==1.3.1
+    # via
+    #   -r requirements/base.txt
+    #   anyio
+    #   httpx
+    #   openai
 social-auth-app-django==5.4.0
     # via
     #   -r requirements/base.txt
@@ -390,13 +439,22 @@ text-unidecode==1.3
     # via
     #   -r requirements/base.txt
     #   python-slugify
+tqdm==4.66.2
+    # via
+    #   -r requirements/base.txt
+    #   openai
 typing-extensions==4.10.0
     # via
     #   -r requirements/base.txt
+    #   annotated-types
+    #   anyio
     #   asgiref
     #   drf-spectacular
     #   edx-opaque-keys
     #   kombu
+    #   openai
+    #   pydantic
+    #   pydantic-core
 tzdata==2024.1
     # via
     #   -r requirements/base.txt
@@ -422,7 +480,7 @@ wcwidth==0.2.13
     #   prompt-toolkit
 xlsxwriter==3.2.0
     # via -r requirements/base.txt
-zipp==3.17.0
+zipp==3.18.0
     # via
     #   -r requirements/base.txt
     #   importlib-resources

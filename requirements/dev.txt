@@ -17,6 +17,17 @@ analytics-python==1.4.post1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+annotated-types==0.6.0
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   pydantic
+anyio==4.3.0
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   httpx
+    #   openai
 asgiref==3.7.2
     # via
     #   -r requirements/quality.txt
@@ -54,11 +65,11 @@ billiard==4.2.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   celery
-build==1.0.3
+build==1.1.1
     # via
     #   -r requirements/pip-tools.txt
     #   pip-tools
-cachetools==5.3.2
+cachetools==5.3.3
     # via
     #   -r requirements/test.txt
     #   tox
@@ -73,6 +84,8 @@ certifi==2024.2.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+    #   httpcore
+    #   httpx
     #   requests
 cffi==1.16.0
     # via
@@ -143,7 +156,7 @@ cryptography==42.0.5
     #   -r requirements/test.txt
     #   pyjwt
     #   social-auth-core
-ddt==1.7.1
+ddt==1.7.2
     # via
     #   -r requirements/dev.in
     #   -r requirements/test.txt
@@ -167,7 +180,12 @@ distlib==0.3.8
     # via
     #   -r requirements/test.txt
     #   virtualenv
-django==4.2.10
+distro==1.9.0
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   openai
+django==4.2.11
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
@@ -286,7 +304,7 @@ edx-django-release-util==1.3.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-edx-django-utils==5.10.1
+edx-django-utils==5.11.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -325,11 +343,13 @@ edx-toggles==5.1.1
     #   -r requirements/test.txt
 exceptiongroup==1.2.0
     # via
+    #   -r requirements/quality.txt
     #   -r requirements/test.txt
+    #   anyio
     #   pytest
 factory-boy==3.3.0
     # via -r requirements/test.txt
-faker==23.2.1
+faker==24.1.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -340,17 +360,34 @@ filelock==3.13.1
     #   virtualenv
 gunicorn==21.2.0
     # via -r requirements/dev.in
+h11==0.14.0
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   httpcore
+httpcore==1.0.4
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   httpx
+httpx==0.27.0
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   openai
 idna==3.6
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+    #   anyio
+    #   httpx
     #   requests
-importlib-metadata==7.0.1
+importlib-metadata==7.0.2
     # via
     #   -r requirements/pip-tools.txt
     #   build
     #   inflect
-importlib-resources==6.1.2
+importlib-resources==6.3.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -434,7 +471,7 @@ mysqlclient==2.2.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-newrelic==9.7.0
+newrelic==9.7.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -445,7 +482,12 @@ oauthlib==3.2.2
     #   -r requirements/test.txt
     #   requests-oauthlib
     #   social-auth-core
-packaging==23.2
+openai==1.13.3
+    # via
+    #   -c requirements/constraints.txt
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+packaging==24.0
     # via
     #   -r requirements/pip-tools.txt
     #   -r requirements/test.txt
@@ -461,7 +503,7 @@ pbr==6.0.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   stevedore
-pip-tools==7.4.0
+pip-tools==7.4.1
     # via -r requirements/pip-tools.txt
 pkgutil-resolve-name==1.3.10
     # via
@@ -505,6 +547,16 @@ pycparser==2.21
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   cffi
+pydantic==2.6.4
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   openai
+pydantic-core==2.16.3
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   pydantic
 pydocstyle==6.3.0
     # via -r requirements/quality.txt
 pygments==2.17.2
@@ -566,7 +618,7 @@ pyproject-hooks==1.0.0
     #   -r requirements/pip-tools.txt
     #   build
     #   pip-tools
-pytest==8.0.2
+pytest==8.1.1
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -575,7 +627,7 @@ pytest-cov==4.1.0
     # via -r requirements/test.txt
 pytest-django==4.8.0
     # via -r requirements/test.txt
-python-dateutil==2.8.2
+python-dateutil==2.9.0.post0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -631,7 +683,7 @@ requests==2.31.0
     #   responses
     #   slumber
     #   social-auth-core
-requests-oauthlib==1.3.1
+requests-oauthlib==1.4.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -674,6 +726,13 @@ slumber==0.7.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-rest-api-client
+sniffio==1.3.1
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   anyio
+    #   httpx
+    #   openai
 snowballstemmer==2.2.0
     # via
     #   -r requirements/quality.txt
@@ -720,23 +779,33 @@ tomli==2.0.1
     #   pyproject-hooks
     #   pytest
     #   tox
-tomlkit==0.12.3
+tomlkit==0.12.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pylint
-tox==4.13.0
+tox==4.14.1
     # via -r requirements/test.txt
+tqdm==4.66.2
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   openai
 typing-extensions==4.10.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+    #   annotated-types
+    #   anyio
     #   asgiref
     #   astroid
     #   drf-spectacular
     #   edx-opaque-keys
     #   faker
     #   kombu
+    #   openai
+    #   pydantic
+    #   pydantic-core
     #   pylint
 tzdata==2024.1
     # via
@@ -771,7 +840,7 @@ wcwidth==0.2.13
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   prompt-toolkit
-wheel==0.42.0
+wheel==0.43.0
     # via
     #   -r requirements/pip-tools.txt
     #   pip-tools
@@ -784,7 +853,7 @@ xlsxwriter==3.2.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-zipp==3.17.0
+zipp==3.18.0
     # via
     #   -r requirements/pip-tools.txt
     #   -r requirements/quality.txt
