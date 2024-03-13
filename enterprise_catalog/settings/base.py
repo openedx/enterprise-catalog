@@ -437,3 +437,13 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }
+
+############################################## AI CURATION ##############################################
+
+AI_CURATION_FILTER_SUBJECTS_PROMPT = 'I am a filter subjects prompt. query: {query} subjects: {subjects}'
+AI_CURATION_QUERY_TO_KEYWORDS_PROMPT = 'I am a query to keywords prompt. query: {query}'
+AI_CURATION_KEYWORDS_TO_PROSE_PROMPT = 'I am a keywords to prose prompt. query: {query} keywords: {keywords}'
+
+OPENAI_API_KEY = 'I am key'
+
+############################################## AI CURATION ##############################################
