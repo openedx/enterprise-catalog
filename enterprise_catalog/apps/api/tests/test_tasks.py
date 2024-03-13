@@ -193,8 +193,8 @@ class UpdateCatalogMetadataTaskTests(TestCase):
         """
         Assert update_catalog_metadata_task is called with correct catalog_query_id
         """
-        tasks.update_catalog_metadata_task.apply(args=(self.catalog_query.id,))
-        mock_update_data_from_discovery.assert_called_with(self.catalog_query)
+        tasks.update_catalog_metadata_task.apply(args=(self.catalog_query.id, False, False))
+        mock_update_data_from_discovery.assert_called_with(self.catalog_query, False)
 
     @mock.patch('enterprise_catalog.apps.api.tasks.update_contentmetadata_from_discovery')
     def test_update_catalog_metadata_no_catalog_query(self, mock_update_data_from_discovery):
@@ -235,7 +235,7 @@ class FetchMissingCourseMetadataTaskTests(TestCase):
         assert catalog_query.content_filter['content_type'] == 'course'
         assert catalog_query.content_filter['key'] == [test_course]
 
-        mock_update_data_from_discovery.assert_called_with(catalog_query)
+        mock_update_data_from_discovery.assert_called_with(catalog_query, False)
 
 
 @ddt.ddt
@@ -537,6 +537,48 @@ class UpdateFullContentMetadataTaskTests(TestCase):
 
         assert metadata_1.json_metadata == program_data_1
         assert metadata_2.json_metadata == program_data_2
+
+    @mock.patch('enterprise_catalog.apps.api.tasks.partition_program_keys_for_indexing')
+    @mock.patch('enterprise_catalog.apps.api_client.base_oauth.OAuthAPIClient')
+    def test_update_full_metadata_program_dry_run(self, mock_oauth_client, mock_partition_program_keys):
+        """
+        Assert that during dry run full program metadata is not merged with original json_metadata
+        """
+        program_key_1 = '02f5edeb-6604-4131-bf45-acd8df91e1f9'
+        program_data_1 = {'uuid': program_key_1, 'full_program_only_field': 'test_1'}
+        program_key_2 = 'be810df3-a059-42a7-b11f-d9bfb2877b15'
+        program_data_2 = {'uuid': program_key_2, 'full_program_only_field': 'test_2'}
+
+        # Mock out the data that should be returned from discovery's /api/v1/programs endpoint
+        mock_oauth_client.return_value.get.return_value.json.return_value = {
+            'results': [program_data_1, program_data_2],
+        }
+        mock_partition_program_keys.return_value = ([], [],)
+
+        metadata_1 = ContentMetadataFactory(content_type=PROGRAM, content_key=program_key_1)
+        metadata_1.catalog_queries.set([self.catalog_query])
+        metadata_2 = ContentMetadataFactory(content_type=PROGRAM, content_key=program_key_2)
+        metadata_2.catalog_queries.set([self.catalog_query])
+
+        assert metadata_1.json_metadata != program_data_1
+        assert metadata_2.json_metadata != program_data_2
+
+        tasks.update_full_content_metadata_task.apply(kwargs={'dry_run': True}).get()
+
+        actual_program_keys_args = mock_partition_program_keys.call_args_list[0][0][0]
+        self.assertEqual(set(actual_program_keys_args), {metadata_1, metadata_2})
+
+        metadata_1 = ContentMetadata.objects.get(content_key='02f5edeb-6604-4131-bf45-acd8df91e1f9')
+        metadata_2 = ContentMetadata.objects.get(content_key='be810df3-a059-42a7-b11f-d9bfb2877b15')
+
+        # Validate original json_metadata still in place after dry run
+        program_data_1.update(metadata_1.json_metadata)
+        program_data_2.update(metadata_2.json_metadata)
+        program_data_1.update({'aggregation_key': 'program:02f5edeb-6604-4131-bf45-acd8df91e1f9'})
+        program_data_2.update({'aggregation_key': 'program:be810df3-a059-42a7-b11f-d9bfb2877b15'})
+
+        assert metadata_1.json_metadata != program_data_1
+        assert metadata_2.json_metadata != program_data_2
 
     # pylint: disable=unused-argument
     @mock.patch('enterprise_catalog.apps.api.tasks.task_recently_run', return_value=False)
@@ -2094,6 +2136,55 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         assert content_metadata_1.json_metadata.get('avg_course_rating') == 4.5
         assert content_metadata_2.json_metadata.get('reviews_count') == 5
         assert content_metadata_2.json_metadata.get('avg_course_rating') == 3.8
+
+        self.assertEqual(mock_update_content_metadata_program.call_count, 2)
+        self.assertEqual(mock_create_course_associated_programs.call_count, 2)
+
+    @mock.patch('enterprise_catalog.apps.api.tasks._fetch_courses_by_keys')
+    @mock.patch('enterprise_catalog.apps.api.tasks.DiscoveryApiClient.get_course_reviews')
+    @mock.patch('enterprise_catalog.apps.api.tasks.ContentMetadata.objects.filter')
+    @mock.patch('enterprise_catalog.apps.api.tasks.create_course_associated_programs')
+    @mock.patch('enterprise_catalog.apps.api.tasks._update_full_content_metadata_program')
+    def test_update_full_content_metadata_course_dry_run(
+        self,
+        mock_update_content_metadata_program,
+        mock_create_course_associated_programs,
+        mock_filter,
+        mock_get_course_reviews,
+        mock_fetch_courses_by_keys
+    ):
+        # Mock data
+        content_keys = ['course1', 'course2']
+        full_course_dicts = [
+            {'key': 'course1', 'title': 'Course 1'},
+            {'key': 'course2', 'title': 'Course 2'}
+        ]
+        reviews_for_courses_dict = {
+            'course1': {'reviews_count': 10, 'avg_course_rating': 4.5},
+            'course2': {'reviews_count': 5, 'avg_course_rating': 3.8}
+        }
+        content_metadata_1 = ContentMetadataFactory(content_type=COURSE, content_key='course1')
+        content_metadata_2 = ContentMetadataFactory(content_type=COURSE, content_key='course2')
+        metadata_records_for_fetched_keys = [content_metadata_1, content_metadata_2]
+
+        # Configure mock objects
+        mock_fetch_courses_by_keys.return_value = full_course_dicts
+        mock_get_course_reviews.return_value = reviews_for_courses_dict
+        mock_filter.return_value = metadata_records_for_fetched_keys
+
+        # Call the function
+        tasks._update_full_content_metadata_course(content_keys, dry_run=True)  # pylint: disable=protected-access
+
+        mock_fetch_courses_by_keys.assert_called_once_with(content_keys)
+        mock_get_course_reviews.assert_called_once_with(['course1', 'course2'])
+        mock_filter.assert_called_once_with(content_key__in=['course1', 'course2'])
+
+        content_metadata_1.refresh_from_db()
+        content_metadata_2.refresh_from_db()
+        assert content_metadata_1.json_metadata.get('reviews_count') is None
+        assert content_metadata_1.json_metadata.get('avg_course_rating') is None
+        assert content_metadata_2.json_metadata.get('reviews_count') is None
+        assert content_metadata_2.json_metadata.get('avg_course_rating') is None
 
         self.assertEqual(mock_update_content_metadata_program.call_count, 2)
         self.assertEqual(mock_create_course_associated_programs.call_count, 2)

@@ -24,29 +24,36 @@ class Command(BaseCommand):
         'Updates Content Metadata, along with the associations of Catalog Queries and Content Metadata.'
     )
 
-    def _update_catalog_metadata_task(self, catalog_query, force=False):
-        message = (
+    def _update_catalog_metadata_task(self, catalog_query, no_async, **kwargs):
+        async_message = (
             'Spinning off update_catalog_metadata_task from update_content_metadata command'
             ' to update content_metadata for catalog query %s.'
         )
-        logger.info(message, catalog_query)
-        return update_catalog_metadata_task.s(catalog_query.id, force=force)
+        if not no_async:
+            logger.info(async_message, catalog_query)
+        return update_catalog_metadata_task.s(catalog_query.id, **kwargs)
 
-    def _fetch_missing_course_metadata_task(self, force=False):
+    def _fetch_missing_course_metadata_task_async(self, **kwargs):
         logger.info(
             'Spinning off fetch_missing_course_metadata_task from update_content_metadata command'
             ' to update content_metadata of missing courses.'
         )
-        return fetch_missing_course_metadata_task.si(force=force)
+        return fetch_missing_course_metadata_task.si(**kwargs).apply_async().get(
+            timeout=TASK_TIMEOUT,
+            propagate=True,
+        )
 
-    def _fetch_missing_pathway_metadata_task(self, force=False):
+    def _fetch_missing_pathway_metadata_task_async(self, **kwargs):
         logger.info(
             'Spinning off fetch_missing_pathway_metadata_task from update_content_metadata command'
             ' to update content_metadata of missing pathways.'
         )
-        return fetch_missing_pathway_metadata_task.si(force=force)
+        return fetch_missing_pathway_metadata_task.si(**kwargs).apply_async().get(
+            timeout=TASK_TIMEOUT,
+            propagate=True,
+        )
 
-    def _update_full_content_metadata_task(self, *args, **kwargs):
+    def _update_full_content_metadata_task_async(self, **kwargs):
         """
         Returns a task signature for the `update_full_content_metadata_task`.
 
@@ -61,7 +68,10 @@ class Command(BaseCommand):
         # task.si() is used as a shortcut for an immutable signature to avoid calling this with the results from the
         # previously run `update_catalog_metadata_task`.
         # https://docs.celeryproject.org/en/master/userguide/canvas.html#immutability
-        return update_full_content_metadata_task.si(force=kwargs.get('force', False))
+        return update_full_content_metadata_task.si(**kwargs).apply_async().get(
+            timeout=TASK_TIMEOUT,
+            propagate=True,
+        )
 
     def add_arguments(self, parser):
         # Argument to force execution of celery task, ignoring time since last execution
@@ -74,6 +84,20 @@ class Command(BaseCommand):
                 'if a record is present and enabled.'
             ),
         )
+        parser.add_argument(
+            '--dry-run',
+            dest='dry_run',
+            default=False,
+            action='store_true',
+            help='Generate algolia products to index, but do not actually send them to algolia for indexing.',
+        )
+        parser.add_argument(
+            '--no-async',
+            dest='no_async',
+            default=False,
+            action='store_true',
+            help='Run the task synchronously (without celery).',
+        )
 
     def handle(self, *args, **options):
         """
@@ -82,17 +106,15 @@ class Command(BaseCommand):
         """
         options.update(CatalogUpdateCommandConfig.current_options())
 
-        # Fetch program metadata for the programs that are missing.
-        self._fetch_missing_pathway_metadata_task(force=options['force']).apply_async().get(
-            timeout=TASK_TIMEOUT,
-            propagate=True,
-        )
-
-        # Fetch course metadata for the courses that are missing.
-        self._fetch_missing_course_metadata_task(force=options['force']).apply_async().get(
-            timeout=TASK_TIMEOUT,
-            propagate=True,
-        )
+        no_async = options.get('no_async', False)
+        flags = {k: options.get(k, False) for k in ('force', 'dry_run')}
+        # Fetch metadata for the courses/programs that are missing.
+        if no_async:
+            fetch_missing_pathway_metadata_task.apply(kwargs=flags)
+            fetch_missing_course_metadata_task.apply(kwargs=flags)
+        else:
+            self._fetch_missing_pathway_metadata_task_async(**flags)
+            self._fetch_missing_course_metadata_task_async(**flags)
 
         # find all CatalogQuery records used by at least one EnterpriseCatalog to avoid
         # calling /search/all/ for a CatalogQuery that is not currently used by any catalogs.
@@ -116,15 +138,18 @@ class Command(BaseCommand):
         # https://docs.celeryproject.org/en/v5.0.5/userguide/canvas.html
         update_group = group(
             [
-                self._update_catalog_metadata_task(catalog_query, force=options['force'])
+                self._update_catalog_metadata_task(catalog_query, no_async, **flags)
                 for catalog_query in catalog_queries
             ]
         )
         try:
-            update_group_result = update_group.apply_async().get(
-                timeout=TASK_TIMEOUT,
-                propagate=True,
-            )
+            if no_async:
+                update_group_result = update_group.apply(kwargs=flags)
+            else:
+                update_group_result = update_group.apply_async().get(
+                    timeout=TASK_TIMEOUT,
+                    propagate=True,
+                )
             logger.info(
                 'Finished doing catalog metadata update related to {} CatalogQueries'.format(len(update_group_result))
             )
@@ -146,11 +171,10 @@ class Command(BaseCommand):
                 )
 
         try:
-            full_update_task = self._update_full_content_metadata_task(force=options['force'])
-            full_update_result = full_update_task.apply_async().get(
-                timeout=TASK_TIMEOUT,
-                propagate=True,
-            )
+            if no_async:
+                update_full_content_metadata_task.apply(kwargs=flags)
+            else:
+                self._update_full_content_metadata_task_async(**flags)
             logger.info('Finished doing full update of metadata records.')
         except Exception as exc:
             # See comment above about celery exception prefixes.
