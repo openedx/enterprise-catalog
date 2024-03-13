@@ -647,7 +647,13 @@ def add_metadata_to_algolia_objects(
     json_metadata.update({
         'objectID': get_algolia_object_id(json_metadata.get('content_type'), json_metadata.get('uuid')),
     })
-
+    # academy uuids and tags are always less than 15 in number
+    json_metadata.update({
+        'academy_uuids': list(academy_uuids),
+    })
+    json_metadata.update({
+        'academy_tags': list(academy_tags),
+    })
     # enterprise catalog uuids
     catalog_uuids = sorted(list(catalog_uuids))
     batched_metadata = _batched_metadata(
@@ -665,26 +671,6 @@ def add_metadata_to_algolia_objects(
         customer_uuids,
         'enterprise_customer_uuids',
         '{}-customer-uuids-{}',
-    )
-    _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata)
-
-    # academy uuids
-    academy_uuids = sorted(list(academy_uuids))
-    batched_metadata = _batched_metadata(
-        json_metadata,
-        academy_uuids,
-        'academy_uuids',
-        '{}-academy-uuids-{}',
-    )
-    _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata)
-
-    # academy tags
-    academy_tags = sorted(list(academy_tags))
-    batched_metadata = _batched_metadata(
-        json_metadata,
-        academy_tags,
-        'academy_tags',
-        '{}-academy-tags-{}',
     )
     _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata)
 
