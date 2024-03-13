@@ -55,3 +55,12 @@ class TestAICurationView(TestCase):
         self.assertEqual(response.data['status'], AICurationStatus.PENDING)
 
         mock_trigger_ai_curations.delay.assert_called_once()
+
+    def test_post_with_query(self):
+        """
+        Verify that the api returns error if query length is greater than 300 characters
+        """
+        data = {'query': 'a' * 301, 'catalog_id': str(uuid4())}
+        response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.json(), {'query': ['Ensure this field has no more than 300 characters.']})

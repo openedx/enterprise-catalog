@@ -8,5 +8,5 @@ class AICurationSerializer(serializers.Serializer):  # pylint: disable=abstract-
     """
     Serializer for AI Curation.
     """
-    query = serializers.CharField()
+    query = serializers.CharField(max_length=300)
     catalog_id = serializers.UUIDField()

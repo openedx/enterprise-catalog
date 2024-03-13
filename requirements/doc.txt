@@ -16,6 +16,15 @@ amqp==5.2.0
     #   kombu
 analytics-python==1.4.post1
     # via -r requirements/test.txt
+annotated-types==0.6.0
+    # via
+    #   -r requirements/test.txt
+    #   pydantic
+anyio==4.3.0
+    # via
+    #   -r requirements/test.txt
+    #   httpx
+    #   openai
 asgiref==3.7.2
     # via
     #   -r requirements/test.txt
@@ -53,7 +62,7 @@ billiard==4.2.0
     # via
     #   -r requirements/test.txt
     #   celery
-cachetools==5.3.2
+cachetools==5.3.3
     # via
     #   -r requirements/test.txt
     #   tox
@@ -66,6 +75,8 @@ celery==5.3.6
 certifi==2024.2.2
     # via
     #   -r requirements/test.txt
+    #   httpcore
+    #   httpx
     #   requests
 cffi==1.16.0
     # via
@@ -125,7 +136,7 @@ cryptography==42.0.5
     #   -r requirements/test.txt
     #   pyjwt
     #   social-auth-core
-ddt==1.7.1
+ddt==1.7.2
     # via -r requirements/test.txt
 defusedxml==0.7.1
     # via
@@ -141,7 +152,11 @@ distlib==0.3.8
     # via
     #   -r requirements/test.txt
     #   virtualenv
-django==4.2.10
+distro==1.9.0
+    # via
+    #   -r requirements/test.txt
+    #   openai
+django==4.2.11
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/test.txt
@@ -234,7 +249,7 @@ edx-celeryutils==1.2.5
     # via -r requirements/test.txt
 edx-django-release-util==1.3.0
     # via -r requirements/test.txt
-edx-django-utils==5.10.1
+edx-django-utils==5.11.0
     # via
     #   -r requirements/test.txt
     #   django-config-models
@@ -262,10 +277,11 @@ edx-toggles==5.1.1
 exceptiongroup==1.2.0
     # via
     #   -r requirements/test.txt
+    #   anyio
     #   pytest
 factory-boy==3.3.0
     # via -r requirements/test.txt
-faker==23.2.1
+faker==24.1.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -274,15 +290,29 @@ filelock==3.13.1
     #   -r requirements/test.txt
     #   tox
     #   virtualenv
+h11==0.14.0
+    # via
+    #   -r requirements/test.txt
+    #   httpcore
+httpcore==1.0.4
+    # via
+    #   -r requirements/test.txt
+    #   httpx
+httpx==0.27.0
+    # via
+    #   -r requirements/test.txt
+    #   openai
 idna==3.6
     # via
     #   -r requirements/test.txt
+    #   anyio
+    #   httpx
     #   requests
 imagesize==1.4.1
     # via sphinx
-importlib-metadata==7.0.1
+importlib-metadata==7.0.2
     # via sphinx
-importlib-resources==6.1.2
+importlib-resources==6.3.0
     # via
     #   -r requirements/test.txt
     #   jsonschema
@@ -340,7 +370,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.4
     # via -r requirements/test.txt
-newrelic==9.7.0
+newrelic==9.7.1
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
@@ -351,7 +381,11 @@ oauthlib==3.2.2
     #   -r requirements/test.txt
     #   requests-oauthlib
     #   social-auth-core
-packaging==23.2
+openai==1.13.3
+    # via
+    #   -c requirements/constraints.txt
+    #   -r requirements/test.txt
+packaging==24.0
     # via
     #   -r requirements/test.txt
     #   pydata-sphinx-theme
@@ -394,6 +428,14 @@ pycparser==2.21
     # via
     #   -r requirements/test.txt
     #   cffi
+pydantic==2.6.4
+    # via
+    #   -r requirements/test.txt
+    #   openai
+pydantic-core==2.16.3
+    # via
+    #   -r requirements/test.txt
+    #   pydantic
 pydata-sphinx-theme==0.14.4
     # via sphinx-book-theme
 pygments==2.17.2
@@ -446,7 +488,7 @@ pyproject-api==1.6.1
     # via
     #   -r requirements/test.txt
     #   tox
-pytest==8.0.2
+pytest==8.1.1
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -455,7 +497,7 @@ pytest-cov==4.1.0
     # via -r requirements/test.txt
 pytest-django==4.8.0
     # via -r requirements/test.txt
-python-dateutil==2.8.2
+python-dateutil==2.9.0.post0
     # via
     #   -r requirements/test.txt
     #   analytics-python
@@ -481,7 +523,7 @@ pyyaml==6.0.1
     #   drf-spectacular
     #   edx-django-release-util
     #   responses
-readme-renderer==42.0
+readme-renderer==43.0
     # via -r requirements/doc.in
 redis==3.5.3
     # via
@@ -504,7 +546,7 @@ requests==2.31.0
     #   slumber
     #   social-auth-core
     #   sphinx
-requests-oauthlib==1.3.1
+requests-oauthlib==1.4.0
     # via
     #   -r requirements/test.txt
     #   social-auth-core
@@ -538,6 +580,12 @@ slumber==0.7.1
     # via
     #   -r requirements/test.txt
     #   edx-rest-api-client
+sniffio==1.3.1
+    # via
+    #   -r requirements/test.txt
+    #   anyio
+    #   httpx
+    #   openai
 snowballstemmer==2.2.0
     # via sphinx
 social-auth-app-django==5.4.0
@@ -594,21 +642,30 @@ tomli==2.0.1
     #   pyproject-api
     #   pytest
     #   tox
-tomlkit==0.12.3
+tomlkit==0.12.4
     # via
     #   -r requirements/test.txt
     #   pylint
-tox==4.13.0
+tox==4.14.1
     # via -r requirements/test.txt
+tqdm==4.66.2
+    # via
+    #   -r requirements/test.txt
+    #   openai
 typing-extensions==4.10.0
     # via
     #   -r requirements/test.txt
+    #   annotated-types
+    #   anyio
     #   asgiref
     #   astroid
     #   drf-spectacular
     #   edx-opaque-keys
     #   faker
     #   kombu
+    #   openai
+    #   pydantic
+    #   pydantic-core
     #   pydata-sphinx-theme
     #   pylint
 tzdata==2024.1
@@ -645,7 +702,7 @@ wrapt==1.16.0
     #   astroid
 xlsxwriter==3.2.0
     # via -r requirements/test.txt
-zipp==3.17.0
+zipp==3.18.0
     # via
     #   -r requirements/test.txt
     #   importlib-metadata
