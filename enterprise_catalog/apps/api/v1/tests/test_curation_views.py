@@ -6,6 +6,7 @@ import uuid
 from unittest import mock
 
 import ddt
+from django.core.cache import cache as django_cache
 from faker import Faker
 from rest_framework import status
 from rest_framework.reverse import reverse
@@ -79,6 +80,9 @@ class CurationAPITestBase(APITestMixin):
             for cm in self.highlighted_content_metadata_two
         ]
 
+        # clear the cache between all test runs
+        django_cache.clear()
+
 
 @ddt.ddt
 class EnterpriseCurationConfigReadOnlyViewSetTests(CurationAPITestBase):
@@ -133,6 +137,78 @@ class EnterpriseCurationConfigReadOnlyViewSetTests(CurationAPITestBase):
         curation_config_results = response.json()['results']
         assert len(curation_config_results) == 1
         assert curation_config_results[0]['uuid'] == str(self.curation_config_one.uuid)
+
+    @ddt.data(True, False)
+    def test_authorized_learner_list_with_caching(self, include_customer_param):
+        """
+        Tests that learners requesting with a specific enterprise customer query param exercise
+        the caching mechanism of this view.
+        """
+        url = reverse('api:v1:enterprise-curations-list')
+        if include_customer_param:
+            url = url + f'?enterprise_customer={self.enterprise_uuid}'
+
+        self.set_up_catalog_learner()
+        self.remove_role_assignments()
+
+        response = self.client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        curation_config_results = response.json()['results']
+        assert len(curation_config_results) == 1
+        assert curation_config_results[0]['uuid'] == str(self.curation_config_one.uuid)
+
+        # there should now only be queries to select the django user record, session record, and
+        # any available enterprise role assignments.
+        with self.assertNumQueries(4):
+            # make a second request to exercise the caching logic
+            second_response = self.client.get(url)
+            assert second_response.json() == response.json()
+            assert second_response.status_code == status.HTTP_200_OK
+
+    def test_authorized_learner_list_caching_toggle_query_param(self):
+        """
+        Tests that learners requesting with a specific enterprise customer query param exercise
+        the caching mechanism of this view, but only in cases where the same
+        user requests the exact same url.
+        """
+        url = reverse('api:v1:enterprise-curations-list')
+        url_with_param = url + f'?enterprise_customer={self.enterprise_uuid}'
+
+        self.set_up_catalog_learner()
+        self.remove_role_assignments()
+
+        # make a request without the customer query param
+        response = self.client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        curation_config_results = response.json()['results']
+        assert len(curation_config_results) == 1
+        assert curation_config_results[0]['uuid'] == str(self.curation_config_one.uuid)
+
+        # second request *with* a param is a different URL, so should not be cached
+        with self.assertNumQueries(18):
+            second_response = self.client.get(url_with_param)
+            assert second_response.status_code == status.HTTP_200_OK
+            assert second_response.json() == response.json()
+
+        # make another request for the original url, without the param.
+        # We should hit the cache here, and therefore,
+        # there should now only be queries to select the django user record, session record, and
+        # any available enterprise role assignments.
+        with self.assertNumQueries(4):
+            # make a second request to exercise the caching logic
+            third_response = self.client.get(url)
+            assert third_response.json() == response.json()
+            assert third_response.status_code == status.HTTP_200_OK
+
+        # For good measure, make a fourth request for the url with a parameter.
+        # We should hit the cache here, and therefore,
+        # there should now only be queries to select the django user record, session record, and
+        # any available enterprise role assignments.
+        with self.assertNumQueries(4):
+            # make a second request to exercise the caching logic
+            third_response = self.client.get(url_with_param)
+            assert third_response.json() == response.json()
+            assert third_response.status_code == status.HTTP_200_OK
 
     @ddt.data(
         {'is_catalog_staff': False, 'is_role_assigned_via_jwt': False, 'curation_config_exists': False},
@@ -315,6 +391,34 @@ class HighlightSetReadOnlyViewSetTests(CurationAPITestBase):
         highlight_sets_results = response.json()['results']
         assert len(highlight_sets_results) == 1
         assert highlight_sets_results[0]['uuid'] == str(self.highlight_set_one.uuid)
+
+    @ddt.data(True, False)
+    def test_list_catalog_learner_with_caching(self, include_customer_param):
+        """
+        A catalog learner should be able to list the highlight sets of their own enterprise customer, but not that of
+        other enterprise customers.
+        """
+        url = reverse('api:v1:highlight-sets-list')
+        if include_customer_param:
+            url = url + f'?enterprise_customer={self.enterprise_uuid}'
+
+        self.set_up_catalog_learner()
+        self.remove_role_assignments()
+
+        response = self.client.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
+        highlight_sets_results = response.json()['results']
+        assert len(highlight_sets_results) == 1
+        assert highlight_sets_results[0]['uuid'] == str(self.highlight_set_one.uuid)
+
+        # there should now only be queries to select the django user record, session record, and
+        # any available enterprise role assignments.
+        with self.assertNumQueries(4):
+            # make a second request to exercise the caching logic
+            second_response = self.client.get(url)
+            assert second_response.json() == response.json()
+            assert second_response.status_code == status.HTTP_200_OK
 
     def test_detail_invalid_uuid(self):
         """

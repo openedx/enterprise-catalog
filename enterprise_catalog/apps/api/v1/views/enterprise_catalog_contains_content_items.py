@@ -1,10 +1,14 @@
 from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework_xml.renderers import XMLRenderer
 
+from enterprise_catalog.apps.api.constants import (
+    CONTAINS_CONTENT_ITEMS_VIEW_CACHE_TIMEOUT_SECONDS,
+)
 from enterprise_catalog.apps.api.v1.decorators import (
     require_at_least_one_query_parameter,
 )
@@ -37,6 +41,10 @@ class EnterpriseCatalogContainsContentItems(BaseViewSet, viewsets.ReadOnlyModelV
             return str(enterprise_catalog.enterprise_uuid)
         return None
 
+    # Becuase the edx-rbac perms are built around a part of the URL
+    # path, here (the uuid of the catalog), we can utilize per-view caching,
+    # rather than per-user caching.
+    @method_decorator(cache_page(CONTAINS_CONTENT_ITEMS_VIEW_CACHE_TIMEOUT_SECONDS))
     @method_decorator(require_at_least_one_query_parameter('course_run_ids', 'program_uuids'))
     @action(detail=True)
     def contains_content_items(self, request, uuid, course_run_ids, program_uuids, **kwargs):  # pylint: disable=unused-argument

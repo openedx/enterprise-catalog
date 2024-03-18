@@ -1037,6 +1037,19 @@ class EnterpriseCatalogContainsContentItemsTests(APITestMixin):
         url = self._get_contains_content_base_url(self.enterprise_catalog) + '?course_run_ids=' + content_key
         self.assert_correct_contains_response(url, True)
 
+        # now query for some stuff that's *not* in the catalog
+        # to get a different response.
+        next_query_params = '?course_run_ids=' + 'test-key-foo,test-key-bar'
+        next_url = self._get_contains_content_base_url(self.enterprise_catalog) + next_query_params
+
+        self.assert_correct_contains_response(next_url, False)
+
+        # ..and finally, exercise the per-view cache on the original url.
+        # There should now only be queries to select the django user record, session record, and
+        # any available enterprise role assignments.
+        with self.assertNumQueries(4):
+            self.assert_correct_contains_response(url, True)
+
     def test_contains_content_items_parent_keys_in_catalog(self):
         """
         Verify the contains_content_items endpoint returns True if the parent's key is in the catalog

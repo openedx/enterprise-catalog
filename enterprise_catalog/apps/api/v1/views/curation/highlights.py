@@ -1,6 +1,9 @@
 import logging
 from uuid import UUID
 
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_cookie
 from edx_django_utils.cache import RequestCache
 from edx_rbac.decorators import permission_required
 from edx_rbac.mixins import PermissionRequiredForListingMixin
@@ -11,6 +14,10 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework_xml.renderers import XMLRenderer
 
+from enterprise_catalog.apps.api.constants import (
+    CURATION_CONFIG_READ_ONLY_VIEW_CACHE_TIMEOUT_SECONDS,
+    HIGHLIGHT_SET_READ_ONLY_VIEW_CACHE_TIMEOUT_SECONDS,
+)
 from enterprise_catalog.apps.api.v1.constants import SegmentEvents
 from enterprise_catalog.apps.api.v1.event_utils import (
     track_highlight_set_changes,
@@ -122,6 +129,12 @@ class EnterpriseCurationConfigReadOnlyViewSet(EnterpriseCurationConfigBaseViewSe
 
     # Fields required for controlling access in the `list()` action
     allowed_roles = [ENTERPRISE_CATALOG_LEARNER_ROLE, ENTERPRISE_CATALOG_ADMIN_ROLE]
+
+    # Varying on the Cookie header means that this view is cached per-user.
+    @method_decorator(cache_page(CURATION_CONFIG_READ_ONLY_VIEW_CACHE_TIMEOUT_SECONDS))
+    @method_decorator(vary_on_cookie)
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
 class EnterpriseCurationConfigViewSet(EnterpriseCurationConfigBaseViewSet, viewsets.ModelViewSet):
@@ -276,6 +289,12 @@ class HighlightSetReadOnlyViewSet(HighlightSetBaseViewSet, viewsets.ReadOnlyMode
 
     # Fields required for controlling access in the `list()` action
     allowed_roles = [ENTERPRISE_CATALOG_LEARNER_ROLE, ENTERPRISE_CATALOG_ADMIN_ROLE]
+
+    # Varying on the Cookie header means that this view is cached per-user.
+    @method_decorator(cache_page(HIGHLIGHT_SET_READ_ONLY_VIEW_CACHE_TIMEOUT_SECONDS))
+    @method_decorator(vary_on_cookie)
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
 class HighlightSetViewSet(HighlightSetBaseViewSet, viewsets.ModelViewSet):
