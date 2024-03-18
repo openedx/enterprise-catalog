@@ -41,6 +41,7 @@ backports-zoneinfo[tzdata]==0.2.1
     #   -r requirements/base.txt
     #   celery
     #   django
+    #   djangorestframework
     #   kombu
 billiard==4.2.0
     # via
@@ -87,7 +88,7 @@ click-repl==0.3.0
     # via
     #   -r requirements/base.txt
     #   celery
-code-annotations==1.6.0
+code-annotations==1.7.0
     # via
     #   -r requirements/base.txt
     #   edx-toggles
@@ -164,7 +165,7 @@ django-waffle==4.1.0
     #   edx-toggles
 djangoql==0.18.1
     # via -r requirements/base.txt
-djangorestframework==3.14.0
+djangorestframework==3.15.0
     # via
     #   -r requirements/base.txt
     #   django-config-models
@@ -234,7 +235,7 @@ idna==3.6
     #   anyio
     #   httpx
     #   requests
-importlib-resources==6.3.0
+importlib-resources==6.3.1
     # via
     #   -r requirements/base.txt
     #   jsonschema
@@ -354,9 +355,7 @@ python3-openid==3.2.0
     #   -r requirements/base.txt
     #   social-auth-core
 pytz==2024.1
-    # via
-    #   -r requirements/base.txt
-    #   djangorestframework
+    # via -r requirements/base.txt
 pyyaml==6.0.1
     # via
     #   -r requirements/base.txt
@@ -366,7 +365,7 @@ pyyaml==6.0.1
     #   edx-django-release-util
 redis==3.5.3
     # via -r requirements/base.txt
-referencing==0.33.0
+referencing==0.34.0
     # via
     #   -r requirements/base.txt
     #   jsonschema
@@ -480,7 +479,7 @@ wcwidth==0.2.13
     #   prompt-toolkit
 xlsxwriter==3.2.0
     # via -r requirements/base.txt
-zipp==3.18.0
+zipp==3.18.1
     # via
     #   -r requirements/base.txt
     #   importlib-resources

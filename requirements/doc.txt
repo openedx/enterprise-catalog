@@ -55,6 +55,7 @@ backports-zoneinfo[tzdata]==0.2.1
     #   -r requirements/test.txt
     #   celery
     #   django
+    #   djangorestframework
     #   kombu
 beautifulsoup4==4.12.3
     # via pydata-sphinx-theme
@@ -118,7 +119,7 @@ click-repl==0.3.0
     # via
     #   -r requirements/test.txt
     #   celery
-code-annotations==1.6.0
+code-annotations==1.7.0
     # via
     #   -r requirements/test.txt
     #   edx-lint
@@ -127,7 +128,7 @@ colorama==0.4.6
     # via
     #   -r requirements/test.txt
     #   tox
-coverage[toml]==7.4.3
+coverage[toml]==7.4.4
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -158,6 +159,7 @@ distro==1.9.0
     #   openai
 django==4.2.11
     # via
+    #   -c requirements/common_constraints.txt
     #   -c requirements/constraints.txt
     #   -r requirements/test.txt
     #   django-celery-results
@@ -219,7 +221,7 @@ django-waffle==4.1.0
     #   edx-toggles
 djangoql==0.18.1
     # via -r requirements/test.txt
-djangorestframework==3.14.0
+djangorestframework==3.15.0
     # via
     #   -r requirements/test.txt
     #   django-config-models
@@ -281,7 +283,7 @@ exceptiongroup==1.2.0
     #   pytest
 factory-boy==3.3.0
     # via -r requirements/test.txt
-faker==24.1.0
+faker==24.2.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -310,9 +312,11 @@ idna==3.6
     #   requests
 imagesize==1.4.1
     # via sphinx
-importlib-metadata==7.0.2
-    # via sphinx
-importlib-resources==6.3.0
+importlib-metadata==6.11.0
+    # via
+    #   -c requirements/common_constraints.txt
+    #   sphinx
+importlib-resources==6.3.1
     # via
     #   -r requirements/test.txt
     #   jsonschema
@@ -515,7 +519,6 @@ pytz==2024.1
     # via
     #   -r requirements/test.txt
     #   babel
-    #   djangorestframework
 pyyaml==6.0.1
     # via
     #   -r requirements/test.txt
@@ -529,7 +532,7 @@ redis==3.5.3
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/test.txt
-referencing==0.33.0
+referencing==0.34.0
     # via
     #   -r requirements/test.txt
     #   jsonschema
@@ -702,7 +705,7 @@ wrapt==1.16.0
     #   astroid
 xlsxwriter==3.2.0
     # via -r requirements/test.txt
-zipp==3.18.0
+zipp==3.18.1
     # via
     #   -r requirements/test.txt
     #   importlib-metadata
