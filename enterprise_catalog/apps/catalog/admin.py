@@ -127,6 +127,14 @@ class EnterpriseCatalogAdmin(UnchangeableMixin):
         'catalog_query',
     )
 
+    readonly_fields = ('get_content_metadata_count',)
+
+    @admin.display(
+        description='Number of content records associated with the catalog'
+    )
+    def get_content_metadata_count(self, obj):
+        return len(obj.catalog_query.contentmetadata_set.all())
+
     @admin.display(
         description='Catalog Query'
     )
