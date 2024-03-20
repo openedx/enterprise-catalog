@@ -1426,3 +1426,39 @@ class AlgoliaUtilsTests(TestCase):
         """
         created_learning_type = utils.get_learning_type(course)
         self.assertEqual(expected_result, created_learning_type)
+
+    @ddt.data(
+        (
+            {
+                'course_runs': [{
+                    'uuid': ADVERTISED_COURSE_RUN_UUID,
+                    'transcript_languages_search_facet_names': ['English', 'Chinese - Mandarin'],
+                }],
+                'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID,
+            },
+            ['English', 'Chinese - Mandarin'],
+        ),
+        (
+            {
+                'course_runs': [{
+                    'uuid': ADVERTISED_COURSE_RUN_UUID,
+                    'content_language_search_facet_name': None,
+                }],
+                'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID,
+            },
+            None,
+        ),
+        (
+            {
+                'advertised_course_run_uuid': None,
+            },
+            None,
+        ),
+    )
+    @ddt.unpack
+    def test_get_course_transcript_languages(self, course_metadata, expected_transcript_languages):
+        """
+        Assert correct parsing of ``transcript_languages`` for a given course run.
+        """
+        transcript_languages = utils.get_course_transcript_languages(course_metadata)
+        assert transcript_languages == expected_transcript_languages
