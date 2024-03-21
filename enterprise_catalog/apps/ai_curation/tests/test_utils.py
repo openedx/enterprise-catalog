@@ -12,9 +12,11 @@ from django.test import TestCase
 from openai import APIConnectionError
 
 from enterprise_catalog.apps.ai_curation.errors import AICurationError
-from enterprise_catalog.apps.ai_curation.utils import (
-    chat_completions,
+from enterprise_catalog.apps.ai_curation.utils.algolia_utils import (
     fetch_catalog_metadata_from_algolia,
+)
+from enterprise_catalog.apps.ai_curation.utils.open_ai_utils import (
+    chat_completions,
     get_filtered_subjects,
     get_keywords_to_prose,
     get_query_keywords,
@@ -53,23 +55,28 @@ class TestUtils(TestCase):
         }
     ]}
 
-    @mock.patch('enterprise_catalog.apps.ai_curation.utils.get_initialized_algolia_client')
+    @mock.patch('enterprise_catalog.apps.ai_curation.utils.algolia_utils.get_initialized_algolia_client')
     def test_fetch_catalog_metadata_from_algolia(self, mock_algolia_client):
         """
         Verify that the catalog metadata from algolia is fetched correctly.
         """
         mock_algolia_client.return_value.algolia_index.search.side_effect = [self.mock_algolia_hits, {'hits': []}]
         ocm_courses, exec_ed_courses, programs, subjects = fetch_catalog_metadata_from_algolia('test_query_title')
-        self.assertEqual(ocm_courses, ['course:MITx+20'])
-        self.assertEqual(exec_ed_courses, ['course:MITx+19'])
-        self.assertEqual(programs, ['program:MITx+21'])
-        self.assertEqual(sorted(subjects), ["Business & Management", "Computer Science",
-                                            "Data Analysis & Statistics", "Economics & Finance",
-                                            "Electronics", "Engineering", "Philosophy & Ethics"])
+
+        self.assertEqual([c['aggregation_key'] for c in ocm_courses], ['course:MITx+20'])
+        self.assertEqual([c['aggregation_key'] for c in exec_ed_courses], ['course:MITx+19'])
+        self.assertEqual([p['aggregation_key'] for p in programs], ['program:MITx+21'])
+        self.assertEqual(
+            sorted(subjects),
+            [
+                "Business & Management", "Computer Science", "Data Analysis & Statistics", "Economics & Finance",
+                "Electronics", "Engineering", "Philosophy & Ethics"
+            ]
+        )
 
 
 class TestChatCompletionUtils(TestCase):
-    @patch('enterprise_catalog.apps.ai_curation.utils.LOGGER')
+    @patch('enterprise_catalog.apps.ai_curation.utils.open_ai_utils.LOGGER')
     @patch('enterprise_catalog.apps.ai_curation.openai_client.client.chat.completions.create')
     def test_get_filtered_subjects(self, mock_create, mock_logger):
         """
@@ -172,7 +179,7 @@ class TestChatCompletionUtils(TestCase):
             )
         ])
 
-    @patch('enterprise_catalog.apps.ai_curation.utils.LOGGER')
+    @patch('enterprise_catalog.apps.ai_curation.utils.open_ai_utils.LOGGER')
     @patch('enterprise_catalog.apps.ai_curation.openai_client.client.chat.completions.create')
     def test_get_query_keywords(self, mock_create, mock_logger):
         """
@@ -200,9 +207,9 @@ class TestChatCompletionUtils(TestCase):
         )
         assert result == ['keyword1', 'keyword2']
 
-    @patch('enterprise_catalog.apps.ai_curation.utils.LOGGER')
+    @patch('enterprise_catalog.apps.ai_curation.utils.open_ai_utils.LOGGER')
     @patch('enterprise_catalog.apps.ai_curation.openai_client.client.chat.completions.create')
-    @patch('enterprise_catalog.apps.ai_curation.utils.get_query_keywords')
+    @patch('enterprise_catalog.apps.ai_curation.utils.open_ai_utils.get_query_keywords')
     def test_get_keywords_to_prose(self, mock_get_query_keywords, mock_create, mock_logger):
         """
         Test that get_keywords_to_prose returns the correct prose
