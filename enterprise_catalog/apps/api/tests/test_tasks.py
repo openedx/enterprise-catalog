@@ -752,6 +752,44 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 obj['academy_tags'] = sorted(obj['academy_tags'])
         return algolia_obj
 
+    def test_add_metadata_to_algolia_objects_skips_metadata_records_over_max_size(self):
+        """
+        Test that the indexing task will skip adding records into the `algolia_products_by_object_id` list of objects
+        that exceed to max byte size according to the Algolia docs.
+        """
+        algolia_products_by_object_id = {}
+        normal_sized_course = ContentMetadataFactory(content_type=COURSE, content_key='test-course-1')
+        short_description_string = "ayylmao".join(["" for x in range(50000)])
+        full_description_string = "foobar".join(["" for x in range(50000)])
+        too_big_sized_course = ContentMetadataFactory(content_type=COURSE, content_key='test-course-2')
+        too_big_sized_course.json_metadata.update(
+            {"short_description": short_description_string, "full_description": full_description_string}
+        )
+        too_big_sized_course.save()
+        tasks.add_metadata_to_algolia_objects(
+            metadata=too_big_sized_course,
+            algolia_products_by_object_id=algolia_products_by_object_id,
+            catalog_uuids=[str(uuid.uuid4())],
+            customer_uuids=[str(uuid.uuid4())],
+            catalog_queries=[(str(uuid.uuid4()), "query title")],
+            academy_uuids=[str(uuid.uuid4())],
+            academy_tags=[],
+        )
+        assert not algolia_products_by_object_id
+        tasks.add_metadata_to_algolia_objects(
+            metadata=normal_sized_course,
+            algolia_products_by_object_id=algolia_products_by_object_id,
+            catalog_uuids=[str(uuid.uuid4())],
+            customer_uuids=[str(uuid.uuid4())],
+            catalog_queries=[(str(uuid.uuid4()), "query title")],
+            academy_uuids=[str(uuid.uuid4())],
+            academy_tags=[],
+        )
+
+        for algolia_object_key in algolia_products_by_object_id.keys():
+            assert str(normal_sized_course.content_uuid) in algolia_object_key
+            assert not str(too_big_sized_course.content_uuid) in algolia_object_key
+
     def test_get_algolia_objects_from_course_metadata(self):
         """
         Test that the ``get_algolia_objects_from_course_content_metadata`` method generates a set of algolia objects to
