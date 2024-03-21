@@ -48,7 +48,7 @@ class TestAICurationView(TestCase):
         """
         Verify that the job calls the trigger_ai_curations with the test data
         """
-        data = {'query': 'Give all courses from edX org.', 'catalog_id': str(uuid4())}
+        data = {'query': 'Give all courses from edX org.', 'catalog_name': 'Test Catalog'}
         response = self.client.post(self.url, data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('task_id', response.data)
@@ -60,7 +60,7 @@ class TestAICurationView(TestCase):
         """
         Verify that the api returns error if query length is greater than 300 characters
         """
-        data = {'query': 'a' * 301, 'catalog_id': str(uuid4())}
+        data = {'query': 'a' * 301, 'catalog_name': 'Test Catalog'}
         response = self.client.post(self.url, data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json(), {'query': ['Ensure this field has no more than 300 characters.']})

@@ -53,7 +53,7 @@ app_name = 'v1'
 
 router = DefaultRouter()
 router.register(r'enterprise-catalogs', EnterpriseCatalogCRUDViewSet, basename='enterprise-catalog')
-router.register(r'enterprise-catalogs', EnterpriseCatalogContainsContentItems, basename='enterprise-catalog')
+router.register(r'enterprise-catalogs', EnterpriseCatalogContainsContentItems, basename='enterprise-catalog-content')
 router.register(r'enterprise-customer', EnterpriseCustomerViewSet, basename='enterprise-customer')
 router.register(r'enterprise-curations', EnterpriseCurationConfigReadOnlyViewSet, basename='enterprise-curations')
 router.register(r'enterprise-curations-admin', EnterpriseCurationConfigViewSet, basename='enterprise-curations-admin')
