@@ -2,6 +2,7 @@ import copy
 import functools
 import json
 import logging
+import sys
 import time
 from collections import defaultdict
 from datetime import timedelta
@@ -20,7 +21,9 @@ from enterprise_catalog.apps.api.constants import CourseMode
 from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 from enterprise_catalog.apps.catalog.algolia_utils import (
     ALGOLIA_FIELDS,
+    ALGOLIA_JSON_METADATA_MAX_SIZE,
     ALGOLIA_UUID_BATCH_SIZE,
+    _algolia_object_from_product,
     _get_course_run_by_uuid,
     configure_algolia_index,
     create_algolia_objects,
@@ -654,6 +657,22 @@ def add_metadata_to_algolia_objects(
     json_metadata.update({
         'academy_tags': list(academy_tags),
     })
+
+    json_metadata_size = sys.getsizeof(
+        json.dumps(_algolia_object_from_product(json_metadata, algolia_fields=ALGOLIA_FIELDS)).strip(" "),
+    )
+    # Algolia limits the size of algolia object records and measures object size as stated in:
+    # https://support.algolia.com/hc/en-us/articles/4406981897617-Is-there-a-size-limit-for-my-index-records
+    # Refrain from adding the metadata record to the list of objects to index if the metadata exceeds the max size
+    # allowed.
+    if json_metadata_size > ALGOLIA_JSON_METADATA_MAX_SIZE:
+        content = json_metadata.get('aggregation_key') or json_metadata.get('title')
+        logger.warning(
+            f"add_metadata_to_algolia_objects found a metadata record: {content} who's sized exceeded the maximum"
+            f"algolia object size of {ALGOLIA_JSON_METADATA_MAX_SIZE} bytes"
+        )
+        return
+
     # enterprise catalog uuids
     catalog_uuids = sorted(list(catalog_uuids))
     batched_metadata = _batched_metadata(
