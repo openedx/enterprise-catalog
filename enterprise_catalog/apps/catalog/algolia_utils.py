@@ -31,6 +31,8 @@ logger = logging.getLogger(__name__)
 
 ALGOLIA_UUID_BATCH_SIZE = 100
 
+ALGOLIA_JSON_METADATA_MAX_SIZE = 100000
+
 
 # keep attributes from content objects that we explicitly want in Algolia
 ALGOLIA_FIELDS = [
