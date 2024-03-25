@@ -21,7 +21,7 @@ anyio==4.3.0
     #   -r requirements/base.txt
     #   httpx
     #   openai
-asgiref==3.7.2
+asgiref==3.8.1
     # via
     #   -r requirements/base.txt
     #   django
@@ -46,6 +46,7 @@ backports-zoneinfo[tzdata]==0.2.1
     #   -r requirements/base.txt
     #   celery
     #   django
+    #   djangorestframework
     #   kombu
 billiard==4.2.0
     # via
@@ -87,7 +88,7 @@ click==8.1.7
     #   code-annotations
     #   edx-django-utils
     #   edx-lint
-click-didyoumean==0.3.0
+click-didyoumean==0.3.1
     # via
     #   -r requirements/base.txt
     #   celery
@@ -101,7 +102,7 @@ click-repl==0.3.0
     # via
     #   -r requirements/base.txt
     #   celery
-code-annotations==1.6.0
+code-annotations==1.7.0
     # via
     #   -r requirements/base.txt
     #   -r requirements/test.in
@@ -109,7 +110,7 @@ code-annotations==1.6.0
     #   edx-toggles
 colorama==0.4.6
     # via tox
-coverage[toml]==7.4.3
+coverage[toml]==7.4.4
     # via
     #   -r requirements/test.in
     #   pytest-cov
@@ -135,6 +136,7 @@ distro==1.9.0
     #   -r requirements/base.txt
     #   openai
     # via
+    #   -c requirements/common_constraints.txt
     #   -c requirements/constraints.txt
     #   -r requirements/base.txt
     #   django-celery-results
@@ -196,7 +198,7 @@ django-waffle==4.1.0
     #   edx-toggles
 djangoql==0.18.1
     # via -r requirements/base.txt
-djangorestframework==3.14.0
+djangorestframework==3.15.1
     # via
     #   -r requirements/base.txt
     #   django-config-models
@@ -249,7 +251,7 @@ exceptiongroup==1.2.0
     #   pytest
 factory-boy==3.3.0
     # via -r requirements/test.in
-faker==24.1.0
+faker==24.3.0
     # via factory-boy
 filelock==3.13.1
     # via
@@ -273,7 +275,7 @@ idna==3.6
     #   anyio
     #   httpx
     #   requests
-importlib-resources==6.3.0
+importlib-resources==6.4.0
     # via
     #   -r requirements/base.txt
     #   jsonschema
@@ -420,7 +422,7 @@ pytest==8.1.1
     # via
     #   pytest-cov
     #   pytest-django
-pytest-cov==4.1.0
+pytest-cov==5.0.0
     # via -r requirements/test.in
 pytest-django==4.8.0
     # via -r requirements/test.in
@@ -439,9 +441,7 @@ python3-openid==3.2.0
     #   -r requirements/base.txt
     #   social-auth-core
 pytz==2024.1
-    # via
-    #   -r requirements/base.txt
-    #   djangorestframework
+    # via -r requirements/base.txt
 pyyaml==6.0.1
     # via
     #   -r requirements/base.txt
@@ -453,7 +453,7 @@ redis==3.5.3
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.txt
-referencing==0.33.0
+referencing==0.34.0
     # via
     #   -r requirements/base.txt
     #   jsonschema
@@ -469,7 +469,7 @@ requests==2.31.0
     #   responses
     #   slumber
     #   social-auth-core
-requests-oauthlib==1.4.0
+requests-oauthlib==2.0.0
     # via
     #   -r requirements/base.txt
     #   social-auth-core
@@ -539,7 +539,7 @@ tomli==2.0.1
     #   tox
 tomlkit==0.12.4
     # via pylint
-tox==4.14.1
+tox==4.14.2
     # via -r requirements/test.in
 tqdm==4.66.2
     # via
@@ -590,7 +590,7 @@ wrapt==1.16.0
     # via astroid
 xlsxwriter==3.2.0
     # via -r requirements/base.txt
-zipp==3.18.0
+zipp==3.18.1
     # via
     #   -r requirements/base.txt
     #   importlib-resources
