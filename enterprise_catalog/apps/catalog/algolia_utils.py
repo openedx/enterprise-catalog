@@ -95,6 +95,7 @@ ALGOLIA_FIELDS = [
     'reviews_count',
     'avg_course_rating',
     'course_bayesian_average',
+    'transcript_languages',
 ]
 
 # default configuration for the index
@@ -138,6 +139,7 @@ ALGOLIA_INDEX_SETTINGS = {
         'aggregation_key',
         'learning_type',
         'learning_type_v2',
+        'transcript_languages',
     ],
     'unretrievableAttributes': [
         'enterprise_catalog_uuids',
@@ -421,6 +423,25 @@ def get_course_language(course):
 
     content_language_name = advertised_course_run.get('content_language_search_facet_name')
     return content_language_name
+
+
+def get_course_transcript_languages(course):
+    """
+    Gets the human-readable video transcript languages associated with the advertised course run. Used for
+    the "transcript_languages" facet in Algolia.
+
+    Arguments:
+        course (dict): a dict representing with course metadata
+
+    Returns:
+        list: a list of available human-readable video transcript languages parsed from a language code.
+    """
+    advertised_course_run = _get_course_run_by_uuid(course, course.get('advertised_course_run_uuid'))
+    if not advertised_course_run:
+        return None
+
+    transcript_languages = advertised_course_run.get('transcript_languages_search_facet_names')
+    return transcript_languages
 
 
 def get_course_availability(course):
@@ -1280,6 +1301,7 @@ def _algolia_object_from_product(product, algolia_fields):
             'reviews_count': get_reviews_count(searchable_product),
             'avg_course_rating': get_avg_course_rating(searchable_product),
             'course_bayesian_average': get_course_bayesian_average(searchable_product),
+            'transcript_languages': get_course_transcript_languages(searchable_product),
         })
     elif searchable_product.get('content_type') == PROGRAM:
         searchable_product.update({
