@@ -17,10 +17,7 @@ from rest_framework.reverse import reverse
 from rest_framework.settings import api_settings
 from six.moves.urllib.parse import quote_plus
 
-from enterprise_catalog.apps.academy.tests.factories import (
-    AcademyFactory,
-    TagFactory,
-)
+from enterprise_catalog.apps.academy.tests.factories import AcademyFactory
 from enterprise_catalog.apps.api.v1.serializers import ContentMetadataSerializer
 from enterprise_catalog.apps.api.v1.tests.mixins import APITestMixin
 from enterprise_catalog.apps.api.v1.utils import is_any_course_run_active
@@ -2339,24 +2336,11 @@ class AcademiesViewSetTests(APITestMixin):
     """
     Tests for the AcademyViewSet.
     """
-    mock_algolia_hits = {'facetHits': [
-        {
-            'value': 'leadership',
-            'count': 4
-        },
-        {
-            'value': 'management',
-            'count': 0
-        }
-    ]}
-
     def setUp(self):
         super().setUp()
         self.set_up_catalog_learner()
-        self.tag1 = TagFactory(title=self.mock_algolia_hits['facetHits'][0]['value'])
-        self.tag2 = TagFactory(title=self.mock_algolia_hits['facetHits'][1]['value'])
         self.academy1 = AcademyFactory()
-        self.academy2 = AcademyFactory(tags=[self.tag1, self.tag2])
+        self.academy2 = AcademyFactory()
         self.enterprise_catalog_query = CatalogQueryFactory(uuid=uuid.uuid4())
         self.enterprise_catalog1 = EnterpriseCatalogFactory(catalog_query=self.enterprise_catalog_query)
         self.enterprise_catalog1.academies.add(self.academy1)
@@ -2364,14 +2348,10 @@ class AcademiesViewSetTests(APITestMixin):
         self.enterprise_catalog2.academies.add(self.academy2)
 
     @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
-    @mock.patch('enterprise_catalog.apps.api.v1.serializers.get_initialized_algolia_client')
-    def test_list_for_academies(self, mock_algolia_client, mock_client):  # pylint: disable=unused-argument
+    def test_list_for_academies(self, mock_client):  # pylint: disable=unused-argument
         """
         Verify the viewset returns enterprise specific academies
         """
-        mock_algolia_client.return_value.algolia_index.search_for_facet_values.side_effect = [
-            self.mock_algolia_hits, {'facetHits': []}
-        ]
         params = {
             'enterprise_customer': str(self.enterprise_catalog2.enterprise_customer.uuid)
         }
@@ -2382,40 +2362,16 @@ class AcademiesViewSetTests(APITestMixin):
         results = response.data['results']
         self.assertEqual(uuid.UUID(results[0]['uuid']), self.academy2.uuid)
 
-    @mock.patch('enterprise_catalog.apps.api.v1.serializers.get_initialized_algolia_client')
-    def test_retrieve_for_academies(self, mock_algolia_client):
+    def test_retrieve_for_academies(self):
         """
         Verify the viewset retrieves an academy
         """
-        mock_algolia_client.return_value.algolia_index.search_for_facet_values.side_effect = [
-            self.mock_algolia_hits, {'facetHits': []}
-        ]
         url = reverse('api:v1:academies-detail', kwargs={
             'uuid': self.academy2.uuid,
         })
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(uuid.UUID(response.data['uuid']), self.academy2.uuid)
-
-    @mock.patch('enterprise_catalog.apps.api.v1.serializers.get_initialized_algolia_client')
-    def test_retrieve_for_tags_no_hits(self, mock_algolia_client):
-        """
-        Verify the viewset retrieves tags of an academy only if algolia hits for tag are > 0
-        """
-        mock_algolia_client.return_value.algolia_index.search_for_facet_values.side_effect = [
-            self.mock_algolia_hits, {'facetHits': []}
-        ]
-        url = reverse('api:v1:academies-detail', kwargs={
-            'uuid': self.academy2.uuid,
-        })
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(uuid.UUID(response.data['uuid']), self.academy2.uuid)
-        self.assertEqual(len(response.data['tags']), 1)
-        self.assertEqual(
-            response.data['tags'][0].get('title'),
-            self.mock_algolia_hits['facetHits'][0]['value']
-        )
 
     def test_list_with_missing_enterprise_customer(self):
         """
