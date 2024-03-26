@@ -39,3 +39,4 @@ xlsxwriter
 django-clearcache
 django-log-request-id
 openai
+scikit-learn

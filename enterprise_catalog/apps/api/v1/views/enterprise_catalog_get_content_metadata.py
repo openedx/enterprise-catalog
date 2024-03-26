@@ -69,7 +69,6 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
         response.data['uuid'] = self.enterprise_catalog.uuid
         response.data['title'] = self.enterprise_catalog.title
         response.data['enterprise_customer'] = self.enterprise_catalog.enterprise_uuid
-        response.data.move_to_end('results')  # Place the results at the end of the response again
         return response
 
     @action(detail=True)
