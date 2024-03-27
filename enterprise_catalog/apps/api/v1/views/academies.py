@@ -23,6 +23,12 @@ class AcademiesReadOnlyViewSet(viewsets.ReadOnlyModelViewSet):
     def request_action(self):
         return getattr(self, 'action', None)
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        academy_uuid = str(self.kwargs['uuid']) if 'uuid' in self.kwargs else None
+        context.update({'academy_uuid': academy_uuid})
+        return context
+
     def get_queryset(self):
         """
         Returns the queryset corresponding to all academies the requesting user has access to.

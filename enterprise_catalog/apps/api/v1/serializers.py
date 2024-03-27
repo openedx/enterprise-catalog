@@ -12,6 +12,9 @@ from enterprise_catalog.apps.api.v1.utils import (
     is_any_course_run_active,
     update_query_parameters,
 )
+from enterprise_catalog.apps.catalog.algolia_utils import (
+    get_initialized_algolia_client,
+)
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
     COURSE_RUN,
@@ -385,23 +388,60 @@ class EnterpriseCurationConfigSerializer(serializers.ModelSerializer):
         ]
 
 
+class AcademyTagsListSerializer(serializers.ListSerializer):  # pylint: disable=abstract-method
+    """
+    List serializer for filtering academy tags with no index hits.
+    """
+
+    def to_representation(self, obj):  # pylint: disable=arguments-renamed
+        """Filter academy tags with no index hits. """
+        tags = super().to_representation(obj)
+        algolia_client = get_initialized_algolia_client()
+        academy_uuid = self.context.get('academy_uuid')
+        if academy_uuid:
+            search_query = {
+                'filters': f'academy_uuids:{academy_uuid}',
+                'maxFacetHits': 50
+            }
+        else:
+            search_query = {'maxFacetHits': 50}
+        response = algolia_client.algolia_index.search_for_facet_values('academy_tags', '', search_query)
+        tag_titles_with_results = []
+        for hit in response.get('facetHits', []):
+            if hit.get('count') > 0:
+                tag_titles_with_results.append(hit.get('value'))
+        tags_with_results = []
+        for tag in tags:
+            tag_title = tag['title']
+            if tag_title in tag_titles_with_results:
+                tags_with_results.append(tag)
+        return tags_with_results
+
+
 class TagsSerializer(serializers.ModelSerializer):
     """
     Serializer for the `Tag` model.
     """
     class Meta:
         model = Tag
-        fields = '__all__'
+        fields = ['id', 'title', 'description']
+        list_serializer_class = AcademyTagsListSerializer
 
 
 class AcademySerializer(serializers.ModelSerializer):
     """
     Serializer for the `Academy` model.
     """
-    enterprise_catalogs = EnterpriseCatalogSerializer(many=True)
-    tags = TagsSerializer(many=True)
+    tags = serializers.SerializerMethodField('get_tags_serializer')
 
     class Meta:
         model = Academy
-        fields = '__all__'
+        fields = ['uuid', 'title', 'short_description', 'long_description', 'image', 'tags']
         lookup_field = 'uuid'
+
+    def get_tags_serializer(self, obj):
+        academy_uuid = self.context.get('academy_uuid')
+        serializer_context = {'academy_uuid': academy_uuid}
+        tags = obj.tags.all()
+        serializer = TagsSerializer(tags, many=True, context=serializer_context)
+        return serializer.data
