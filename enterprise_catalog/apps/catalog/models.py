@@ -693,7 +693,7 @@ def _partition_content_metadata_defaults(batched_metadata, existing_metadata_by_
     return existing_metadata_defaults, nonexisting_metadata_defaults
 
 
-def _update_existing_content_metadata(existing_metadata_defaults, existing_metadata_by_key):
+def _update_existing_content_metadata(existing_metadata_defaults, existing_metadata_by_key, dry_run=False):
     """
     Iterates through existing ContentMetadata database objects, updating the values of various
     fields based on the defaults provided.
@@ -703,6 +703,7 @@ def _update_existing_content_metadata(existing_metadata_defaults, existing_metad
             to update the existing ContentMetadata database objects.
         existing_metadata_by_key (dict): Dictionary of existing ContentMetadata database objects to
             update by content_key.
+        dry_run (boolean): Logs rather than commits updated content metadata
 
     Returns:
         list: List of ContentMetadata objects that were updated.
@@ -720,24 +721,29 @@ def _update_existing_content_metadata(existing_metadata_defaults, existing_metad
                     setattr(content_metadata, key, value)
             metadata_list.append(content_metadata)
 
-    metadata_fields_to_update = ['content_key', 'parent_content_key', 'content_type', 'json_metadata']
-    batch_size = settings.UPDATE_EXISTING_CONTENT_METADATA_BATCH_SIZE
-    for batched_metadata in batch(metadata_list, batch_size=batch_size):
-        try:
-            ContentMetadata.objects.bulk_update(
-                batched_metadata,
-                metadata_fields_to_update,
-                batch_size=batch_size,
-            )
-        except OperationalError:
-            content_keys = [record.content_key for record in batched_metadata]
-            log_message = 'Operational error while updating batch of ContentMetadata objects with keys: %s'
-            LOGGER.exception(log_message, content_keys)
-            raise
+    if dry_run:
+        LOGGER.info(f"[Dry Run] Number of Content Metadata records that would have been updated: {len(metadata_list)}")
+        for metadata in metadata_list:
+            LOGGER.info(f"[Dry Run] Skipping Content Metadata update: {metadata}")
+    else:
+        metadata_fields_to_update = ['content_key', 'parent_content_key', 'content_type', 'json_metadata']
+        batch_size = settings.UPDATE_EXISTING_CONTENT_METADATA_BATCH_SIZE
+        for batched_metadata in batch(metadata_list, batch_size=batch_size):
+            try:
+                ContentMetadata.objects.bulk_update(
+                    batched_metadata,
+                    metadata_fields_to_update,
+                    batch_size=batch_size,
+                )
+            except OperationalError:
+                content_keys = [record.content_key for record in batched_metadata]
+                log_message = 'Operational error while updating batch of ContentMetadata objects with keys: %s'
+                LOGGER.exception(log_message, content_keys)
+                raise
     return metadata_list
 
 
-def _create_new_content_metadata(nonexisting_metadata_defaults):
+def _create_new_content_metadata(nonexisting_metadata_defaults, dry_run=False):
     """
     Creates new ContentMetadata database objects based on the defaults provided. This is done through an atomic
     database transaction.
@@ -745,15 +751,20 @@ def _create_new_content_metadata(nonexisting_metadata_defaults):
     Arguments:
         nonexisting_metadata_defaults (list): List of default values for various fields to create
             non-existing ContentMetadata database objects.
+        dry_run (boolean): Logs rather than commits newly-created content metadata.
 
     Returns:
-        list: List of ContentMetadata objects that were created.
+        list: List of ContentMetadata objects that were created (or logged if dry_run=True).
     """
     metadata_list = []
     try:
         with transaction.atomic():
             for defaults in nonexisting_metadata_defaults:
-                content_metadata = ContentMetadata.objects.create(**defaults)
+                if dry_run:
+                    content_metadata = ContentMetadata(**defaults)
+                    LOGGER.info(f"Created {content_metadata}")
+                else:
+                    content_metadata = ContentMetadata.objects.create(**defaults)
                 metadata_list.append(content_metadata)
     except IntegrityError:
         LOGGER.exception('_create_new_content_metadata ran into an issue while creating new ContentMetadata objects.')
@@ -797,13 +808,14 @@ def _should_allow_metadata(metadata_entry, catalog_query=None):
     return False
 
 
-def create_content_metadata(metadata, catalog_query=None):
+def create_content_metadata(metadata, catalog_query=None, dry_run=False):
     """
     Creates or updates a ContentMetadata object.
 
     Arguments:
         metadata (list): List of content metadata dictionaries.
         catalog_query (CatalogQuery): Catalog Query object.
+        dry_run (boolean): Logs rather than commits content metadata additions.
 
     Returns:
         list: The list of ContentMetaData.
@@ -824,17 +836,21 @@ def create_content_metadata(metadata, catalog_query=None):
         )
 
         # Update existing ContentMetadata records
-        updated_metadata = _update_existing_content_metadata(existing_metadata_defaults, existing_metadata_by_key)
+        updated_metadata = _update_existing_content_metadata(
+            existing_metadata_defaults,
+            existing_metadata_by_key,
+            dry_run
+        )
         metadata_list.extend(updated_metadata)
 
         # Create new ContentMetadata records
-        created_metadata = _create_new_content_metadata(nonexisting_metadata_defaults)
+        created_metadata = _create_new_content_metadata(nonexisting_metadata_defaults, dry_run)
         metadata_list.extend(created_metadata)
 
     return metadata_list
 
 
-def associate_content_metadata_with_query(metadata, catalog_query):
+def associate_content_metadata_with_query(metadata, catalog_query, dry_run=False):
     """
     Creates or updates a ContentMetadata object for each entry in `metadata`,
     and then associates that object with the `catalog_query` provided.
@@ -842,17 +858,26 @@ def associate_content_metadata_with_query(metadata, catalog_query):
     Arguments:
         metadata (list): List of content metadata dictionaries.
         catalog_query (CatalogQuery): CatalogQuery object
+        dry_run (boolean): Logs rather than commits updated content metadata.
 
     Returns:
         list: The list of content_keys for the metadata associated with the query.
     """
-    metadata_list = create_content_metadata(metadata, catalog_query)
+    metadata_list = create_content_metadata(metadata, catalog_query, dry_run)
 
     # Setting `clear=True` will remove all prior relationships between
     # the CatalogQuery's associated ContentMetadata objects
     # before setting all new relationships from `metadata_list`.
     # https://docs.djangoproject.com/en/2.2/ref/models/relations/#django.db.models.fields.related.RelatedManager.set
-    catalog_query.contentmetadata_set.set(metadata_list, clear=True)
+    if dry_run:
+        old_metadata_count = catalog_query.contentmetadata_set.count()
+        new_metadata_count = len(metadata_list)
+        if old_metadata_count != new_metadata_count:
+            LOGGER.info('[Dry Run] Updated metadata count ({} -> {}) for {}'.format(
+                old_metadata_count, new_metadata_count, catalog_query))
+    else:
+        catalog_query.contentmetadata_set.set(metadata_list, clear=True)
+
     associated_content_keys = [metadata.content_key for metadata in metadata_list]
     return associated_content_keys
 
@@ -944,7 +969,7 @@ class EnterpriseCatalogRoleAssignment(UserRoleAssignment):
         return self.__str__()
 
 
-def update_contentmetadata_from_discovery(catalog_query):
+def update_contentmetadata_from_discovery(catalog_query, dry_run=False):
     """
     Takes a CatalogQuery, uses cache or the Discovery API client to
     retrieve associated metadata, and then creates/updates ContentMetadata objects.
@@ -954,6 +979,7 @@ def update_contentmetadata_from_discovery(catalog_query):
 
     Args:
         catalog_query (CatalogQuery): The catalog query to pass to discovery's /search/all endpoint.
+        dry_run (boolean): Logs rather than commits updated content metadata.
     Returns:
         list of str: Returns the content keys that were associated from the query results.
     """
@@ -977,7 +1003,7 @@ def update_contentmetadata_from_discovery(catalog_query):
             catalog_query,
         )
 
-        associated_content_keys = associate_content_metadata_with_query(metadata, catalog_query)
+        associated_content_keys = associate_content_metadata_with_query(metadata, catalog_query, dry_run)
         LOGGER.info(
             'Associated %d content items (%d unique) with catalog query %s',
             len(associated_content_keys),
