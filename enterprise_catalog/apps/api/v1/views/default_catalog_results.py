@@ -32,6 +32,7 @@ class DefaultCatalogResultsView(GenericAPIView):
         'program_titles',
         'level_type',
         'language',
+        'transcript_languages',
         'short_description',
         'subjects',
         'aggregation_key',

@@ -59,6 +59,7 @@ class EnterpriseCatalogDefaultCatalogResultsTests(APITestMixin):
         'aggregation_key': 'course:MITx+18.01.2x',
         'key': 'MITx+18.01.2x',
         'language': 'English',
+        'transcript_languages': ['English', 'Arabic'],
         'level_type': 'Intermediate',
         'content_type': 'course',
         'partners': [
@@ -92,12 +93,14 @@ class EnterpriseCatalogDefaultCatalogResultsTests(APITestMixin):
         'aggregation_key': 'course:MITx+19',
         'key': 'MITx+19',
         'language': 'English',
+        'transcript_languages': ['English', 'Arabic'],
         'level_type': 'Intermediate',
         'objectID': 'course-3543aa4e-3c64-4d9a-a343-5d5eda1dacf9-catalog-query-uuids-0'
     },
         {
         'aggregation_key': 'course:MITx+20',
         'language': 'English',
+        'transcript_languages': ['English', 'Arabic'],
         'level_type': 'Intermediate',
         'objectID': 'course-3543aa4e-3c64-4d9a-a343-5d5eda1dacf7-catalog-query-uuids-0'
     }
@@ -607,6 +610,7 @@ class EnterpriseCatalogCsvDataViewTests(APITestMixin):
         'aggregation_key': 'course:MITx+18.01.2x',
         'key': 'MITx+18.01.2x',
         'language': 'English',
+        'transcript_languages': ['English', 'Arabic'],
         'level_type': 'Intermediate',
         'content_type': 'course',
         'enterprise_catalog_query_titles': ['A la carte', 'Business', 'DemoX'],
@@ -646,25 +650,29 @@ class EnterpriseCatalogCsvDataViewTests(APITestMixin):
         'aggregation_key': 'course:MITx+19',
         'key': 'MITx+19',
         'language': 'English',
+        'transcript_languages': ['English', 'Arabic'],
         'level_type': 'Intermediate',
         'objectID': 'course-3543aa4e-3c64-4d9a-a343-5d5eda1dacf9-catalog-query-uuids-0'
     },
         {
         'aggregation_key': 'course:MITx+20',
         'language': 'English',
+        'transcript_languages': ['English', 'Arabic'],
         'level_type': 'Intermediate',
         'objectID': 'course-3543aa4e-3c64-4d9a-a343-5d5eda1dacf7-catalog-query-uuids-0'
     }
     ]}
 
-    expected_result_data = 'Title,Partner Name,Start,End,Verified Upgrade Deadline,Program Type,Program Name,Pacing,' \
-                           'Level,Price,Language,URL,Short Description,Subjects,Key,Short Key,Skills,Min Effort,' \
-                           'Max Effort,Length,What You’ll Learn,Pre-requisites,Associated Catalogs\r\nCalculus 1B: ' \
-                           'Integration,Massachusetts Institute of Technology,2015-09-08,' \
-                           '2015-09-08,3000-01-01,Professional Certificate,Totally ' \
-                           'Awesome Program,instructor_paced,Intermediate,100,English,edx.org/foo-bar,description,' \
-                           'Math,MITx/18.01.2x/3T2015,course:MITx+18.01.2x,"Probability And Statistics, ' \
-                           'Engineering Design Process",1,10,1,learn,interest,"A la carte, Business"\r\n'
+    expected_result_data = (
+        "Title,Partner Name,Start,End,Verified Upgrade Deadline,Program Type,Program Name,Pacing,"
+        "Level,Price,Language,Subtitles,URL,Short Description,Subjects,Key,Short Key,Skills,Min Effort,"
+        "Max Effort,Length,What You’ll Learn,Pre-requisites,Associated Catalogs\r\nCalculus 1B: "
+        "Integration,Massachusetts Institute of Technology,2015-09-08,"
+        "2015-09-08,3000-01-01,Professional Certificate,Totally "
+        'Awesome Program,instructor_paced,Intermediate,100,English,"English, Arabic",edx.org/foo-bar,description,'
+        'Math,MITx/18.01.2x/3T2015,course:MITx+18.01.2x,"Probability And Statistics, '
+        'Engineering Design Process",1,10,1,learn,interest,"A la carte, Business"\r\n'
+    )
 
     def setUp(self):
         super().setUp()
@@ -721,14 +729,16 @@ class EnterpriseCatalogCsvDataViewTests(APITestMixin):
         facets = 'language=English'
         response = self.client.get(f'{url}?{facets}')
         assert response.status_code == 200
-        excpected_csv_data = 'Title,Partner Name,Start,End,Verified Upgrade Deadline,Program Type,Program Name,' \
-                             'Pacing,Level,Price,Language,URL,Short Description,Subjects,Key,Short Key,Skills,' \
-                             'Min Effort,Max Effort,Length,What You’ll Learn,Pre-requisites,Associated Catalogs\r\n' \
-                             'Calculus 1B: Integration,Massachusetts Institute of Technology,2015-09-08,' \
-                             ',,Professional Certificate,Totally Awesome ' \
-                             'Program,instructor_paced,Intermediate,,English,,description,' \
-                             'Math,MITx/18.01.2x/3T2015,course:MITx+18.01.2x,"Probability And Statistics, ' \
-                             'Engineering Design Process",1,10,1,learn,interest,"A la carte, Business"\r\n'
+        excpected_csv_data = (
+            "Title,Partner Name,Start,End,Verified Upgrade Deadline,Program Type,Program Name,"
+            "Pacing,Level,Price,Language,Subtitles,URL,Short Description,Subjects,Key,Short Key,Skills,"
+            "Min Effort,Max Effort,Length,What You’ll Learn,Pre-requisites,Associated Catalogs\r\n"
+            "Calculus 1B: Integration,Massachusetts Institute of Technology,2015-09-08,"
+            ",,Professional Certificate,Totally Awesome "
+            'Program,instructor_paced,Intermediate,,English,"English, Arabic",,description,'
+            'Math,MITx/18.01.2x/3T2015,course:MITx+18.01.2x,"Probability And Statistics, '
+            'Engineering Design Process",1,10,1,learn,interest,"A la carte, Business"\r\n'
+        )
         expected_response = {
             'csv_data': excpected_csv_data
         }
