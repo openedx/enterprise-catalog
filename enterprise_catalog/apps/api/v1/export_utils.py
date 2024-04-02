@@ -23,6 +23,7 @@ CSV_COURSE_HEADERS = [
     'Level',
     'Price',
     'Language',
+    'Subtitles',
     'URL',
     'Short Description',
     'Subjects',
@@ -63,6 +64,7 @@ CSV_COURSE_RUN_HEADERS = [
     'Skills',
     'Subjects',
     'Language',
+    'Subtitles',
     'Associated Catalogs'
 ]
 
@@ -74,6 +76,7 @@ CSV_EXEC_ED_COURSE_HEADERS = [
     'Registration Deadline',
     'Price',
     'Language',
+    'Subtitles',
     'URL',
     'Short Description',
     'Subjects',
@@ -101,6 +104,7 @@ ALGOLIA_ATTRIBUTES_TO_RETRIEVE = [
     'full_description',
     'key',
     'language',
+    'transcript_languages',
     'level_type',
     'marketing_url',
     'outcome',
@@ -163,6 +167,7 @@ def program_hit_to_row(hit):
     return csv_row
 
 
+# pylint: disable=too-many-statements
 def course_hit_to_row(hit):
     """
     Helper function to construct a CSV row according to a single Algolia result course hit.
@@ -210,6 +215,7 @@ def course_hit_to_row(hit):
 
     csv_row.append(hit.get('first_enrollable_paid_seat_price'))
     csv_row.append(hit.get('language'))
+    csv_row.append(', '.join(hit.get('transcript_languages', [])))
     csv_row.append(hit.get('marketing_url'))
     csv_row.append(strip_tags(hit.get('short_description', '')))
 
@@ -283,6 +289,7 @@ def exec_ed_course_to_row(hit):
     price = float(hit['entitlements'][0]['price'])
     csv_row.append(math.trunc(price))
     csv_row.append(hit.get('language'))
+    csv_row.append(', '.join(hit.get('transcript_languages', [])))
     csv_row.append(hit.get('marketing_url'))
     csv_row.append(strip_tags(hit.get('short_description', '')))
 
@@ -362,6 +369,9 @@ def course_run_to_row(hit, course_run):
 
     # Language
     csv_row.append(hit.get('language'))
+
+    # Subtitles
+    csv_row.append(', '.join(hit.get('transcript_languages', [])))
 
     # Course Catalogs
     catalogs = fetch_catalog_types(hit)
