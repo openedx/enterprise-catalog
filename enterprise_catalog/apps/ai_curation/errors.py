@@ -2,7 +2,10 @@
 AI curation errors
 """
 
-USER_MESSAGE = "Something went wrong. Please wait a minute and try again. If the issue persists, please reach out to your contact at edX."  # pylint: disable=line-too-long
+USER_MESSAGE = (
+    "Something went wrong. Please wait a minute and try again. If the issue persists, "
+    "please reach out to your contact at edX."
+)
 
 
 class AICurationError(Exception):

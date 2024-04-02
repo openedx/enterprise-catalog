@@ -1,8 +1,12 @@
 """
 Utility functions for curation generation.
 """
+from django.core.cache import cache
+from rest_framework import status
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+
+from enterprise_catalog.apps.ai_curation.errors import AICurationError
 
 from .algolia_utils import fetch_catalog_metadata_from_algolia
 from .open_ai_utils import (
@@ -10,6 +14,16 @@ from .open_ai_utils import (
     get_keywords_to_prose,
     get_query_keywords,
 )
+
+
+CACHE_KEY = '{task_id}_{content_type}'
+
+
+def get_cache_key(task_id: str, content_type: str) -> str:
+    """
+    Get the cache key.
+    """
+    return CACHE_KEY.format(task_id=task_id, content_type=content_type)
 
 
 def count_terms_in_description(search_terms, product_description):
@@ -94,17 +108,16 @@ def get_cosine_similarities(search_string, product_strings):
     return cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:])[0]
 
 
-def apply_tfidf_filter(query: str, courses: list, tfidf_threshold: float):
+def calculate_tfidf_score(query: str, courses: list):
     """
-    Filter the courses based on the TF-IDF score.
+    Calculate the TF-IDF score for the given query and courses.
 
     Arguments:
         query (str): Search query given by the user
         courses (list): List of courses
-        tfidf_threshold (float): The minimum TF-IDF score that a course should have
 
     Returns:
-        list: List of courses filtered by the TF-IDF score
+        list: List of courses with the TF-IDF score, sorted by the score in descending order.
     """
     keywords_to_prose = get_keywords_to_prose(query)
 
@@ -117,7 +130,37 @@ def apply_tfidf_filter(query: str, courses: list, tfidf_threshold: float):
             )
         ])[0]
 
+    return sorted(courses, key=lambda item: item['tf_idf_score'], reverse=True)
+
+
+def filter_by_threshold(courses: list, tfidf_threshold: float):
+    """
+    Filter courses by the given threshold.
+
+    Arguments:
+        courses (list): List of courses
+        tfidf_threshold (float): The minimum TF-IDF score that a course should have
+
+    Returns:
+        list: List of courses filtered by the TF-IDF score
+    """
     return [course for course in courses if course['tf_idf_score'] > tfidf_threshold]
+
+
+def apply_tfidf_filter(query: str, courses: list, tfidf_threshold: float):
+    """
+    Filter the courses based on the TF-IDF score.
+
+    Arguments:
+        query (str): Search query given by the user
+        courses (list): List of courses
+        tfidf_threshold (float): The minimum TF-IDF score that a course should have
+
+    Returns:
+        list: List of courses filtered by the TF-IDF score
+    """
+    courses = calculate_tfidf_score(query, courses)
+    return filter_by_threshold(courses, tfidf_threshold), courses
 
 
 def apply_programs_filter(courses: list, programs: list):
@@ -136,13 +179,14 @@ def apply_programs_filter(courses: list, programs: list):
     return [program for program in programs if program['title'] in unique_programs]
 
 
-def generate_curation(query: str, catalog_name: str):
+def generate_curation(query: str, catalog_name: str, task_id: str):
     """
     Generate the AI curation for the given query.
 
     Args:
         query (str): Search query given by the user
         catalog_name (str): Name of the catalog query to search
+        task_id (str): Task UUID for the AI curation task.
 
     Returns:
         dict: AI curation response
@@ -161,14 +205,50 @@ def generate_curation(query: str, catalog_name: str):
 
     tfidf_threshold = .2
     # filter courses and exec ed courses based on the TI-IDF score
-    filtered_ocm_courses = apply_tfidf_filter(query, filtered_ocm_courses, tfidf_threshold)
-    filtered_exec_ed_courses = apply_tfidf_filter(query, filtered_exec_ed_courses, tfidf_threshold)
+    filtered_ocm_courses, partially_filtered_ocm_courses = apply_tfidf_filter(
+        query, filtered_ocm_courses, tfidf_threshold
+    )
+    filtered_exec_ed_courses, partially_filtered_exec_ed_courses = apply_tfidf_filter(
+        query, filtered_exec_ed_courses, tfidf_threshold
+    )
+
+    # Cache data for tweaking the filter
+    cache.set(get_cache_key(task_id=task_id, content_type='ocm_courses'), partially_filtered_ocm_courses)
+    cache.set(get_cache_key(task_id=task_id, content_type='exec_ed_courses'), partially_filtered_exec_ed_courses)
+    cache.set(get_cache_key(task_id=task_id, content_type='programs'), programs)
 
     # filter programs based on the filtered courses
     filtered_programs = apply_programs_filter(filtered_ocm_courses + filtered_exec_ed_courses, programs)
 
     return {
         'query': query,
+        'ocm_courses': filtered_ocm_courses,
+        'exec_ed_courses': filtered_exec_ed_courses,
+        'programs': filtered_programs,
+    }
+
+
+def get_tweaked_results(task_id: str, threshold: float):
+    """
+    Get the tweaked results.
+    """
+    partially_filtered_ocm_courses = cache.get(get_cache_key(task_id=task_id, content_type='ocm_courses'))
+    partially_filtered_exec_ed_courses = cache.get(get_cache_key(task_id=task_id, content_type='exec_ed_courses'))
+    programs = cache.get(get_cache_key(task_id=task_id, content_type='programs'))
+
+    if not partially_filtered_ocm_courses or not partially_filtered_exec_ed_courses or not programs:
+        raise AICurationError(
+            dev_message=f'No cached data found for task_id: {task_id}.',
+            status_code=status.HTTP_400_BAD_REQUEST
+        )
+
+    filtered_ocm_courses = filter_by_threshold(partially_filtered_ocm_courses, threshold)
+    filtered_exec_ed_courses = filter_by_threshold(partially_filtered_exec_ed_courses, threshold)
+
+    # Filter programs based on the filtered courses
+    filtered_programs = apply_programs_filter(filtered_ocm_courses + filtered_exec_ed_courses, programs)
+
+    return {
         'ocm_courses': filtered_ocm_courses,
         'exec_ed_courses': filtered_exec_ed_courses,
         'programs': filtered_programs,
