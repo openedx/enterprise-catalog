@@ -127,7 +127,7 @@ class TestUtils(TestCase):
             },
         ]
 
-        filtered_courses = apply_tfidf_filter('python data science', courses, tfidf_threshold=0.2)
+        filtered_courses, _ = apply_tfidf_filter('python data science', courses, tfidf_threshold=0.2)
 
         assert {c['title'] for c in filtered_courses} == {'Python for data science', 'Java for data science'}
 
@@ -213,7 +213,7 @@ class TestUtils(TestCase):
             ['Python', 'Data Analysis & Statistics', 'Computer Science', "Java", "C", "C++"]
         )
 
-        result = generate_curation('python data science', 'Test Catalog')
+        result = generate_curation('python data science', 'Test Catalog', 'task_id')
 
         assert result['exec_ed_courses'] == []
         assert result['programs'] == []

@@ -11,8 +11,8 @@ from enterprise_catalog.apps.ai_curation.utils import generate_curation
     base=LoggedTask,
     bind=True,
 )
-def trigger_ai_curations(self, query: str, catalog_name: str):  # pylint: disable=unused-argument
+def trigger_ai_curations(self, query: str, catalog_name: str):
     """
     Triggers the AI curation process.
     """
-    return generate_curation(query, catalog_name)
+    return generate_curation(query, catalog_name, task_id=self.request.id)
