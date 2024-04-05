@@ -47,6 +47,10 @@ piptools: ## install pinned version of pip-compile and pip-sync
 
 requirements: piptools dev_requirements ## sync to default requirements
 
+requirements312:  ## sync to requirements for local development with Python 3.12
+	pip3.12 install -qr requirements/pip-tools.txt
+	pip3.12 install -qr requirements/dev312.txt
+
 dev_requirements: ## sync to requirements for local development
 	pip-sync -q requirements/dev.txt
 
@@ -99,9 +103,8 @@ html_coverage: ## generate and view HTML coverage report
 upgrade: export CUSTOM_COMPILE_COMMAND=make upgrade
 upgrade: $(COMMON_CONSTRAINTS_TXT) piptools ## update the requirements/*.txt files with the latest packages satisfying requirements/*.in
 	# Make sure to compile files after any other files they include!
-	sed 's/Django<4.0//g' requirements/common_constraints.txt > requirements/common_constraints.tmp
+	sed 's/django-simple-history==3.0.0//g' requirements/common_constraints.txt > requirements/common_constraints.tmp
 	mv requirements/common_constraints.tmp requirements/common_constraints.txt
-	sed -i 's/django-simple-history==//g' requirements/common_constraints.txt
 	pip-compile --allow-unsafe --rebuild --upgrade -o requirements/pip.txt requirements/pip.in
 	pip-compile --upgrade -o requirements/pip-tools.txt requirements/pip-tools.in
 	pip install -qr requirements/pip.txt
