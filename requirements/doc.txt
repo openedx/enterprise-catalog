@@ -119,7 +119,7 @@ click-repl==0.3.0
     # via
     #   -r requirements/test.txt
     #   celery
-code-annotations==1.7.0
+code-annotations==1.8.0
     # via
     #   -r requirements/test.txt
     #   edx-lint
@@ -188,7 +188,7 @@ django-celery-results==2.5.1
     # via -r requirements/test.txt
 django-clearcache==1.2.1
     # via -r requirements/test.txt
-django-config-models==2.5.1
+django-config-models==2.7.0
     # via -r requirements/test.txt
 django-cors-headers==4.3.1
     # via -r requirements/test.txt
@@ -204,7 +204,7 @@ django-extensions==3.2.3
     # via -r requirements/test.txt
 django-log-request-id==2.1.0
     # via -r requirements/test.txt
-django-model-utils==4.4.0
+django-model-utils==4.5.0
     # via
     #   -r requirements/test.txt
     #   edx-celeryutils
@@ -243,13 +243,13 @@ drf-jwt==1.19.2
     # via
     #   -r requirements/test.txt
     #   edx-drf-extensions
-drf-spectacular==0.27.1
+drf-spectacular==0.27.2
     # via -r requirements/test.txt
-edx-auth-backends==4.2.0
+edx-auth-backends==4.3.0
     # via -r requirements/test.txt
-edx-celeryutils==1.2.5
+edx-celeryutils==1.3.0
     # via -r requirements/test.txt
-edx-django-release-util==1.3.0
+edx-django-release-util==1.4.0
     # via -r requirements/test.txt
 edx-django-utils==5.12.0
     # via
@@ -272,9 +272,9 @@ edx-opaque-keys==2.5.1
     #   edx-drf-extensions
 edx-rbac==1.8.0
     # via -r requirements/test.txt
-edx-rest-api-client==5.6.1
+edx-rest-api-client==5.7.0
     # via -r requirements/test.txt
-edx-toggles==5.1.1
+edx-toggles==5.2.0
     # via -r requirements/test.txt
 exceptiongroup==1.2.0
     # via
@@ -283,7 +283,7 @@ exceptiongroup==1.2.0
     #   pytest
 factory-boy==3.3.0
     # via -r requirements/test.txt
-faker==24.4.0
+faker==24.7.1
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -674,7 +674,7 @@ tqdm==4.66.2
     # via
     #   -r requirements/test.txt
     #   openai
-typing-extensions==4.10.0
+typing-extensions==4.11.0
     # via
     #   -r requirements/test.txt
     #   annotated-types
