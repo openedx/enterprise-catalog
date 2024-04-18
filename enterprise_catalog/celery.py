@@ -8,8 +8,11 @@ from celery import Celery
 # TODO: remove this code.
 try:
     from ddtrace import patch
-    patch(celery=True)
 except ImportError:
+    pass
+try:
+    patch(celery=True)
+except NameError:
     pass
 
 app = Celery('enterprise_catalog', )
