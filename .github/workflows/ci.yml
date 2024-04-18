@@ -11,12 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['py38', 'py312']
+        python-version: ['3.8', '3.12']
         django-version: [django42]
 
     steps:
     - uses: actions/checkout@v2
-    - uses: actions/setup-python@v4
+    - uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
         architecture: x64
@@ -25,7 +25,11 @@ jobs:
         docker-compose -f .github/docker-compose-github.yml up -d
     - name: Install test dependencies and run validation
       run: |
-        docker exec -e TOXENV=${{ matrix.python-version }}-${{ matrix.django-version }} -u root enterprise.catalog.app /edx/app/enterprise_catalog/enterprise_catalog/validate.sh
+        if [[ "${{ matrix.python-version }}" == "3.8" ]]; then
+        docker exec -e TOXENV=py38-${{ matrix.django-version }} -u root enterprise.catalog.app /edx/app/enterprise_catalog/enterprise_catalog/validate.sh
+        elif [[ "${{ matrix.python-version }}" == "3.12" ]]; then
+        docker exec -e TOXENV=py312-${{ matrix.django-version }} -u root enterprise.catalog.app /edx/app/enterprise_catalog/enterprise_catalog/validate.sh
+        fi
     - name: Code Coverage
-      if: matrix.python-version == 'py38' && matrix.django-version=='django42'
+      if: matrix.python-version == '3.8' && matrix.django-version=='django42'
       uses: codecov/codecov-action@v1
