@@ -47,7 +47,7 @@ billiard==4.2.0
     # via
     #   -r requirements/base.txt
     #   celery
-celery==5.3.6
+celery==5.4.0
     # via
     #   -r requirements/base.txt
     #   django-celery-results
@@ -215,7 +215,7 @@ gevent==24.2.1
     # via -r requirements/production.in
 greenlet==3.0.3
     # via gevent
-gunicorn==21.2.0
+gunicorn==22.0.0
     # via -r requirements/production.in
 h11==0.14.0
     # via
