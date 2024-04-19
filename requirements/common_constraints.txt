@@ -20,7 +20,7 @@ Django<5.0
 elasticsearch<7.14.0
 
 # django-simple-history>3.0.0 adds indexing and causes a lot of migrations to be affected
-3.0.0
+
 
 # opentelemetry requires version 6.x at the moment:
 # https://github.com/open-telemetry/opentelemetry-python/issues/3570

@@ -53,8 +53,9 @@ backoff==1.10.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   analytics-python
-backports-zoneinfo[tzdata]==0.2.1
+backports-zoneinfo[tzdata]==0.2.1 ; python_version < "3.9"
     # via
+    #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   celery
@@ -70,7 +71,7 @@ cachetools==5.3.3
     # via
     #   -r requirements/test.txt
     #   tox
-celery==5.3.6
+celery==5.4.0
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
@@ -333,7 +334,7 @@ exceptiongroup==1.2.0
     #   pytest
 factory-boy==3.3.0
     # via -r requirements/test.txt
-faker==24.9.0
+faker==24.11.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -794,7 +795,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.25.1
+virtualenv==20.25.3
     # via
     #   -r requirements/test.txt
     #   tox

@@ -192,7 +192,7 @@ class TestDiscoveryApiClient(TestCase):
                 "total_enrollments": 300
             }
         })
-        assert mock_sleep.not_called()
+        mock_sleep.assert_not_called()
 
     @mock.patch('enterprise_catalog.apps.api_client.discovery.time.sleep')
     @mock.patch('enterprise_catalog.apps.api_client.discovery.LOGGER')
