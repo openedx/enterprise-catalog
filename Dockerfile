@@ -36,6 +36,16 @@ RUN apt-get update && apt-get -qy install --no-install-recommends \
  git \
  wget
 
+ENV TZ=UTC
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+RUN apt-get update && apt-get -qy install  libffi-dev libsqlite3-dev python3-distutils
+
+RUN apt-get update && apt-get install -y build-essential wget && \
+wget https://www.python.org/ftp/python/3.12.0/Python-3.12.0.tgz && \
+tar -xzvf Python-3.12.0.tgz && cd Python-3.12.0 && ./configure --enable-optimizations && \
+make -j$(nproc) && make altinstall && python3.12 --version
+
 ENV VIRTUAL_ENV=/venv
 RUN python3.8 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
