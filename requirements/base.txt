@@ -27,15 +27,16 @@ attrs==23.2.0
     #   referencing
 backoff==1.10.0
     # via analytics-python
-backports-zoneinfo[tzdata]==0.2.1
+backports-zoneinfo[tzdata]==0.2.1 ; python_version < "3.9"
     # via
+    #   -c requirements/constraints.txt
     #   celery
     #   django
     #   djangorestframework
     #   kombu
 billiard==4.2.0
     # via celery
-celery==5.3.6
+celery==5.4.0
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.in
