@@ -40,3 +40,6 @@ astroid<2.12
 
 # To avoid any breaking changes
 openai<=1.13.3
+
+# For python greater than or equal to 3.9 backports.zoneinfo causing failures
+backports.zoneinfo; python_version<'3.9'
