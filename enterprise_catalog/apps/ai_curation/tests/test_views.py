@@ -200,7 +200,8 @@ class TestAICurationView(TestCase):
         """
         Verify that the job calls the trigger_ai_curations with the test data
         """
-        mock_trigger_ai_curations.delay = MagicMock(return_value=self.task)
+        mock_trigger_ai_curations.apply_async = MagicMock(return_value=self.task)
+
         data = {'query': 'Give all courses from edX org.', 'catalog_name': 'Test Catalog'}
         response = self.client.post(self.url, data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -208,7 +209,7 @@ class TestAICurationView(TestCase):
         self.assertIn('status', response.data)
         self.assertEqual(response.data['status'], self.task.status)
 
-        mock_trigger_ai_curations.delay.assert_called_once()
+        mock_trigger_ai_curations.apply_async.assert_called_once()
 
     def test_post_with_query(self):
         """

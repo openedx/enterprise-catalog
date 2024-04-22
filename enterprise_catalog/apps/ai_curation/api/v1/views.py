@@ -93,5 +93,7 @@ class AICurationView(APIView):
         """
         serializer = AICurationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        task = trigger_ai_curations.delay(**serializer.validated_data)
+        # 9 is the highest priority for the task
+        # Find more information at https://docs.celeryq.dev/en/stable/userguide/routing.html#redis-message-priorities
+        task = trigger_ai_curations.apply_async(kwargs=serializer.validated_data, priority=9)
         return Response({'task_id': str(task.task_id), 'status': task.status})
