@@ -173,13 +173,13 @@ edx-drf-extensions==10.3.0
     #   edx-rbac
 edx-opaque-keys==2.5.1
     # via edx-drf-extensions
-edx-rbac==1.8.0
+edx-rbac==1.9.0
     # via -r requirements/base.in
 edx-rest-api-client==5.7.0
     # via -r requirements/base.in
 edx-toggles==5.2.0
     # via -r requirements/base.in
-exceptiongroup==1.2.0
+exceptiongroup==1.2.1
     # via anyio
 h11==0.14.0
     # via httpcore
@@ -218,7 +218,7 @@ monotonic==1.6
     # via analytics-python
 mysqlclient==2.2.4
     # via -r requirements/base.in
-newrelic==9.8.0
+newrelic==9.9.0
     # via edx-django-utils
 numpy==1.24.4
     # via
@@ -376,3 +376,6 @@ zipp==3.18.1
     # via
     #   -r requirements/base.in
     #   importlib-resources
+
+# The following packages are considered to be unsafe in a requirements file:
+# setuptools
