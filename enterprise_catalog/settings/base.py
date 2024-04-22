@@ -364,8 +364,6 @@ CELERY_EAGER_PROPAGATES = True
 CELERY_BROKER_TRANSPORT_OPTIONS = {
     'fanout_patterns': True,
     'fanout_prefix': True,
-    'queue_order_strategy': 'priority',
-    'sep': ':',
 }
 
 # Only allow each worker to run 100 tasks before restarting
