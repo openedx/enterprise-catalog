@@ -60,7 +60,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && celery -A enterprise_catalog worker -l DEBUG'
+    command: bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && celery -A enterprise_catalog worker -Q enterprise_catalog.default -l DEBUG'
     container_name: enterprise.catalog.worker
     depends_on:
       - mysql
@@ -77,6 +77,34 @@ services:
       - devstack_default
     ports:
       - "18161:18161"
+    restart: always
+    # Allows attachment to this container using 'docker attach <containerID>'.
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/edx/app/enterprise_catalog/enterprise_catalog
+
+  curations_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && celery -A enterprise_catalog worker -Q enterprise_catalog.curations -l DEBUG'
+    container_name: enterprise.catalog.curations
+    depends_on:
+      - mysql
+    environment:
+      CELERY_ALWAYS_EAGER: 'false'
+      CELERY_BROKER_TRANSPORT: redis
+      CELERY_BROKER_HOSTNAME: edx.devstack.redis:6379
+      CELERY_BROKER_VHOST: 0
+      CELERY_BROKER_PASSWORD: password
+      DJANGO_SETTINGS_MODULE: enterprise_catalog.settings.devstack
+      COLUMNS: 80
+    hostname: curations.catalog.enterprise
+    networks:
+      - devstack_default
+    ports:
+      - "18162:18162"
     restart: always
     # Allows attachment to this container using 'docker attach <containerID>'.
     stdin_open: true
