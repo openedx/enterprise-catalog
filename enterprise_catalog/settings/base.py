@@ -369,6 +369,12 @@ CELERY_BROKER_TRANSPORT_OPTIONS = {
 # Only allow each worker to run 100 tasks before restarting
 CELERY_WORKER_MAX_TASKS_PER_CHILD = 100
 
+CELERY_TASK_ROUTES = {
+    'enterprise_catalog.apps.ai_curation.tasks.trigger_ai_curations': {
+        'queue': 'enterprise_catalog.curations',
+    },
+}
+
 """############################# END CELERY ##################################"""
 
 MEDIA_STORAGE_BACKEND = {
