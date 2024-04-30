@@ -78,6 +78,10 @@ BEST_MODE_ORDER = [
     CourseMode.AUDIT,
 ]
 
+# The default normalized content price for any content which otherwise
+# would have a null price
+DEFAULT_NORMALIZED_PRICE = 0.0
+
 
 def _fetch_courses_by_keys(course_keys):
     """
@@ -291,7 +295,7 @@ def _normalize_course_metadata(course_metadata_record):
         normalized_metadata['enroll_by_date'] = additional_metadata.get('registration_deadline')
         for entitlement in json_meta.get('entitlements', []):
             if entitlement.get('mode') == CourseMode.PAID_EXECUTIVE_EDUCATION:
-                normalized_metadata['content_price'] = entitlement.get('price')
+                normalized_metadata['content_price'] = entitlement.get('price') or DEFAULT_NORMALIZED_PRICE
     else:
         # Else case covers OCM courses.
         advertised_course_run_uuid = json_meta.get('advertised_course_run_uuid')
@@ -299,7 +303,8 @@ def _normalize_course_metadata(course_metadata_record):
         if advertised_course_run is not None:
             normalized_metadata['start_date'] = advertised_course_run.get('start')
             normalized_metadata['end_date'] = advertised_course_run.get('end')
-            normalized_metadata['content_price'] = advertised_course_run.get('first_enrollable_paid_seat_price')
+            normalized_metadata['content_price'] = \
+                advertised_course_run.get('first_enrollable_paid_seat_price') or DEFAULT_NORMALIZED_PRICE
             all_seats = advertised_course_run.get('seats', [])
             seat = _find_best_mode_seat(all_seats)
             if seat:
