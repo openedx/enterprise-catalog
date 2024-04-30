@@ -410,7 +410,18 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         course_key_1 = 'edX+fakeX'
         course_data_1 = {'key': course_key_1, 'full_course_only_field': 'test_1', 'programs': []}
         course_key_2 = 'edX+testX'
-        course_data_2 = {'key': course_key_2, 'full_course_only_field': 'test_2', 'programs': [program_data]}
+        course_run_2_uuid = str(uuid.uuid4())
+        course_data_2 = {
+            'key': course_key_2,
+            'full_course_only_field': 'test_2',
+            'programs': [program_data],
+            'advertised_course_run_uuid': course_run_2_uuid,
+            'course_runs': [{
+                'uuid': course_run_2_uuid,
+                'key': f'course-v1:{course_key_2}+1',
+                'first_enrollable_paid_seat_price': None,  # should cause fallback to DEFAULT_NORMALIZED_PRICE
+            }],
+        }
 
         course_key_3 = 'edX+fooX'
         course_run_3_uuid = str(uuid.uuid4())
@@ -480,6 +491,7 @@ class UpdateFullContentMetadataTaskTests(TestCase):
 
         assert metadata_2.json_metadata['aggregation_key'] == f'course:{course_key_2}'
         assert metadata_2.json_metadata['full_course_only_field'] == 'test_2'
+        assert metadata_2.json_metadata['normalized_metadata']['content_price'] == tasks.DEFAULT_NORMALIZED_PRICE
         assert set(program_data.items()).issubset(set(metadata_2.json_metadata['programs'][0].items()))
 
         assert metadata_3.json_metadata['aggregation_key'] == f'course:{course_key_3}'
