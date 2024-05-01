@@ -233,7 +233,7 @@ class LoggedTaskWithRetry(LoggedTask):  # pylint: disable=abstract-method
 
 @shared_task(base=LoggedTaskWithRetry, bind=True, default_retry_delay=UNREADY_TASK_RETRY_COUNTDOWN_SECONDS)
 @expiring_task_semaphore()
-def update_full_content_metadata_task(self, force=False):  # pylint: disable=unused-argument
+def update_full_content_metadata_task(self, force=False, dry_run=False):  # pylint: disable=unused-argument
     """
     Looks up the full metadata from discovery's `/api/v1/courses` and `/api/v1/programs` endpoints to pad all
     ContentMetadata objects. The metadata is merged with the existing contents
@@ -244,9 +244,9 @@ def update_full_content_metadata_task(self, force=False):  # pylint: disable=unu
     """
 
     content_keys = [metadata.content_key for metadata in ContentMetadata.objects.filter(content_type=COURSE)]
-    _update_full_content_metadata_course(content_keys)
+    _update_full_content_metadata_course(content_keys, dry_run)
     content_keys = [metadata.content_key for metadata in ContentMetadata.objects.filter(content_type=PROGRAM)]
-    _update_full_content_metadata_program(content_keys)
+    _update_full_content_metadata_program(content_keys, dry_run)
 
 
 def _find_best_mode_seat(seats):
@@ -316,7 +316,7 @@ def _normalize_course_metadata(course_metadata_record):
     json_meta['normalized_metadata'] = normalized_metadata
 
 
-def _update_full_content_metadata_course(content_keys):
+def _update_full_content_metadata_course(content_keys, dry_run=False):
     """
     Given content_keys, finds the associated ContentMetadata records with a type of course and looks up the full
     course metadata from discovery's /api/v1/courses endpoint to pad the ContentMetadata objects. The course
@@ -393,13 +393,20 @@ def _update_full_content_metadata_course(content_keys):
                 course_metadata_dict.get('programs', []),
                 metadata_record,
             )
-            _update_full_content_metadata_program(program_content_keys)
+            _update_full_content_metadata_program(program_content_keys, dry_run)
+            if dry_run:
+                logger.info('[Dry Run] Updated content metadata json for {}: {}'.format(
+                    content_key, json.dumps(metadata_record.json_metadata)
+                ))
 
-        ContentMetadata.objects.bulk_update(
-            modified_content_metadata_records,
-            ['json_metadata'],
-            batch_size=10,
-        )
+        if dry_run:
+            logger.info('dry_run=True, not updating course metadata')
+        else:
+            ContentMetadata.objects.bulk_update(
+                modified_content_metadata_records,
+                ['json_metadata'],
+                batch_size=10,
+            )
 
         logger.info(
             'Successfully updated %d of %d ContentMetadata records with full metadata from course-discovery.',
@@ -416,7 +423,7 @@ def _update_full_content_metadata_course(content_keys):
     )
 
 
-def _update_full_content_metadata_program(content_keys):
+def _update_full_content_metadata_program(content_keys, dry_run=False):
     """
     Given content_keys, finds the associated ContentMetadata records with a type of program and looks up the full
     program metadata from discovery's /api/v1/programs endpoint to pad the ContentMetadata objects. The program
@@ -462,11 +469,14 @@ def _update_full_content_metadata_program(content_keys):
             metadata_record.json_metadata.update(program_metadata_dict)
             modified_content_metadata_records.append(metadata_record)
 
-        ContentMetadata.objects.bulk_update(
-            modified_content_metadata_records,
-            ['json_metadata'],
-            batch_size=10,
-        )
+        if dry_run:
+            logger.info('dry_run=true, not updating program metadata')
+        else:
+            ContentMetadata.objects.bulk_update(
+                modified_content_metadata_records,
+                ['json_metadata'],
+                batch_size=10,
+            )
 
         logger.info(
             'Successfully updated %d of %d ContentMetadata records with full metadata from course-discovery.',
@@ -1094,7 +1104,7 @@ def _reindex_algolia(indexable_content_keys, nonindexable_content_keys, dry_run=
 
 @shared_task(base=LoggedTaskWithRetry, bind=True)
 @expiring_task_semaphore()
-def update_catalog_metadata_task(self, catalog_query_id, force=False):  # pylint: disable=unused-argument
+def update_catalog_metadata_task(self, catalog_query_id, force=False, dry_run=False):  # pylint: disable=unused-argument
     """
     Associates ContentMetadata objects with the appropriate catalog query by pulling data
     from /search/all on discovery.
@@ -1113,7 +1123,7 @@ def update_catalog_metadata_task(self, catalog_query_id, force=False):  # pylint
         logger.error('Could not find a CatalogQuery with id %s', catalog_query_id)
 
     try:
-        associated_content_keys = update_contentmetadata_from_discovery(catalog_query)
+        associated_content_keys = update_contentmetadata_from_discovery(catalog_query, dry_run)
     except Exception as e:
         logger.exception(
             f'Something went wrong while updating content metadata from discovery using catalog: {catalog_query_id} '
@@ -1130,7 +1140,7 @@ def update_catalog_metadata_task(self, catalog_query_id, force=False):  # pylint
 
 @shared_task(base=LoggedTaskWithRetry, bind=True)
 @expiring_task_semaphore()
-def fetch_missing_course_metadata_task(self, force=False):  # pylint: disable=unused-argument
+def fetch_missing_course_metadata_task(self, force=False, dry_run=False):  # pylint: disable=unused-argument
     """
     Creates a CatalogQuery for all the courses that do not have ContentMetadata instance.
 
@@ -1165,7 +1175,7 @@ def fetch_missing_course_metadata_task(self, force=False):  # pylint: disable=un
             defaults={'content_filter': content_filter, 'title': None},
         )
 
-        associated_content_keys = update_contentmetadata_from_discovery(catalog_query)
+        associated_content_keys = update_contentmetadata_from_discovery(catalog_query, dry_run)
         logger.info('[FETCH_MISSING_METADATA] Finished fetch_missing_course_metadata_task with {} associated content '
                     'keys for catalog {}'.format(len(associated_content_keys), catalog_query.id))
     else:
@@ -1174,7 +1184,7 @@ def fetch_missing_course_metadata_task(self, force=False):  # pylint: disable=un
 
 @shared_task(base=LoggedTaskWithRetry, bind=True)
 @expiring_task_semaphore()
-def fetch_missing_pathway_metadata_task(self, force=False):  # pylint: disable=unused-argument
+def fetch_missing_pathway_metadata_task(self, force=False, dry_run=False):  # pylint: disable=unused-argument
     """
     Creates ContentMetadata for Learner Pathways and all its associates.
 
@@ -1196,7 +1206,7 @@ def fetch_missing_pathway_metadata_task(self, force=False):  # pylint: disable=u
         content_filter_hash=get_content_filter_hash(content_filter),
         defaults={'content_filter': content_filter, 'title': None},
     )
-    associated_content_keys = update_contentmetadata_from_discovery(catalog_query)
+    associated_content_keys = update_contentmetadata_from_discovery(catalog_query, dry_run)
     logger.info(
         '[FETCH_MISSING_METADATA] Finished Pathways fetch_missing_pathway_metadata_task with {} associated content '
         'keys for catalog {}'.format(
@@ -1232,7 +1242,7 @@ def fetch_missing_pathway_metadata_task(self, force=False):  # pylint: disable=u
             defaults={'content_filter': content_filter, 'title': None},
         )
 
-        associated_content_keys = update_contentmetadata_from_discovery(catalog_query)
+        associated_content_keys = update_contentmetadata_from_discovery(catalog_query, dry_run)
         logger.info(
             '[FETCH_MISSING_METADATA] Finished programs fetch_missing_pathway_metadata_task with {} keys for '
             'catalog {}'.format(
@@ -1260,7 +1270,7 @@ def fetch_missing_pathway_metadata_task(self, force=False):  # pylint: disable=u
             defaults={'content_filter': content_filter, 'title': None},
         )
 
-        associated_content_keys = update_contentmetadata_from_discovery(catalog_query)
+        associated_content_keys = update_contentmetadata_from_discovery(catalog_query, dry_run)
         logger.info(
             '[FETCH_MISSING_METADATA] Finished courses fetch_missing_pathway_metadata_task with {} keys for '
             'catalog {}'.format(
@@ -1276,13 +1286,22 @@ def fetch_missing_pathway_metadata_task(self, force=False):  # pylint: disable=u
             associated_content_metadata = ContentMetadata.objects.filter(
                 content_key__in=program_uuids + course_keys
             )
-            pathway.associated_content_metadata.set(associated_content_metadata)
-            logger.info(
-                '[FETCH_MISSING_METADATA] Learner Pathway {} associated created. No. of associations: {}'.format(
-                    pathway.content_key,
-                    pathway.associated_content_metadata.count(),
+            if dry_run:
+                logger.info(
+                    ('[FETCH_MISSING_METADATA][Dry Run] Learner Pathway {} associations created.'
+                        'No. of associations: {}').format(
+                        pathway.content_key,
+                        pathway.associated_content_metadata.count(),
+                    )
                 )
-            )
+            else:
+                pathway.associated_content_metadata.set(associated_content_metadata)
+                logger.info(
+                    '[FETCH_MISSING_METADATA] Learner Pathway {} associated created. No. of associations: {}'.format(
+                        pathway.content_key,
+                        pathway.associated_content_metadata.count(),
+                    )
+                )
         else:
             pathway.associated_content_metadata.clear()
 
