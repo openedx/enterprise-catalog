@@ -25,7 +25,7 @@ RUN apt update && apt -qy install --no-install-recommends \
  software-properties-common \
  language-pack-en \
  locales \
- python $PYTHON_VERSION \
+ python$PYTHON_VERSION \
  python3-pip \
  python$PYTHON_VERSION-dev \
  python$PYTHON_VERSION-distutils \
