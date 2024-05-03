@@ -20,24 +20,25 @@ MAINTAINER sre@edx.org
 
 ARG PYTHON_VERSION=3.12
 # If you add a package here please include a comment above describing what it is used for
-RUN apt update && add-apt-repository ppa:python/cpython-3.12 && \
- apt -qy install --no-install-recommends \
+RUN apt-get update && apt-get -qy install --no-install-recommends \
  build-essential \
  software-properties-common \
  language-pack-en \
  locales \
- python$PYTHON_VERSION \
- python3-pip \
- python$PYTHON_VERSION-dev \
- python$PYTHON_VERSION-distutils \
  pkg-config \
  libmysqlclient-dev \
  libssl-dev \
  libffi-dev \
  libsqlite3-dev \
- build-essential \
  git \
  wget
+
+RUN add-apt-repository ppa:python/cpython-3.12
+RUN apt-get -qy install --no-install-recommends \
+python3-pip \
+python$PYTHON_VERSION \
+python$PYTHON_VERSION-dev \
+python$PYTHON_VERSION-distutils
 
 ENV TZ=UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
