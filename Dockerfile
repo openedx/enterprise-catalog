@@ -25,6 +25,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # If you add a package here please include a comment above describing what it is used for
 RUN apt-get update && apt-get -qy install --no-install-recommends \
+ python3.12 \
+ python3.12-dev \
+ python3-pip \
+ python3.12-venv \
  build-essential \
  software-properties-common \
  language-pack-en \
@@ -37,10 +41,12 @@ RUN apt-get update && apt-get -qy install --no-install-recommends \
  git \
  wget
 
-RUN apt-get -qy install --no-install-recommends \
-python3-pip \
-python$PYTHON_VERSION-dev \
-python$PYTHON_VERSION-distutils
+# Set Python 3.12 as default
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1
+
+# RUN apt-get -qy install --no-install-recommends \
+# python3-pip \
+# python$PYTHON_VERSION-dev \
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
