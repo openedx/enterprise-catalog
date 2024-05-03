@@ -20,7 +20,7 @@ MAINTAINER sre@edx.org
 
 ARG PYTHON_VERSION=3.12
 # If you add a package here please include a comment above describing what it is used for
-RUN apt-get update && apt-get -qy install --no-install-recommends \
+RUN apt update && apt -qy install --no-install-recommends \
  build-essential \
  software-properties-common \
  language-pack-en \
