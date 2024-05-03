@@ -47,10 +47,6 @@ piptools: ## install pinned version of pip-compile and pip-sync
 
 requirements: piptools dev_requirements ## sync to default requirements
 
-requirements312:  ## sync to requirements for local development with Python 3.12
-	pip3.12 install -qr requirements/pip-tools.txt
-	pip3.12 install -qr requirements/dev312.txt
-
 dev_requirements: ## sync to requirements for local development
 	pip-sync -q requirements/dev.txt
 
