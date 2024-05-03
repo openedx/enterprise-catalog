@@ -37,7 +37,6 @@ RUN apt-get update && apt-get -qy install --no-install-recommends \
  git \
  wget
 
-RUN add-apt-repository ppa:python/cpython-3.12
 RUN apt-get -qy install --no-install-recommends \
 python3-pip \
 python$PYTHON_VERSION \
