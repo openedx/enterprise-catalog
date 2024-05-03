@@ -32,5 +32,5 @@ services:
       DJANGO_SETTINGS_MODULE: enterprise_catalog.settings.test
 
 volumes:
-  enterprise_catalog_mysql:
+  enterprise_catalog_mysql8:
     driver: local
