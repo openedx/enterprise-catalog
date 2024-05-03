@@ -19,6 +19,9 @@ MAINTAINER sre@edx.org
 #     MySQL-python for performance gains.
 
 ARG PYTHON_VERSION=3.12
+ENV TZ=UTC
+ENV TERM=xterm
+
 # If you add a package here please include a comment above describing what it is used for
 RUN apt-get update && apt-get -qy install --no-install-recommends \
  build-essential \
@@ -40,9 +43,7 @@ python$PYTHON_VERSION \
 python$PYTHON_VERSION-dev \
 python$PYTHON_VERSION-distutils
 
-ENV TZ=UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-ENV TERM=xterm
 
 ENV VIRTUAL_ENV=/venv
 RUN python$PYTHON_VERSION -m venv $VIRTUAL_ENV
