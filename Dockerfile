@@ -42,7 +42,7 @@ python$PYTHON_VERSION-distutils
 
 ENV TZ=UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-ENV TERM xterm
+ENV TERM=xterm
 
 ENV VIRTUAL_ENV=/venv
 RUN python$PYTHON_VERSION -m venv $VIRTUAL_ENV
