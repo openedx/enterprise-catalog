@@ -41,6 +41,7 @@ class TestAICurationView(TestCase):
                 'outcome': 'Learn data science with Python',
                 'program_titles': [],
                 'tf_idf_score': 0.3,
+                'tf_idf_percentile': 0.3,
             },
             {
                 'aggregation_key': 'course:MITx+20',
@@ -53,6 +54,7 @@ class TestAICurationView(TestCase):
                 'outcome': 'Learn Programming Basics',
                 'program_titles': ['Learn Programming Basics'],
                 'tf_idf_score': 0.6,
+                'tf_idf_percentile': 0.6,
             },
         ]
         self.partially_filtered_exec_ed_courses = [
@@ -67,6 +69,7 @@ class TestAICurationView(TestCase):
                 'program_titles': ['Java for data science'],
                 'outcome': 'Learn data science with Java',
                 'tf_idf_score': 0.5,
+                'tf_idf_percentile': 0.5,
             },
         ]
 
