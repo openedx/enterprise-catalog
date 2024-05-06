@@ -42,7 +42,7 @@ attrs==23.2.0
     #   -r requirements/test.txt
     #   jsonschema
     #   referencing
-babel==2.14.0
+babel==2.15.0
     # via
     #   pydata-sphinx-theme
     #   sphinx
@@ -129,11 +129,11 @@ colorama==0.4.6
     # via
     #   -r requirements/test.txt
     #   tox
-coverage[toml]==7.4.4
+coverage[toml]==7.5.1
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==42.0.5
+cryptography==42.0.6
     # via
     #   -r requirements/test.txt
     #   pyjwt
@@ -205,7 +205,7 @@ django-extensions==3.2.3
     # via -r requirements/test.txt
 django-log-request-id==2.1.0
     # via -r requirements/test.txt
-django-model-utils==4.5.0
+django-model-utils==4.5.1
     # via
     #   -r requirements/test.txt
     #   edx-celeryutils
@@ -231,6 +231,10 @@ djangorestframework==3.15.1
     #   edx-drf-extensions
 djangorestframework-xml==2.0.0
     # via -r requirements/test.txt
+dnspython==2.6.1
+    # via
+    #   -r requirements/test.txt
+    #   pymongo
 doc8==1.1.1
     # via -r requirements/doc.in
 docutils==0.19
@@ -252,7 +256,7 @@ edx-celeryutils==1.3.0
     # via -r requirements/test.txt
 edx-django-release-util==1.4.0
     # via -r requirements/test.txt
-edx-django-utils==5.12.0
+edx-django-utils==5.13.0
     # via
     #   -r requirements/test.txt
     #   django-config-models
@@ -267,28 +271,28 @@ edx-lint==5.2.5
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/test.txt
-edx-opaque-keys==2.5.1
+edx-opaque-keys==2.9.0
     # via
     #   -r requirements/test.txt
     #   edx-drf-extensions
-edx-rbac==1.8.0
+edx-rbac==1.9.0
     # via -r requirements/test.txt
 edx-rest-api-client==5.7.0
     # via -r requirements/test.txt
 edx-toggles==5.2.0
     # via -r requirements/test.txt
-exceptiongroup==1.2.0
+exceptiongroup==1.2.1
     # via
     #   -r requirements/test.txt
     #   anyio
     #   pytest
 factory-boy==3.3.0
     # via -r requirements/test.txt
-faker==24.11.0
+faker==25.0.1
     # via
     #   -r requirements/test.txt
     #   factory-boy
-filelock==3.13.4
+filelock==3.14.0
     # via
     #   -r requirements/test.txt
     #   tox
@@ -334,12 +338,12 @@ isort==5.13.2
     # via
     #   -r requirements/test.txt
     #   pylint
-jinja2==3.1.3
+jinja2==3.1.4
     # via
     #   -r requirements/test.txt
     #   code-annotations
     #   sphinx
-joblib==1.4.0
+joblib==1.4.2
     # via
     #   -r requirements/test.txt
     #   scikit-learn
@@ -349,7 +353,7 @@ jsonfield==3.1.0
     #   edx-celeryutils
 jsonfield2==4.0.0.post0
     # via -r requirements/test.txt
-jsonschema==4.21.1
+jsonschema==4.22.0
     # via
     #   -r requirements/test.txt
     #   drf-spectacular
@@ -379,7 +383,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.4
     # via -r requirements/test.txt
-newrelic==9.8.0
+newrelic==9.9.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
@@ -415,13 +419,13 @@ pkgutil-resolve-name==1.3.10
     # via
     #   -r requirements/test.txt
     #   jsonschema
-platformdirs==4.2.0
+platformdirs==4.2.1
     # via
     #   -r requirements/test.txt
     #   pylint
     #   tox
     #   virtualenv
-pluggy==1.4.0
+pluggy==1.5.0
     # via
     #   -r requirements/test.txt
     #   pytest
@@ -442,17 +446,17 @@ pycparser==2.22
     # via
     #   -r requirements/test.txt
     #   cffi
-pydantic==2.7.0
+pydantic==2.7.1
     # via
     #   -r requirements/test.txt
     #   openai
-pydantic-core==2.18.1
+pydantic-core==2.18.2
     # via
     #   -r requirements/test.txt
     #   pydantic
 pydata-sphinx-theme==0.14.4
     # via sphinx-book-theme
-pygments==2.17.2
+pygments==2.18.0
     # via
     #   accessible-pygments
     #   doc8
@@ -490,7 +494,7 @@ pylint-plugin-utils==0.8.2
     #   pylint-django
 pymemcache==4.0.0
     # via -r requirements/test.txt
-pymongo==3.13.0
+pymongo==4.4.0
     # via
     #   -r requirements/test.txt
     #   edx-opaque-keys
@@ -502,7 +506,7 @@ pyproject-api==1.6.1
     # via
     #   -r requirements/test.txt
     #   tox
-pytest==8.1.1
+pytest==8.2.0
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -542,7 +546,7 @@ redis==3.5.3
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/test.txt
-referencing==0.34.0
+referencing==0.35.1
     # via
     #   -r requirements/test.txt
     #   jsonschema
@@ -607,11 +611,11 @@ sniffio==1.3.1
     #   openai
 snowballstemmer==2.2.0
     # via sphinx
-social-auth-app-django==5.4.0
+social-auth-app-django==5.4.1
     # via
     #   -r requirements/test.txt
     #   edx-auth-backends
-social-auth-core==4.5.3
+social-auth-core==4.5.4
     # via
     #   -r requirements/test.txt
     #   edx-auth-backends
@@ -652,7 +656,7 @@ text-unidecode==1.3
     # via
     #   -r requirements/test.txt
     #   python-slugify
-threadpoolctl==3.4.0
+threadpoolctl==3.5.0
     # via
     #   -r requirements/test.txt
     #   scikit-learn
@@ -669,9 +673,9 @@ tomlkit==0.12.4
     # via
     #   -r requirements/test.txt
     #   pylint
-tox==4.14.2
+tox==4.15.0
     # via -r requirements/test.txt
-tqdm==4.66.2
+tqdm==4.66.4
     # via
     #   -r requirements/test.txt
     #   openai
@@ -684,7 +688,6 @@ typing-extensions==4.11.0
     #   astroid
     #   drf-spectacular
     #   edx-opaque-keys
-    #   faker
     #   kombu
     #   openai
     #   pydantic
@@ -711,7 +714,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.25.3
+virtualenv==20.26.1
     # via
     #   -r requirements/test.txt
     #   tox
