@@ -50,7 +50,7 @@ RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python${PYTHON_VERSION}
 RUN pip install virtualenv
 
 ENV VIRTUAL_ENV=/venv
-RUN virtualenv -p python$PYTHON_VERSION -m $VIRTUAL_ENV
+RUN virtualenv -p python$PYTHON_VERSION $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 RUN pip install pip==24.0 setuptools==69.5.1
