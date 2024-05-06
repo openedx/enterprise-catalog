@@ -23,9 +23,7 @@ from enterprise_catalog.apps.ai_curation.utils.open_ai_utils import (
 )
 
 
-CHAT_COMPLETIONS_API_KEYWARGS = dict(
-    model='gpt-4', temperature=0.3, max_tokens=500
-)
+CHAT_COMPLETIONS_API_KEYWARGS = {"model"='gpt-4', "temperature"=0.3, "max_tokens"=500}
 
 
 class TestUtils(TestCase):
