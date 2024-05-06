@@ -3,6 +3,7 @@ Utility functions for curation generation.
 """
 from django.core.cache import cache
 from rest_framework import status
+from scipy.stats import percentileofscore
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -130,7 +131,12 @@ def calculate_tfidf_score(query: str, courses: list):
             )
         ])[0]
 
-    return sorted(courses, key=lambda item: item['tf_idf_score'], reverse=True)
+    sorted_by_score = sorted(courses, key=lambda item: item['tf_idf_score'], reverse=True)
+    scores = [course['tf_idf_score'] for course in sorted_by_score]
+    for course in sorted_by_score:
+        course['tf_idf_percentile'] = percentileofscore(scores, course['tf_idf_score']) / 100
+
+    return sorted_by_score
 
 
 def filter_by_threshold(courses: list, tfidf_threshold: float):
@@ -144,7 +150,7 @@ def filter_by_threshold(courses: list, tfidf_threshold: float):
     Returns:
         list: List of courses filtered by the TF-IDF score
     """
-    return [course for course in courses if course['tf_idf_score'] > tfidf_threshold]
+    return [course for course in courses if course['tf_idf_percentile'] > tfidf_threshold]
 
 
 def apply_tfidf_filter(query: str, courses: list, tfidf_threshold: float):
