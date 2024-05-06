@@ -24,13 +24,12 @@ ENV TERM=xterm-256color
 ENV DEBIAN_FRONTEND=noninteractive
 
 # If you add a package here please include a comment above describing what it is used for
+RUN apt-get update && \
+  apt-get install -y software-properties-common && \
+  apt-add-repository -y ppa:deadsnakes/ppa
+
 RUN apt-get update && apt-get -qy install --no-install-recommends \
- python3.12 \
- python3.12-dev \
- python3-pip \
- python3.12-venv \
  build-essential \
- software-properties-common \
  language-pack-en \
  locales \
  pkg-config \
@@ -39,10 +38,14 @@ RUN apt-get update && apt-get -qy install --no-install-recommends \
  libffi-dev \
  libsqlite3-dev \
  git \
- wget
+ wget \
+ python3.12 \
+ python3.12-dev \
+ python3.12-distutils \
+ python3-pip
 
 # Set Python 3.12 as default
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1
+# RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1
 
 # RUN apt-get -qy install --no-install-recommends \
 # python3-pip \
