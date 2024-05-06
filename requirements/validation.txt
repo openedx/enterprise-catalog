@@ -35,9 +35,8 @@ asgiref==3.8.1
     #   django
     #   django-cors-headers
     #   django-simple-history
-astroid==2.11.7
+astroid==3.1.0
     # via
-    #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pylint
@@ -133,7 +132,7 @@ colorama==0.4.6
     # via
     #   -r requirements/test.txt
     #   tox
-coverage[toml]==7.5.0
+coverage[toml]==7.5.1
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -307,9 +306,8 @@ edx-drf-extensions==10.3.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-rbac
-edx-lint==5.2.5
+edx-lint==5.3.6
     # via
-    #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
 edx-opaque-keys==2.9.0
@@ -416,11 +414,6 @@ kombu==5.3.7
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   celery
-lazy-object-proxy==1.10.0
-    # via
-    #   -r requirements/quality.txt
-    #   -r requirements/test.txt
-    #   astroid
 markupsafe==2.1.5
     # via
     #   -r requirements/quality.txt
@@ -532,9 +525,8 @@ pyjwt[crypto]==2.8.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
-pylint==2.14.5
+pylint==3.1.0
     # via
-    #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-lint
@@ -646,7 +638,7 @@ requests-oauthlib==2.0.0
     #   social-auth-core
 responses==0.25.0
     # via -r requirements/test.txt
-rpds-py==0.18.0
+rpds-py==0.18.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -791,11 +783,6 @@ wcwidth==0.2.13
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   prompt-toolkit
-wrapt==1.16.0
-    # via
-    #   -r requirements/quality.txt
-    #   -r requirements/test.txt
-    #   astroid
 xlsxwriter==3.2.0
     # via
     #   -r requirements/quality.txt

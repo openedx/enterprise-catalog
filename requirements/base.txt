@@ -295,7 +295,7 @@ requests==2.31.0
     #   social-auth-core
 requests-oauthlib==2.0.0
     # via social-auth-core
-rpds-py==0.18.0
+rpds-py==0.18.1
     # via
     #   jsonschema
     #   referencing
