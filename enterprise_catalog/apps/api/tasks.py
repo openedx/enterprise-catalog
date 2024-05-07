@@ -66,7 +66,7 @@ ONE_HOUR = timedelta(hours=1)
 UNREADY_TASK_RETRY_COUNTDOWN_SECONDS = 60 * 5
 
 # ENT-4980 every batch "shard" record in Algolia should have all of these that pertain to the course
-EXPLORE_CATALOG_TITLES = ['A la carte', 'Business', 'Education']
+EXPLORE_CATALOG_TITLES = ['A la carte', 'Subscription']
 
 # The closer a mode is to the beginning of this list, the more likely a seat with that mode will be used to find the
 # upgrade deadline for the course (and course run).
