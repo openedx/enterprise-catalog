@@ -850,6 +850,54 @@ def create_content_metadata(metadata, catalog_query=None, dry_run=False):
     return metadata_list
 
 
+def _check_content_association_threshold(catalog_query, metadata_list):
+    """
+    Helper method to check a given catalog query's content metadata association set and compare it to a new set of
+    metadata records. Should the two sets of records differ in size beyond a configurable percentage value, and are
+    evaluated to be applicable, this method returns True, indicating the threshold of difference has been met.
+
+    Applicability for the threshold is defined as such:
+    - The existing set of content associations must exceed a configurable cutoff value
+    - The query must have not been modified today, meaning it's stale
+    - The change in number of content association records must exceed a configurable percentage, both in a positive and
+    negative direction (ie the query loses or gains more than x% of its prior number of records)
+    """
+    existing_relations_size = catalog_query.contentmetadata_set.count()
+    new_relations_size = len(metadata_list)
+    # To prevent false positives, this content association action stop gap will only apply to reasonably sized
+    # content sets
+    if existing_relations_size > settings.CATALOG_CONTENT_INCLUSION_GUARDRAIL_CONSIDERATION_FLOOR:
+        # If the catalog query hasn't been modified yet today, means there's no immediate reason for such a
+        # large change in content associations
+        if catalog_query.modified.date() < localized_utcnow().date():
+            # Check if the association of content results in a percentage change of
+            # `CATALOG_CONTENT_INCLUSION_GUARDRAIL_ALLOWABLE_DELTA` of content items from the query's content set.
+            percent_change = abs((new_relations_size - existing_relations_size) / existing_relations_size)
+            if percent_change > settings.CATALOG_CONTENT_INCLUSION_GUARDRAIL_ALLOWABLE_DELTA:
+                LOGGER.warning(
+                    "[CONTENT_DELTA_WARNING] associate_content_metadata_with_query is requested to set query: "
+                    "%s to a content metadata set of length of %s when it previous had a content metadata set length "
+                    "of:%s. The current threshold cutoff is a delta of: %s content remaining. The update has been "
+                    "prevented.",
+                    catalog_query,
+                    new_relations_size,
+                    existing_relations_size,
+                    settings.CATALOG_CONTENT_INCLUSION_GUARDRAIL_ALLOWABLE_DELTA,
+                )
+                return True
+            elif percent_change > settings.CATALOG_CONTENT_ASSOCIATIONS_CONTENT_DELTA_WARNING_THRESHOLD:
+                LOGGER.warning(
+                    "[CONTENT_DELTA_WARNING] associate_content_metadata_with_query hit the warning threshold: %s "
+                    "while setting query: %s to a content metadata set of length of %s when it previous had a content "
+                    "metadata set length of:%s.",
+                    settings.CATALOG_CONTENT_ASSOCIATIONS_CONTENT_DELTA_WARNING_THRESHOLD,
+                    catalog_query,
+                    new_relations_size,
+                    existing_relations_size,
+                )
+    return False
+
+
 def associate_content_metadata_with_query(metadata, catalog_query, dry_run=False):
     """
     Creates or updates a ContentMetadata object for each entry in `metadata`,
@@ -864,7 +912,11 @@ def associate_content_metadata_with_query(metadata, catalog_query, dry_run=False
         list: The list of content_keys for the metadata associated with the query.
     """
     metadata_list = create_content_metadata(metadata, catalog_query, dry_run)
-
+    # Stop gap if the new metadata list is extremely different from the current one
+    if _check_content_association_threshold(catalog_query, metadata_list):
+        return list(content_key for content_key in catalog_query.contentmetadata_set.values_list(
+            'content_key', flat=True,
+        ))
     # Setting `clear=True` will remove all prior relationships between
     # the CatalogQuery's associated ContentMetadata objects
     # before setting all new relationships from `metadata_list`.
