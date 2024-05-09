@@ -18,6 +18,7 @@ from .open_ai_utils import (
 
 
 CACHE_KEY = '{task_id}_{content_type}'
+CACHE_TIMEOUT = 1200
 
 
 def get_cache_key(task_id: str, content_type: str) -> str:
@@ -219,9 +220,21 @@ def generate_curation(query: str, catalog_name: str, task_id: str):
     )
 
     # Cache data for tweaking the filter
-    cache.set(get_cache_key(task_id=task_id, content_type='ocm_courses'), partially_filtered_ocm_courses)
-    cache.set(get_cache_key(task_id=task_id, content_type='exec_ed_courses'), partially_filtered_exec_ed_courses)
-    cache.set(get_cache_key(task_id=task_id, content_type='programs'), programs)
+    cache.set(
+        get_cache_key(task_id=task_id, content_type='ocm_courses'),
+        partially_filtered_ocm_courses,
+        CACHE_TIMEOUT
+    )
+    cache.set(
+        get_cache_key(task_id=task_id, content_type='exec_ed_courses'),
+        partially_filtered_exec_ed_courses,
+        CACHE_TIMEOUT
+    )
+    cache.set(
+        get_cache_key(task_id=task_id, content_type='programs'),
+        programs,
+        CACHE_TIMEOUT
+    )
 
     # filter programs based on the filtered courses
     filtered_programs = apply_programs_filter(filtered_ocm_courses + filtered_exec_ed_courses, programs)
