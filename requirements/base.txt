@@ -80,7 +80,7 @@ defusedxml==0.7.1
     #   social-auth-core
 distro==1.9.0
     # via openai
-django==4.2.11
+django==4.2.13
     # via
     #   -c requirements/common_constraints.txt
     #   -c requirements/constraints.txt
