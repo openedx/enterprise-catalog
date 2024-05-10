@@ -3,6 +3,7 @@
 import json
 from collections import OrderedDict
 from contextlib import contextmanager
+from datetime import timedelta
 from unittest import mock
 from uuid import uuid4
 
@@ -23,6 +24,7 @@ from enterprise_catalog.apps.catalog.models import (
     update_contentmetadata_from_discovery,
 )
 from enterprise_catalog.apps.catalog.tests import factories
+from enterprise_catalog.apps.catalog.utils import localized_utcnow
 
 
 @ddt.ddt
@@ -499,3 +501,75 @@ class TestModels(TestCase):
         else:
             assert 'happy-little-sku' in actual_enrollment_url
             assert 'proxy-login' in actual_enrollment_url
+
+    @override_settings(DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT=0)
+    @mock.patch('enterprise_catalog.apps.api_client.discovery.DiscoveryApiClient')
+    def test_associate_content_metadata_with_query_guardrails(self, mock_client):
+        """
+        Test the limitations of the `associate_content_metadata_with_query_guardrails` and situations where content
+        association sets are blocked from updates
+        """
+        # Set up our catalog and query
+        catalog = factories.EnterpriseCatalogFactory()
+
+        # Mock discovery returning a single metadata record for our query
+        course_metadata = OrderedDict([
+            ('aggregation_key', 'course:edX+testX'),
+            ('key', 'edX+testX'),
+            ('title', 'test course'),
+        ])
+        mock_client.return_value.get_metadata_by_query.return_value = [course_metadata]
+
+        # The catalog has no values, and falls under the guard rails minimum threshold so the update should be
+        # uninhibited
+        update_contentmetadata_from_discovery(catalog.catalog_query)
+        assert len(catalog.catalog_query.contentmetadata_set.all()) == 1
+
+        # Build an existing content metadata set that will surpass the minimum
+        content_metadata = []
+        for x in range(100):
+            content_metadata.append(
+                factories.ContentMetadataFactory(
+                    content_key=f'the-content-key-{x}',
+                    content_type=COURSE,
+                )
+            )
+        catalog.catalog_query.contentmetadata_set.set(content_metadata, clear=True)
+
+        # Move the modified to before today
+        catalog.catalog_query.modified -= timedelta(days=2)
+        # Now if we run the update, with discovery mocked to return a single item, the update will be blocked and
+        # retain the 100 records since the modified at of the query isn't today
+        update_contentmetadata_from_discovery(catalog.catalog_query)
+        assert len(catalog.catalog_query.contentmetadata_set.all()) == 100
+
+        # updates that results in a net positive change in number of content record associations will be allowed
+        # so long as they fall under the threshold
+        course_metadata_list = []
+        for x in range(120):
+            course_metadata_list.append(OrderedDict([
+                ('aggregation_key', f'course:edX+testX-{x}'),
+                ('key', f'edX+testX-{x}'),
+                ('title', f'test course-{x}'),
+            ]))
+        # Mock discovery to return 101 returns
+        mock_client.return_value.get_metadata_by_query.return_value = course_metadata_list
+        update_contentmetadata_from_discovery(catalog.catalog_query)
+        assert len(catalog.catalog_query.contentmetadata_set.all()) == 120
+        for x in range(120):
+            course_metadata_list.append(OrderedDict([
+                ('aggregation_key', f'course:edX+testX-{x}'),
+                ('key', f'edX+testX-{x}'),
+                ('title', f'test course-{x}'),
+            ]))
+        mock_client.return_value.get_metadata_by_query.return_value = course_metadata_list
+        update_contentmetadata_from_discovery(catalog.catalog_query)
+        # with the 120 additional records returned, that exceeds the threshold
+        assert len(catalog.catalog_query.contentmetadata_set.all()) == 120
+
+        # Now that the current contentmetadata_set is of length 120 mock discovery to return just one record again
+        mock_client.return_value.get_metadata_by_query.return_value = [course_metadata]
+        # Move the modified at time to allow the update to go through
+        catalog.catalog_query.modified = localized_utcnow()
+        update_contentmetadata_from_discovery(catalog.catalog_query)
+        assert len(catalog.catalog_query.contentmetadata_set.all()) == 1

@@ -453,3 +453,12 @@ AI_CURATION_KEYWORDS_TO_PROSE_PROMPT = 'I am a keywords to prose prompt. query: 
 OPENAI_API_KEY = 'I am key'
 
 ############################################## AI CURATION ##############################################
+
+# Decimal percentage cutoff value for queries' content metadata association setting. If the absolute percent change
+# from the old set length to the new set length is greater than the setting value, the update may be prevented
+CATALOG_CONTENT_INCLUSION_GUARDRAIL_ALLOWABLE_DELTA = .8
+# Decimal percentage warning value for queries' content metadata association setting. If the absolute percent change
+# is greater than the setting value, the operation may trigger a warning log
+CATALOG_CONTENT_ASSOCIATIONS_CONTENT_DELTA_WARNING_THRESHOLD = .5
+# Flat minimum value of content associations for a catalog query to be considered for guardrail protections
+CATALOG_CONTENT_INCLUSION_GUARDRAIL_CONSIDERATION_FLOOR = 50
