@@ -142,7 +142,7 @@ coverage[toml]==7.5.1
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==42.0.6
+cryptography==42.0.7
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -340,7 +340,7 @@ edx-toggles==5.2.0
     #   -r requirements/test.txt
 factory-boy==3.3.0
     # via -r requirements/test.txt
-faker==25.0.1
+faker==25.1.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -680,6 +680,7 @@ responses==0.25.0
     #   -r requirements/dev.in
     #   -r requirements/test.txt
 rpds-py==0.18.1
+rpds-py==0.18.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -767,7 +768,19 @@ threadpoolctl==3.5.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   scikit-learn
-tomlkit==0.12.4
+tomli==2.0.1
+    # via
+    #   -r requirements/pip-tools.txt
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   build
+    #   coverage
+    #   pip-tools
+    #   pylint
+    #   pyproject-api
+    #   pytest
+    #   tox
+tomlkit==0.12.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
