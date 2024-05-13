@@ -69,7 +69,7 @@ click-repl==0.3.0
     # via celery
 code-annotations==1.8.0
     # via edx-toggles
-cryptography==42.0.6
+cryptography==42.0.7
     # via
     #   pyjwt
     #   social-auth-core
@@ -297,7 +297,7 @@ requests==2.31.0
     #   social-auth-core
 requests-oauthlib==2.0.0
     # via social-auth-core
-rpds-py==0.18.0
+rpds-py==0.18.1
     # via
     #   jsonschema
     #   referencing

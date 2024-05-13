@@ -104,7 +104,7 @@ code-annotations==1.8.0
     #   -r requirements/base.txt
     #   edx-lint
     #   edx-toggles
-cryptography==42.0.6
+cryptography==42.0.7
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -441,7 +441,7 @@ requests-oauthlib==2.0.0
     # via
     #   -r requirements/base.txt
     #   social-auth-core
-rpds-py==0.18.0
+rpds-py==0.18.1
     # via
     #   -r requirements/base.txt
     #   jsonschema
@@ -510,7 +510,7 @@ threadpoolctl==3.5.0
     #   scikit-learn
 tomli==2.0.1
     # via pylint
-tomlkit==0.12.4
+tomlkit==0.12.5
     # via pylint
 tqdm==4.66.4
     # via

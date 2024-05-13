@@ -152,7 +152,7 @@ coverage[toml]==7.5.1
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==42.0.6
+cryptography==42.0.7
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -357,7 +357,7 @@ exceptiongroup==1.2.1
     #   pytest
 factory-boy==3.3.0
     # via -r requirements/test.txt
-faker==25.0.1
+faker==25.1.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -715,7 +715,7 @@ responses==0.25.0
     # via
     #   -r requirements/dev.in
     #   -r requirements/test.txt
-rpds-py==0.18.0
+rpds-py==0.18.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -815,7 +815,7 @@ tomli==2.0.1
     #   pyproject-api
     #   pytest
     #   tox
-tomlkit==0.12.4
+tomlkit==0.12.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
