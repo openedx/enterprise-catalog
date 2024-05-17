@@ -398,9 +398,10 @@ class AcademyTagsListSerializer(serializers.ListSerializer):  # pylint: disable=
         tags = super().to_representation(obj)
         algolia_client = get_initialized_algolia_client()
         academy_uuid = self.context.get('academy_uuid')
-        if academy_uuid:
+        enterprise_uuid = self.context.get('enterprise_uuid')
+        if academy_uuid and enterprise_uuid:
             search_query = {
-                'filters': f'academy_uuids:{academy_uuid}',
+                'filters': f'academy_uuids:{academy_uuid} AND enterprise_customer_uuids:{enterprise_uuid}',
                 'maxFacetHits': 50
             }
         else:
