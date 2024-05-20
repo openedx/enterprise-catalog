@@ -26,7 +26,8 @@ class AcademiesReadOnlyViewSet(viewsets.ReadOnlyModelViewSet):
     def get_serializer_context(self):
         context = super().get_serializer_context()
         academy_uuid = str(self.kwargs['uuid']) if 'uuid' in self.kwargs else None
-        context.update({'academy_uuid': academy_uuid})
+        enterprise_customer = self.request.GET.get('enterprise_customer', None)
+        context.update({'academy_uuid': academy_uuid, 'enterprise_uuid': enterprise_customer})
         return context
 
     def get_queryset(self):
