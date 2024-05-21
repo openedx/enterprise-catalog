@@ -8,9 +8,6 @@ MAINTAINER sre@edx.org
 # language-pack-en locales
 #     ubuntu locale support so that system utilities have a consistent
 #     language and time zone.
-# python3.5
-#     ubuntu doesnt ship with python, so this is the python we will use to run the
-#     application
 # python3-pip
 #     install pip to install application requirements.txt files
 # pkg-config
@@ -21,36 +18,42 @@ MAINTAINER sre@edx.org
 #     to install header files needed to use native C implementation for
 #     MySQL-python for performance gains.
 
+ARG PYTHON_VERSION=3.12
+ENV TZ=UTC
+ENV TERM=xterm-256color
+ENV DEBIAN_FRONTEND=noninteractive
+
 # If you add a package here please include a comment above describing what it is used for
+RUN apt-get update && \
+  apt-get install -y software-properties-common && \
+  apt-add-repository -y ppa:deadsnakes/ppa
+
 RUN apt-get update && apt-get -qy install --no-install-recommends \
+ build-essential \
  language-pack-en \
  locales \
- python3.8 \
- python3-pip \
- python3.8-venv \
- python3.8-dev \
  pkg-config \
  libmysqlclient-dev \
  libssl-dev \
- build-essential \
+ libffi-dev \
+ libsqlite3-dev \
  git \
- wget
+ wget \
+ python3.12 \
+ python3.12-dev \
+ python3.12-distutils \
+ python3-pip
 
-ENV TZ=UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-RUN apt-get update && apt-get -qy install  libffi-dev libsqlite3-dev python3-distutils
-
-RUN apt-get update && apt-get install -y build-essential wget && \
-wget https://www.python.org/ftp/python/3.12.0/Python-3.12.0.tgz && \
-tar -xzvf Python-3.12.0.tgz && cd Python-3.12.0 && ./configure --enable-optimizations && \
-make -j$(nproc) && make altinstall && python3.12 --version
+RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python${PYTHON_VERSION}
+RUN pip install virtualenv
 
 ENV VIRTUAL_ENV=/venv
-RUN python3.8 -m venv $VIRTUAL_ENV
+RUN virtualenv -p python$PYTHON_VERSION $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-RUN pip install pip==20.2.3 setuptools==50.3.0
+RUN pip install pip==24.0 setuptools==69.5.1
 
 RUN locale-gen en_US.UTF-8
 ENV LANG en_US.UTF-8
