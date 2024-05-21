@@ -18,6 +18,7 @@ jobs:
       branch: ${{ github.event.inputs.branch || 'master' }}
       team_reviewers: "enterprise-quokkas"
       email_address: "online-campus@edx.org"
+      python_version: 3.12
     secrets:
       requirements_bot_github_token: ${{ secrets.REQUIREMENTS_BOT_GITHUB_TOKEN }}
       requirements_bot_github_email: ${{ secrets.REQUIREMENTS_BOT_GITHUB_EMAIL }}

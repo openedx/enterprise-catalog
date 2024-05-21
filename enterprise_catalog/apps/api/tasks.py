@@ -1127,14 +1127,14 @@ def update_catalog_metadata_task(self, catalog_query_id, force=False, dry_run=Fa
     except Exception as e:
         logger.exception(
             f'Something went wrong while updating content metadata from discovery using catalog: {catalog_query_id} '
-            f'after update_catalog_metadata_task_seconds={time.perf_counter()-start_time} seconds',
+            f'after update_catalog_metadata_task_seconds={time.perf_counter() - start_time} seconds',
             exc_info=e,
         )
         raise e
     logger.info(
         f'Finished update_catalog_metadata_task with {len(associated_content_keys)} '
         f'associated content keys for catalog {catalog_query_id} '
-        f'after update_catalog_metadata_task_seconds={time.perf_counter()-start_time} seconds'
+        f'after update_catalog_metadata_task_seconds={time.perf_counter() - start_time} seconds'
     )
 
 
