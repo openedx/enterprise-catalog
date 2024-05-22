@@ -43,6 +43,7 @@ def extract_course_data(hit: dict):
         'program_titles': hit.get('program_titles', []),
         'skills': hit.get('skill_names', []),
         'subjects': hit.get('subjects', []),
+        'availability': hit.get('availability', [])
     }
 
 
@@ -66,12 +67,23 @@ def fetch_catalog_metadata_from_algolia(enterprise_catalog_query_title: str):
     """
     algolia_client = get_initialized_algolia_client()
     search_options = {
-        'facetFilters': [f'enterprise_catalog_query_titles:{enterprise_catalog_query_title}', ],
+        'facetFilters': [
+            [
+                'availability:Available Now',
+                'availability:Starting Soon',
+                'availability:Upcoming'
+            ],
+            [
+                f'enterprise_catalog_query_titles:{enterprise_catalog_query_title}'
+            ]
+        ],
+        'filters': 'learning_type:course OR learning_type:program OR learning_type:"Executive Education"',
         'attributesToRetrieve': [
             'key',
             'aggregation_key',
             'content_type',
             'course_type',
+            'availability',
             'title',
             'short_description',
             'full_description',
@@ -80,6 +92,7 @@ def fetch_catalog_metadata_from_algolia(enterprise_catalog_query_title: str):
             'skill_names',
             'subjects',
         ],
+        'facetingAfterDistinct': True,
         'hitsPerPage': 100,
         'page': 0,
     }
