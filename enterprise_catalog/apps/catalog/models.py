@@ -866,13 +866,32 @@ def _check_content_association_threshold(catalog_query, metadata_list):
     new_relations_size = len(metadata_list)
     # To prevent false positives, this content association action stop gap will only apply to reasonably sized
     # content sets
+    LOGGER.info(
+        '_check_content_association_threshold is checking the guardrail consideration floor of: %s for query: %s',
+        settings.CATALOG_CONTENT_INCLUSION_GUARDRAIL_CONSIDERATION_FLOOR,
+        catalog_query,
+    )
     if existing_relations_size > settings.CATALOG_CONTENT_INCLUSION_GUARDRAIL_CONSIDERATION_FLOOR:
         # If the catalog query hasn't been modified yet today, means there's no immediate reason for such a
         # large change in content associations
+        LOGGER.info(
+            '_check_content_association_threshold is checking the modified value: %s of query: %s as compared to '
+            'todays date: %s',
+            catalog_query.modified.date(),
+            catalog_query,
+            localized_utcnow().date(),
+        )
         if catalog_query.modified.date() < localized_utcnow().date():
             # Check if the association of content results in a percentage change of
             # `CATALOG_CONTENT_INCLUSION_GUARDRAIL_ALLOWABLE_DELTA` of content items from the query's content set.
             percent_change = abs((new_relations_size - existing_relations_size) / existing_relations_size)
+            LOGGER.info(
+                '_check_content_association_threshold is checking the percent change: %s of query: %s as compared to '
+                'the threshold: %s',
+                percent_change,
+                catalog_query,
+                settings.CATALOG_CONTENT_INCLUSION_GUARDRAIL_ALLOWABLE_DELTA,
+            )
             if percent_change > settings.CATALOG_CONTENT_INCLUSION_GUARDRAIL_ALLOWABLE_DELTA:
                 LOGGER.warning(
                     "[CONTENT_DELTA_WARNING] associate_content_metadata_with_query is requested to set query: "
@@ -914,9 +933,7 @@ def associate_content_metadata_with_query(metadata, catalog_query, dry_run=False
     metadata_list = create_content_metadata(metadata, catalog_query, dry_run)
     # Stop gap if the new metadata list is extremely different from the current one
     if _check_content_association_threshold(catalog_query, metadata_list):
-        return list(content_key for content_key in catalog_query.contentmetadata_set.values_list(
-            'content_key', flat=True,
-        ))
+        return catalog_query.contentmetadata_set.values_list('content_key', flat=True)
     # Setting `clear=True` will remove all prior relationships between
     # the CatalogQuery's associated ContentMetadata objects
     # before setting all new relationships from `metadata_list`.
