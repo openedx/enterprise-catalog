@@ -45,7 +45,7 @@ class EnterpriseCatalogCRUDViewSet(BaseViewSet, viewsets.ModelViewSet):
 
     def get_permission_object(self):
         """
-        Retrieves the apporpriate object to use during edx-rbac's permission checks.
+        Retrieves the appropriate object to use during edx-rbac's permission checks.
 
         This object is passed to the rule predicate(s).
         """

@@ -44,6 +44,7 @@ from enterprise_catalog.apps.catalog.tests.factories import (
 )
 from enterprise_catalog.apps.catalog.utils import (
     enterprise_proxy_login_url,
+    get_content_filter_hash,
     get_content_key,
     get_parent_content_key,
     localized_utcnow,
@@ -2499,3 +2500,140 @@ class ContentMetadataViewTests(APITestMixin):
         assert len(response_json.get('results')) == 1
         assert response_json.get('results')[0].get("key") == self.content_metadata_object.content_key
         assert response_json.get('results')[0].get("course_runs")[0].get('start') == '2024-02-12T11:00:00Z'
+
+
+@ddt.ddt
+class CatalogQueryViewTests(APITestMixin):
+    """
+    Tests for the readonly ContentMetadata viewset.
+    """
+    def setUp(self):
+        super().setUp()
+        self.set_up_catalog_learner()
+        self.catalog_query_object = CatalogQueryFactory()
+        self.catalog_object = EnterpriseCatalogFactory(catalog_query=self.catalog_query_object)
+        self.assign_catalog_admin_feature_role(enterprise_uuids=[self.catalog_object.enterprise_uuid])
+        # Factory doesn't set up a hash, so do it manually
+        self.catalog_query_object.content_filter_hash = get_content_filter_hash(
+            self.catalog_query_object.content_filter
+        )
+        self.catalog_query_object.save()
+
+    def test_get_query_by_hash(self):
+        """
+        Test that the list content_identifiers query param accepts uuids
+        """
+        query_param_string = f"?hash={self.catalog_query_object.content_filter_hash}"
+        url = reverse('api:v1:get-query-by-hash') + query_param_string
+        response = self.client.get(url)
+        response_json = response.json()
+        # The user is a part of the enterprise that has a catalog that contains this query
+        # so they can view the data
+        assert response_json.get('uuid') == str(self.catalog_query_object.uuid)
+        assert str(response_json.get('content_filter')) == str(self.catalog_query_object.content_filter)
+
+        # Permissions verification while looking up by hash
+        different_catalog = EnterpriseCatalogFactory()
+        # Factory doesn't set up a hash, so do it manually
+        different_catalog.catalog_query.content_filter_hash = get_content_filter_hash(
+            different_catalog.catalog_query.content_filter
+        )
+        different_catalog.save()
+        query_param_string = f"?hash={different_catalog.catalog_query.content_filter_hash}"
+        url = reverse('api:v1:get-query-by-hash') + query_param_string
+        response = self.client.get(url)
+        response_json = response.json()
+        assert response_json == {'detail': 'Catalog query not found.'}
+
+        # If the user is staff, they get access to everything
+        self.set_up_staff()
+        response = self.client.get(url)
+        response_json = response.json()
+        assert response_json.get('uuid') == str(different_catalog.catalog_query.uuid)
+
+        self.set_up_invalid_jwt_role()
+        self.remove_role_assignments()
+        response = self.client.get(url)
+        assert response.status_code == 404
+
+    def test_get_query_by_hash_not_found(self):
+        """
+        Test that the get query by hash endpoint returns expected not found
+        """
+        query_param_string = f"?hash={self.catalog_query_object.content_filter_hash[:-6]}aaaaaa"
+        url = reverse('api:v1:get-query-by-hash') + query_param_string
+        response = self.client.get(url)
+        response_json = response.json()
+        assert response_json == {'detail': 'Catalog query not found.'}
+
+    def test_get_query_by_illegal_hash(self):
+        """
+        Test that the get query by hash endpoint validates filter hashes
+        """
+        query_param_string = "?hash=foobar"
+        url = reverse('api:v1:get-query-by-hash') + query_param_string
+        response = self.client.get(url)
+        response_json = response.json()
+        assert response_json == {'hash': ['Invalid filter hash.']}
+
+    def test_get_query_by_hash_requires_hash(self):
+        """
+        Test that the get query by hash requires a hash query param
+        """
+        url = reverse('api:v1:get-query-by-hash')
+        response = self.client.get(url)
+        response_json = response.json()
+        assert response_json == ['You must provide at least one of the following query parameters: hash.']
+
+    def test_catalog_query_retrieve(self):
+        """
+        Test that the Catalog Query viewset supports retrieving individual queries
+        """
+        self.assign_catalog_admin_jwt_role(
+            self.enterprise_uuid,
+            self.catalog_query_object.enterprise_catalogs.first().enterprise_uuid,
+        )
+        url = reverse('api:v1:catalog-queries-detail', kwargs={'pk': self.catalog_query_object.pk})
+        response = self.client.get(url)
+        response_json = response.json()
+        assert response_json.get('uuid') == str(self.catalog_query_object.uuid)
+
+        different_customer_catalog = EnterpriseCatalogFactory()
+        # We don't have a jwt token that includes an admin role for the new enterprise so it is
+        # essentially hidden to the requester
+        url = reverse('api:v1:catalog-queries-detail', kwargs={'pk': different_customer_catalog.catalog_query.pk})
+        response = self.client.get(url)
+        assert response.status_code == 404
+
+        # If the user is staff, they get access to everything
+        self.set_up_staff()
+        response = self.client.get(url)
+        response_json = response.json()
+        assert response_json.get('uuid') == str(different_customer_catalog.catalog_query.uuid)
+
+    def test_catalog_query_list(self):
+        """
+        Test that the Catalog Query viewset supports listing queries
+        """
+        # Create another catalog associated with another enterprise and therefore hidden to the requesting user
+        EnterpriseCatalogFactory()
+        self.assign_catalog_admin_jwt_role(
+            self.enterprise_uuid,
+            self.catalog_query_object.enterprise_catalogs.first().enterprise_uuid,
+        )
+        url = reverse('api:v1:catalog-queries-list')
+        response = self.client.get(url)
+        response_json = response.json()
+        assert response_json.get('count') == 1
+        assert response_json.get('results')[0].get('uuid') == str(self.catalog_query_object.uuid)
+
+        # If the user is staff, they get access to everything
+        self.set_up_staff()
+        response = self.client.get(url)
+        response_json = response.json()
+        assert response_json.get('count') == 2
+
+        self.set_up_invalid_jwt_role()
+        self.remove_role_assignments()
+        response = self.client.get(url)
+        assert response.data == {'count': 0, 'next': None, 'previous': None, 'results': []}
