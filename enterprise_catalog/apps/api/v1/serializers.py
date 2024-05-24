@@ -1,5 +1,5 @@
 import logging
-from re import search
+from re import findall, search
 
 from django.db import IntegrityError, models
 from rest_framework import serializers, status
@@ -83,6 +83,25 @@ def find_and_modify_catalog_query(
         )
 
         return content_filter_from_hash
+
+
+class CatalogQuerySerializer(serializers.ModelSerializer):
+    """
+    Serializer for the `CatalogQuery` model
+    """
+    content_filter = serializers.JSONField(
+        read_only=True,
+        help_text="Elastic search content filter used to determine content ownership of the query."
+    )
+
+    class Meta:
+        model = CatalogQuery
+        fields = [
+            'uuid',
+            'content_filter',
+            'content_filter_hash',
+            'title',
+        ]
 
 
 class EnterpriseCatalogSerializer(serializers.ModelSerializer):
@@ -189,6 +208,18 @@ class ImmutableStateSerializer(serializers.Serializer):
         """
         Do not perform any operations for state changing requests.
         """
+
+
+class CatalogQueryGetByHashRequestSerializer(ImmutableStateSerializer):
+    """
+    Request serializer to validate request data provided to the CatalogQueryViewSet's ``get_query_by_hash`` endpoint
+    """
+    hash = serializers.CharField(required=True, max_length=32)
+
+    def validate_hash(self, value):
+        if not findall(r"([a-fA-F\d]{32})", value):
+            raise serializers.ValidationError("Invalid filter hash.")
+        return value
 
 
 class ContentMetadataSerializer(ImmutableStateSerializer):
