@@ -17,12 +17,12 @@ analytics-python==1.4.post1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-annotated-types==0.6.0
+annotated-types==0.7.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pydantic
-anyio==4.3.0
+anyio==4.4.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -35,7 +35,7 @@ asgiref==3.8.1
     #   django
     #   django-cors-headers
     #   django-simple-history
-astroid==3.1.0
+astroid==3.2.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -138,11 +138,11 @@ colorama==0.4.6
     # via
     #   -r requirements/test.txt
     #   tox
-coverage[toml]==7.5.1
+coverage[toml]==7.5.2
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==42.0.6
+cryptography==42.0.7
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -230,7 +230,7 @@ django-crum==0.7.9
     #   edx-django-utils
     #   edx-rbac
     #   edx-toggles
-django-debug-toolbar==4.3.0
+django-debug-toolbar==4.4.1
     # via -r requirements/dev.in
 django-dynamic-fixture==4.0.1
     # via -r requirements/test.txt
@@ -302,7 +302,7 @@ edx-django-release-util==1.4.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-edx-django-utils==5.13.0
+edx-django-utils==5.14.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -340,7 +340,7 @@ edx-toggles==5.2.0
     #   -r requirements/test.txt
 factory-boy==3.3.0
     # via -r requirements/test.txt
-faker==25.0.1
+faker==25.2.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -434,7 +434,7 @@ kombu==5.3.7
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   celery
-lxml[html-clean,html_clean]==5.2.1
+lxml[html-clean,html_clean]==5.2.2
     # via
     #   edx-i18n-tools
     #   lxml-html-clean
@@ -459,7 +459,7 @@ mysqlclient==2.2.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-newrelic==9.9.0
+newrelic==9.10.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -499,7 +499,7 @@ pbr==6.0.0
     #   stevedore
 pip-tools==7.4.1
     # via -r requirements/pip-tools.txt
-platformdirs==4.2.1
+platformdirs==4.2.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -559,7 +559,7 @@ pyjwt[crypto]==2.8.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
-pylint==3.1.0
+pylint==3.2.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -606,7 +606,7 @@ pyproject-hooks==1.1.0
     #   -r requirements/pip-tools.txt
     #   build
     #   pip-tools
-pytest==8.2.0
+pytest==8.2.1
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -685,15 +685,15 @@ rpds-py==0.18.1
     #   -r requirements/test.txt
     #   jsonschema
     #   referencing
-rules==3.3
+rules==3.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-scikit-learn==1.4.2
+scikit-learn==1.5.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-scipy==1.13.0
+scipy==1.13.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -767,7 +767,7 @@ threadpoolctl==3.5.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   scikit-learn
-tomlkit==0.12.4
+tomlkit==0.12.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -779,7 +779,7 @@ tqdm==4.66.4
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   openai
-typing-extensions==4.11.0
+typing-extensions==4.12.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -810,7 +810,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.26.1
+virtualenv==20.26.2
     # via
     #   -r requirements/test.txt
     #   tox
@@ -827,7 +827,7 @@ xlsxwriter==3.2.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-zipp==3.18.1
+zipp==3.19.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt

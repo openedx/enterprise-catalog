@@ -4,7 +4,7 @@
 #
 #    make upgrade
 #
-accessible-pygments==0.0.4
+accessible-pygments==0.0.5
     # via pydata-sphinx-theme
 alabaster==0.7.16
     # via sphinx
@@ -16,11 +16,11 @@ amqp==5.2.0
     #   kombu
 analytics-python==1.4.post1
     # via -r requirements/test.txt
-annotated-types==0.6.0
+annotated-types==0.7.0
     # via
     #   -r requirements/test.txt
     #   pydantic
-anyio==4.3.0
+anyio==4.4.0
     # via
     #   -r requirements/test.txt
     #   httpx
@@ -31,7 +31,7 @@ asgiref==3.8.1
     #   django
     #   django-cors-headers
     #   django-simple-history
-astroid==3.1.0
+astroid==3.2.2
     # via
     #   -r requirements/test.txt
     #   pylint
@@ -120,11 +120,11 @@ colorama==0.4.6
     # via
     #   -r requirements/test.txt
     #   tox
-coverage[toml]==7.5.1
+coverage[toml]==7.5.2
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==42.0.6
+cryptography==42.0.7
     # via
     #   -r requirements/test.txt
     #   pyjwt
@@ -247,7 +247,7 @@ edx-celeryutils==1.3.0
     # via -r requirements/test.txt
 edx-django-release-util==1.4.0
     # via -r requirements/test.txt
-edx-django-utils==5.13.0
+edx-django-utils==5.14.1
     # via
     #   -r requirements/test.txt
     #   django-config-models
@@ -272,7 +272,7 @@ edx-toggles==5.2.0
     # via -r requirements/test.txt
 factory-boy==3.3.0
     # via -r requirements/test.txt
-faker==25.0.1
+faker==25.2.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -354,7 +354,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.4
     # via -r requirements/test.txt
-newrelic==9.9.0
+newrelic==9.10.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
@@ -386,7 +386,7 @@ pbr==6.0.0
     # via
     #   -r requirements/test.txt
     #   stevedore
-platformdirs==4.2.1
+platformdirs==4.2.2
     # via
     #   -r requirements/test.txt
     #   pylint
@@ -438,7 +438,7 @@ pyjwt[crypto]==2.8.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
-pylint==3.1.0
+pylint==3.2.2
     # via
     #   -r requirements/test.txt
     #   edx-lint
@@ -472,7 +472,7 @@ pyproject-api==1.6.1
     # via
     #   -r requirements/test.txt
     #   tox
-pytest==8.2.0
+pytest==8.2.1
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -540,11 +540,11 @@ rpds-py==0.18.1
     #   -r requirements/test.txt
     #   jsonschema
     #   referencing
-rules==3.3
+rules==3.4
     # via -r requirements/test.txt
-scikit-learn==1.4.2
+scikit-learn==1.5.0
     # via -r requirements/test.txt
-scipy==1.13.0
+scipy==1.13.1
     # via
     #   -r requirements/test.txt
     #   scikit-learn
@@ -624,7 +624,7 @@ threadpoolctl==3.5.0
     # via
     #   -r requirements/test.txt
     #   scikit-learn
-tomlkit==0.12.4
+tomlkit==0.12.5
     # via
     #   -r requirements/test.txt
     #   pylint
@@ -634,7 +634,7 @@ tqdm==4.66.4
     # via
     #   -r requirements/test.txt
     #   openai
-typing-extensions==4.11.0
+typing-extensions==4.12.0
     # via
     #   -r requirements/test.txt
     #   edx-opaque-keys
@@ -661,7 +661,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.26.1
+virtualenv==20.26.2
     # via
     #   -r requirements/test.txt
     #   tox
@@ -671,7 +671,7 @@ wcwidth==0.2.13
     #   prompt-toolkit
 xlsxwriter==3.2.0
     # via -r requirements/test.txt
-zipp==3.18.1
+zipp==3.19.0
     # via -r requirements/test.txt
 
 # The following packages are considered to be unsafe in a requirements file:
