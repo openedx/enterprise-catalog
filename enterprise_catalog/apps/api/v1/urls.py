@@ -11,6 +11,9 @@ from enterprise_catalog.apps.api.v1.views.catalog_csv import CatalogCsvView
 from enterprise_catalog.apps.api.v1.views.catalog_csv_data import (
     CatalogCsvDataView,
 )
+from enterprise_catalog.apps.api.v1.views.catalog_query import (
+    CatalogQueryViewSet,
+)
 from enterprise_catalog.apps.api.v1.views.catalog_workbook import (
     CatalogWorkbookView,
 )
@@ -61,6 +64,7 @@ router.register(r'highlight-sets', HighlightSetReadOnlyViewSet, basename='highli
 router.register(r'highlight-sets-admin', HighlightSetViewSet, basename='highlight-sets-admin')
 router.register(r'academies', AcademiesReadOnlyViewSet, basename='academies')
 router.register(r'content-metadata', ContentMetadataView, basename='content-metadata')
+router.register(r'catalog-queries', CatalogQueryViewSet, basename='catalog-queries')
 
 urlpatterns = [
     path('enterprise-catalogs/catalog_csv_data', CatalogCsvDataView.as_view(),
@@ -105,6 +109,11 @@ urlpatterns = [
         'enterprise-customer/<enterprise_uuid>/content-metadata/<content_identifier>/',
         EnterpriseCustomerViewSet.as_view({'get': 'content_metadata'}),
         name='customer-content-metadata-retrieve'
+    ),
+    path(
+        'catalog-queries/get_query_by_hash',
+        CatalogQueryViewSet.as_view({'get': 'get_query_by_hash'}),
+        name='get-query-by-hash'
     ),
 ]
 
