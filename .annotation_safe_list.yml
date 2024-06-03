@@ -57,3 +57,7 @@ waffle.Switch:
   ".. no_pii:": "This model has no PII"
 academy.HistoricalAcademy:
   ".. no_pii:": "This model has no PII"
+video_catalog.HistoricalVideo:
+  ".. no_pii:": "This model has no PII"
+video_catalog.HistoricalVideoTranscriptSummary:
+  ".. no_pii:": "This model has no PII"
