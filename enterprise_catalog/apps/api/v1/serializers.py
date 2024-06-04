@@ -440,7 +440,7 @@ class AcademyTagsListSerializer(serializers.ListSerializer):  # pylint: disable=
         response = algolia_client.algolia_index.search_for_facet_values('academy_tags', '', search_query)
         tag_titles_with_results = []
         for hit in response.get('facetHits', []):
-            if hit.get('count') > 0:
+            if hit.get('count') > 1:
                 tag_titles_with_results.append(hit.get('value'))
         tags_with_results = []
         for tag in tags:
