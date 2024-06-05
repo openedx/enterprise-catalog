@@ -451,8 +451,13 @@ class AcademyTagsListSerializer(serializers.ListSerializer):  # pylint: disable=
             if tag_title in tag_titles_with_results:
                 tags_with_results.append(tag)
                 filtered_tags.append(tag_title)
-        logger.info('[Academy Tags] Academy tags: [{}] were filtered via [{}] to produce: [{}]'.format(
-            ','.join(academy_tags), ','.join(tag_titles_with_results), ','.join(filtered_tags)
+        logger.info('[Academy Tags] Academy tags: [{}] were filtered via [{}] to produce: [{}] \
+                    for enterprise: {} for academy: {}'.format(
+            ','.join(academy_tags),
+            ','.join(tag_titles_with_results),
+            ','.join(filtered_tags),
+            enterprise_uuid,
+            academy_uuid
         ))
         return tags_with_results
 
@@ -480,7 +485,8 @@ class AcademySerializer(serializers.ModelSerializer):
 
     def get_tags_serializer(self, obj):
         academy_uuid = self.context.get('academy_uuid')
-        serializer_context = {'academy_uuid': academy_uuid}
+        enterprise_uuid = self.context.get('enterprise_uuid')
+        serializer_context = {'academy_uuid': academy_uuid, 'enterprise_uuid': enterprise_uuid}
         tags = obj.tags.all()
         serializer = TagsSerializer(tags, many=True, context=serializer_context)
         return serializer.data
