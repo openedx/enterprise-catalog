@@ -443,22 +443,10 @@ class AcademyTagsListSerializer(serializers.ListSerializer):  # pylint: disable=
             if hit.get('count') > 1:
                 tag_titles_with_results.append(hit.get('value'))
         tags_with_results = []
-        academy_tags = []
-        filtered_tags = []
         for tag in tags:
             tag_title = tag['title']
-            academy_tags.append(tag_title)
             if tag_title in tag_titles_with_results:
                 tags_with_results.append(tag)
-                filtered_tags.append(tag_title)
-        logger.info('[Academy Tags] Academy tags: [{}] were filtered via [{}] to produce: [{}] \
-                    for enterprise: {} for academy: {}'.format(
-            ','.join(academy_tags),
-            ','.join(tag_titles_with_results),
-            ','.join(filtered_tags),
-            enterprise_uuid,
-            academy_uuid
-        ))
         return tags_with_results
 
 
