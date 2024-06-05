@@ -31,3 +31,26 @@ def track_event(lms_user_id, event_name, properties):
         logger.warning(
             "Segment event %s for user_id %s not tracked because SEGMENT_KEY not set", event_name, lms_user_id
         )
+
+
+def track_anonymous_event(anonymous_id, event_name, properties):
+    """
+    Send a tracking event to segment
+
+    Args:
+        anonymous_id (str): Anonymous User ID, we want this to track events for cross-platform tracking.
+        event_name (str): Name of the event.
+        properties (dict): All the properties of an event.
+
+    Returns:
+        None
+    """
+    if hasattr(settings, "SEGMENT_KEY") and settings.SEGMENT_KEY:
+        try:  # We should never raise an exception when not able to send a tracking event.
+            analytics.track(anonymous_id=anonymous_id, event=event_name, properties=properties)
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.exception(exc)
+    else:
+        logger.warning(
+            "Segment event %s for anonymous_id %s not tracked because SEGMENT_KEY not set", event_name, anonymous_id
+        )
