@@ -8,6 +8,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 from enterprise_catalog.apps.ai_curation.errors import AICurationError
+from enterprise_catalog.apps.api.v1.constants import SegmentEvents
 
 from .algolia_utils import fetch_catalog_metadata_from_algolia
 from .open_ai_utils import (
@@ -15,6 +16,7 @@ from .open_ai_utils import (
     get_keywords_to_prose,
     get_query_keywords,
 )
+from .segment_utils import track_ai_curation
 
 
 CACHE_KEY = '{task_id}_{content_type}'
@@ -110,19 +112,17 @@ def get_cosine_similarities(search_string, product_strings):
     return cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:])[0]
 
 
-def calculate_tfidf_score(query: str, courses: list):
+def calculate_tfidf_score(keywords_to_prose: str, courses: list):
     """
     Calculate the TF-IDF score for the given query and courses.
 
     Arguments:
-        query (str): Search query given by the user
+        keywords_to_prose (str): Expanded version of the query
         courses (list): List of courses
 
     Returns:
         list: List of courses with the TF-IDF score, sorted by the score in descending order.
     """
-    keywords_to_prose = get_keywords_to_prose(query)
-
     for course in courses:
         # Get the cosine similarity between the keywords and the course
         course['tf_idf_score'] = get_cosine_similarities(keywords_to_prose, [
@@ -154,19 +154,19 @@ def filter_by_threshold(courses: list, tfidf_threshold: float):
     return [course for course in courses if course['tf_idf_percentile'] > tfidf_threshold]
 
 
-def apply_tfidf_filter(query: str, courses: list, tfidf_threshold: float):
+def apply_tfidf_filter(keywords_to_prose: str, courses: list, tfidf_threshold: float):
     """
     Filter the courses based on the TF-IDF score.
 
     Arguments:
-        query (str): Search query given by the user
+        keywords_to_prose (str): Expanded version of the query
         courses (list): List of courses
         tfidf_threshold (float): The minimum TF-IDF score that a course should have
 
     Returns:
         list: List of courses filtered by the TF-IDF score
     """
-    courses = calculate_tfidf_score(query, courses)
+    courses = calculate_tfidf_score(keywords_to_prose, courses)
     return filter_by_threshold(courses, tfidf_threshold), courses
 
 
@@ -210,13 +210,16 @@ def generate_curation(query: str, catalog_name: str, task_id: str):
     filtered_ocm_courses = apply_keywords_filter(filtered_ocm_courses, keywords, kw_threshold)
     filtered_exec_ed_courses = apply_keywords_filter(filtered_exec_ed_courses, keywords, kw_threshold)
 
+    # Calculate keywords to prose
+    keywords_to_prose = get_keywords_to_prose(query)
+
     tfidf_threshold = .2
     # filter courses and exec ed courses based on the TI-IDF score
     filtered_ocm_courses, partially_filtered_ocm_courses = apply_tfidf_filter(
-        query, filtered_ocm_courses, tfidf_threshold
+        keywords_to_prose, filtered_ocm_courses, tfidf_threshold
     )
     filtered_exec_ed_courses, partially_filtered_exec_ed_courses = apply_tfidf_filter(
-        query, filtered_exec_ed_courses, tfidf_threshold
+        keywords_to_prose, filtered_exec_ed_courses, tfidf_threshold
     )
 
     # Cache data for tweaking the filter
@@ -238,6 +241,25 @@ def generate_curation(query: str, catalog_name: str, task_id: str):
 
     # filter programs based on the filtered courses
     filtered_programs = apply_programs_filter(filtered_ocm_courses + filtered_exec_ed_courses, programs)
+
+    # Fire segment events.
+    if (len(ocm_courses) + len(exec_ed_courses) + len(programs)) == 0:
+        event_name = SegmentEvents.AI_CURATIONS_RESULTS_NOT_FOUND
+    else:
+        event_name = SegmentEvents.AI_CURATIONS_RESULTS_FOUND
+
+    track_ai_curation(
+        task_id=str(task_id),
+        event_name=event_name,
+        properties={
+            'query': query,
+            'task_id': task_id,
+            'catalog_name': catalog_name,
+            'filtered_subjects': filtered_subjects,
+            'keywords': keywords,
+            'summary': keywords_to_prose,
+        }
+    )
 
     return {
         'query': query,
