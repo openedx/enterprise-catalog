@@ -19,7 +19,11 @@ from enterprise_catalog.apps.ai_curation.api.throttle import (
 )
 from enterprise_catalog.apps.ai_curation.errors import AICurationError
 from enterprise_catalog.apps.ai_curation.tasks import trigger_ai_curations
-from enterprise_catalog.apps.ai_curation.utils import get_tweaked_results
+from enterprise_catalog.apps.ai_curation.utils import (
+    get_tweaked_results,
+    track_ai_curation,
+)
+from enterprise_catalog.apps.api.v1.constants import SegmentEvents
 
 
 class AICurationView(APIView):
@@ -94,4 +98,13 @@ class AICurationView(APIView):
         serializer = AICurationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         task = trigger_ai_curations.delay(**serializer.validated_data)
+        track_ai_curation(
+            task_id=str(task.task_id),
+            event_name=SegmentEvents.AI_CURATIONS_TASK_TRIGGERED,
+            properties={
+                'task_id': str(task.task_id),
+                'status': task.status,
+                **serializer.validated_data
+            }
+        )
         return Response({'task_id': str(task.task_id), 'status': task.status})
