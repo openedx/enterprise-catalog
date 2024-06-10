@@ -828,6 +828,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             catalog_queries=[(str(uuid.uuid4()), "query title")],
             academy_uuids=[str(uuid.uuid4())],
             academy_tags=[],
+            video_ids=[],
         )
         assert not algolia_products_by_object_id
         tasks.add_metadata_to_algolia_objects(
@@ -838,6 +839,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             catalog_queries=[(str(uuid.uuid4()), "query title")],
             academy_uuids=[str(uuid.uuid4())],
             academy_tags=[],
+            video_ids=[],
         )
 
         for algolia_object_key in algolia_products_by_object_id.keys():

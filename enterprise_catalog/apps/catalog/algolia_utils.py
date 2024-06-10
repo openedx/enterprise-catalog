@@ -48,6 +48,10 @@ ALGOLIA_FIELDS = [
     'enterprise_customer_uuids',
     'academy_uuids',
     'academy_tags',
+    'video_ids',
+    'transcript_summary',
+    'video_usage_key',
+    'video_skills',
     'full_description',
     'key',  # for links to Course about pages from the Learner Portal search page
     'uuid',
@@ -111,6 +115,7 @@ ALGOLIA_INDEX_SETTINGS = {
         'partners',
         'skill_names',
         'skills',
+        'transcript_summary',
     ],
     'attributesForFaceting': [
         'availability',
