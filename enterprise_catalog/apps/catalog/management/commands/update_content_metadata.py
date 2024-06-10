@@ -10,10 +10,7 @@ from enterprise_catalog.apps.api.tasks import (
     update_full_content_metadata_task,
 )
 from enterprise_catalog.apps.catalog.constants import COURSE, TASK_TIMEOUT
-from enterprise_catalog.apps.catalog.models import (
-    CatalogQuery,
-    CatalogUpdateCommandConfig,
-)
+from enterprise_catalog.apps.catalog.models import CatalogQuery
 
 
 logger = logging.getLogger(__name__)
@@ -74,14 +71,12 @@ class Command(BaseCommand):
         )
 
     def add_arguments(self, parser):
-        # Argument to force execution of celery task, ignoring time since last execution
         parser.add_argument(
             '--force',
             default=False,
             action='store_true',
             help=(
-                'Will read the value of this option from the CatalogUpdateCommandConfig table '
-                'if a record is present and enabled.'
+                'Will force execution of task, ignoring time since last execution'
             ),
         )
         parser.add_argument(
@@ -104,8 +99,6 @@ class Command(BaseCommand):
         Runs a group of `update_catalog_metadata_tasks`, followed by
         a single `update_full_content_metadata_task` instance.
         """
-        options.update(CatalogUpdateCommandConfig.current_options())
-
         no_async = options.get('no_async', False)
         flags = {k: options.get(k, False) for k in ('force', 'dry_run')}
         # Fetch metadata for the courses/programs that are missing.
