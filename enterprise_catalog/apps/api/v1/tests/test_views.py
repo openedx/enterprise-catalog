@@ -2512,7 +2512,7 @@ class CatalogQueryViewTests(APITestMixin):
         self.set_up_catalog_learner()
         self.catalog_query_object = CatalogQueryFactory()
         self.catalog_object = EnterpriseCatalogFactory(catalog_query=self.catalog_query_object)
-        self.assign_catalog_admin_feature_role(enterprise_uuids=[self.catalog_object.enterprise_uuid])
+        self.assign_catalog_admin_jwt_role(str(self.catalog_object.enterprise_uuid))
         # Factory doesn't set up a hash, so do it manually
         self.catalog_query_object.content_filter_hash = get_content_filter_hash(
             self.catalog_query_object.content_filter
@@ -2555,6 +2555,10 @@ class CatalogQueryViewTests(APITestMixin):
         self.remove_role_assignments()
         response = self.client.get(url)
         assert response.status_code == 404
+
+        self.client.logout()
+        response = self.client.get(url)
+        assert response.status_code == 401
 
     def test_get_query_by_hash_not_found(self):
         """
@@ -2611,6 +2615,10 @@ class CatalogQueryViewTests(APITestMixin):
         response_json = response.json()
         assert response_json.get('uuid') == str(different_customer_catalog.catalog_query.uuid)
 
+        self.client.logout()
+        response = self.client.get(url)
+        assert response.status_code == 401
+
     def test_catalog_query_list(self):
         """
         Test that the Catalog Query viewset supports listing queries
@@ -2620,6 +2628,7 @@ class CatalogQueryViewTests(APITestMixin):
         self.assign_catalog_admin_jwt_role(
             self.enterprise_uuid,
             self.catalog_query_object.enterprise_catalogs.first().enterprise_uuid,
+            self.catalog_object.enterprise_uuid,
         )
         url = reverse('api:v1:catalog-queries-list')
         response = self.client.get(url)
@@ -2636,4 +2645,8 @@ class CatalogQueryViewTests(APITestMixin):
         self.set_up_invalid_jwt_role()
         self.remove_role_assignments()
         response = self.client.get(url)
-        assert response.data == {'count': 0, 'next': None, 'previous': None, 'results': []}
+        assert response.json() == {'count': 0, 'next': None, 'previous': None, 'results': []}
+
+        self.client.logout()
+        response = self.client.get(url)
+        assert response.status_code == 401
