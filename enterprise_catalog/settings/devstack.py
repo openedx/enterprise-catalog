@@ -61,6 +61,7 @@ DISCOVERY_SERVICE_API_URL = 'http://edx.devstack.discovery:18381/api/v1/'
 ENTERPRISE_LEARNER_PORTAL_BASE_URL = 'http://localhost:8734'
 ECOMMERCE_BASE_URL = 'http://edx.devstack.ecommerce:18130'
 LICENSE_MANAGER_BASE_URL = 'http://license-manager.app:18170'
+STUDIO_BASE_URL = 'http://edx.devstack.lms:18010'
 
 CELERY_WORKER_HIJACK_ROOT_LOGGER = True
 CELERY_TASK_ALWAYS_EAGER = (

@@ -17,13 +17,57 @@ class Video(TimeStampedModel):
     """
     Model to store data for videos associated with content.
 
+    Here is sample json_metadata:
+    ```json
+    {
+      "client_video_id": "style-720p.mp4",
+      "course_video_image_url": "https://prod-images.edx-video.net/video-images/a1be2e276d3e40598e3d4a5d67d30a69.png",
+      "created": "2024-01-04 03:27:55+00:00",
+      "duration": 694.593,
+      "edx_video_id": "d289bdea-5c23-4e1b-8954-cb55ba7772c5",
+      "error_description": null,
+      "status": "Ready",
+      "file_size": 67700414,
+      "download_link": "https://edx-video.net/d289bdea-5c23-4e1b-8954-cb55ba7772c5-mp4_720p.mp4",
+      "transcript_urls": {
+        "ar": "https://example.com/video-transcripts/d289bdea-5c23-4e1b-8954-cb55ba7772c5_ar.sjson",
+        "de": "https://example.com/video-transcripts/d289bdea-5c23-4e1b-8954-cb55ba7772c5_de.sjson",
+        "en": "https://example.com/video-transcripts/53149c10ad7b46f1b70c528f333fd681.sjson",
+        "es": "https://example.com/video-transcripts/d289bdea-5c23-4e1b-8954-cb55ba7772c5_es.sjson",
+        "fr": "https://example.com/video-transcripts/d289bdea-5c23-4e1b-8954-cb55ba7772c5_fr.sjson",
+        "hi": "https://example.com/video-transcripts/d289bdea-5c23-4e1b-8954-cb55ba7772c5_hi.sjson",
+        "id": "https://example.com/video-transcripts/d289bdea-5c23-4e1b-8954-cb55ba7772c5_id.sjson",
+        "pt": "https://example.com/video-transcripts/d289bdea-5c23-4e1b-8954-cb55ba7772c5_pt.sjson",
+        "sw": "https://example.com/video-transcripts/d289bdea-5c23-4e1b-8954-cb55ba7772c5_sw.sjson",
+        "te": "https://example.com/video-transcripts/d289bdea-5c23-4e1b-8954-cb55ba7772c5_te.sjson",
+        "tr": "https://example.com/video-transcripts/d289bdea-5c23-4e1b-8954-cb55ba7772c5_tr.sjson",
+        "zh": "https://example.com/video-transcripts/d289bdea-5c23-4e1b-8954-cb55ba7772c5_zh.sjson"
+      },
+      "transcription_status": "",
+      "transcripts": [
+        "ar",
+        "de",
+        "en",
+        "es",
+        "fr",
+        "hi",
+        "id",
+        "pt",
+        "sw",
+        "te",
+        "tr",
+        "zh"
+      ]
+    }
+    ```
+
     .. no_pii:
     """
     edx_video_id = models.CharField(primary_key=True, max_length=255, help_text=_('EdX video id'))
     client_video_id = models.CharField(max_length=255, help_text=_('Client video id'))
-    parent_content_metadata = models.OneToOneField(
+    parent_content_metadata = models.ForeignKey(
         ContentMetadata,
-        related_name='parent_metadata',
+        related_name='videos',
         on_delete=models.DO_NOTHING,
     )
     json_metadata = JSONField(
