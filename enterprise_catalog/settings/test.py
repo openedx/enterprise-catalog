@@ -8,6 +8,7 @@ DISCOVERY_SERVICE_API_URL = 'https://edx.test.discovery/'
 ENTERPRISE_LEARNER_PORTAL_BASE_URL = 'https://edx.test.learnerportal'
 ECOMMERCE_BASE_URL = 'https://edx.test.ecommerce/'
 LICENSE_MANAGER_BASE_URL = 'https://edx.test.licensemanager/'
+STUDIO_BASE_URL = 'https://edx.test.cms'
 
 # IN-MEMORY TEST DATABASE
 DATABASES = {

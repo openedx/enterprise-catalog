@@ -25,6 +25,7 @@ COURSE_REVIEW_BASE_AVG_REVIEW_SCORE = 4.5
 ENTERPRISE_API_URL = urljoin(settings.LMS_BASE_URL, '/enterprise/api/v1/')
 ENTERPRISE_CUSTOMER_ENDPOINT = urljoin(ENTERPRISE_API_URL, 'enterprise-customer/')
 ENTERPRISE_CUSTOMER_CACHE_KEY_TPL = 'customer:{uuid}'
+STUDIO_API_COURSE_VIDEOS_ENDPOINT = urljoin(settings.STUDIO_BASE_URL, '/api/contentstore/v1/videos/{course_run_key}')
 
 # Ecommerce API Client Constants
 COUPONS_OVERVIEW_ENDPOINT = urljoin(
