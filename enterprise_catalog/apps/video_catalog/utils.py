@@ -1,10 +1,19 @@
 """
 Utility functions for the video_catalog app.
 """
+import logging
+
+import requests
+from django.conf import settings
+
+from enterprise_catalog.apps.ai_curation.openai_client import chat_completions
 from enterprise_catalog.apps.api_client.studio import StudioApiClient
 from enterprise_catalog.apps.catalog.constants import COURSE, COURSE_RUN
 from enterprise_catalog.apps.catalog.models import ContentMetadata
 from enterprise_catalog.apps.video_catalog.models import Video
+
+
+logger = logging.getLogger(__name__)
 
 
 def fetch_course_video_metadata(course_run_key):
@@ -39,8 +48,64 @@ def fetch_videos(course_keys):
     Arguments:
         course_keys (list): List of course run keys for which to fetch video metadata.
     """
+    # Import is placed here to avoid circular imports
     courses = ContentMetadata.objects.filter(content_key__in=course_keys, content_type=COURSE)
     for course in courses:
         course_run = course.get_child_records(course).first()
         if course_run:
             fetch_course_video_metadata(course_run.content_key)
+
+
+def get_transcript_summary(transcript: str, max_length: int = 250) -> str:
+    """
+    Generate a summary of the video transcript.
+
+    Arguments:
+        transcript (str): The video transcript.
+        max_length (int): The maximum length of the summary.
+
+    Returns:
+        (str): The summary of the video transcript.
+    """
+    content = settings.SUMMARIZE_VIDEO_TRANSCRIPT_PROMPT.format(count=max_length, transcript=transcript)
+    messages = [
+        {
+            'role': 'system',
+            'content': content
+        }
+    ]
+    logger.info('[VIDEO_CATALOG] Getting transcript summary. Prompt: [%s]', messages)
+    summary = chat_completions(messages=messages, response_format='text', response_type=str)
+    logger.info('[VIDEO_CATALOG] Transcript summary. Response: [%s]', summary)
+    return summary
+
+
+def fetch_transcript(transcript_url: str, include_time_markings: bool = True) -> str:
+    """
+    Fetch the transcript from the given URL.
+
+    Arguments:
+        transcript_url (str): The URL to fetch the transcript from.
+        include_time_markings (bool): Whether to include time markings in the transcript.
+
+    Returns:
+        (str): The fetched transcript.
+    """
+    response = requests.get(transcript_url, timeout=settings.TRANSCRIPT_FETCH_TIMEOUT)
+    if include_time_markings:
+        return response.text
+    else:
+        return ' '.join(response.json().get('text', []))
+
+
+def generate_transcript_summary(video, language='en'):
+    """
+    Generate a summary of the video transcript.
+
+    Arguments:
+        video (Video): Video instance whose transcript to create.
+        language (str): Transcript language to use for creating summary.
+    """
+    transcript_url = video.json_metadata['transcript_urls'].get(language)
+    transcript = fetch_transcript(transcript_url, include_time_markings=False)
+    return get_transcript_summary(transcript)
