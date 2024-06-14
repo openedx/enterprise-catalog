@@ -56,7 +56,7 @@ def fetch_videos(course_keys):
             fetch_course_video_metadata(course_run.content_key)
 
 
-def get_transcript_summary(transcript: str, max_length: int = 250) -> str:
+def get_transcript_summary(transcript: str, max_length: int = 260) -> str:
     """
     Generate a summary of the video transcript.
 
@@ -67,17 +67,13 @@ def get_transcript_summary(transcript: str, max_length: int = 250) -> str:
     Returns:
         (str): The summary of the video transcript.
     """
-    content = settings.SUMMARIZE_VIDEO_TRANSCRIPT_PROMPT.format(count=max_length, transcript=transcript)
     messages = [
         {
             'role': 'system',
-            'content': content
+            'content': settings.SUMMARIZE_VIDEO_TRANSCRIPT_PROMPT.format(count=max_length, transcript=transcript)
         }
     ]
-    logger.info('[VIDEO_CATALOG] Getting transcript summary. Prompt: [%s]', messages)
-    summary = chat_completions(messages=messages, response_format='text', response_type=str)
-    logger.info('[VIDEO_CATALOG] Transcript summary. Response: [%s]', summary)
-    return summary
+    return chat_completions(messages=messages, response_format='text', response_type=str)
 
 
 def fetch_transcript(transcript_url: str, include_time_markings: bool = True) -> str:
@@ -108,4 +104,4 @@ def generate_transcript_summary(video, language='en'):
     """
     transcript_url = video.json_metadata['transcript_urls'].get(language)
     transcript = fetch_transcript(transcript_url, include_time_markings=False)
-    return get_transcript_summary(transcript)
+    return get_transcript_summary(transcript[:settings.MAX_TRANSCRIPT_LENGTH])
