@@ -9,6 +9,9 @@ from enterprise_catalog.apps.video_catalog.models import (
     Video,
     VideoTranscriptSummary,
 )
+from enterprise_catalog.apps.video_catalog.utils import (
+    generate_transcript_summary,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -33,6 +36,6 @@ class Command(BaseCommand):
         processed_videos = VideoTranscriptSummary.objects.all().values_list('video_id', flat=True)
         videos = Video.objects.exclude(edx_video_id__in=processed_videos)
         for video in videos:
-            summary = video.generate_transcript_summary()
+            summary = generate_transcript_summary(video)
             if summary:
                 VideoTranscriptSummary.objects.create(video=video, summary=summary)
