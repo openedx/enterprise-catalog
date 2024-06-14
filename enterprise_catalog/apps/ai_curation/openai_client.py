@@ -72,7 +72,7 @@ def chat_completions(
         max_tokens (int): Maximum number of tokens that can be generated in the chat completion
 
     Returns:
-        list: The response from the chat.completions endpoint
+        <list, text>: The response from the chat.completions endpoint
 
     Throws:
         AICurationError: Raise an exception with the below attributes

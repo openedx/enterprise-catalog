@@ -464,3 +464,8 @@ CATALOG_CONTENT_INCLUSION_GUARDRAIL_ALLOWABLE_DELTA = .8
 CATALOG_CONTENT_ASSOCIATIONS_CONTENT_DELTA_WARNING_THRESHOLD = .5
 # Flat minimum value of content associations for a catalog query to be considered for guardrail protections
 CATALOG_CONTENT_INCLUSION_GUARDRAIL_CONSIDERATION_FLOOR = 50
+
+############################################## VIDEO CATALOG #############################################
+SUMMARIZE_VIDEO_TRANSCRIPT_PROMPT = 'Summarize in {count} words: {transcript}'
+
+TRANSCRIPT_FETCH_TIMEOUT = 10  # 10 seconds
