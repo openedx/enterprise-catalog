@@ -12,11 +12,11 @@ amqp==5.2.0
     #   kombu
 analytics-python==1.4.post1
     # via -r requirements/base.txt
-annotated-types==0.6.0
+annotated-types==0.7.0
     # via
     #   -r requirements/base.txt
     #   pydantic
-anyio==4.3.0
+anyio==4.4.0
     # via
     #   -r requirements/base.txt
     #   httpx
@@ -26,8 +26,7 @@ asgiref==3.8.1
     #   -r requirements/base.txt
     #   django
     #   django-cors-headers
-    #   django-simple-history
-astroid==3.1.0
+astroid==3.2.2
     # via
     #   pylint
     #   pylint-celery
@@ -50,7 +49,7 @@ celery==5.4.0
     #   -r requirements/base.txt
     #   django-celery-results
     #   edx-celeryutils
-certifi==2024.2.2
+certifi==2024.6.2
     # via
     #   -r requirements/base.txt
     #   httpcore
@@ -95,7 +94,7 @@ code-annotations==1.8.0
     #   -r requirements/base.txt
     #   edx-lint
     #   edx-toggles
-cryptography==42.0.6
+cryptography==42.0.8
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -125,6 +124,7 @@ django==4.2.13
     #   django-extensions
     #   django-log-request-id
     #   django-model-utils
+    #   django-simple-history
     #   django-waffle
     #   djangorestframework
     #   drf-jwt
@@ -162,7 +162,7 @@ django-model-utils==4.5.1
     #   -r requirements/base.txt
     #   edx-celeryutils
     #   edx-rbac
-django-simple-history==3.5.0
+django-simple-history==3.7.0
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.txt
@@ -199,7 +199,7 @@ edx-celeryutils==1.3.0
     # via -r requirements/base.txt
 edx-django-release-util==1.4.0
     # via -r requirements/base.txt
-edx-django-utils==5.13.0
+edx-django-utils==5.14.2
     # via
     #   -r requirements/base.txt
     #   django-config-models
@@ -212,7 +212,7 @@ edx-drf-extensions==10.3.0
     #   edx-rbac
 edx-lint==5.3.6
     # via -r requirements/quality.in
-edx-opaque-keys==2.9.0
+edx-opaque-keys==2.10.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
@@ -286,11 +286,11 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.4
     # via -r requirements/base.txt
-newrelic==9.9.0
+newrelic==9.11.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
-numpy==1.26.4
+numpy==2.0.0
     # via
     #   -r requirements/base.txt
     #   scikit-learn
@@ -308,13 +308,13 @@ pbr==6.0.0
     # via
     #   -r requirements/base.txt
     #   stevedore
-platformdirs==4.2.1
+platformdirs==4.2.2
     # via pylint
 ply==3.11
     # via
     #   -r requirements/base.txt
     #   djangoql
-prompt-toolkit==3.0.43
+prompt-toolkit==3.0.47
     # via
     #   -r requirements/base.txt
     #   click-repl
@@ -322,17 +322,17 @@ psutil==5.9.8
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
-pycodestyle==2.11.1
+pycodestyle==2.12.0
     # via -r requirements/quality.in
 pycparser==2.22
     # via
     #   -r requirements/base.txt
     #   cffi
-pydantic==2.7.1
+pydantic==2.7.4
     # via
     #   -r requirements/base.txt
     #   openai
-pydantic-core==2.18.2
+pydantic-core==2.18.4
     # via
     #   -r requirements/base.txt
     #   pydantic
@@ -346,7 +346,7 @@ pyjwt[crypto]==2.8.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
-pylint==3.1.0
+pylint==3.2.3
     # via
     #   edx-lint
     #   pylint-celery
@@ -362,7 +362,7 @@ pylint-plugin-utils==0.8.2
     #   pylint-django
 pymemcache==4.0.0
     # via -r requirements/base.txt
-pymongo==4.4.0
+pymongo==4.7.3
     # via
     #   -r requirements/base.txt
     #   edx-opaque-keys
@@ -419,11 +419,11 @@ rpds-py==0.18.1
     #   -r requirements/base.txt
     #   jsonschema
     #   referencing
-rules==3.3
+rules==3.4
     # via -r requirements/base.txt
-scikit-learn==1.4.2
+scikit-learn==1.5.0
     # via -r requirements/base.txt
-scipy==1.13.0
+scipy==1.13.1
     # via
     #   -r requirements/base.txt
     #   scikit-learn
@@ -481,13 +481,13 @@ threadpoolctl==3.5.0
     # via
     #   -r requirements/base.txt
     #   scikit-learn
-tomlkit==0.12.4
+tomlkit==0.12.5
     # via pylint
 tqdm==4.66.4
     # via
     #   -r requirements/base.txt
     #   openai
-typing-extensions==4.11.0
+typing-extensions==4.12.2
     # via
     #   -r requirements/base.txt
     #   edx-opaque-keys
@@ -518,7 +518,7 @@ wcwidth==0.2.13
     #   prompt-toolkit
 xlsxwriter==3.2.0
     # via -r requirements/base.txt
-zipp==3.18.1
+zipp==3.19.2
     # via -r requirements/base.txt
 
 # The following packages are considered to be unsafe in a requirements file:
