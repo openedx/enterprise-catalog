@@ -1,3 +1,5 @@
+import json
+
 from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
 from edx_rbac.mixins import PermissionRequiredForListingMixin
@@ -24,6 +26,7 @@ from enterprise_catalog.apps.catalog.rules import (
     enterprises_with_admin_access,
     has_access_to_all_enterprises,
 )
+from enterprise_catalog.apps.catalog.utils import get_content_filter_hash
 
 
 class CatalogQueryViewSet(viewsets.ReadOnlyModelViewSet, BaseViewSet, PermissionRequiredForListingMixin):
@@ -106,3 +109,11 @@ class CatalogQueryViewSet(viewsets.ReadOnlyModelViewSet, BaseViewSet, Permission
             raise NotFound('Catalog query not found.') from exc
         serialized_data = self.serializer_class(query)
         return Response(serialized_data.data)
+
+    @action(detail=True, methods=['get'])
+    def get_content_filter_hash(self, request, **kwargs):
+        """
+        Get md5 hash of a catalog query
+        """
+        content_filter_hash = get_content_filter_hash(json.loads(request.body))
+        return Response(content_filter_hash)
