@@ -115,6 +115,11 @@ urlpatterns = [
         CatalogQueryViewSet.as_view({'get': 'get_query_by_hash'}),
         name='get-query-by-hash'
     ),
+    path(
+        'catalog-queries/get_content_filter_hash',
+        CatalogQueryViewSet.as_view({'get': 'get_content_filter_hash'}),
+        name='get-content-filter-hash'
+    ),
 ]
 
 urlpatterns += router.urls
