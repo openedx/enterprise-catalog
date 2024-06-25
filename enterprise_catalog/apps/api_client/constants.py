@@ -26,6 +26,10 @@ ENTERPRISE_API_URL = urljoin(settings.LMS_BASE_URL, '/enterprise/api/v1/')
 ENTERPRISE_CUSTOMER_ENDPOINT = urljoin(ENTERPRISE_API_URL, 'enterprise-customer/')
 ENTERPRISE_CUSTOMER_CACHE_KEY_TPL = 'customer:{uuid}'
 STUDIO_API_COURSE_VIDEOS_ENDPOINT = urljoin(settings.STUDIO_BASE_URL, '/api/contentstore/v1/videos/{course_run_key}')
+STUDIO_API_VIDEOS_LOCATION_ENDPOINT = urljoin(
+    settings.STUDIO_BASE_URL,
+    '/api/contentstore/v1/videos/{course_run_key}/{edx_video_id}/usage'
+)
 
 # Ecommerce API Client Constants
 COUPONS_OVERVIEW_ENDPOINT = urljoin(
