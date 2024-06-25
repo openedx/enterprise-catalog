@@ -56,6 +56,7 @@ THIRD_PARTY_APPS = (
     'waffle',
     'release_util',
     'rules.apps.AutodiscoverRulesConfig',
+    'import_export',
 )
 
 PROJECT_APPS = (
