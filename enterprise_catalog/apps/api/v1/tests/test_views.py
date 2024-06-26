@@ -9,6 +9,7 @@ from urllib.parse import urljoin
 import ddt
 import pytz
 from django.conf import settings
+from django.contrib.auth.models import Group
 from django.db import IntegrityError
 from django.utils.http import urlencode
 from django.utils.text import slugify
@@ -31,6 +32,7 @@ from enterprise_catalog.apps.catalog.constants import (
     EXEC_ED_2U_ENTITLEMENT_MODE,
     LEARNER_PATHWAY,
     PROGRAM,
+    PROVISIONING_ADMINS_GROUP,
 )
 from enterprise_catalog.apps.catalog.models import (
     CatalogQuery,
@@ -177,6 +179,7 @@ class EnterpriseCatalogCRUDViewSetTests(APITestMixin):
             'publish_audit_enrollment_urls': True,
             'content_filter': {'content_type': 'course'},
         }
+        self.allowed_group = Group.objects.create(name=PROVISIONING_ADMINS_GROUP)
 
     def _assert_correct_new_catalog_data(self, catalog_uuid):
         """
@@ -250,6 +253,22 @@ class EnterpriseCatalogCRUDViewSetTests(APITestMixin):
         self.assertEqual(data['title'], self.enterprise_catalog.title)
         self.assertEqual(uuid.UUID(data['enterprise_customer']), self.enterprise_catalog.enterprise_uuid)
 
+    def test_detail_provisioning_admin(self):
+        """
+        Verify the viewset returns the details if requesting user is a PA
+        """
+        self.set_up_staff_user()
+        self.remove_role_assignments()
+        self.set_up_invalid_jwt_role()
+        self.user.groups.add(self.allowed_group)
+        url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': self.enterprise_catalog.uuid})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data
+        self.assertEqual(uuid.UUID(data['uuid']), self.enterprise_catalog.uuid)
+        self.assertEqual(data['title'], self.enterprise_catalog.title)
+        self.assertEqual(uuid.UUID(data['enterprise_customer']), self.enterprise_catalog.enterprise_uuid)
+
     def test_detail_unauthorized_non_catalog_admin(self):
         """
         Verify the viewset rejects users that are not catalog admins for the detail route
@@ -282,6 +301,29 @@ class EnterpriseCatalogCRUDViewSetTests(APITestMixin):
         if is_implicit_check:
             self.remove_role_assignments()
 
+        url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': self.enterprise_catalog.uuid})
+        patch_data = {'title': 'Patch title'}
+        response = self.client.patch(url, patch_data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Verify that only the data we specifically patched changed
+        self.assertEqual(response.data['title'], patch_data['title'])
+        patched_catalog = EnterpriseCatalog.objects.get(uuid=self.enterprise_catalog.uuid)
+        self.assertEqual(patched_catalog.catalog_query, self.enterprise_catalog.catalog_query)
+        self.assertEqual(patched_catalog.enterprise_uuid, self.enterprise_catalog.enterprise_uuid)
+        self.assertEqual(patched_catalog.enabled_course_modes, self.enterprise_catalog.enabled_course_modes)
+        self.assertEqual(
+            patched_catalog.publish_audit_enrollment_urls,
+            self.enterprise_catalog.publish_audit_enrollment_urls,
+        )
+
+    def test_patch_provisioning_admins(self):
+        """
+        Verify the viewset handles patching an enterprise catalog
+        """
+        self.set_up_staff_user()
+        self.remove_role_assignments()
+        self.set_up_invalid_jwt_role()
+        self.user.groups.add(self.allowed_group)
         url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': self.enterprise_catalog.uuid})
         patch_data = {'title': 'Patch title'}
         response = self.client.patch(url, patch_data)
@@ -331,6 +373,19 @@ class EnterpriseCatalogCRUDViewSetTests(APITestMixin):
         if is_implicit_check:
             self.remove_role_assignments()
 
+        url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': self.enterprise_catalog.uuid})
+        response = self.client.put(url, self.new_catalog_data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self._assert_correct_new_catalog_data(self.enterprise_catalog.uuid)  # The UUID should not have changed
+
+    def test_put_provisioning_admins(self):
+        """
+        Verify the viewset allows access to PAs
+        """
+        self.set_up_staff_user()
+        self.remove_role_assignments()
+        self.set_up_invalid_jwt_role()
+        self.user.groups.add(self.allowed_group)
         url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': self.enterprise_catalog.uuid})
         response = self.client.put(url, self.new_catalog_data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -413,6 +468,19 @@ class EnterpriseCatalogCRUDViewSetTests(APITestMixin):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self._assert_correct_new_catalog_data(self.new_catalog_uuid)
 
+    def test_post_provisioning_admins(self):
+        """
+        Verify the viewset handles creating an enterprise catalog
+        """
+        self.set_up_staff_user()
+        self.remove_role_assignments()
+        self.set_up_invalid_jwt_role()
+        self.user.groups.add(self.allowed_group)
+        url = reverse('api:v1:enterprise-catalog-list')
+        response = self.client.post(url, self.new_catalog_data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self._assert_correct_new_catalog_data(self.new_catalog_uuid)
+
     def test_post_integrity_error(self):
         """
         Verify the viewset raises error when creating a duplicate enterprise catalog
@@ -464,6 +532,7 @@ class EnterpriseCatalogCRUDViewSetListTests(APITestMixin):
         super().setUp()
         self.set_up_staff_user()
         self.enterprise_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
+        self.allowed_group = Group.objects.create(name=PROVISIONING_ADMINS_GROUP)
 
     def test_list_for_superusers(self):
         """
@@ -478,6 +547,25 @@ class EnterpriseCatalogCRUDViewSetListTests(APITestMixin):
         results = response.data['results']
         self.assertEqual(uuid.UUID(results[0]['uuid']), self.enterprise_catalog.uuid)
         self.assertEqual(uuid.UUID(results[1]['uuid']), second_enterprise_catalog.uuid)
+
+    def test_list_for_provisioning_admins(self):
+        """
+        Verify the viewset returns a list of all enterprise catalogs for provisioning admins
+        """
+        self.set_up_staff_user()
+        self.remove_role_assignments()
+        self.set_up_invalid_jwt_role()
+        self.user.groups.add(self.allowed_group)
+        url = reverse('api:v1:enterprise-catalog-list')
+        second_enterprise_catalog = EnterpriseCatalogFactory()
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 2)
+        results = response.data['results']
+        self.assertEqual(
+            uuid.UUID(results[0]['uuid']), self.enterprise_catalog.uuid)
+        self.assertEqual(
+            uuid.UUID(results[1]['uuid']), second_enterprise_catalog.uuid)
 
     def test_empty_list_for_non_catalog_admin(self):
         """
