@@ -12,6 +12,7 @@ from enterprise_catalog.apps.api.v1.serializers import (
     EnterpriseCatalogSerializer,
 )
 from enterprise_catalog.apps.api.v1.views.base import BaseViewSet
+from enterprise_catalog.apps.catalog.constants import PROVISIONING_ADMINS_GROUP
 from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
 from enterprise_catalog.apps.catalog.rules import (
     enterprises_with_admin_access,
@@ -64,6 +65,11 @@ class EnterpriseCatalogCRUDViewSet(BaseViewSet, viewsets.ModelViewSet):
         If `get_permission_object` is implemented, it will be called and should return the object
         for which the `rules` predicate checks against.
         """
+        # Grant provisioning-admins access to few actions
+        if self.request_action in ('create', 'partial_update', 'update', 'retrieve', 'list') and \
+                request.user.groups.filter(name=PROVISIONING_ADMINS_GROUP).exists():
+            return
+
         if self.request_action == 'list':
             # Super-users and staff won't get Forbidden responses,
             # but depending on their assigned roles, staff may
@@ -78,16 +84,19 @@ class EnterpriseCatalogCRUDViewSet(BaseViewSet, viewsets.ModelViewSet):
     def get_queryset(self):
         """
         Returns the queryset corresponding to all catalogs the requesting user has access to.
+        Also allows provisioning admins to access all catalogs.
         """
         all_catalogs = EnterpriseCatalog.objects.all().order_by('created')
         enterprise_customer = self.request.GET.get('enterprise_customer', False)
+        is_provisioning_admin = self.request.user.groups.filter(
+            name=PROVISIONING_ADMINS_GROUP).exists()
         if enterprise_customer:
             all_catalogs = all_catalogs.filter(enterprise_uuid=enterprise_customer)
 
         if self.request_action == 'list':
-            if not self.admin_accessible_enterprises:
+            if not self.admin_accessible_enterprises and not is_provisioning_admin:
                 return EnterpriseCatalog.objects.none()
-            if has_access_to_all_enterprises(self.admin_accessible_enterprises):
+            if has_access_to_all_enterprises(self.admin_accessible_enterprises) or is_provisioning_admin:
                 return all_catalogs
             return all_catalogs.filter(enterprise_uuid__in=self.admin_accessible_enterprises)
         return all_catalogs
