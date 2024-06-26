@@ -1230,6 +1230,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         """
         content_type = content_metadata.content_type
         json_metadata = content_metadata.json_metadata.copy()
+        enrollment_url = '{}/enterprise/{}/{}/{}/enroll/?catalog={}&utm_medium=enterprise&utm_source={}'
 
         json_metadata['content_last_modified'] = content_metadata.modified.isoformat()[:-6] + 'Z'
         if content_metadata.is_exec_ed_2u_course and is_learner_portal_enabled:
@@ -1244,8 +1245,6 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
                 enrollment_url = enterprise_proxy_login_url(self.enterprise_slug, next_url=exec_ed_enrollment_url)
         elif is_learner_portal_enabled and content_type in (COURSE, COURSE_RUN):
             enrollment_url = '{}/{}/course/{}?{}utm_medium=enterprise&utm_source={}'
-        else:
-            enrollment_url = '{}/enterprise/{}/{}/{}/enroll/?catalog={}&utm_medium=enterprise&utm_source={}'
         marketing_url = '{}?utm_medium=enterprise&utm_source={}'
         xapi_activity_id = '{}/xapi/activities/{}/{}'
 
