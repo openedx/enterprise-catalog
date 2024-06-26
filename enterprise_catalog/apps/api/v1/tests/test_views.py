@@ -1270,7 +1270,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
             course_key = json_metadata.get('key')
             course_runs = json_metadata.get('course_runs') or []
             if is_learner_portal_enabled:
-                course_enrollment_url = enrollment_url.format(
+                course_enrollment_url = enrollment_url.format(  # pylint: disable=possibly-used-before-assignment
                     settings.ENTERPRISE_LEARNER_PORTAL_BASE_URL,
                     self.enterprise_slug,
                     course_key,
