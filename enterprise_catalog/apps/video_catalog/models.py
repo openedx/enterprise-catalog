@@ -65,6 +65,7 @@ class Video(TimeStampedModel):
     """
     edx_video_id = models.CharField(primary_key=True, max_length=255, help_text=_('EdX video id'))
     client_video_id = models.CharField(max_length=255, help_text=_('Client video id'))
+    video_usage_key = models.CharField(max_length=255, help_text=_('Video Xblock Usage Key'))
     parent_content_metadata = models.ForeignKey(
         ContentMetadata,
         related_name='videos',
@@ -126,5 +127,32 @@ class VideoTranscriptSummary(TimeStampedModel):
         return (
             "<VideoTranscriptSummary for '{video_id}'>".format(
                 video_id=str(self.video)
+            )
+        )
+
+
+class VideoShortlist(models.Model):
+    """
+    Stores the shortlisted videos for microlearning index and search.
+
+    Example video_usage_key
+    block-v1:UnivX+QMB1+2T2017+type@video+block@0accf77cf6634c93b0f095f65fed41a1
+
+    .. no_pii:
+    """
+    video_usage_key = models.CharField(primary_key=True, max_length=255, help_text=_('Video Xblock Usage Key'))
+
+    class Meta:
+        verbose_name = _("Shortlisted Video")
+        verbose_name_plural = _("Shortlisted Videos")
+        app_label = 'video_catalog'
+
+    def __str__(self):
+        """
+        Return human-readable string representation.
+        """
+        return (
+            "<VideoShortlist for '{usage_key}'>".format(
+                usage_key=str(self.video_usage_key)
             )
         )

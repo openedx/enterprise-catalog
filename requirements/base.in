@@ -10,6 +10,7 @@ django-config-models
 django-cors-headers
 django-crum
 django-extensions
+django-import-export
 django-model-utils
 django-simple-history
 djangorestframework
