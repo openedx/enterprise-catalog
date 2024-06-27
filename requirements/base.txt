@@ -70,6 +70,8 @@ defusedxml==0.7.1
     #   djangorestframework-xml
     #   python3-openid
     #   social-auth-core
+diff-match-patch==20230430
+    # via django-import-export
 distro==1.9.0
     # via openai
 django==4.2.13
@@ -83,6 +85,7 @@ django==4.2.13
     #   django-cors-headers
     #   django-crum
     #   django-extensions
+    #   django-import-export
     #   django-log-request-id
     #   django-model-utils
     #   django-simple-history
@@ -115,6 +118,8 @@ django-crum==0.7.9
     #   edx-rbac
     #   edx-toggles
 django-extensions==3.2.3
+    # via -r requirements/base.in
+django-import-export==4.1.0
     # via -r requirements/base.in
 django-log-request-id==2.1.0
     # via -r requirements/base.in
@@ -244,7 +249,7 @@ pyjwt[crypto]==2.8.0
     #   social-auth-core
 pymemcache==4.0.0
     # via -r requirements/base.in
-pymongo==4.7.3
+pymongo==4.8.0
     # via edx-opaque-keys
 pynacl==1.5.0
     # via edx-django-utils
@@ -325,6 +330,8 @@ stevedore==5.2.0
     #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
+tablib==3.5.0
+    # via django-import-export
 text-unidecode==1.3
     # via python-slugify
 threadpoolctl==3.5.0
