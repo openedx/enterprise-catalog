@@ -150,6 +150,11 @@ defusedxml==0.7.1
     #   djangorestframework-xml
     #   python3-openid
     #   social-auth-core
+diff-match-patch==20230430
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   django-import-export
 dill==0.3.8
     # via
     #   -r requirements/quality.txt
@@ -176,6 +181,7 @@ django==4.2.13
     #   django-cors-headers
     #   django-crum
     #   django-extensions
+    #   django-import-export
     #   django-log-request-id
     #   django-model-utils
     #   django-simple-history
@@ -219,6 +225,10 @@ django-crum==0.7.9
 django-dynamic-fixture==4.0.1
     # via -r requirements/test.txt
 django-extensions==3.2.3
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+django-import-export==4.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -322,7 +332,7 @@ edx-toggles==5.2.0
     #   -r requirements/test.txt
 factory-boy==3.3.0
     # via -r requirements/test.txt
-faker==25.9.1
+faker==26.0.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -508,7 +518,7 @@ pyjwt[crypto]==2.8.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
-pylint==3.2.3
+pylint==3.2.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -536,7 +546,7 @@ pymemcache==4.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-pymongo==4.7.3
+pymongo==4.8.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -695,6 +705,11 @@ stevedore==5.2.0
     #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
+tablib==3.5.0
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   django-import-export
 text-unidecode==1.3
     # via
     #   -r requirements/quality.txt
