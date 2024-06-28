@@ -9,6 +9,7 @@ from simple_history.admin import SimpleHistoryAdmin
 from enterprise_catalog.apps.video_catalog.models import (
     Video,
     VideoShortlist,
+    VideoSkill,
     VideoTranscriptSummary,
 )
 
@@ -27,8 +28,17 @@ class VideoAdmin(SimpleHistoryAdmin):
     """
     Django admin for Video.
     """
-    list_display = ('edx_video_id', 'client_video_id', 'created', 'modified', )
+    list_display = ('edx_video_id', 'client_video_id', 'video_usage_key', 'created', 'modified', )
     search_fields = ('edx_video_id', 'client_video_id', )
+
+
+@admin.register(VideoSkill)
+class VideoSkillAdmin(SimpleHistoryAdmin):
+    """
+    Django admin for VideoSkill.
+    """
+    list_display = ('skill_id', 'name', 'created', 'modified', )
+    search_fields = ('name', )
 
 
 class VideoShortlistResource(resources.ModelResource):

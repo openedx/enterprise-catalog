@@ -9,10 +9,15 @@ from opaque_keys.edx.keys import UsageKey
 from rest_framework.exceptions import ValidationError
 
 from enterprise_catalog.apps.ai_curation.openai_client import chat_completions
+from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 from enterprise_catalog.apps.api_client.studio import StudioApiClient
 from enterprise_catalog.apps.catalog.constants import COURSE_RUN
 from enterprise_catalog.apps.catalog.models import ContentMetadata
-from enterprise_catalog.apps.video_catalog.models import Video, VideoShortlist
+from enterprise_catalog.apps.video_catalog.models import (
+    Video,
+    VideoShortlist,
+    VideoSkill,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -51,9 +56,6 @@ def fetch_course_video_metadata(course_run_key, video_usage_key):
 def fetch_videos():
     """
     Fetch and store video metadata for multiple course run keys.
-
-    Arguments:
-        course_keys (list): List of course run keys for which to fetch video metadata.
     """
     shortlisted_videos = VideoShortlist.objects.all()
     for video in shortlisted_videos:
@@ -63,6 +65,25 @@ def fetch_videos():
             raise ValidationError('Invalid usage key')  # lint-amnesty, pylint: disable=raise-missing-from
         course_run_key = str(video_usage_key.context_key)
         fetch_course_video_metadata(course_run_key, video.video_usage_key)
+
+
+def store_video_skills(edx_video_id):
+    """
+    Fetch and store video skills for a video.
+
+    Arguments:
+        edx_video_id (str): The video id for which to fetch the skills.
+    """
+    video_skills = []
+    video = Video.objects.filter(edx_video_id=edx_video_id).first()
+    if video and video.video_usage_key:
+        video_skills = DiscoveryApiClient().get_video_skills(video.video_usage_key)
+        for skill in video_skills:
+            VideoSkill.objects.update_or_create(
+                video=video,
+                skill_id=skill.get('id'),
+                name=skill.get('name'),
+            )
 
 
 def get_transcript_summary(transcript: str, max_length: int = 260) -> str:
