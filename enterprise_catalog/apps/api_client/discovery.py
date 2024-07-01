@@ -24,6 +24,7 @@ from .constants import (
     DISCOVERY_OFFSET_SIZE,
     DISCOVERY_PROGRAMS_ENDPOINT,
     DISCOVERY_SEARCH_ALL_ENDPOINT,
+    DISCOVERY_VIDEO_SKILLS_ENDPOINT,
 )
 
 
@@ -175,6 +176,80 @@ class DiscoveryApiClient(BaseOAuthClient):
         }
 
         return results
+
+    def _retrieve_video_skills(self, request_params):
+        """
+        Makes a request to discovery's taxonomy/api/v1/xblocks paginated endpoint
+        """
+        page = request_params.get('page', 1)
+        LOGGER.info(f'Retrieving video skills from course-discovery for page {page}...')
+        attempts = 0
+        while True:
+            attempts = attempts + 1
+            successful = True
+            exception = None
+            try:
+                response = self.client.get(
+                    DISCOVERY_VIDEO_SKILLS_ENDPOINT,
+                    params=request_params,
+                    timeout=self.HTTP_TIMEOUT,
+                )
+                successful = response.status_code < 400
+                elapsed_seconds = response.elapsed.total_seconds()
+                LOGGER.info(
+                    f'Retrieved video skills results from course-discovery for page {page} in '
+                    f'retrieve_video_skills_seconds={elapsed_seconds} seconds.'
+                )
+            except requests.exceptions.RequestException as err:
+                exception = err
+                LOGGER.exception(f'Error while retrieving video skills results from course-discovery for page {page}')
+                successful = False
+            if attempts <= self.MAX_RETRIES and not successful:
+                sleep_seconds = self._calculate_backoff(attempts)
+                LOGGER.warning(
+                    f'failed request detected from {DISCOVERY_VIDEO_SKILLS_ENDPOINT}, '
+                    'backing-off before retrying, '
+                    f'sleeping {sleep_seconds} seconds...'
+                )
+                time.sleep(sleep_seconds)
+            else:
+                if exception:
+                    raise exception
+                break
+        try:
+            return response.json()
+        except requests.exceptions.JSONDecodeError as err:
+            LOGGER.exception(
+                f'Invalid JSON while retrieving video skills results from course-discovery for page {page}, '
+                f'resonse status code: {response.status_code}, '
+                f'response body: {response.text}'
+            )
+            raise err
+
+    def get_video_skills(self, video_usage_key):
+        """
+        Return results from the discovery service's taxonomy/api/v1/xblocks endpoint
+        """
+        page = 1
+        results = []
+        request_params = {'page': page, 'usage_key': video_usage_key, 'verified': 'true'}
+        try:
+            response = self._retrieve_video_skills(request_params)
+            results += response.get('results', [])
+            # Traverse all pages and concatenate results
+            while response.get('next'):
+                page += 1
+                request_params.update({'page': page})
+                response = self._retrieve_video_skills(request_params)
+                results += response.get('results', [])
+        except Exception as exc:
+            LOGGER.exception(f'Could not retrieve video skills from course-discovery (page {page}) {exc}')
+            raise exc
+        video_skills = []
+        for result in results:
+            video_skills += result.get('skills')
+
+        return video_skills
 
     def get_metadata_by_query(self, catalog_query):
         """

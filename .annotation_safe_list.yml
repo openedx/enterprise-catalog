@@ -61,3 +61,5 @@ video_catalog.HistoricalVideo:
   ".. no_pii:": "This model has no PII"
 video_catalog.HistoricalVideoTranscriptSummary:
   ".. no_pii:": "This model has no PII"
+video_catalog.HistoricalVideoSkill:
+  ".. no_pii:": "This model has no PII"
