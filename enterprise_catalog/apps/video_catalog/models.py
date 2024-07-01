@@ -156,3 +156,37 @@ class VideoShortlist(models.Model):
                 usage_key=str(self.video_usage_key)
             )
         )
+
+
+class VideoSkill(TimeStampedModel):
+    """
+    Stores the skills associated with a video.
+
+    .. no_pii:
+    """
+    video = models.ForeignKey(
+        Video,
+        blank=True,
+        null=True,
+        related_name='skills',
+        on_delete=models.deletion.SET_NULL,
+    )
+    skill_id = models.CharField(max_length=255, help_text=_('Skill id'))
+    name = models.CharField(max_length=255, help_text=_('Skill name'))
+
+    history = HistoricalRecords()
+
+    class Meta:
+        verbose_name = _("Video Skill")
+        verbose_name_plural = _("Video Skills")
+        app_label = 'video_catalog'
+
+    def __str__(self):
+        """
+        Return human-readable string representation.
+        """
+        return (
+            "<VideoSkills for '{video_id}'>".format(
+                video_id=str(self.video)
+            )
+        )
