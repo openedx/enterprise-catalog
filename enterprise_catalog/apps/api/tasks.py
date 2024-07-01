@@ -873,6 +873,18 @@ def _get_algolia_products_for_batch(
                             academy_tags_by_key[content_key].add(str(tag.title))
                             academy_tags_by_catalog_uuid[str(catalog.uuid)].add(str(tag.title))
 
+        # adding temporary debug logging for MIT's Finance Micromasters Program
+        if content_key in (
+            "MITx+15.415.2x",
+            "MITx+15.435x",
+            "MITx+15.516x",
+            "MITx+15.455x",
+            "MITx+15.415.1x",
+            "MITx+FIN.CFx"
+        ):
+            logger.info('Debugging content key = {} ...'.format(content_key))
+            logger.info('catalog_queries_by_key: {}'.format(catalog_queries_by_key[content_key]))
+
     # Second pass.  This time the goal is to capture indirect relationships on programs:
     #  * For each program:
     #    - Absorb all UUIDs associated with every associated course.
@@ -905,6 +917,18 @@ def _get_algolia_products_for_batch(
                 academy_tags_by_key[program_content_key].update(
                     academy_tags_by_catalog_uuid[catalog_uuid]
                 )
+
+        # adding temporary logging for MIT's Finance Micromasters Program
+        if program_content_key in (
+            "MITx+15.415.2x",
+            "MITx+15.435x",
+            "MITx+15.516x",
+            "MITx+15.455x",
+            "MITx+15.415.1x",
+            "MITx+FIN.CFx"
+        ):
+            logger.info('Pass 2 - Debugging program_content_key = {} ...'.format(program_content_key))
+            logger.info('Pass 2 - catalog_queries_by_key: {}'.format(catalog_queries_by_key[program_content_key]))
 
     # Third pass.  This time the goal is to capture indirect relationships on pathways:
     #  * For each pathway:
