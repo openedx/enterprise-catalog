@@ -42,6 +42,7 @@ from enterprise_catalog.apps.catalog.constants import (
     PROGRAM,
     REINDEX_TASK_BATCH_SIZE,
     TASK_BATCH_SIZE,
+    VIDEO,
 )
 from enterprise_catalog.apps.catalog.content_metadata_utils import (
     transform_course_metadata_to_visible,
@@ -56,6 +57,11 @@ from enterprise_catalog.apps.catalog.utils import (
     batch,
     get_content_filter_hash,
     localized_utcnow,
+)
+from enterprise_catalog.apps.video_catalog.models import (
+    Video,
+    VideoSkill,
+    VideoTranscriptSummary,
 )
 
 
@@ -632,6 +638,92 @@ def _precalculate_content_mappings():
     return program_to_courses_mapping, pathway_to_programs_courses_mapping
 
 
+def add_video_to_algolia_objects(
+    video,
+    algolia_products_by_object_id,
+    customer_uuids,
+    catalog_uuids,
+    catalog_queries,
+):
+    """
+    Convert Video objects into Algolia products and accumulate results into `algolia_products_by_object_id`.
+
+    Duplicate Algolia products generated per video for customer uuids, and possibly more if any one of those
+    exceeds ALGOLIA_UUID_BATCH_SIZE.  In the case of the batch size being exceeded, create further duplicate
+    algolia product records, batching the uuids to reduce the payload size of the Algolia product objects.
+
+    Args:
+        video (Video): The video for which to generate aloglia products.
+        algolia_products_by_object_id (dict):
+            Object to append the resulting algolia products to.  Keys are objectIDs, and values are algolia products to
+            actually index.
+        customer_uuids (list of str): Associated customer UUIDs.
+        catalog_uuids (list of str): Associated catalog UUIDs.
+        catalog_queries (list of tuple(str, str)): Associated catalog queries, as a list of (UUID, title) tuples.
+    """
+    # add enterprise-related uuids to json_metadata
+    json_metadata = copy.deepcopy(video.json_metadata)
+    json_metadata.update({
+        'objectID': f'video-{video.edx_video_id}',
+    })
+    json_metadata.update({
+        'content_type': VIDEO,
+    })
+    json_metadata.update({
+        'aggregation_key': video.edx_video_id,
+    })
+    json_metadata.update({
+        'video_usage_key': video.video_usage_key,
+    })
+    transcript_summary = VideoTranscriptSummary.objects.filter(video=video).first()
+    if transcript_summary is not None:
+        json_metadata.update({
+            'transcript_summary': transcript_summary.summary,
+        })
+    video_skills = VideoSkill.objects.filter(video=video).values_list('name', flat=True)
+    json_metadata.update({
+        'video_skills': list(video_skills),
+    })
+
+    json_metadata_size = sys.getsizeof(
+        json.dumps(_algolia_object_from_product(json_metadata, algolia_fields=ALGOLIA_FIELDS)).strip(" "),
+    )
+    # Algolia limits the size of algolia object records and measures object size as stated in:
+    # https://support.algolia.com/hc/en-us/articles/4406981897617-Is-there-a-size-limit-for-my-index-records
+    # Refrain from adding the video record to the list of objects to index if the video exceeds the max size
+    # allowed.
+    if json_metadata_size > ALGOLIA_JSON_METADATA_MAX_SIZE:
+        logger.warning(
+            f"add_video_to_algolia_objects found a video record: {video.edx_video_id} who's sized exceeded the maximum"
+            f"algolia object size of {ALGOLIA_JSON_METADATA_MAX_SIZE} bytes"
+        )
+        return
+
+    # enterprise customer uuids
+    customer_uuids = sorted(list(customer_uuids))
+    batched_metadata = _batched_metadata(
+        json_metadata,
+        customer_uuids,
+        'enterprise_customer_uuids',
+        '{}-customer-uuids-{}',
+    )
+    _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata)
+
+    # enterprise catalog uuids
+    catalog_uuids = sorted(list(catalog_uuids))
+    batched_metadata = _batched_metadata(
+        json_metadata,
+        catalog_uuids,
+        'enterprise_catalog_uuids',
+        '{}-catalog-uuids-{}',
+    )
+    _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata)
+
+    queries = sorted(list(catalog_queries))
+    batched_metadata = _batched_metadata_with_queries(json_metadata, queries)
+    _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata)
+
+
 def add_metadata_to_algolia_objects(
     metadata,
     algolia_products_by_object_id,
@@ -640,6 +732,7 @@ def add_metadata_to_algolia_objects(
     catalog_queries,
     academy_uuids,
     academy_tags,
+    video_ids,
 ):
     """
     Convert ContentMetadata objects into Algolia products and accumulate results into `algolia_products_by_object_id`.
@@ -671,6 +764,9 @@ def add_metadata_to_algolia_objects(
     })
     json_metadata.update({
         'academy_tags': list(academy_tags),
+    })
+    json_metadata.update({
+        'video_ids': list(video_ids),
     })
 
     json_metadata_size = sys.getsizeof(
@@ -785,6 +881,7 @@ def _get_algolia_products_for_batch(
     catalog_queries_by_key = defaultdict(set)
     academy_uuids_by_key = defaultdict(set)
     academy_tags_by_key = defaultdict(set)
+    video_ids_by_key = defaultdict(set)
 
     catalog_query_uuid_by_catalog_uuid = defaultdict(set)
     customer_uuid_by_catalog_uuid = defaultdict(set)
@@ -832,6 +929,10 @@ def _get_algolia_products_for_batch(
     ).prefetch_related(
         Prefetch('catalog_queries', queryset=all_catalog_queries),
     )
+    course_run_content_keys = [cm.content_key for cm in content_metadata_courseruns]
+    videos = Video.objects.filter(
+        parent_content_metadata__content_key__in=course_run_content_keys
+    ).select_related('parent_content_metadata')
 
     # Combine both querysets to represent all the ContentMetadata needed to process this batch.
     #
@@ -851,6 +952,10 @@ def _get_algolia_products_for_batch(
             # Course runs should contribute their UUIDs to the parent course.
             content_key = metadata.parent_content_key
         associated_catalog_queries = metadata.catalog_queries.all()
+        for video in videos:
+            if (metadata.content_type == COURSE_RUN
+                    and video.parent_content_metadata.content_key == metadata.content_key):
+                video_ids_by_key[content_key].add(str(video.edx_video_id))
         for catalog_query in associated_catalog_queries:
             catalog_queries_by_key[content_key].add((str(catalog_query.uuid), catalog_query.title))
             # This line is possible thanks to `all_catalog_queries` with the prefectch_related() above.
@@ -981,6 +1086,18 @@ def _get_algolia_products_for_batch(
             catalog_queries_by_key[metadata.content_key],
             academy_uuids_by_key[metadata.content_key],
             academy_tags_by_key[metadata.content_key],
+            video_ids_by_key[metadata.content_key],
+        )
+
+        num_content_metadata_indexed += 1
+
+    for video in videos:
+        add_video_to_algolia_objects(
+            video,
+            algolia_products_by_object_id,
+            customer_uuids_by_key[video.parent_content_metadata.parent_content_key],
+            catalog_uuids_by_key[video.parent_content_metadata.parent_content_key],
+            catalog_queries_by_key[video.parent_content_metadata.parent_content_key],
         )
 
         num_content_metadata_indexed += 1
