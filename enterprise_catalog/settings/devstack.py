@@ -58,6 +58,7 @@ ALLOWED_HOSTS = ['*']
 
 LMS_BASE_URL = 'http://edx.devstack.lms:18000'
 DISCOVERY_SERVICE_API_URL = 'http://edx.devstack.discovery:18381/api/v1/'
+DISCOVERY_SERVICE_URL = 'http://edx.devstack.discovery:18381/'
 ENTERPRISE_LEARNER_PORTAL_BASE_URL = 'http://localhost:8734'
 ECOMMERCE_BASE_URL = 'http://edx.devstack.ecommerce:18130'
 LICENSE_MANAGER_BASE_URL = 'http://license-manager.app:18170'
