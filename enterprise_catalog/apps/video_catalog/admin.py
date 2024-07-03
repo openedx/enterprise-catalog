@@ -30,6 +30,7 @@ class VideoAdmin(SimpleHistoryAdmin):
     """
     list_display = ('edx_video_id', 'client_video_id', 'video_usage_key', 'created', 'modified', )
     search_fields = ('edx_video_id', 'client_video_id', )
+    raw_id_fields = ('parent_content_metadata', )
 
 
 @admin.register(VideoSkill)
