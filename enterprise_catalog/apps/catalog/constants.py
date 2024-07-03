@@ -10,6 +10,7 @@ COURSE = 'course'
 COURSE_RUN = 'courserun'
 PROGRAM = 'program'
 LEARNER_PATHWAY = 'learnerpathway'
+VIDEO = 'video'
 
 CONTENT_TYPE_CHOICES = [
     (COURSE, 'Course'),
