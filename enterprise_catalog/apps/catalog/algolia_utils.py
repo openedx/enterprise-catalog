@@ -52,6 +52,11 @@ ALGOLIA_FIELDS = [
     'transcript_summary',
     'video_usage_key',
     'video_skills',
+    'course_run_key',
+    'org',
+    'logo_image_urls',
+    'image_url',
+    'duration',
     'full_description',
     'key',  # for links to Course about pages from the Learner Portal search page
     'uuid',
