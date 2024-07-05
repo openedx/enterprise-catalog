@@ -50,6 +50,9 @@ from enterprise_catalog.apps.api.v1.views.enterprise_catalog_refresh_data_from_d
 from enterprise_catalog.apps.api.v1.views.enterprise_customer import (
     EnterpriseCustomerViewSet,
 )
+from enterprise_catalog.apps.api.v1.views.video_catalog import (
+    VideoReadOnlyViewSet,
+)
 
 
 app_name = 'v1'
@@ -85,6 +88,11 @@ urlpatterns = [
     path('academies/<uuid:uuid>/', AcademiesReadOnlyViewSet.as_view({'get': 'retrieve'}),
          name='academies-detail'
          ),
+    re_path(
+        r'^videos/(?P<edx_video_id>[-\w]+)$',
+        VideoReadOnlyViewSet.as_view({'get': 'retrieve'}),
+        name='video-detail'
+    ),
     re_path(
         r'^enterprise-catalogs/(?P<uuid>[\S]+)/get_content_metadata',
         EnterpriseCatalogGetContentMetadata.as_view({'get': 'get'}),
