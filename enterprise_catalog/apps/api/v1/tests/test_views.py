@@ -51,6 +51,11 @@ from enterprise_catalog.apps.catalog.utils import (
     get_parent_content_key,
     localized_utcnow,
 )
+from enterprise_catalog.apps.video_catalog.tests.factories import (
+    VideoFactory,
+    VideoSkillFactory,
+    VideoTranscriptSummaryFactory,
+)
 
 
 @ddt.ddt
@@ -2737,3 +2742,34 @@ class CatalogQueryViewTests(APITestMixin):
         self.client.logout()
         response = self.client.get(url)
         assert response.status_code == 401
+
+
+@ddt.ddt
+class VideoReadOnlyViewSetTests(APITestMixin):
+    """
+    Tests for the VideoReadOnlyViewSet.
+    """
+    def setUp(self):
+        super().setUp()
+        self.set_up_catalog_learner()
+        self.video = VideoFactory()
+        self.video_skill = VideoSkillFactory(video=self.video)
+        self.video_transcript_summary = VideoTranscriptSummaryFactory(video=self.video)
+
+    def test_retrieve_for_videos(self):
+        """
+        Verify the viewset retrieves the correct video
+        """
+        url = reverse('api:v1:video-detail', kwargs={
+            'edx_video_id': self.video.edx_video_id,
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['edx_video_id'], self.video.edx_video_id)
+        self.assertEqual(response.data['video_usage_key'], self.video.video_usage_key)
+        self.assertEqual(response.data['skills'][0]['name'], self.video_skill.name)
+        self.assertEqual(response.data['summary_transcripts'][0], self.video_transcript_summary.summary)
+        self.assertEqual(
+            response.data['parent_content_metadata']['key'],
+            self.video.parent_content_metadata.content_key
+        )
