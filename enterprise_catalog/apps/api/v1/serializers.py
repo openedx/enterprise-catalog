@@ -31,6 +31,7 @@ from enterprise_catalog.apps.curation.models import (
     HighlightedContent,
     HighlightSet,
 )
+from enterprise_catalog.apps.video_catalog.models import Video, VideoSkill
 
 
 logger = logging.getLogger(__name__)
@@ -478,3 +479,29 @@ class AcademySerializer(serializers.ModelSerializer):
         tags = obj.tags.all()
         serializer = TagsSerializer(tags, many=True, context=serializer_context)
         return serializer.data
+
+
+class VideoSkillSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the `VideoSkill` model.
+    """
+    class Meta:
+        model = VideoSkill
+        fields = ['skill_id', 'name']
+
+
+class VideoSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the `Video` model.
+    """
+    skills = VideoSkillSerializer(many=True, read_only=True)
+    summary_transcripts = serializers.SlugRelatedField(many=True, read_only=True, slug_field='summary')
+    parent_content_metadata = ContentMetadataSerializer(read_only=True)
+
+    class Meta:
+        model = Video
+        fields = [
+            'edx_video_id', 'client_video_id', 'video_usage_key',
+            'json_metadata', 'summary_transcripts', 'parent_content_metadata', 'skills',
+        ]
+        lookup_field = 'edx_video_id'
