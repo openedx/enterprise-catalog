@@ -34,7 +34,7 @@ celery==5.4.0
     #   -r requirements/base.in
     #   django-celery-results
     #   edx-celeryutils
-certifi==2024.6.2
+certifi==2024.7.4
     # via
     #   httpcore
     #   httpx
@@ -236,9 +236,9 @@ psutil==6.0.0
     # via edx-django-utils
 pycparser==2.22
     # via cffi
-pydantic==2.7.4
+pydantic==2.8.2
     # via openai
-pydantic-core==2.18.4
+pydantic-core==2.20.1
     # via pydantic
 pyjwt[crypto]==2.8.0
     # via
@@ -293,7 +293,7 @@ rpds-py==0.18.1
     #   referencing
 rules==3.4
     # via -r requirements/base.in
-scikit-learn==1.5.0
+scikit-learn==1.5.1
     # via -r requirements/base.in
 scipy==1.14.0
     # via scikit-learn
