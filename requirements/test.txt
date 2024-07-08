@@ -51,7 +51,7 @@ celery==5.4.0
     #   -r requirements/base.txt
     #   django-celery-results
     #   edx-celeryutils
-certifi==2024.6.2
+certifi==2024.7.4
     # via
     #   -r requirements/base.txt
     #   httpcore
@@ -369,11 +369,11 @@ pycparser==2.22
     # via
     #   -r requirements/base.txt
     #   cffi
-pydantic==2.7.4
+pydantic==2.8.2
     # via
     #   -r requirements/base.txt
     #   openai
-pydantic-core==2.18.4
+pydantic-core==2.20.1
     # via
     #   -r requirements/base.txt
     #   pydantic
@@ -475,7 +475,7 @@ rpds-py==0.18.1
     #   referencing
 rules==3.4
     # via -r requirements/base.txt
-scikit-learn==1.5.0
+scikit-learn==1.5.1
     # via -r requirements/base.txt
 scipy==1.14.0
     # via
@@ -539,7 +539,7 @@ threadpoolctl==3.5.0
     #   scikit-learn
 tomlkit==0.12.5
     # via pylint
-tox==4.15.1
+tox==4.16.0
     # via -r requirements/test.in
 tqdm==4.66.4
     # via
