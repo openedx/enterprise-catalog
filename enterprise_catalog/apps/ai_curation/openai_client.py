@@ -1,17 +1,11 @@
 import functools
+import json
 import logging
 
 import backoff
-import simplejson
+import requests
 from django.conf import settings
-from openai import (
-    APIConnectionError,
-    APIError,
-    APITimeoutError,
-    InternalServerError,
-    OpenAI,
-    RateLimitError,
-)
+from requests.exceptions import ConnectTimeout
 
 from enterprise_catalog.apps.ai_curation.errors import (
     AICurationError,
@@ -20,8 +14,6 @@ from enterprise_catalog.apps.ai_curation.errors import (
 
 
 LOGGER = logging.getLogger(__name__)
-
-client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
 
 def api_error_handler(func):
@@ -37,7 +29,7 @@ def api_error_handler(func):
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except (APIError, AICurationError) as ex:
+        except (ConnectionError, AICurationError) as ex:
             LOGGER.exception('[AI_CURATION] API Error: Prompt: [%s]', kwargs.get('messages'))
             # status_code attribute is not available for all exceptions, such as APIConnectionError and APITimeoutError
             status_code = getattr(ex, 'status_code', None)
@@ -49,27 +41,19 @@ def api_error_handler(func):
 @api_error_handler
 @backoff.on_exception(
     backoff.expo,
-    (APIConnectionError, APITimeoutError, InternalServerError, RateLimitError, InvalidJSONResponseError),
+    (ConnectTimeout, ConnectionError, InvalidJSONResponseError),
     max_tries=3,
 )
 def chat_completions(
     messages,
     response_format='json',
-    response_type=list,
-    model="gpt-4",
-    temperature=0.3,
-    max_tokens=500,
 ):
     """
-    Get a response from the chat.completions endpoint
+    Pass message list to chat endpoint, as defined by the CHAT_COMPLETION_API setting.
 
     Args:
         messages (list): List of messages to send to the chat.completions endpoint
         response_format (str): Format of the response. Can be 'json' or 'text'
-        response_type (any): Expected type of the response. For now we only expect `list`
-        model (str): Model to use for the completion
-        temperature (number): Make model output more focused and deterministic
-        max_tokens (int): Maximum number of tokens that can be generated in the chat completion
 
     Returns:
         <list, text>: The response from the chat.completions endpoint
@@ -81,32 +65,31 @@ def chat_completions(
             - status_code (int): The actual error code returned by the API
     """
     LOGGER.info('[AI_CURATION] [CHAT_COMPLETIONS] Prompt: [%s]', messages)
-    response = client.chat.completions.create(
-        messages=messages,
-        model=model,
-        temperature=temperature,
-        max_tokens=max_tokens,
+
+    headers = {'Content-Type': 'application/json', 'x-api-key': settings.CHAT_COMPLETION_API_KEY}
+    message_list = []
+    for message in messages:
+        message_list.append({'role': 'assistant', 'content': message['content']})
+    body = {'message_list': message_list}
+    response = requests.post(
+        settings.CHAT_COMPLETION_API,
+        headers=headers,
+        data=json.dumps(body),
+        timeout=(
+            settings.CHAT_COMPLETION_API_CONNECT_TIMEOUT,
+            settings.CHAT_COMPLETION_API_READ_TIMEOUT
+        )
     )
     LOGGER.info('[AI_CURATION] [CHAT_COMPLETIONS] Response: [%s]', response)
-    response_content = response.choices[0].message.content
-
-    if response_format == 'json':
-        try:
-            json_response = simplejson.loads(response_content)
-            if isinstance(json_response, response_type):
-                return json_response
-            LOGGER.error(
-                '[AI_CURATION] JSON response received but response type is incorrect: Prompt: [%s], Response: [%s]',
-                messages,
-                response
-            )
-            raise InvalidJSONResponseError('Invalid response type received from chatgpt')
-        except simplejson.errors.JSONDecodeError as ex:
-            LOGGER.error(
-                '[AI_CURATION] Invalid JSON response received from chatgpt: Prompt: [%s], Response: [%s]',
-                messages,
-                response
-            )
-            raise InvalidJSONResponseError('Invalid JSON response received from chatgpt') from ex
-
-    return response_content
+    try:
+        response_content = response.json().get('content')
+        if response_format == 'json':
+            return json.loads(response_content)
+        return json.loads(response_content)[0]
+    except requests.exceptions.JSONDecodeError as ex:
+        LOGGER.error(
+            '[AI_CURATION] Invalid JSON response received: Prompt: [%s], Response: [%s]',
+            messages,
+            response
+        )
+        raise InvalidJSONResponseError('Invalid response received.') from ex
