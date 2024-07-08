@@ -71,7 +71,7 @@ celery==5.4.0
     #   -r requirements/test.txt
     #   django-celery-results
     #   edx-celeryutils
-certifi==2024.6.2
+certifi==2024.7.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -236,7 +236,7 @@ django-crum==0.7.9
     #   edx-django-utils
     #   edx-rbac
     #   edx-toggles
-django-debug-toolbar==4.4.2
+django-debug-toolbar==4.4.5
     # via -r requirements/dev.in
 django-dynamic-fixture==4.0.1
     # via -r requirements/test.txt
@@ -546,12 +546,12 @@ pycparser==2.22
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   cffi
-pydantic==2.7.4
+pydantic==2.8.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   openai
-pydantic-core==2.18.4
+pydantic-core==2.20.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -699,7 +699,7 @@ rules==3.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-scikit-learn==1.5.0
+scikit-learn==1.5.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -787,7 +787,7 @@ tomlkit==0.12.5
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pylint
-tox==4.15.1
+tox==4.16.0
     # via -r requirements/test.txt
 tqdm==4.66.4
     # via
