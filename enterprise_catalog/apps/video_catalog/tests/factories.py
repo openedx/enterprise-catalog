@@ -9,6 +9,7 @@ from enterprise_catalog.apps.catalog.tests.factories import (
 )
 from enterprise_catalog.apps.video_catalog.models import (
     Video,
+    VideoSkill,
     VideoTranscriptSummary,
 )
 
@@ -22,6 +23,7 @@ class VideoFactory(factory.django.DjangoModelFactory):
 
     edx_video_id = FuzzyText(length=255)
     client_video_id = FuzzyText(length=255)
+    video_usage_key = FuzzyText(length=150, prefix="block-v1:ACCA+FFA-F3.x+FFA1T2023+type@video+block@")
     parent_content_metadata = factory.SubFactory(ContentMetadataFactory)
 
     @factory.lazy_attribute
@@ -96,3 +98,15 @@ class VideoTranscriptSummaryFactory(factory.django.DjangoModelFactory):
 
     video = factory.SubFactory(Video)
     summary = FuzzyText(length=4096)
+
+
+class VideoSkillFactory(factory.django.DjangoModelFactory):
+    """
+    Test factory for the `VideoSkill` model
+    """
+    class Meta:
+        model = VideoSkill
+
+    video = factory.SubFactory(Video)
+    skill_id = FuzzyText(length=255)
+    name = FuzzyText(length=255)
