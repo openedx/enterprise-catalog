@@ -104,7 +104,7 @@ PROGRAM_TYPES_MAP = {
 }
 
 FORCE_INCLUSION_METADATA_TAG_KEY = 'enterprise_force_included'
-PROVISIONING_ADMINS_GROUP = "provisioning-admins-group"
+PROVISIONING_ADMINS_GROUP = "provisioning_admins_group"
 
 
 def json_serialized_course_modes():
