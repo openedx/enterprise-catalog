@@ -210,6 +210,7 @@ class HighlightSetBaseViewSet(PermissionRequiredForListingMixin, BaseViewSet):
     renderer_classes = [JSONRenderer, XMLRenderer]
     serializer_class = HighlightSetSerializer
     lookup_field = 'uuid'
+    pagination_class = PageNumberWithSizePagination
 
     # Fields required for controlling access in the `list()` action
     list_lookup_field = 'enterprise_curation__enterprise_uuid'
