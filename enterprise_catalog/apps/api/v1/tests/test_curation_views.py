@@ -48,7 +48,7 @@ class CurationAPITestBase(APITestMixin):
         # types including ones not supported by Curations/Highlighting feature, we set up a content type generator that
         # deterministically provides supported content types.
         supported_content_types = [COURSE, PROGRAM]
-        content_type_generator = (
+        self.content_type_generator = (
             supported_content_types[idx % len(supported_content_types)]
             for idx in itertools.count()
         )
@@ -58,7 +58,7 @@ class CurationAPITestBase(APITestMixin):
         self.highlight_set_one = HighlightSetFactory(enterprise_curation=self.curation_config_one)
         self.card_image_urls_one = [fake.image_url() + '.jpg' for idx in range(5)]
         self.highlighted_content_metadata_one = [
-            ContentMetadataFactory(card_image_url=url, content_type=next(content_type_generator))
+            ContentMetadataFactory(card_image_url=url, content_type=next(self.content_type_generator))
             for url in self.card_image_urls_one
         ]
         self.highlighted_content_list_one = [
@@ -72,7 +72,7 @@ class CurationAPITestBase(APITestMixin):
         self.highlight_set_two = HighlightSetFactory(enterprise_curation=self.curation_config_two)
         self.card_image_urls_two = [fake.image_url() + '.jpg' for idx in range(5)]
         self.highlighted_content_metadata_two = [
-            ContentMetadataFactory(card_image_url=url, content_type=next(content_type_generator))
+            ContentMetadataFactory(card_image_url=url, content_type=next(self.content_type_generator))
             for url in self.card_image_urls_two
         ]
         self.highlighted_content_list_two = [
@@ -419,6 +419,42 @@ class HighlightSetReadOnlyViewSetTests(CurationAPITestBase):
             second_response = self.client.get(url)
             assert second_response.json() == response.json()
             assert second_response.status_code == status.HTTP_200_OK
+
+    def test_list_test(self):
+        """
+        A catalog learner should be able to list the highlight sets of their own enterprise customer, but not that of
+        other enterprise customers.
+        """
+        self.highlight_set_two = HighlightSetFactory(enterprise_curation=self.curation_config_one)
+        self.card_image_urls_two = [fake.image_url() + '.jpg' for idx in range(5)]
+        self.highlighted_content_metadata_two = [
+            ContentMetadataFactory(card_image_url=url, content_type=next(self.content_type_generator))
+            for url in self.card_image_urls_one
+        ]
+        self.highlighted_content_list_two = [
+            HighlightedContentFactory(catalog_highlight_set=self.highlight_set_two, content_metadata=cm)
+            for cm in self.highlighted_content_metadata_two
+        ]
+
+        url = reverse('api:v1:highlight-sets-list')
+        url = url + f'?enterprise_customer={self.enterprise_uuid}'
+
+        self.set_up_catalog_learner()
+        self.remove_role_assignments()
+
+        response = self.client.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
+        highlight_sets_results = response.json()['results']
+        assert len(highlight_sets_results) == 2
+
+        limited_url = url + '&page_size=1'
+
+        response = self.client.get(limited_url)
+
+        assert response.status_code == status.HTTP_200_OK
+        highlight_sets_results = response.json()['results']
+        assert len(highlight_sets_results) == 1
 
     def test_detail_invalid_uuid(self):
         """

@@ -22,9 +22,6 @@ from enterprise_catalog.apps.api.v1.constants import SegmentEvents
 from enterprise_catalog.apps.api.v1.event_utils import (
     track_highlight_set_changes,
 )
-from enterprise_catalog.apps.api.v1.pagination import (
-    PageNumberWithSizePagination,
-)
 from enterprise_catalog.apps.api.v1.serializers import (
     ContentMetadataSerializer,
     EnterpriseCurationConfigSerializer,
