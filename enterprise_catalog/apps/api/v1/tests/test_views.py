@@ -2737,7 +2737,15 @@ class CatalogQueryViewTests(APITestMixin):
         self.set_up_invalid_jwt_role()
         self.remove_role_assignments()
         response = self.client.get(url)
-        assert response.json() == {'count': 0, 'next': None, 'previous': None, 'results': []}
+        assert response.json() == {
+            'count': 0,
+            'current_page': 1,
+            'next': None,
+            'num_pages': 1,
+            'previous': None,
+            'results': [],
+            'start': 0,
+        }
 
         self.client.logout()
         response = self.client.get(url)

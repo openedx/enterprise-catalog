@@ -22,9 +22,6 @@ from enterprise_catalog.apps.api.v1.constants import SegmentEvents
 from enterprise_catalog.apps.api.v1.event_utils import (
     track_highlight_set_changes,
 )
-from enterprise_catalog.apps.api.v1.pagination import (
-    PageNumberWithSizePagination,
-)
 from enterprise_catalog.apps.api.v1.serializers import (
     ContentMetadataSerializer,
     EnterpriseCurationConfigSerializer,
@@ -210,7 +207,6 @@ class HighlightSetBaseViewSet(PermissionRequiredForListingMixin, BaseViewSet):
     renderer_classes = [JSONRenderer, XMLRenderer]
     serializer_class = HighlightSetSerializer
     lookup_field = 'uuid'
-    pagination_class = PageNumberWithSizePagination
 
     # Fields required for controlling access in the `list()` action
     list_lookup_field = 'enterprise_curation__enterprise_uuid'

@@ -437,6 +437,7 @@ class HighlightSetReadOnlyViewSetTests(CurationAPITestBase):
         ]
 
         url = reverse('api:v1:highlight-sets-list')
+        url = url + f'?enterprise_customer={self.enterprise_uuid}'
 
         self.set_up_catalog_learner()
         self.remove_role_assignments()
@@ -447,7 +448,7 @@ class HighlightSetReadOnlyViewSetTests(CurationAPITestBase):
         highlight_sets_results = response.json()['results']
         assert len(highlight_sets_results) == 2
 
-        limited_url = url + '?page_size=1'
+        limited_url = url + '&page_size=1'
 
         response = self.client.get(limited_url)
 
