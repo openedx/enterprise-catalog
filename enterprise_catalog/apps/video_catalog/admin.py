@@ -47,7 +47,7 @@ class VideoShortlistResource(resources.ModelResource):
     class Meta:
         model = VideoShortlist
         import_id_fields = ('video_usage_key',)
-        fields = ('video_usage_key',)
+        fields = ('video_usage_key', 'is_processed')
 
 
 @admin.register(VideoShortlist)
@@ -55,6 +55,7 @@ class VideoShortlistAdmin(ImportExportModelAdmin):
     """
     Django admin for VideoShortlist.
     """
+    list_per_page = 800
     resource_classes = [VideoShortlistResource]
-    list_display = ('video_usage_key',)
-    search_fields = ('video_usage_key',)
+    list_display = ('video_usage_key', 'is_processed',)
+    search_fields = ('video_usage_key', 'is_processed',)
