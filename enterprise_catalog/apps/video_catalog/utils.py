@@ -13,11 +13,7 @@ from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 from enterprise_catalog.apps.api_client.studio import StudioApiClient
 from enterprise_catalog.apps.catalog.constants import COURSE_RUN
 from enterprise_catalog.apps.catalog.models import ContentMetadata
-from enterprise_catalog.apps.video_catalog.models import (
-    Video,
-    VideoShortlist,
-    VideoSkill,
-)
+from enterprise_catalog.apps.video_catalog.models import Video, VideoSkill
 
 
 logger = logging.getLogger(__name__)
@@ -53,18 +49,16 @@ def fetch_course_video_metadata(course_run_key, video_usage_key):
                 )
 
 
-def fetch_videos():
+def fetch_video(video):
     """
-    Fetch and store video metadata for multiple course run keys.
+    Fetch and store video metadata.
     """
-    shortlisted_videos = VideoShortlist.objects.all()
-    for video in shortlisted_videos:
-        try:
-            video_usage_key = UsageKey.from_string(video.video_usage_key)
-        except ValueError:
-            raise ValidationError('Invalid usage key')  # lint-amnesty, pylint: disable=raise-missing-from
-        course_run_key = str(video_usage_key.context_key)
-        fetch_course_video_metadata(course_run_key, video.video_usage_key)
+    try:
+        video_usage_key = UsageKey.from_string(video.video_usage_key)
+    except ValueError:
+        raise ValidationError('Invalid usage key')  # lint-amnesty, pylint: disable=raise-missing-from
+    course_run_key = str(video_usage_key.context_key)
+    fetch_course_video_metadata(course_run_key, video.video_usage_key)
 
 
 def store_video_skills(edx_video_id):

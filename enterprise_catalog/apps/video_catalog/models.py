@@ -141,6 +141,10 @@ class VideoShortlist(models.Model):
     .. no_pii:
     """
     video_usage_key = models.CharField(primary_key=True, max_length=255, help_text=_('Video Xblock Usage Key'))
+    is_processed = models.BooleanField(
+        default=False,
+        help_text=_('Flag for row level filtering of processed rows.')
+    )
 
     class Meta:
         verbose_name = _("Shortlisted Video")
