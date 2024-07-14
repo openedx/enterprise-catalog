@@ -5,6 +5,7 @@ import logging
 
 import requests
 from django.conf import settings
+from django.db import IntegrityError
 from opaque_keys.edx.keys import UsageKey
 from rest_framework.exceptions import ValidationError
 
@@ -36,17 +37,23 @@ def fetch_course_video_metadata(course_run_key, video_usage_key):
         video_usage_locations = client.get_video_usage_locations(course_run_key, video_data['edx_video_id'])
         for location in video_usage_locations:
             if video_usage_key in location:
-                Video.objects.update_or_create(
-                    edx_video_id=video_data['edx_video_id'],
-                    video_usage_key=video_usage_key,
-                    defaults={
-                        'client_video_id': video_data['client_video_id'],
-                        'json_metadata': video_data,
-                        'parent_content_metadata': ContentMetadata.objects.get(
-                            content_key=course_run_key, content_type=COURSE_RUN
-                        )
-                    }
-                )
+                try:
+                    Video.objects.update_or_create(
+                        edx_video_id=video_data['edx_video_id'],
+                        defaults={
+                            'client_video_id': video_data['client_video_id'],
+                            'json_metadata': video_data,
+                            'video_usage_key': video_usage_key,
+                            'parent_content_metadata': ContentMetadata.objects.get(
+                                content_key=course_run_key, content_type=COURSE_RUN
+                            )
+                        }
+                    )
+                except (ContentMetadata.DoesNotExist, IntegrityError) as ex:
+                    logger.error(
+                        '[FETCH_VIDEO_METADATA] Could not save video: Course: [%s], Video: [%s], Ex: [%s]',
+                        course_run_key, video_usage_key, str(ex)
+                    )
 
 
 def fetch_video(video):
