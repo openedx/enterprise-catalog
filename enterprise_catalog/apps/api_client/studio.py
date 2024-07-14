@@ -1,8 +1,15 @@
+import logging
+
+import requests
+
 from .base_oauth import BaseOAuthClient
 from .constants import (
     STUDIO_API_COURSE_VIDEOS_ENDPOINT,
     STUDIO_API_VIDEOS_LOCATION_ENDPOINT,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class StudioApiClient(BaseOAuthClient):
@@ -35,8 +42,16 @@ class StudioApiClient(BaseOAuthClient):
         Returns:
             (list): List of course video locations.
         """
-        locations = self.client.get(
-            STUDIO_API_VIDEOS_LOCATION_ENDPOINT.format(course_run_key=course_run_key, edx_video_id=edx_video_id),
-        ).json().get('usage_locations', [])
-
-        return ([location['url'] for location in locations]) if locations else []
+        try:
+            locations = self.client.get(
+                STUDIO_API_VIDEOS_LOCATION_ENDPOINT.format(course_run_key=course_run_key, edx_video_id=edx_video_id),
+            ).json().get('usage_locations', [])
+            return ([location['url'] for location in locations]) if locations else []
+        except requests.exceptions.JSONDecodeError as ex:
+            logger.error(
+                'Invalid JSON response received for usage locations: Course: [%s], Video: [%s], Ex: [%s]',
+                course_run_key,
+                edx_video_id,
+                str(ex)
+            )
+            return []
