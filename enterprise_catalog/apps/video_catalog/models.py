@@ -65,6 +65,7 @@ class Video(TimeStampedModel):
     """
     edx_video_id = models.CharField(primary_key=True, max_length=255, help_text=_('EdX video id'))
     client_video_id = models.CharField(max_length=255, help_text=_('Client video id'))
+    title = models.CharField(max_length=255, blank=True, null=True, help_text=_('Video title'))
     video_usage_key = models.CharField(max_length=255, help_text=_('Video Xblock Usage Key'))
     parent_content_metadata = models.ForeignKey(
         ContentMetadata,
@@ -141,6 +142,7 @@ class VideoShortlist(models.Model):
     .. no_pii:
     """
     video_usage_key = models.CharField(primary_key=True, max_length=255, help_text=_('Video Xblock Usage Key'))
+    title = models.CharField(max_length=255, blank=True, null=True, help_text=_('Video title'))
     is_processed = models.BooleanField(
         default=False,
         help_text=_('Flag for row level filtering of processed rows.')
