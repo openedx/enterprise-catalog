@@ -2681,6 +2681,25 @@ class CatalogQueryViewTests(APITestMixin):
         response_json = response.json()
         assert response_json == ['You must provide at least one of the following query parameters: hash.']
 
+    def test_get_content_filter_hash(self):
+        """
+        Test that get content filter hash returns md5 hash of query
+        """
+        url = reverse('api:v1:get-content-filter-hash')
+        test_query = json.dumps({"content_type": ["political", "unit", "market"]})
+        response = self.client.generic('GET', url, content_type='application/json', data=test_query)
+        assert response.json() == '35584b583415a5bd4e51cc70d898a0eb'  # pylint: disable=no-member
+
+    def test_get_content_filter_hash_bad_query(self):
+        """
+        Test that get content filter hash returns md5 hash of query
+        """
+        url = reverse('api:v1:get-content-filter-hash')
+        test_query = 'bad query'
+        response = self.client.generic('GET', url, content_type='application/json', data=test_query)
+        err_detail = "Failed to parse catalog query: JSON parse error - Expecting value: line 1 column 1 (char 0)"
+        assert response.json() == {"detail": err_detail}  # pylint: disable=no-member
+
     def test_catalog_query_retrieve(self):
         """
         Test that the Catalog Query viewset supports retrieving individual queries
