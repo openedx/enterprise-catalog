@@ -48,7 +48,7 @@ class VideoShortlistResource(resources.ModelResource):
     class Meta:
         model = VideoShortlist
         import_id_fields = ('video_usage_key',)
-        fields = ('video_usage_key',)
+        fields = ('video_usage_key', 'title')
 
 
 @admin.register(VideoShortlist)
