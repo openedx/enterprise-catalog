@@ -59,6 +59,9 @@ def fetch_course_video_metadata(course_run_key, video_usage_key):
 def fetch_video(video):
     """
     Fetch and store video metadata.
+
+    Arguments:
+        video (Video): The Video object.
     """
     try:
         video_usage_key = UsageKey.from_string(video.video_usage_key)
@@ -68,16 +71,14 @@ def fetch_video(video):
     fetch_course_video_metadata(course_run_key, video.video_usage_key)
 
 
-def store_video_skills(edx_video_id):
+def store_video_skills(video):
     """
     Fetch and store video skills for a video.
 
     Arguments:
-        edx_video_id (str): The video id for which to fetch the skills.
+        video (Video): The Video object.
     """
-    video_skills = []
-    video = Video.objects.filter(edx_video_id=edx_video_id).first()
-    if video and video.video_usage_key:
+    try:
         video_skills = DiscoveryApiClient().get_video_skills(video.video_usage_key)
         for skill in video_skills:
             VideoSkill.objects.update_or_create(
@@ -85,6 +86,9 @@ def store_video_skills(edx_video_id):
                 skill_id=skill.get('id'),
                 name=skill.get('name'),
             )
+    except Exception as exc:
+        logger.exception(f'Could not retrieve and store video skills {exc}')
+        raise exc
 
 
 def get_transcript_summary(transcript: str, max_length: int = 260) -> str:
