@@ -34,7 +34,7 @@ asgiref==3.8.1
     #   -r requirements/test.txt
     #   django
     #   django-cors-headers
-astroid==3.2.2
+astroid==3.2.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -131,7 +131,7 @@ colorama==0.4.6
     # via
     #   -r requirements/test.txt
     #   tox
-coverage[toml]==7.5.4
+coverage[toml]==7.6.0
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -169,7 +169,7 @@ distro==1.9.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   openai
-django==4.2.13
+django==4.2.14
     # via
     #   -c requirements/common_constraints.txt
     #   -c requirements/constraints.txt
@@ -228,7 +228,7 @@ django-extensions==3.2.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-django-import-export==4.1.0
+django-import-export==4.1.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -396,7 +396,7 @@ jsonfield2==4.0.0.post0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-jsonschema==4.22.0
+jsonschema==4.23.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -430,7 +430,7 @@ mysqlclient==2.2.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-newrelic==9.11.0
+newrelic==9.12.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -628,7 +628,7 @@ requests-oauthlib==2.0.0
     #   social-auth-core
 responses==0.25.3
     # via -r requirements/test.txt
-rpds-py==0.18.1
+rpds-py==0.19.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -682,7 +682,7 @@ snowballstemmer==2.2.0
     # via
     #   -r requirements/quality.txt
     #   pydocstyle
-social-auth-app-django==5.4.1
+social-auth-app-django==5.4.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -720,7 +720,7 @@ threadpoolctl==3.5.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   scikit-learn
-tomlkit==0.12.5
+tomlkit==0.13.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
