@@ -39,14 +39,13 @@ class Command(BaseCommand):
         shortlisted_videos = VideoShortlist.objects.filter(is_processed=False)
         if options.get('force', False):
             shortlisted_videos = VideoShortlist.objects.all()
-        processed_ids = []
         for shorlisted_video in shortlisted_videos:
             try:
                 fetch_video(shorlisted_video)
-                processed_ids.append(shorlisted_video.video_usage_key)
+                shorlisted_video.is_processed = True
+                shorlisted_video.save()
             except ValidationError:
                 logger.error(
                     '[FETCH_VIDEO_METADATA] Video usage key:  "%s" could not be validated.',
                     shorlisted_video.video_usage_key
                 )
-        VideoShortlist.objects.filter(video_usage_key__in=processed_ids).update(is_processed=True)

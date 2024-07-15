@@ -675,6 +675,9 @@ def add_video_to_algolia_objects(
     json_metadata.update({
         'video_usage_key': video.video_usage_key,
     })
+    json_metadata.update({
+        'title': video.title,
+    })
     transcript_summary = VideoTranscriptSummary.objects.filter(video=video).first()
     if transcript_summary is not None:
         json_metadata.update({
@@ -688,7 +691,6 @@ def add_video_to_algolia_objects(
     if video_parent_cm:
         json_metadata.update({
             'course_run_key': video_parent_cm.json_metadata.get('key'),
-            'title': video_parent_cm.json_metadata.get('title'),
             'org': video_parent_cm.json_metadata.get('org'),
             'logo_image_urls': list(video_parent_cm.json_metadata.get('logo_image_urls', [])),
             'image_url': video_parent_cm.json_metadata.get('image_url'),
