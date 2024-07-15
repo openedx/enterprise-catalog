@@ -20,13 +20,14 @@ from enterprise_catalog.apps.video_catalog.models import Video, VideoSkill
 logger = logging.getLogger(__name__)
 
 
-def fetch_course_video_metadata(course_run_key, video_usage_key):
+def fetch_course_video_metadata(course_run_key, video_usage_key, video_title):
     """
     Fetch and store video metadata from the Studio service.
 
     Arguments:
         course_run_key (str): The course run key for which to fetch video metadata.
         video_usage_key (str): The video usage key for which to fetch video metadata.
+        video_title (str): The video title to augment into the video metadata.
 
     Raises:
         (DoesNotExist): If the course run key does not exist in the ContentMetadata model.
@@ -44,6 +45,7 @@ def fetch_course_video_metadata(course_run_key, video_usage_key):
                             'client_video_id': video_data['client_video_id'],
                             'json_metadata': video_data,
                             'video_usage_key': video_usage_key,
+                            'title': video_title,
                             'parent_content_metadata': ContentMetadata.objects.get(
                                 content_key=course_run_key, content_type=COURSE_RUN
                             )
@@ -56,19 +58,19 @@ def fetch_course_video_metadata(course_run_key, video_usage_key):
                     )
 
 
-def fetch_video(video):
+def fetch_video(shortlisted_video):
     """
     Fetch and store video metadata.
 
     Arguments:
-        video (Video): The Video object.
+        video (Video): The VideoShortlist object.
     """
     try:
-        video_usage_key = UsageKey.from_string(video.video_usage_key)
+        video_usage_key = UsageKey.from_string(shortlisted_video.video_usage_key)
     except ValueError:
         raise ValidationError('Invalid usage key')  # lint-amnesty, pylint: disable=raise-missing-from
     course_run_key = str(video_usage_key.context_key)
-    fetch_course_video_metadata(course_run_key, video.video_usage_key)
+    fetch_course_video_metadata(course_run_key, shortlisted_video.video_usage_key, shortlisted_video.title)
 
 
 def store_video_skills(video):
