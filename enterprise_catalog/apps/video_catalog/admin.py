@@ -29,9 +29,9 @@ class VideoAdmin(SimpleHistoryAdmin):
     """
     Django admin for Video.
     """
-    list_display = ('edx_video_id', 'client_video_id', 'video_usage_key', 'created', 'modified', )
-    search_fields = ('edx_video_id', 'client_video_id', )
-    raw_id_fields = ('parent_content_metadata', )
+    list_display = ('edx_video_id', 'client_video_id', 'title', 'video_usage_key', 'created', 'modified',)
+    search_fields = ('edx_video_id', 'client_video_id', 'title',)
+    raw_id_fields = ('parent_content_metadata',)
 
 
 @admin.register(VideoSkill)
@@ -59,5 +59,5 @@ class VideoShortlistAdmin(ImportExportModelAdmin):
     list_per_page = 800
     tmp_storage_class = CacheStorage
     resource_classes = [VideoShortlistResource]
-    list_display = ('video_usage_key', 'is_processed',)
-    search_fields = ('video_usage_key', 'is_processed',)
+    list_display = ('video_usage_key', 'title', 'is_processed',)
+    search_fields = ('video_usage_key', 'title', 'is_processed',)
