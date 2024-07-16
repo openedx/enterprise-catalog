@@ -4,7 +4,6 @@ Management command for fetching video metadata from LMS
 import logging
 
 from django.core.management.base import BaseCommand
-from rest_framework.exceptions import ValidationError
 
 from enterprise_catalog.apps.video_catalog.models import VideoShortlist
 from enterprise_catalog.apps.video_catalog.utils import fetch_video
@@ -44,8 +43,9 @@ class Command(BaseCommand):
                 fetch_video(shorlisted_video)
                 shorlisted_video.is_processed = True
                 shorlisted_video.save()
-            except ValidationError:
-                logger.error(
-                    '[FETCH_VIDEO_METADATA] Video usage key:  "%s" could not be validated.',
-                    shorlisted_video.video_usage_key
+            except Exception as ex:  # pylint: disable=broad-exception-caught
+                logger.exception(
+                    '[FETCH_VIDEO_METADATA] Video usage key:  "%s" could not be processed. Ex: "%s"',
+                    shorlisted_video.video_usage_key,
+                    str(ex)
                 )
