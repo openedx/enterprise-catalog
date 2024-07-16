@@ -27,9 +27,17 @@ class StudioApiClient(BaseOAuthClient):
         Returns:
             (dict): Dictionary containing course video metadata.
         """
-        return self.client.get(
-            STUDIO_API_COURSE_VIDEOS_ENDPOINT.format(course_run_key=course_run_key),
-        ).json()
+        try:
+            return self.client.get(
+                STUDIO_API_COURSE_VIDEOS_ENDPOINT.format(course_run_key=course_run_key),
+            ).json()
+        except requests.exceptions.JSONDecodeError as ex:
+            logger.error(
+                'Invalid JSON response received for video metadata: Course run: [%s], Ex: [%s]',
+                course_run_key,
+                str(ex)
+            )
+            return {}
 
     def get_video_usage_locations(self, course_run_key, edx_video_id):
         """
