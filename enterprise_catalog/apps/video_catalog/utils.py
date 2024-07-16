@@ -67,8 +67,8 @@ def fetch_video(shortlisted_video):
     """
     try:
         video_usage_key = UsageKey.from_string(shortlisted_video.video_usage_key)
-    except ValueError:
-        raise ValidationError('Invalid usage key')  # lint-amnesty, pylint: disable=raise-missing-from
+    except ValueError as e:
+        raise ValidationError('Invalid video usage key') from e
     course_run_key = str(video_usage_key.context_key)
     fetch_course_video_metadata(course_run_key, shortlisted_video.video_usage_key, shortlisted_video.title)
 
