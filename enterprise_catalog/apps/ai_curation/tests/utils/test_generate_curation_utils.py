@@ -2,7 +2,7 @@
 Tests for ai_curation app utils.
 """
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from django.test import TestCase
 
@@ -95,16 +95,17 @@ class TestUtils(TestCase):
 
         assert apply_keywords_filter(courses, ['java']) == []
 
-    @patch('enterprise_catalog.apps.ai_curation.openai_client.client.chat.completions.create')
+    @patch('enterprise_catalog.apps.ai_curation.openai_client.requests.post')
     @patch('enterprise_catalog.apps.ai_curation.utils.open_ai_utils.get_query_keywords')
-    def test_apply_tfidf_filter(self, mock_get_query_keywords, mock_create):
+    def test_apply_tfidf_filter(self, mock_get_query_keywords, mock_requests):
         """
         Validate apply_tfidf_filter function.
         """
         mock_get_query_keywords.return_value = ['keyword1', 'keyword2']
-        mock_create.return_value = MagicMock(
-            choices=[MagicMock(message=MagicMock(content=json.dumps(['Learn data science with python'])))]
-        )
+        mock_requests.return_value.json.return_value = {
+            "role": "assistant",
+            "content": json.dumps(['Learn data science with python'])
+        }
 
         courses = [
             {
