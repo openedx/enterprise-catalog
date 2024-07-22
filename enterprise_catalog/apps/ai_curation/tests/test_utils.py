@@ -180,3 +180,30 @@ class TestChatCompletionUtils(TestCase):
         assert mock_backoff_logger['error'].call_count == 1
         assert mock_logger.exception.called
         mock_logger.exception.assert_has_calls([mock.call('[AI_CURATION] API Error: Prompt: [%s]', messages)])
+
+    @patch('enterprise_catalog.apps.ai_curation.openai_client.LOGGER')
+    @patch('enterprise_catalog.apps.ai_curation.openai_client.requests.post')
+    def test_chat_completions_decode_json(self, mock_requests, mock_logger):
+        """
+        Test that json decode error is raised for improper json response
+        """
+        mock_requests.return_value.json.return_value = {
+            "role": "assistant",
+            "content": "subjects: ['subject1', 'subject2']"
+        }
+        messages = [
+            {
+                'role': 'system',
+                'content': 'I am a prompt'
+            }
+        ]
+        with self.assertRaises(AICurationError):
+            backoff_logger = logging.getLogger('backoff')
+            with mock.patch.multiple(backoff_logger, info=mock.DEFAULT, error=mock.DEFAULT) as mock_backoff_logger:
+                chat_completions(messages=messages)
+
+        assert mock_requests.call_count == 3
+        assert mock_backoff_logger['info'].call_count == 2
+        assert mock_backoff_logger['error'].call_count == 1
+        assert mock_logger.exception.called
+        mock_logger.exception.assert_has_calls([mock.call('[AI_CURATION] API Error: Prompt: [%s]', messages)])

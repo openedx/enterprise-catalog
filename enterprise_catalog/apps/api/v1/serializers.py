@@ -497,11 +497,12 @@ class VideoSerializer(serializers.ModelSerializer):
     skills = VideoSkillSerializer(many=True, read_only=True)
     summary_transcripts = serializers.SlugRelatedField(many=True, read_only=True, slug_field='summary')
     parent_content_metadata = ContentMetadataSerializer(read_only=True)
+    json_metadata = serializers.JSONField(read_only=True)
 
     class Meta:
         model = Video
         fields = [
-            'edx_video_id', 'client_video_id', 'video_usage_key',
+            'edx_video_id', 'client_video_id', 'video_usage_key', 'title',
             'json_metadata', 'summary_transcripts', 'parent_content_metadata', 'skills',
         ]
         lookup_field = 'edx_video_id'
