@@ -80,16 +80,16 @@ def chat_completions(
             settings.CHAT_COMPLETION_API_READ_TIMEOUT
         )
     )
-    LOGGER.info('[AI_CURATION] [CHAT_COMPLETIONS] Response: [%s]', response)
+    LOGGER.info('[AI_CURATION] [CHAT_COMPLETIONS] Response: [%s]', response.json())
     try:
         response_content = response.json().get('content')
         if response_format == 'json':
             return json.loads(response_content)
         return json.loads(response_content)[0]
-    except requests.exceptions.JSONDecodeError as ex:
+    except json.decoder.JSONDecodeError as ex:
         LOGGER.error(
             '[AI_CURATION] Invalid JSON response received: Prompt: [%s], Response: [%s]',
             messages,
-            response
+            response.json()
         )
         raise InvalidJSONResponseError('Invalid response received.') from ex
