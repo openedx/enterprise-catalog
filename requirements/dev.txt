@@ -34,7 +34,7 @@ asgiref==3.8.1
     #   -r requirements/test.txt
     #   django
     #   django-cors-headers
-astroid==3.2.2
+astroid==3.2.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -60,7 +60,7 @@ build==1.2.1
     # via
     #   -r requirements/pip-tools.txt
     #   pip-tools
-cachetools==5.3.3
+cachetools==5.4.0
     # via
     #   -r requirements/test.txt
     #   tox
@@ -137,11 +137,11 @@ colorama==0.4.6
     # via
     #   -r requirements/test.txt
     #   tox
-coverage[toml]==7.5.4
+coverage[toml]==7.6.0
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==42.0.8
+cryptography==43.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -181,7 +181,7 @@ distro==1.9.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   openai
-django==4.2.13
+django==4.2.14
     # via
     #   -c requirements/common_constraints.txt
     #   -c requirements/constraints.txt
@@ -236,7 +236,7 @@ django-crum==0.7.9
     #   edx-django-utils
     #   edx-rbac
     #   edx-toggles
-django-debug-toolbar==4.4.5
+django-debug-toolbar==4.4.6
     # via -r requirements/dev.in
 django-dynamic-fixture==4.0.1
     # via -r requirements/test.txt
@@ -244,7 +244,7 @@ django-extensions==3.2.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-django-import-export==4.1.0
+django-import-export==4.1.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -327,7 +327,7 @@ edx-drf-extensions==10.3.0
     #   edx-rbac
 edx-i18n-tools==1.6.0
     # via -r requirements/dev.in
-edx-lint==5.3.6
+edx-lint==5.3.7
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -429,7 +429,7 @@ jsonfield2==4.0.0.post0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-jsonschema==4.22.0
+jsonschema==4.23.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -469,12 +469,12 @@ mysqlclient==2.2.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-newrelic==9.11.0
+newrelic==9.12.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-django-utils
-numpy==2.0.0
+numpy==2.0.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -569,7 +569,7 @@ pyjwt[crypto]==2.8.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
-pylint==3.2.5
+pylint==3.2.6
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -616,7 +616,7 @@ pyproject-hooks==1.1.0
     #   -r requirements/pip-tools.txt
     #   build
     #   pip-tools
-pytest==8.2.2
+pytest==8.3.1
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -689,7 +689,7 @@ responses==0.25.3
     # via
     #   -r requirements/dev.in
     #   -r requirements/test.txt
-rpds-py==0.18.1
+rpds-py==0.19.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -743,7 +743,7 @@ snowballstemmer==2.2.0
     # via
     #   -r requirements/quality.txt
     #   pydocstyle
-social-auth-app-django==5.4.1
+social-auth-app-django==5.4.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -754,7 +754,7 @@ social-auth-core==4.5.4
     #   -r requirements/test.txt
     #   edx-auth-backends
     #   social-auth-app-django
-sqlparse==0.5.0
+sqlparse==0.5.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -782,7 +782,7 @@ threadpoolctl==3.5.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   scikit-learn
-tomlkit==0.12.5
+tomlkit==0.13.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
