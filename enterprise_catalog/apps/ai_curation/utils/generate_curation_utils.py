@@ -1,6 +1,8 @@
 """
 Utility functions for curation generation.
 """
+import logging
+
 from django.core.cache import cache
 from rest_framework import status
 from scipy.stats import percentileofscore
@@ -18,6 +20,8 @@ from .open_ai_utils import (
 )
 from .segment_utils import track_ai_curation
 
+
+logger = logging.getLogger(__name__)
 
 CACHE_KEY = '{task_id}_{content_type}'
 CACHE_TIMEOUT = 1200
@@ -278,6 +282,7 @@ def get_tweaked_results(task_id: str, threshold: float):
     programs = cache.get(get_cache_key(task_id=task_id, content_type='programs'))
 
     if not partially_filtered_ocm_courses or not partially_filtered_exec_ed_courses or not programs:
+        logger.error(f'[AI_CURATION] Cached data not found for task_id: {task_id}')
         raise AICurationError(
             dev_message=f'No cached data found for task_id: {task_id}.',
             status_code=status.HTTP_400_BAD_REQUEST
