@@ -252,6 +252,8 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
         marketing_url = json_metadata.get('marketing_url')
         content_key = json_metadata.get('key')
 
+        json_metadata['parent_content_key'] = instance.parent_content_key
+
         # Currently (3/17/23) product source can potentially be two different formats, string and dict.
         # For the purposes of the metadata serializer, we will standardize and default to the dict format.
         if product_source := json_metadata.get('product_source'):
@@ -293,7 +295,7 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
                 # is controlled via Entitlements, which are tied directly to Courses
                 # (as opposed to Seats, which are tied to Course Runs).
                 if not instance.is_exec_ed_2u_course and not self.context.get('skip_customer_fetch'):
-                    self._add_course_run_enrollment_urls(instance, serialized_course_runs)
+                    self._augment_serialized_runs_for_course(instance, serialized_course_runs)
         elif content_type == PROGRAM:
             # We want this to be null, because we have no notion
             # of directly enrolling in a program.
@@ -301,23 +303,25 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
 
         return json_metadata
 
-    def _add_course_run_enrollment_urls(self, course_instance, serialized_course_runs):
+    def _augment_serialized_runs_for_course(self, course_instance, serialized_course_runs):
         """
-        For the given `course_instance`, computes the enrollment url for each
-        child course run and adds it to the serialized representation of the
+        For the given `course_instance`, computes the enrollment url and parent_content_key for each
+        child course run and adds them to the serialized representation of the
         course run record in `serialized_course_runs`.
         """
         # Early guard in case the context has no catalog
         if not self.context.get('enterprise_catalog'):
             return
 
-        urls_by_course_run_key = {}
-        for course_run in ContentMetadata.get_child_records(course_instance):
-            urls_by_course_run_key[course_run.content_key] = \
-                self.context['enterprise_catalog'].get_content_enrollment_url(course_run)
+        serialized_runs_by_key = {run['key']: run for run in serialized_course_runs}
 
-        for serialized_run in serialized_course_runs:
-            serialized_run['enrollment_url'] = urls_by_course_run_key.get(serialized_run['key'])
+        for course_run_instance in ContentMetadata.get_child_records(course_instance):
+            serialized_run = serialized_runs_by_key.get(course_run_instance.content_key)
+            if not serialized_run:
+                continue
+            serialized_run['parent_content_key'] = course_run_instance.parent_content_key
+            serialized_run['enrollment_url'] = \
+                self.context['enterprise_catalog'].get_content_enrollment_url(course_run_instance)
 
 
 class HighlightedContentSerializer(serializers.ModelSerializer):
