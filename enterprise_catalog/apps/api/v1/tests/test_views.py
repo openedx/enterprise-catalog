@@ -1236,6 +1236,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         content_type = content_metadata.content_type
         json_metadata = content_metadata.json_metadata.copy()
         enrollment_url = '{}/enterprise/{}/{}/{}/enroll/?catalog={}&utm_medium=enterprise&utm_source={}'
+        json_metadata['parent_content_key'] = content_metadata.parent_content_key
 
         json_metadata['content_last_modified'] = content_metadata.modified.isoformat()[:-6] + 'Z'
         if content_metadata.is_exec_ed_2u_course and is_learner_portal_enabled:
@@ -1269,7 +1270,6 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
                 json_metadata.get('key'),
             )
 
-        # course
         if content_type == COURSE:
             course_key = json_metadata.get('key')
             course_runs = json_metadata.get('course_runs') or []
@@ -1294,6 +1294,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
                             slugify(self.enterprise_catalog.enterprise_name),
                         )
                         course_run.update({'enrollment_url': course_run_enrollment_url})
+                        course_run['parent_content_key'] = course_key
             else:
                 course_enrollment_url = enrollment_url.format(
                     settings.LMS_BASE_URL,
@@ -1315,14 +1316,14 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
                             slugify(self.enterprise_catalog.enterprise_name),
                         )
                         course_run.update({'enrollment_url': course_run_enrollment_url})
+                        course_run['parent_content_key'] = course_key
 
             json_metadata['course_runs'] = course_runs
             json_metadata['active'] = is_any_course_run_active(course_runs)
 
-        # course run
         if content_type == COURSE_RUN:
+            course_key = content_metadata.parent_content_key or get_parent_content_key(json_metadata)
             if is_learner_portal_enabled:
-                course_key = content_metadata.parent_content_key or get_parent_content_key(json_metadata)
                 course_run_key = quote_plus(json_metadata.get('key'))
                 course_run_key_param = f'course_run_key={course_run_key}&'
                 course_run_enrollment_url = enrollment_url.format(
@@ -1344,7 +1345,6 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
                 )
                 json_metadata['enrollment_url'] = course_run_enrollment_url
 
-        # program
         if content_type == PROGRAM:
             json_metadata['enrollment_url'] = None
 
@@ -1480,7 +1480,6 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
             response_data['results'] + second_response_data['results'],
             key=get_content_key,
         )
-
         self.assertEqual(
             json.dumps(actual_metadata, sort_keys=True),
             json.dumps(expected_metadata, sort_keys=True),
@@ -1535,7 +1534,6 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
             response_data['results'],
             key=get_content_key,
         )
-
         self.assertEqual(
             json.dumps(actual_metadata, sort_keys=True),
             json.dumps(expected_metadata, sort_keys=True),

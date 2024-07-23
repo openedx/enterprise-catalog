@@ -90,6 +90,7 @@ docs/_build/
 
 # emacs
 *~
+.projectile
 
 # transifex exe
 tx
