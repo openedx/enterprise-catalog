@@ -573,3 +573,20 @@ class TestModels(TestCase):
         catalog.catalog_query.modified = localized_utcnow()
         update_contentmetadata_from_discovery(catalog.catalog_query)
         assert len(catalog.catalog_query.contentmetadata_set.all()) == 1
+
+    def test_bulk_update_changes_modified_time(self):
+        """
+        Test that `ContentMetadata.objects.bulk_update()` changes
+        the modified time of the updated records.
+        """
+        original_modified_time = localized_utcnow()
+        records = factories.ContentMetadataFactory.create_batch(10, modified=original_modified_time)
+
+        for record in records:
+            record.json_metadata['extra_stuff'] = 'foo'
+
+        ContentMetadata.objects.bulk_update(records, ['json_metadata'], batch_size=10)
+
+        for record in records:
+            record.refresh_from_db()
+            self.assertGreater(record.modified, original_modified_time)

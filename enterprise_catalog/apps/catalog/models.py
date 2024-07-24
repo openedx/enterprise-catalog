@@ -493,6 +493,26 @@ class EnterpriseCatalog(TimeStampedModel):
         return xapi_activity_id
 
 
+class ContentMetadataManager(models.Manager):
+    """
+    Customer manager for ContentMetadata that forces the `modified` field
+    to be updated during `bulk_update()`.
+    """
+
+    def bulk_update(self, objs, fields, batch_size=None):
+        """
+        Updates the `modified` time of each object, and then
+        does the usual bulk update, with `modified` as also
+        a field to save.
+        """
+        last_modified = localized_utcnow()
+        for obj in objs:
+            obj.modified = last_modified
+        fields += ['modified']
+
+        super().bulk_update(objs, fields, batch_size=batch_size)
+
+
 class ContentMetadata(TimeStampedModel):
     """
     Stores the JSON metadata for a piece of content, such as a course, course run, or program.
@@ -555,6 +575,8 @@ class ContentMetadata(TimeStampedModel):
     catalog_queries = models.ManyToManyField(CatalogQuery)
 
     history = HistoricalRecords()
+
+    objects = ContentMetadataManager()
 
     class Meta:
         verbose_name = _("Content Metadata")
