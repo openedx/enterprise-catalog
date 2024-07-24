@@ -66,20 +66,21 @@ def chat_completions(
     """
     LOGGER.info('[AI_CURATION] [CHAT_COMPLETIONS] Prompt: [%s]', messages)
 
-    headers = {'Content-Type': 'application/json', 'x-api-key': settings.CHAT_COMPLETION_API_KEY}
+    headers = {'Content-Type': 'application/json', 'x-api-key': ''}
     message_list = []
     for message in messages:
         message_list.append({'role': 'assistant', 'content': message['content']})
     body = {'message_list': message_list}
     response = requests.post(
-        settings.CHAT_COMPLETION_API,
+        'https://xpert-platform-services-api.prod.ai.2u.com/xpert/chatservice',
         headers=headers,
         data=json.dumps(body),
         timeout=(
-            settings.CHAT_COMPLETION_API_CONNECT_TIMEOUT,
-            settings.CHAT_COMPLETION_API_READ_TIMEOUT
+            1,
+            15
         )
     )
+    LOGGER.info('[AI_CURATION] [CHAT_COMPLETIONS] Response: [%s]', response.json())
     LOGGER.info('[AI_CURATION] [CHAT_COMPLETIONS] Response: [%s]', response.json())
     try:
         response_content = response.json().get('content')
