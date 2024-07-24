@@ -58,11 +58,7 @@ from enterprise_catalog.apps.catalog.utils import (
     get_content_filter_hash,
     localized_utcnow,
 )
-from enterprise_catalog.apps.video_catalog.models import (
-    Video,
-    VideoSkill,
-    VideoTranscriptSummary,
-)
+from enterprise_catalog.apps.video_catalog.models import Video
 
 
 logger = logging.getLogger(__name__)
@@ -677,26 +673,6 @@ def add_video_to_algolia_objects(
     })
     json_metadata.update({
         'title': video.title,
-    })
-    transcript_summary = VideoTranscriptSummary.objects.filter(video=video).first()
-    if transcript_summary is not None:
-        json_metadata.update({
-            'transcript_summary': transcript_summary.summary,
-        })
-    video_skills = VideoSkill.objects.filter(video=video).values_list('name', flat=True)
-    json_metadata.update({
-        'video_skills': list(video_skills),
-    })
-    video_parent_cm = video.parent_content_metadata
-    if video_parent_cm:
-        json_metadata.update({
-            'course_run_key': video_parent_cm.json_metadata.get('key'),
-            'org': video_parent_cm.json_metadata.get('org'),
-            'logo_image_urls': list(video_parent_cm.json_metadata.get('logo_image_urls', [])),
-            'image_url': video_parent_cm.json_metadata.get('image_url'),
-        })
-    json_metadata.update({
-        'duration': video.json_metadata.get('duration'),
     })
     json_metadata_size = sys.getsizeof(
         json.dumps(_algolia_object_from_product(json_metadata, algolia_fields=ALGOLIA_FIELDS)).strip(" "),
