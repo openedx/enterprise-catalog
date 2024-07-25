@@ -1281,22 +1281,18 @@ def get_avg_course_rating(content):
     return content.get('avg_course_rating')
 
 
-def get_video_partners(content):
+def get_video_partners(video):
     """
     Gets list of partners associated with the video. Used for the "Partners" facet and
     searchable attribute in Algolia.
 
     Arguments:
-        video (dict): a dictionary representing the video
+        video (obj): the video model object
 
     Returns:
         list: a list of partner metadata associated with the course
     """
-    try:
-        video = Video.objects.get(edx_video_id=content.get('aggregation_key'))
-        course_content_key = video.parent_content_metadata.parent_content_key
-    except Video.DoesNotExist:
-        return []
+    course_content_key = video.parent_content_metadata.parent_content_key
     try:
         course_metadata = ContentMetadata.objects.get(content_key=course_content_key)
         return get_course_partners(course_metadata.json_metadata) if course_metadata else []
@@ -1304,128 +1300,100 @@ def get_video_partners(content):
         return []
 
 
-def get_transcript_summary(content):
+def get_transcript_summary(video):
     """
     Gets transcript summary of the video
 
     Arguments:
-        video (dict): a dictionary representing the video
+        video (obj): the video model object
 
     Returns:
         str: video transcript summary
     """
-    try:
-        video = Video.objects.get(edx_video_id=content.get('aggregation_key'))
-    except Video.DoesNotExist:
-        return ''
     transcript_summary = VideoTranscriptSummary.objects.filter(video=video).first()
     return transcript_summary.summary if transcript_summary else ''
 
 
-def get_video_skills(content):
+def get_video_skills(video):
     """
     Gets skills associated with the video
 
     Arguments:
-        video (dict): a dictionary representing the video
+        video (obj): the video model object
 
     Returns:
         list: a list of skills associated with the video
     """
-    try:
-        video = Video.objects.get(edx_video_id=content.get('aggregation_key'))
-    except Video.DoesNotExist:
-        return []
     video_skills = VideoSkill.objects.filter(video=video).values_list('name', flat=True)
     return list(video_skills) if video_skills else []
 
 
-def get_video_course_run_key(content):
+def get_video_course_run_key(video):
     """
     Gets course run key associated with the video
 
     Arguments:
-        video (dict): a dictionary representing the video
+        video (obj): the video model object
 
     Returns:
         str: course run key
     """
-    try:
-        video = Video.objects.get(edx_video_id=content.get('aggregation_key'))
-    except Video.DoesNotExist:
-        return ''
     video_parent_cm = video.parent_content_metadata
     return video_parent_cm.json_metadata.get('key') if video_parent_cm else ''
 
 
-def get_video_org(content):
+def get_video_org(video):
     """
     Gets organization associated with the video
 
     Arguments:
-        video (dict): a dictionary representing the video
+        video (obj): the video model object
 
     Returns:
         str: organization code
     """
-    try:
-        video = Video.objects.get(edx_video_id=content.get('aggregation_key'))
-    except Video.DoesNotExist:
-        return ''
     video_parent_cm = video.parent_content_metadata
     return video_parent_cm.json_metadata.get('org') if video_parent_cm else ''
 
 
-def get_video_logo_image_urls(content):
+def get_video_logo_image_urls(video):
     """
     Gets logo image urls associated with the video
 
     Arguments:
-        video (dict): a dictionary representing the video
+        video (obj): the video model object
 
     Returns:
         list: a list of logo image urls associated with the video
     """
-    try:
-        video = Video.objects.get(edx_video_id=content.get('aggregation_key'))
-    except Video.DoesNotExist:
-        return []
     video_parent_cm = video.parent_content_metadata
     return list(video_parent_cm.json_metadata.get('logo_image_urls', [])) if video_parent_cm else []
 
 
-def get_video_image_url(content):
+def get_video_image_url(video):
     """
     Gets image url associated with the video
 
     Arguments:
-        video (dict): a dictionary representing the video
+        video (obj): the video model object
 
     Returns:
         str: video image url
     """
-    try:
-        video = Video.objects.get(edx_video_id=content.get('aggregation_key'))
-    except Video.DoesNotExist:
-        return ''
     video_parent_cm = video.parent_content_metadata
     return video_parent_cm.json_metadata.get('image_url') if video_parent_cm else ''
 
 
-def get_video_duration(content):
+def get_video_duration(video):
     """
     Gets video duration associated with the video
 
     Arguments:
-        video (dict): a dictionary representing the video
+        video (obj): the video model object
 
     Returns:
         str: video duration
     """
-    try:
-        video = Video.objects.get(edx_video_id=content.get('aggregation_key'))
-    except Video.DoesNotExist:
-        return ''
     return video.json_metadata.get('duration')
 
 
@@ -1498,16 +1466,21 @@ def _algolia_object_from_product(product, algolia_fields):
             'learning_type_v2': get_learning_type_v2(searchable_product),
         })
     elif searchable_product.get('content_type') == VIDEO:
-        searchable_product.update({
-            'partners': get_video_partners(searchable_product),
-            'transcript_summary': get_transcript_summary(searchable_product),
-            'video_skills': get_video_skills(searchable_product),
-            'course_run_key': get_video_course_run_key(searchable_product),
-            'org': get_video_org(searchable_product),
-            'logo_image_urls': get_video_logo_image_urls(searchable_product),
-            'image_url': get_video_image_url(searchable_product),
-            'duration': get_video_duration(searchable_product),
-        })
+        try:
+            edx_video_id = searchable_product.get('aggregation_key')
+            video = Video.objects.get(edx_video_id=edx_video_id)
+            searchable_product.update({
+                'partners': get_video_partners(video),
+                'transcript_summary': get_transcript_summary(video),
+                'video_skills': get_video_skills(video),
+                'course_run_key': get_video_course_run_key(video),
+                'org': get_video_org(video),
+                'logo_image_urls': get_video_logo_image_urls(video),
+                'image_url': get_video_image_url(video),
+                'duration': get_video_duration(video),
+            })
+        except Video.DoesNotExist:
+            logger.warning(f"video not found for aggregation_key: {edx_video_id}")
 
     algolia_object = {}
     keys = searchable_product.keys()
