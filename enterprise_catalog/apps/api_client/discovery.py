@@ -232,7 +232,7 @@ class DiscoveryApiClient(BaseOAuthClient):
         """
         page = 1
         results = []
-        request_params = {'page': page, 'usage_key': video_usage_key, 'verified': 'true'}
+        request_params = {'page': page, 'usage_key': video_usage_key, 'verified': 'false'}
         try:
             response = self._retrieve_video_skills(request_params)
             results += response.get('results', [])
