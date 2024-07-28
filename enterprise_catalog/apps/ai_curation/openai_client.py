@@ -85,7 +85,7 @@ def chat_completions(
         response_content = response.json().get('content')
         if response_format == 'json':
             return json.loads(response_content)
-        return json.loads(response_content)[0]
+        return response_content
     except json.decoder.JSONDecodeError as ex:
         LOGGER.error(
             '[AI_CURATION] Invalid JSON response received: Prompt: [%s], Response: [%s]',

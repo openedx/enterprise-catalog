@@ -110,7 +110,7 @@ def get_transcript_summary(transcript: str, max_length: int = 260) -> str:
             'content': settings.SUMMARIZE_VIDEO_TRANSCRIPT_PROMPT.format(count=max_length, transcript=transcript)
         }
     ]
-    return chat_completions(messages=messages, response_format='text', response_type=str)
+    return chat_completions(messages=messages, response_format='text')
 
 
 def fetch_transcript(transcript_url: str, include_time_markings: bool = True) -> str:
