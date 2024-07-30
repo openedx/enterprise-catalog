@@ -325,7 +325,7 @@ edx-drf-extensions==10.3.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-rbac
-edx-i18n-tools==1.6.0
+edx-i18n-tools==1.6.2
     # via -r requirements/dev.in
 edx-lint==5.3.7
     # via
@@ -444,12 +444,8 @@ kombu==5.3.7
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   celery
-lxml[html-clean,html_clean]==5.2.2
-    # via
-    #   edx-i18n-tools
-    #   lxml-html-clean
-lxml-html-clean==0.1.1
-    # via lxml
+lxml==5.2.2
+    # via edx-i18n-tools
 markupsafe==2.1.5
     # via
     #   -r requirements/quality.txt
@@ -500,7 +496,7 @@ packaging==24.1
     #   pyproject-api
     #   pytest
     #   tox
-path==16.14.0
+path==16.16.0
     # via edx-i18n-tools
 pbr==6.0.0
     # via
@@ -616,7 +612,7 @@ pyproject-hooks==1.1.0
     #   -r requirements/pip-tools.txt
     #   build
     #   pip-tools
-pytest==8.3.1
+pytest==8.3.2
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -689,7 +685,7 @@ responses==0.25.3
     # via
     #   -r requirements/dev.in
     #   -r requirements/test.txt
-rpds-py==0.19.0
+rpds-py==0.19.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
