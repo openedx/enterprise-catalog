@@ -17,14 +17,12 @@ from django.db.utils import OperationalError
 from django_celery_results.models import TaskResult
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
-from enterprise_catalog.apps.api.constants import CourseMode
 from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 from enterprise_catalog.apps.catalog.algolia_utils import (
     ALGOLIA_FIELDS,
     ALGOLIA_JSON_METADATA_MAX_SIZE,
     ALGOLIA_UUID_BATCH_SIZE,
     _algolia_object_from_product,
-    _get_course_run_by_uuid,
     configure_algolia_index,
     create_algolia_objects,
     get_algolia_object_id,
@@ -53,6 +51,9 @@ from enterprise_catalog.apps.catalog.models import (
     create_course_associated_programs,
     update_contentmetadata_from_discovery,
 )
+from enterprise_catalog.apps.catalog.serializers import (
+    NormalizedContentMetadataSerializer,
+)
 from enterprise_catalog.apps.catalog.utils import (
     batch,
     get_content_filter_hash,
@@ -69,20 +70,6 @@ UNREADY_TASK_RETRY_COUNTDOWN_SECONDS = 60 * 5
 
 # ENT-4980 every batch "shard" record in Algolia should have all of these that pertain to the course
 EXPLORE_CATALOG_TITLES = ['A la carte', 'Subscription']
-
-# The closer a mode is to the beginning of this list, the more likely a seat with that mode will be used to find the
-# upgrade deadline for the course (and course run).
-BEST_MODE_ORDER = [
-    CourseMode.VERIFIED,
-    CourseMode.PROFESSIONAL,
-    CourseMode.NO_ID_PROFESSIONAL_MODE,
-    CourseMode.UNPAID_EXECUTIVE_EDUCATION,
-    CourseMode.AUDIT,
-]
-
-# The default normalized content price for any content which otherwise
-# would have a null price
-DEFAULT_NORMALIZED_PRICE = 0.0
 
 
 def _fetch_courses_by_keys(course_keys):
@@ -251,73 +238,6 @@ def update_full_content_metadata_task(self, force=False, dry_run=False):  # pyli
     _update_full_content_metadata_program(content_keys, dry_run)
 
 
-def _find_best_mode_seat(seats):
-    """
-    Find the seat with the "best" course mode.  See BEST_MODE_ORDER to find which modes are best.
-    """
-    sort_key_for_mode = {mode: index for (index, mode) in enumerate(BEST_MODE_ORDER)}
-
-    def sort_key(seat):
-        """
-        Get a sort key (int) for a seat dictionary based on the position of its mode in the BEST_MODE_ORDER list.
-
-        Modes not found in the BEST_MODE_ORDER list get sorted to the end of the list.
-        """
-        mode = seat['type']
-        return sort_key_for_mode.get(mode, len(sort_key_for_mode))
-
-    sorted_seats = sorted(seats, key=sort_key)
-    if sorted_seats:
-        return sorted_seats[0]
-    return None
-
-
-def _normalize_course_metadata(course_metadata_record):
-    """
-    Add normalized metadata keys with values calculated by normalizing existing keys. This will be helpful for
-    downstream consumers which no longer will need to do their own independent normalization.
-
-    At the time of writing, output normalized metadata keys include:
-
-    * normalized_metadata.start_date: When the course starts
-    * normalized_metadata.end_date: When the course ends
-    * normalized_metadata.enroll_by_date: The deadline for enrollment
-    * normalized_metadata.content_price: The price of a course
-
-    Note that course-type-specific definitions of each of these keys may be more nuanced.
-    """
-    json_meta = course_metadata_record.json_metadata
-    normalized_metadata = {}
-    # For each content type, find the values that correspond to the desired output key.
-    if course_metadata_record.is_exec_ed_2u_course:
-        # First case covers Exec Ed courses.
-        additional_metadata = json_meta.get('additional_metadata', {})
-        normalized_metadata['start_date'] = additional_metadata.get('start_date')
-        normalized_metadata['end_date'] = additional_metadata.get('end_date')
-        normalized_metadata['enroll_by_date'] = additional_metadata.get('registration_deadline')
-        for entitlement in json_meta.get('entitlements', []):
-            if entitlement.get('mode') == CourseMode.PAID_EXECUTIVE_EDUCATION:
-                normalized_metadata['content_price'] = entitlement.get('price') or DEFAULT_NORMALIZED_PRICE
-    else:
-        # Else case covers OCM courses.
-        advertised_course_run_uuid = json_meta.get('advertised_course_run_uuid')
-        advertised_course_run = _get_course_run_by_uuid(json_meta, advertised_course_run_uuid)
-        if advertised_course_run is not None:
-            normalized_metadata['start_date'] = advertised_course_run.get('start')
-            normalized_metadata['end_date'] = advertised_course_run.get('end')
-            normalized_metadata['content_price'] = \
-                advertised_course_run.get('first_enrollable_paid_seat_price') or DEFAULT_NORMALIZED_PRICE
-            all_seats = advertised_course_run.get('seats', [])
-            seat = _find_best_mode_seat(all_seats)
-            if seat:
-                normalized_metadata['enroll_by_date'] = seat.get('upgrade_deadline')
-            else:
-                logger.info(f"No Seat Found for course run '{advertised_course_run.get('key')}'. Seats: {all_seats}")
-
-    # Add normalized values to net-new keys:
-    json_meta['normalized_metadata'] = normalized_metadata
-
-
 def _update_full_content_metadata_course(content_keys, dry_run=False):
     """
     Given content_keys, finds the associated ContentMetadata records with a type of course and looks up the full
@@ -379,8 +299,10 @@ def _update_full_content_metadata_course(content_keys, dry_run=False):
                     if run.get('uuid') == course_run_uuid:
                         run.update({'start': start_date, 'end': end_date})
 
-            # Perform more steps to normalize and move keys around for more consistency across content types.
-            _normalize_course_metadata(metadata_record)
+            # Perform more steps to normalize and move keys around
+            # for more consistency across content types.
+            metadata_record.json_metadata['normalized_metadata'] =\
+                NormalizedContentMetadataSerializer(metadata_record).data
 
             if review := reviews_for_courses_dict.get(content_key):
                 metadata_record.json_metadata['reviews_count'] = review.get('reviews_count')
