@@ -22,7 +22,7 @@ jobs:
         architecture: x64
     - name: Start container
       run: |
-        docker-compose -f .github/docker-compose-github.yml up -d
+        docker compose -f .github/docker-compose-github.yml up -d
     - name: Install test dependencies and run validation
       run: |
         docker exec -e TOXENV=py312-${{ matrix.django-version }} -u root enterprise.catalog.app /edx/app/enterprise_catalog/enterprise_catalog/validate.sh
