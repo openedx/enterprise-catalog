@@ -24,6 +24,10 @@ from enterprise_catalog.apps.catalog.constants import (
     PROGRAM,
 )
 from enterprise_catalog.apps.catalog.models import CatalogQuery, ContentMetadata
+from enterprise_catalog.apps.catalog.serializers import (
+    DEFAULT_NORMALIZED_PRICE,
+    _find_best_mode_seat,
+)
 from enterprise_catalog.apps.catalog.tests.factories import (
     CatalogQueryFactory,
     ContentMetadataFactory,
@@ -394,8 +398,7 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         """
         Test the behavior of _find_best_mode_seat().
         """
-        # pylint: disable=protected-access
-        assert tasks._find_best_mode_seat(seats) == expected_seat
+        assert _find_best_mode_seat(seats) == expected_seat
 
     # pylint: disable=unused-argument
     @mock.patch('enterprise_catalog.apps.api.tasks.task_recently_run', return_value=False)
@@ -491,7 +494,7 @@ class UpdateFullContentMetadataTaskTests(TestCase):
 
         assert metadata_2.json_metadata['aggregation_key'] == f'course:{course_key_2}'
         assert metadata_2.json_metadata['full_course_only_field'] == 'test_2'
-        assert metadata_2.json_metadata['normalized_metadata']['content_price'] == tasks.DEFAULT_NORMALIZED_PRICE
+        assert metadata_2.json_metadata['normalized_metadata']['content_price'] == DEFAULT_NORMALIZED_PRICE
         assert set(program_data.items()).issubset(set(metadata_2.json_metadata['programs'][0].items()))
 
         assert metadata_3.json_metadata['aggregation_key'] == f'course:{course_key_3}'
