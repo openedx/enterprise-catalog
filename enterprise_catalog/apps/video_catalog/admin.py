@@ -2,6 +2,7 @@
 Admin for video catalog models.
 """
 from django.contrib import admin
+from djangoql.admin import DjangoQLSearchMixin
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
 from import_export.tmp_storages import CacheStorage
@@ -16,7 +17,7 @@ from enterprise_catalog.apps.video_catalog.models import (
 
 
 @admin.register(VideoTranscriptSummary)
-class VideoTranscriptSummaryAdmin(SimpleHistoryAdmin):
+class VideoTranscriptSummaryAdmin(DjangoQLSearchMixin, SimpleHistoryAdmin):
     """
     Django admin for VideoTranscriptSummary.
     """
@@ -25,7 +26,7 @@ class VideoTranscriptSummaryAdmin(SimpleHistoryAdmin):
 
 
 @admin.register(Video)
-class VideoAdmin(SimpleHistoryAdmin):
+class VideoAdmin(DjangoQLSearchMixin, SimpleHistoryAdmin):
     """
     Django admin for Video.
     """
@@ -35,7 +36,7 @@ class VideoAdmin(SimpleHistoryAdmin):
 
 
 @admin.register(VideoSkill)
-class VideoSkillAdmin(SimpleHistoryAdmin):
+class VideoSkillAdmin(DjangoQLSearchMixin, SimpleHistoryAdmin):
     """
     Django admin for VideoSkill.
     """
@@ -52,7 +53,7 @@ class VideoShortlistResource(resources.ModelResource):
 
 
 @admin.register(VideoShortlist)
-class VideoShortlistAdmin(ImportExportModelAdmin):
+class VideoShortlistAdmin(DjangoQLSearchMixin, ImportExportModelAdmin):
     """
     Django admin for VideoShortlist.
     """
