@@ -400,7 +400,7 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         """
         assert _find_best_mode_seat(seats) == expected_seat
 
-    # pylint: disable=unused-argument
+    # pylint: disable=unused-argument, too-many-statements
     @mock.patch('enterprise_catalog.apps.api.tasks.task_recently_run', return_value=False)
     @mock.patch('enterprise_catalog.apps.api.tasks.partition_course_keys_for_indexing')
     @mock.patch('enterprise_catalog.apps.api_client.base_oauth.OAuthAPIClient')
@@ -451,6 +451,8 @@ class UpdateFullContentMetadataTaskTests(TestCase):
             }],
             'advertised_course_run_uuid': course_run_3_uuid,
         }
+        course_key_4 = 'edX+superDuperFakeX'
+        course_data_4 = {'key': course_key_4, 'full_course_only_field': 'test_4', 'programs': []}
 
         non_course_key = 'course-runX'
 
@@ -459,7 +461,7 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         # Mock out the data that should be returned from discovery's /api/v1/courses and /api/v1/programs endpoints
         mock_oauth_client.return_value.get.return_value.json.side_effect = [
             # first call will be /api/v1/courses
-            {'results': [course_data_1, course_data_2, course_data_3]},
+            {'results': [course_data_1, course_data_2, course_data_3, course_data_4]},
             # second call will be to /api/v1/programs
             {'results': [program_data]},
             {'results': []},
@@ -472,21 +474,29 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         metadata_2.catalog_queries.set([self.catalog_query])
         metadata_3 = ContentMetadataFactory(content_type=COURSE, content_key=course_key_3)
         metadata_3.catalog_queries.set([self.catalog_query])
+        # Create a metadata record without an advertised course run to test
+        # the normalized metadata serializer.
+        metadata_4 = ContentMetadataFactory(content_type=COURSE, content_key=course_key_4)
+        metadata_4.catalog_queries.set([self.catalog_query])
+        metadata_4.json_metadata['advertised_course_run_uuid'] = None
+        metadata_4.save()
         non_course_metadata = ContentMetadataFactory(content_type=COURSE_RUN, content_key=non_course_key)
         non_course_metadata.catalog_queries.set([self.catalog_query])
 
         assert metadata_1.json_metadata != course_data_1
         assert metadata_2.json_metadata != course_data_2
         assert metadata_3.json_metadata != course_data_3
+        assert metadata_4.json_metadata != course_data_4
 
         tasks.update_full_content_metadata_task.apply().get()
 
         actual_course_keys_args = mock_partition_course_keys.call_args_list[0][0][0]
-        self.assertEqual(set(actual_course_keys_args), {metadata_1, metadata_2, metadata_3})
+        self.assertEqual(set(actual_course_keys_args), {metadata_1, metadata_2, metadata_3, metadata_4})
 
         metadata_1 = ContentMetadata.objects.get(content_key=course_key_1)
         metadata_2 = ContentMetadata.objects.get(content_key=course_key_2)
         metadata_3 = ContentMetadata.objects.get(content_key=course_key_3)
+        metadata_4 = ContentMetadata.objects.get(content_key=course_key_4)
 
         assert metadata_1.json_metadata['aggregation_key'] == f'course:{course_key_1}'
         assert metadata_1.json_metadata['full_course_only_field'] == 'test_1'
@@ -502,6 +512,16 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         assert metadata_3.json_metadata['normalized_metadata']['end_date'] == '2023-03-01T00:00:00Z'
         assert metadata_3.json_metadata['normalized_metadata']['enroll_by_date'] == '2023-02-01T00:00:00Z'
         assert metadata_3.json_metadata['normalized_metadata']['content_price'] == 90
+
+        assert metadata_4.json_metadata['aggregation_key'] == f'course:{course_key_4}'
+        assert metadata_4.json_metadata['full_course_only_field'] == 'test_4'
+        assert metadata_4.json_metadata['programs'] == []
+        assert metadata_4.json_metadata['normalized_metadata'] == {
+            'start_date': None,
+            'end_date': None,
+            'enroll_by_date': None,
+            'content_price': None,
+        }
 
         # make sure course associated program metadata has been created and linked correctly
         assert ContentMetadata.objects.filter(content_key=program_key).exists()

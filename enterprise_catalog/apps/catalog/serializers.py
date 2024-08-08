@@ -130,6 +130,9 @@ class NormalizedContentMetadataSerializer(ReadOnlySerializer):
         if obj.is_exec_ed_2u_course:
             return self.additional_metadata.get('registration_deadline')
 
+        if not self.advertised_course_run:
+            return None
+
         all_seats = self.advertised_course_run.get('seats', [])
         seat = _find_best_mode_seat(all_seats)
         if seat:
@@ -147,5 +150,8 @@ class NormalizedContentMetadataSerializer(ReadOnlySerializer):
             for entitlement in obj.json_metadata.get('entitlements', []):
                 if entitlement.get('mode') == CourseMode.PAID_EXECUTIVE_EDUCATION:
                     return entitlement.get('price') or DEFAULT_NORMALIZED_PRICE
+
+        if not self.advertised_course_run:
+            return None
 
         return self.advertised_course_run.get('first_enrollable_paid_seat_price') or DEFAULT_NORMALIZED_PRICE
