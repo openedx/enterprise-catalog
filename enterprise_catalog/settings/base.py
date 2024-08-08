@@ -11,6 +11,8 @@ from enterprise_catalog.apps.catalog.constants import (
     SYSTEM_ENTERPRISE_CATALOG_ADMIN_ROLE,
     SYSTEM_ENTERPRISE_LEARNER_ROLE,
     SYSTEM_ENTERPRISE_OPERATOR_ROLE,
+    SYSTEM_ENTERPRISE_PROVISIONING_ADMIN_ROLE,
+    ENTERPRISE_CATALOG_PROVISIONING_ADMIN,
 )
 from enterprise_catalog.settings.utils import get_logger_config
 
@@ -424,6 +426,9 @@ SYSTEM_TO_FEATURE_ROLE_MAPPING = {
     # Admins and learners should both be able to access catalog metadata and call the contains content endpoints
     SYSTEM_ENTERPRISE_LEARNER_ROLE: [ENTERPRISE_CATALOG_LEARNER_ROLE],
     SYSTEM_ENTERPRISE_ADMIN_ROLE: [ENTERPRISE_CATALOG_LEARNER_ROLE, ENTERPRISE_CATALOG_ADMIN_ROLE],
+    SYSTEM_ENTERPRISE_PROVISIONING_ADMIN_ROLE: [
+        ENTERPRISE_CATALOG_PROVISIONING_ADMIN,
+    ]
 }
 
 # Set the query batch size with which existing content metadata records

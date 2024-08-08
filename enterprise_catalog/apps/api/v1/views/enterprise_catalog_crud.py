@@ -12,7 +12,9 @@ from enterprise_catalog.apps.api.v1.serializers import (
     EnterpriseCatalogSerializer,
 )
 from enterprise_catalog.apps.api.v1.views.base import BaseViewSet
-from enterprise_catalog.apps.catalog.constants import PROVISIONING_ADMINS_GROUP
+from enterprise_catalog.apps.catalog.constants import (
+    PERMISSION_HAS_PROVISIONING_ADMIN_ACCESS,
+)
 from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
 from enterprise_catalog.apps.catalog.rules import (
     enterprises_with_admin_access,
@@ -66,8 +68,9 @@ class EnterpriseCatalogCRUDViewSet(BaseViewSet, viewsets.ModelViewSet):
         for which the `rules` predicate checks against.
         """
         # Grant provisioning-admins access to few actions
+        is_provisioning_admin = self.request.user.has_perm(PERMISSION_HAS_PROVISIONING_ADMIN_ACCESS)
         if self.request_action in ('create', 'partial_update', 'update', 'retrieve', 'list') and \
-                request.user.groups.filter(name=PROVISIONING_ADMINS_GROUP).exists():
+                is_provisioning_admin:
             return
 
         if self.request_action == 'list':
@@ -88,8 +91,7 @@ class EnterpriseCatalogCRUDViewSet(BaseViewSet, viewsets.ModelViewSet):
         """
         all_catalogs = EnterpriseCatalog.objects.all().order_by('created')
         enterprise_customer = self.request.GET.get('enterprise_customer', False)
-        is_provisioning_admin = self.request.user.groups.filter(
-            name=PROVISIONING_ADMINS_GROUP).exists()
+        is_provisioning_admin = self.request.user.has_perm(PERMISSION_HAS_PROVISIONING_ADMIN_ACCESS)
         if enterprise_customer:
             all_catalogs = all_catalogs.filter(enterprise_uuid=enterprise_customer)
 

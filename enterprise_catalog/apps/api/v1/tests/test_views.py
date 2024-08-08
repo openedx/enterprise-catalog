@@ -9,7 +9,6 @@ from urllib.parse import urljoin
 import ddt
 import pytz
 from django.conf import settings
-from django.contrib.auth.models import Group
 from django.db import IntegrityError
 from django.utils.http import urlencode
 from django.utils.text import slugify
@@ -32,7 +31,7 @@ from enterprise_catalog.apps.catalog.constants import (
     EXEC_ED_2U_ENTITLEMENT_MODE,
     LEARNER_PATHWAY,
     PROGRAM,
-    PROVISIONING_ADMINS_GROUP,
+    SYSTEM_ENTERPRISE_PROVISIONING_ADMIN_ROLE,
 )
 from enterprise_catalog.apps.catalog.models import (
     CatalogQuery,
@@ -184,7 +183,6 @@ class EnterpriseCatalogCRUDViewSetTests(APITestMixin):
             'publish_audit_enrollment_urls': True,
             'content_filter': {'content_type': 'course'},
         }
-        self.allowed_group = Group.objects.create(name=PROVISIONING_ADMINS_GROUP)
 
     def _assert_correct_new_catalog_data(self, catalog_uuid):
         """
@@ -265,7 +263,7 @@ class EnterpriseCatalogCRUDViewSetTests(APITestMixin):
         self.set_up_staff_user()
         self.remove_role_assignments()
         self.set_up_invalid_jwt_role()
-        self.user.groups.add(self.allowed_group)
+        self.set_jwt_cookie([(SYSTEM_ENTERPRISE_PROVISIONING_ADMIN_ROLE, '*')])
         url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': self.enterprise_catalog.uuid})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -325,10 +323,9 @@ class EnterpriseCatalogCRUDViewSetTests(APITestMixin):
         """
         Verify the viewset handles patching an enterprise catalog
         """
-        self.set_up_staff_user()
         self.remove_role_assignments()
         self.set_up_invalid_jwt_role()
-        self.user.groups.add(self.allowed_group)
+        self.set_jwt_cookie([(SYSTEM_ENTERPRISE_PROVISIONING_ADMIN_ROLE, '*')])
         url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': self.enterprise_catalog.uuid})
         patch_data = {'title': 'Patch title'}
         response = self.client.patch(url, patch_data)
@@ -390,7 +387,7 @@ class EnterpriseCatalogCRUDViewSetTests(APITestMixin):
         self.set_up_staff_user()
         self.remove_role_assignments()
         self.set_up_invalid_jwt_role()
-        self.user.groups.add(self.allowed_group)
+        self.set_jwt_cookie([(SYSTEM_ENTERPRISE_PROVISIONING_ADMIN_ROLE, '*')])
         url = reverse('api:v1:enterprise-catalog-detail', kwargs={'uuid': self.enterprise_catalog.uuid})
         response = self.client.put(url, self.new_catalog_data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -480,7 +477,7 @@ class EnterpriseCatalogCRUDViewSetTests(APITestMixin):
         self.set_up_staff_user()
         self.remove_role_assignments()
         self.set_up_invalid_jwt_role()
-        self.user.groups.add(self.allowed_group)
+        self.set_jwt_cookie([(SYSTEM_ENTERPRISE_PROVISIONING_ADMIN_ROLE, '*')])
         url = reverse('api:v1:enterprise-catalog-list')
         response = self.client.post(url, self.new_catalog_data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -537,7 +534,6 @@ class EnterpriseCatalogCRUDViewSetListTests(APITestMixin):
         super().setUp()
         self.set_up_staff_user()
         self.enterprise_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
-        self.allowed_group = Group.objects.create(name=PROVISIONING_ADMINS_GROUP)
 
     def test_list_for_superusers(self):
         """
@@ -560,7 +556,7 @@ class EnterpriseCatalogCRUDViewSetListTests(APITestMixin):
         self.set_up_staff_user()
         self.remove_role_assignments()
         self.set_up_invalid_jwt_role()
-        self.user.groups.add(self.allowed_group)
+        self.set_jwt_cookie([(SYSTEM_ENTERPRISE_PROVISIONING_ADMIN_ROLE, '*')])
         url = reverse('api:v1:enterprise-catalog-list')
         second_enterprise_catalog = EnterpriseCatalogFactory()
         response = self.client.get(url)
