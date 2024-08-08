@@ -16,7 +16,9 @@ from enterprise_catalog.apps.catalog.constants import (
     ACCESS_TO_ALL_ENTERPRISES_TOKEN,
     ENTERPRISE_CATALOG_ADMIN_ROLE,
     ENTERPRISE_CATALOG_LEARNER_ROLE,
+    ENTERPRISE_CATALOG_PROVISIONING_ADMIN_ROLE,
     PERMISSION_HAS_ADMIN_ACCESS,
+    PERMISSION_HAS_CATALOG_PROVISIONING_ADMIN_ACCESS,
     PERMISSION_HAS_LEARNER_ACCESS,
 )
 from enterprise_catalog.apps.catalog.models import (
@@ -99,6 +101,24 @@ rules.add_perm(
     PERMISSION_HAS_LEARNER_ACCESS,
     (has_implicit_access_to_catalog_learner | has_explicit_access_to_catalog_learner
      | has_implicit_access_to_catalog_admin | has_explicit_access_to_catalog_admin)
+)
+
+@rules.predicate
+def has_implicit_access_to_enterprise_catalog_provisioining(user, context):  # pylint: disable=unused-argument
+    """
+    Check that if request user has implicit access to `ENTERPRISE_CATALOG_PROVISIONING_ADMIN_ROLE` role.
+
+    Returns:
+        boolean: whether the request user has access or not
+    """
+    request = crum.get_current_request()
+    decoded_jwt = get_decoded_jwt(request) or get_decoded_jwt_from_auth(request)
+    return request_user_has_implicit_access_via_jwt(decoded_jwt, ENTERPRISE_CATALOG_PROVISIONING_ADMIN_ROLE, context)
+
+
+rules.add_perm(
+    PERMISSION_HAS_CATALOG_PROVISIONING_ADMIN_ACCESS,
+    has_implicit_access_to_enterprise_catalog_provisioining
 )
 
 
