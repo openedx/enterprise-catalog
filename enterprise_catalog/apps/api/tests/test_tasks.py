@@ -450,23 +450,6 @@ class UpdateFullContentMetadataTaskTests(TestCase):
                 ]
             }],
             'advertised_course_run_uuid': course_run_3_uuid,
-            'advertised_course_run': {
-                'key': f'course-v1:{course_key_3}+1',
-                'uuid': course_run_3_uuid,
-                'start': '2023-03-01T00:00:00Z',
-                'end': '2023-03-01T00:00:00Z',
-                'first_enrollable_paid_seat_price': 90,
-                'seats': [
-                    {
-                        'type': CourseMode.VERIFIED,
-                        'upgrade_deadline': '2023-02-01T00:00:00Z',
-                    },
-                    {
-                        "type": str(CourseMode.PROFESSIONAL),
-                        "upgrade_deadline": '2022-02-01T00:00:00Z',
-                    },
-                ]
-            },
         }
         course_key_4 = 'edX+superDuperFakeX'
         course_data_4 = {'key': course_key_4, 'full_course_only_field': 'test_4', 'programs': []}
@@ -657,10 +640,8 @@ class UpdateFullContentMetadataTaskTests(TestCase):
                 'key': course_run_key,
                 'uuid': course_run_uuid,
                 # Use dummy 2022 dates that we will assert are overwritten.
-                'start': '2023-03-01T00:00:00Z',
-                'end': '2023-04-09T23:59:59Z',
-                'enrollment_end': '2023-02-01T00:00:00Z',
-                "first_enrollable_paid_seat_price": 2900,
+                'start': '2022-03-01T00:00:00Z',
+                'end': '2022-03-01T00:00:00Z',
             }],
             'programs': [],
             'additional_metadata': {

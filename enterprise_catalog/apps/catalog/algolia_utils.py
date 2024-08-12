@@ -236,18 +236,20 @@ def _has_enroll_by_deadline_passed(course_json_metadata, advertised_course_run):
     Helper to determine if the enrollment deadline has passed for the given course
     and advertised course run.  For course metadata records with a `course_type` of "course" (e.g. OCM courses),
     this is based on the verified upgrade deadline.
-    For 2u exec ed courses, this is based on the enrollment_end deadline.
+    For 2u exec ed courses, this is based on the registration deadline.
     """
     enroll_by_deadline_timestamp = 0
     if course_json_metadata.get('course_type') == EXEC_ED_2U_COURSE_TYPE:
-        enrollment_end = advertised_course_run.get('end') or {}
-        if enrollment_end:
+        additional_metadata = course_json_metadata.get('additional_metadata') or {}
+        registration_deadline = additional_metadata.get('registration_deadline')
+        if registration_deadline:
             enroll_by_deadline_timestamp = datetime.datetime.strptime(
-                enrollment_end,
+                registration_deadline,
                 '%Y-%m-%dT%H:%M:%S%z',
             ).timestamp()
     else:
         enroll_by_deadline_timestamp = _get_verified_upgrade_deadline(advertised_course_run)
+
     return enroll_by_deadline_timestamp < localized_utcnow().timestamp()
 
 
@@ -1094,7 +1096,6 @@ def _get_course_run(full_course_run):
         'availability': full_course_run.get('availability'),
         'start': full_course_run.get('start'),
         'end': full_course_run.get('end'),
-        'enrollment_end': full_course_run.get('enrollment_end'),
         'min_effort': full_course_run.get('min_effort'),
         'max_effort': full_course_run.get('max_effort'),
         'weeks_to_complete': full_course_run.get('weeks_to_complete'),
