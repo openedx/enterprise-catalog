@@ -30,7 +30,7 @@ astroid==3.2.4
     # via
     #   pylint
     #   pylint-celery
-attrs==24.1.0
+attrs==24.2.0
     # via
     #   -r requirements/base.txt
     #   jsonschema
@@ -57,7 +57,7 @@ certifi==2024.7.4
     #   httpcore
     #   httpx
     #   requests
-cffi==1.16.0
+cffi==1.17.0
     # via
     #   -r requirements/base.txt
     #   cryptography
@@ -247,7 +247,7 @@ edx-toggles==5.2.0
     # via -r requirements/base.txt
 factory-boy==3.3.0
     # via -r requirements/test.in
-faker==26.1.0
+faker==26.3.0
     # via factory-boy
 filelock==3.15.4
     # via
@@ -301,7 +301,7 @@ jsonschema-specifications==2023.12.1
     # via
     #   -r requirements/base.txt
     #   jsonschema
-kombu==5.3.7
+kombu==5.4.0
     # via
     #   -r requirements/base.txt
     #   celery
@@ -317,7 +317,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.4
     # via -r requirements/base.txt
-newrelic==9.12.0
+newrelic==9.13.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -435,7 +435,7 @@ python3-openid==3.2.0
     #   social-auth-core
 pytz==2024.1
     # via -r requirements/base.txt
-pyyaml==6.0.1
+pyyaml==6.0.2
     # via
     #   -r requirements/base.txt
     #   code-annotations
@@ -468,7 +468,7 @@ requests-oauthlib==2.0.0
     #   social-auth-core
 responses==0.25.3
     # via -r requirements/test.in
-rpds-py==0.19.1
+rpds-py==0.20.0
     # via
     #   -r requirements/base.txt
     #   jsonschema
@@ -539,7 +539,7 @@ threadpoolctl==3.5.0
     #   scikit-learn
 tomlkit==0.13.0
     # via pylint
-tox==4.16.0
+tox==4.17.1
     # via -r requirements/test.in
 tqdm==4.66.5
     # via
@@ -579,7 +579,7 @@ wcwidth==0.2.13
     #   prompt-toolkit
 xlsxwriter==3.2.0
     # via -r requirements/base.txt
-zipp==3.19.2
+zipp==3.20.0
     # via -r requirements/base.txt
 
 # The following packages are considered to be unsafe in a requirements file:
