@@ -95,8 +95,15 @@ class NormalizedContentMetadataSerializer(ReadOnlySerializer):
         advertised_course_run_uuid = self.instance.json_metadata.get('advertised_course_run_uuid')
         return _get_course_run_by_uuid(self.instance.json_metadata, advertised_course_run_uuid)
 
+    @cached_property
+    def additional_metadata(self):
+        return self.instance.json_metadata.get('additional_metadata', {})
+
     @extend_schema_field(serializers.DateTimeField)
-    def get_start_date(self, obj) -> str:  # pylint: disable=unused-argument
+    def get_start_date(self, obj) -> str:
+        if obj.is_exec_ed_2u_course:
+            return self.additional_metadata.get('start_date')
+
         if not self.advertised_course_run:
             return None
 
@@ -106,7 +113,10 @@ class NormalizedContentMetadataSerializer(ReadOnlySerializer):
         return None
 
     @extend_schema_field(serializers.DateTimeField)
-    def get_end_date(self, obj) -> str:  # pylint: disable=unused-argument
+    def get_end_date(self, obj) -> str:
+        if obj.is_exec_ed_2u_course:
+            return self.additional_metadata.get('end_date')
+
         if not self.advertised_course_run:
             return None
 
@@ -116,7 +126,10 @@ class NormalizedContentMetadataSerializer(ReadOnlySerializer):
         return None
 
     @extend_schema_field(serializers.DateTimeField)
-    def get_enroll_by_date(self, obj) -> str:  # pylint: disable=unused-argument
+    def get_enroll_by_date(self, obj) -> str:
+        if obj.is_exec_ed_2u_course:
+            return self.additional_metadata.get('registration_deadline')
+
         if not self.advertised_course_run:
             return None
 
@@ -124,8 +137,6 @@ class NormalizedContentMetadataSerializer(ReadOnlySerializer):
         seat = _find_best_mode_seat(all_seats)
         if seat:
             return seat.get('upgrade_deadline')
-        if enrollment_end := self.advertised_course_run.get('enrollment_end'):
-            return enrollment_end
         else:
             logger.info(
                 f"No Seat Found for course run '{self.advertised_course_run.get('key')}'. "
@@ -134,7 +145,12 @@ class NormalizedContentMetadataSerializer(ReadOnlySerializer):
             return None
 
     @extend_schema_field(serializers.FloatField)
-    def get_content_price(self, obj) -> float:  # pylint: disable=unused-argument
+    def get_content_price(self, obj) -> float:
+        if obj.is_exec_ed_2u_course:
+            for entitlement in obj.json_metadata.get('entitlements', []):
+                if entitlement.get('mode') == CourseMode.PAID_EXECUTIVE_EDUCATION:
+                    return entitlement.get('price') or DEFAULT_NORMALIZED_PRICE
+
         if not self.advertised_course_run:
             return None
 

@@ -22,9 +22,9 @@ class ExportUtilsTests(TestCase):
         """
         # expected hit format from algolia, porperly reformatted for csv download
         assert export_utils.fetch_and_format_registration_date(
-            {'end': '2002-02-15T12:12:200'}
+            {'registration_deadline': '2002-02-15T12:12:200'}
         ) == '02-15-2002'
         # some other format from algolia, should return None
         assert export_utils.fetch_and_format_registration_date(
-            {'end': '02-15-2015T12:12:200'}
+            {'registration_deadline': '02-15-2015T12:12:200'}
         ) is None
