@@ -30,8 +30,6 @@ from .constants import (
 
 LOGGER = logging.getLogger(__name__)
 
-CUSTOM_B2B_RESTRICTION_TYPE_KEY = 'custom-b2b-enterprise'
-
 
 class DiscoveryApiClient(BaseOAuthClient):
     """
@@ -296,8 +294,7 @@ class DiscoveryApiClient(BaseOAuthClient):
             raise exc
 
         try:
-            # NOTE johnnagro: This ONLY supports courses at the moment (NOT programs, leanerpathways, etc).
-            # NOTE Troy: This now also supports force-including restricted/custom-b2b courses.
+            # NOTE johnnagro this ONLY supports courses at the moment (NOT programs, leanerpathways, etc)
             if forced_aggregation_keys := catalog_query.content_filter.get('enterprise_force_include_aggregation_keys'):
                 LOGGER.info(
                     'get_metadata_by_query enterprise_force_include_aggregation_keys seen'
@@ -327,7 +324,7 @@ class DiscoveryApiClient(BaseOAuthClient):
 
     def get_courses(self, query_params=None):
         """
-        Return results from the discovery service's /api/v1/courses/ endpoint.
+        Return results from the discovery service's /courses endpoint.
 
         Arguments:
             query_params (dict): additional query params for the rest api endpoint
@@ -339,11 +336,6 @@ class DiscoveryApiClient(BaseOAuthClient):
         request_params = {
             'ordering': 'key',
             'limit': DISCOVERY_OFFSET_SIZE,
-            # ALWAYS include restricted/custom-b2b courses in the search results. Usability/visiblility of restricted
-            # courses is ultimately controlled at the level of catalog inclusion, but this helper function is designed
-            # to facilitate fetching specific courses. Therefore, there's no reason to hide anything restricted at this
-            # level of the code.
-            'include_restricted': CUSTOM_B2B_RESTRICTION_TYPE_KEY,
         }
         request_params.update(query_params or {})
 
