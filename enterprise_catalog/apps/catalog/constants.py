@@ -63,16 +63,19 @@ COURSE_MODE_SORT_ORDER = ['verified', 'professional', 'no-id-professional', 'aud
 
 ENTERPRISE_CATALOG_ADMIN_ROLE = 'enterprise_catalog_admin'
 ENTERPRISE_CATALOG_LEARNER_ROLE = 'enterprise_learner'
+ENTERPRISE_CATALOG_PROVISIONING_ADMIN = 'enterprise_catalog_provisioning_admin'
 
 SYSTEM_ENTERPRISE_CATALOG_ADMIN_ROLE = 'enterprise_catalog_admin'
 SYSTEM_ENTERPRISE_LEARNER_ROLE = 'enterprise_learner'
 SYSTEM_ENTERPRISE_ADMIN_ROLE = 'enterprise_admin'
 SYSTEM_ENTERPRISE_OPERATOR_ROLE = 'enterprise_openedx_operator'
+SYSTEM_ENTERPRISE_PROVISIONING_ADMIN_ROLE = 'enterprise_provisioning_admin'
 
 ACCESS_TO_ALL_ENTERPRISES_TOKEN = '*'
 
 PERMISSION_HAS_LEARNER_ACCESS = 'catalog.has_learner_access'
 PERMISSION_HAS_ADMIN_ACCESS = 'catalog.has_admin_access'
+PERMISSION_HAS_PROVISIONING_ADMIN_ACCESS = 'catalog.has_provisioning_admin_access'
 
 DISCOVERY_COURSE_KEY_BATCH_SIZE = 50
 DISCOVERY_PROGRAM_KEY_BATCH_SIZE = 50
@@ -104,7 +107,6 @@ PROGRAM_TYPES_MAP = {
 }
 
 FORCE_INCLUSION_METADATA_TAG_KEY = 'enterprise_force_included'
-PROVISIONING_ADMINS_GROUP = "provisioning_admins_group"
 
 
 def json_serialized_course_modes():
