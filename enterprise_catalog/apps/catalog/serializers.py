@@ -127,22 +127,23 @@ class NormalizedContentMetadataSerializer(ReadOnlySerializer):
 
     @extend_schema_field(serializers.DateTimeField)
     def get_enroll_by_date(self, obj) -> str:
-        if obj.is_exec_ed_2u_course:
-            return self.additional_metadata.get('registration_deadline')
-
         if not self.advertised_course_run:
             return None
+
+        if obj.is_exec_ed_2u_course:
+            return (
+                self.advertised_course_run.get('enrollment_end')
+                or self.additional_metadata.get('registration_deadline')
+            )
+
+        upgrade_deadline = None
 
         all_seats = self.advertised_course_run.get('seats', [])
         seat = _find_best_mode_seat(all_seats)
         if seat:
-            return seat.get('upgrade_deadline')
-        else:
-            logger.info(
-                f"No Seat Found for course run '{self.advertised_course_run.get('key')}'. "
-                f"Seats: {all_seats}"
-            )
-            return None
+            upgrade_deadline = seat.get('upgrade_deadline_override') or seat.get('upgrade_deadline')
+
+        return upgrade_deadline or self.advertised_course_run.get('enrollment_end')
 
     @extend_schema_field(serializers.FloatField)
     def get_content_price(self, obj) -> float:
