@@ -17,6 +17,7 @@ from enterprise_catalog.apps.catalog.constants import (
     EXEC_ED_2U_COURSE_TYPE,
     EXEC_ED_2U_ENTITLEMENT_MODE,
     PROGRAM,
+    RESTRICTED_RUNS_ALLOWED_KEY,
 )
 from enterprise_catalog.apps.catalog.models import (
     ContentMetadata,
@@ -590,3 +591,68 @@ class TestModels(TestCase):
         for record in records:
             record.refresh_from_db()
             self.assertGreater(record.modified, original_modified_time)
+
+    def test_restricted_runs_allowed_happy_path(self):
+        """
+        Test the happy path for computing a CatalogQuery's `restricted_runs_allowed`.
+        """
+        restricted_runs_dict = {
+            "course:edX+FUN": [
+                "course-v1:edX+FUN+3T2024",
+                "course-v1:edX+FUN+4T2024",
+            ],
+            "course:edX+GAMES": [
+                "course-v1:edX+GAMES+3T2024",
+                "course-v1:edX+GAMES+4T2024",
+            ]
+        }
+        content_filter = {
+            'other': 'stuff',
+            RESTRICTED_RUNS_ALLOWED_KEY: restricted_runs_dict
+        }
+        catalog_query = factories.CatalogQueryFactory(content_filter=content_filter)
+        catalog = factories.EnterpriseCatalogFactory(
+            catalog_query=catalog_query,
+        )
+
+        expected_restricted_runs_dict = {
+            "edX+FUN": [
+                "course-v1:edX+FUN+3T2024",
+                "course-v1:edX+FUN+4T2024",
+            ],
+            "edX+GAMES": [
+                "course-v1:edX+GAMES+3T2024",
+                "course-v1:edX+GAMES+4T2024",
+            ]
+        }
+        self.assertEqual(
+            expected_restricted_runs_dict,
+            catalog_query.restricted_runs_allowed,
+        )
+        self.assertEqual(
+            expected_restricted_runs_dict,
+            catalog.restricted_runs_allowed,
+        )
+
+    @ddt.data(
+        ['some+course+run'],
+        'some+course+run',
+        {},
+        [],
+        '',
+    )
+    def test_restricted_runs_are_none(self, restricted_runs_dict):
+        """
+        Tests all the cases that should result in a restricted_runs_allowed of None.
+        """
+        content_filter = {
+            'other': 'stuff',
+            RESTRICTED_RUNS_ALLOWED_KEY: restricted_runs_dict
+        }
+        catalog_query = factories.CatalogQueryFactory(content_filter=content_filter)
+        catalog = factories.EnterpriseCatalogFactory(
+            catalog_query=catalog_query,
+        )
+
+        self.assertIsNone(catalog_query.restricted_runs_allowed)
+        self.assertIsNone(catalog.restricted_runs_allowed)

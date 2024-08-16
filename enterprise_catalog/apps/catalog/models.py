@@ -26,6 +26,7 @@ from enterprise_catalog.apps.api_client.enterprise_cache import (
 )
 from enterprise_catalog.apps.catalog.constants import (
     ACCESS_TO_ALL_ENTERPRISES_TOKEN,
+    AGGREGATION_KEY_PREFIX,
     CONTENT_COURSE_TYPE_ALLOW_LIST,
     CONTENT_PRODUCT_SOURCE_ALLOW_LIST,
     CONTENT_TYPE_CHOICES,
@@ -34,6 +35,7 @@ from enterprise_catalog.apps.catalog.constants import (
     EXEC_ED_2U_COURSE_TYPE,
     EXEC_ED_2U_ENTITLEMENT_MODE,
     PROGRAM,
+    RESTRICTED_RUNS_ALLOWED_KEY,
     json_serialized_course_modes,
 )
 from enterprise_catalog.apps.catalog.utils import (
@@ -115,6 +117,28 @@ class CatalogQuery(TimeStampedModel):
         Prints the content filter in an indented, more easily readable format.
         """
         return json.dumps(self.content_filter, indent=4)
+
+    @cached_property
+    def restricted_runs_allowed(self):
+        """
+        Return a dict of restricted course <-> run mappings by
+        course key, e.g.
+        ```
+        "edX+FUN": [
+            "course-v1:edX+FUN+3T2024"
+        ]
+        ```
+        """
+        mapping = self.content_filter.get(RESTRICTED_RUNS_ALLOWED_KEY)  # pylint: disable=no-member
+        if not mapping:
+            return None
+        if not isinstance(mapping, dict):
+            LOGGER.error('%s restricted runs value is not a dict', self)
+            return None
+        return {
+            course_key.removeprefix(AGGREGATION_KEY_PREFIX): course_run_list
+            for course_key, course_run_list in mapping.items()
+        }
 
     @classmethod
     def get_by_uuid(cls, uuid):
@@ -210,6 +234,10 @@ class EnterpriseCatalog(TimeStampedModel):
         if not self.catalog_query:
             return ContentMetadata.objects.none()
         return self.catalog_query.contentmetadata_set.all()
+
+    @cached_property
+    def restricted_runs_allowed(self):
+        return self.catalog_query.restricted_runs_allowed
 
     @cached_property
     def enterprise_customer(self):
