@@ -279,7 +279,7 @@ newrelic==9.13.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
-numpy==2.0.1
+numpy==2.1.0
     # via
     #   -r requirements/base.txt
     #   scikit-learn
@@ -401,7 +401,7 @@ semantic-version==2.10.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-simplejson==3.19.2
+simplejson==3.19.3
     # via -r requirements/base.txt
 six==1.16.0
     # via
