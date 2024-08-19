@@ -4,7 +4,13 @@
 #
 #    make upgrade
 #
-algoliasearch==3.0.0
+aiohappyeyeballs==2.3.7
+    # via aiohttp
+aiohttp==3.10.4
+    # via algoliasearch
+aiosignal==1.3.1
+    # via aiohttp
+algoliasearch==4.0.0
     # via -r requirements/base.in
 amqp==5.2.0
     # via kombu
@@ -20,8 +26,11 @@ asgiref==3.8.1
     # via
     #   django
     #   django-cors-headers
+async-timeout==4.0.3
+    # via algoliasearch
 attrs==24.2.0
     # via
+    #   aiohttp
     #   jsonschema
     #   referencing
 backoff==1.10.0
@@ -179,6 +188,10 @@ edx-rest-api-client==5.7.1
     # via -r requirements/base.in
 edx-toggles==5.2.0
     # via -r requirements/base.in
+frozenlist==1.4.1
+    # via
+    #   aiohttp
+    #   aiosignal
 h11==0.14.0
     # via httpcore
 httpcore==1.0.5
@@ -190,6 +203,7 @@ idna==3.7
     #   anyio
     #   httpx
     #   requests
+    #   yarl
 inflection==0.5.1
     # via drf-spectacular
 jinja2==3.1.4
@@ -210,11 +224,15 @@ markupsafe==2.1.5
     # via jinja2
 monotonic==1.6
     # via analytics-python
+multidict==6.0.5
+    # via
+    #   aiohttp
+    #   yarl
 mysqlclient==2.2.4
     # via -r requirements/base.in
 newrelic==9.13.0
     # via edx-django-utils
-numpy==2.0.1
+numpy==2.1.0
     # via
     #   scikit-learn
     #   scipy
@@ -237,7 +255,9 @@ psutil==6.0.0
 pycparser==2.22
     # via cffi
 pydantic==2.8.2
-    # via openai
+    # via
+    #   algoliasearch
+    #   openai
 pydantic-core==2.20.1
     # via pydantic
 pyjwt[crypto]==2.9.0
@@ -255,6 +275,7 @@ pynacl==1.5.0
     # via edx-django-utils
 python-dateutil==2.9.0.post0
     # via
+    #   algoliasearch
     #   analytics-python
     #   celery
 python-slugify==8.0.4
@@ -278,7 +299,6 @@ referencing==0.35.1
     #   jsonschema-specifications
 requests==2.32.3
     # via
-    #   algoliasearch
     #   analytics-python
     #   edx-drf-extensions
     #   edx-rest-api-client
@@ -299,7 +319,7 @@ scipy==1.14.0
     # via scikit-learn
 semantic-version==2.10.0
     # via edx-drf-extensions
-simplejson==3.19.2
+simplejson==3.19.3
     # via -r requirements/base.in
 six==1.16.0
     # via
@@ -349,7 +369,9 @@ tzdata==2024.1
 uritemplate==4.1.1
     # via drf-spectacular
 urllib3==2.2.2
-    # via requests
+    # via
+    #   algoliasearch
+    #   requests
 vine==5.1.0
     # via
     #   amqp
@@ -359,6 +381,8 @@ wcwidth==0.2.13
     # via prompt-toolkit
 xlsxwriter==3.2.0
     # via -r requirements/base.in
+yarl==1.9.4
+    # via aiohttp
 zipp==3.20.0
     # via -r requirements/base.in
 

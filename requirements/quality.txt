@@ -4,7 +4,19 @@
 #
 #    make upgrade
 #
-algoliasearch==3.0.0
+aiohappyeyeballs==2.3.7
+    # via
+    #   -r requirements/base.txt
+    #   aiohttp
+aiohttp==3.10.4
+    # via
+    #   -r requirements/base.txt
+    #   algoliasearch
+aiosignal==1.3.1
+    # via
+    #   -r requirements/base.txt
+    #   aiohttp
+algoliasearch==4.0.0
     # via -r requirements/base.txt
 amqp==5.2.0
     # via
@@ -30,9 +42,14 @@ astroid==3.2.4
     # via
     #   pylint
     #   pylint-celery
+async-timeout==4.0.3
+    # via
+    #   -r requirements/base.txt
+    #   algoliasearch
 attrs==24.2.0
     # via
     #   -r requirements/base.txt
+    #   aiohttp
     #   jsonschema
     #   referencing
 backoff==1.10.0
@@ -229,6 +246,11 @@ edx-rest-api-client==5.7.1
     # via -r requirements/base.txt
 edx-toggles==5.2.0
     # via -r requirements/base.txt
+frozenlist==1.4.1
+    # via
+    #   -r requirements/base.txt
+    #   aiohttp
+    #   aiosignal
 h11==0.14.0
     # via
     #   -r requirements/base.txt
@@ -247,6 +269,7 @@ idna==3.7
     #   anyio
     #   httpx
     #   requests
+    #   yarl
 inflection==0.5.1
     # via
     #   -r requirements/base.txt
@@ -291,13 +314,18 @@ monotonic==1.6
     # via
     #   -r requirements/base.txt
     #   analytics-python
+multidict==6.0.5
+    # via
+    #   -r requirements/base.txt
+    #   aiohttp
+    #   yarl
 mysqlclient==2.2.4
     # via -r requirements/base.txt
 newrelic==9.13.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
-numpy==2.0.1
+numpy==2.1.0
     # via
     #   -r requirements/base.txt
     #   scikit-learn
@@ -338,6 +366,7 @@ pycparser==2.22
 pydantic==2.8.2
     # via
     #   -r requirements/base.txt
+    #   algoliasearch
     #   openai
 pydantic-core==2.20.1
     # via
@@ -380,6 +409,7 @@ pynacl==1.5.0
 python-dateutil==2.9.0.post0
     # via
     #   -r requirements/base.txt
+    #   algoliasearch
     #   analytics-python
     #   celery
 python-slugify==8.0.4
@@ -410,7 +440,6 @@ referencing==0.35.1
 requests==2.32.3
     # via
     #   -r requirements/base.txt
-    #   algoliasearch
     #   analytics-python
     #   edx-drf-extensions
     #   edx-rest-api-client
@@ -438,7 +467,7 @@ semantic-version==2.10.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-simplejson==3.19.2
+simplejson==3.19.3
     # via -r requirements/base.txt
 six==1.16.0
     # via
@@ -492,7 +521,7 @@ threadpoolctl==3.5.0
     # via
     #   -r requirements/base.txt
     #   scikit-learn
-tomlkit==0.13.0
+tomlkit==0.13.2
     # via pylint
 tqdm==4.66.5
     # via
@@ -516,6 +545,7 @@ uritemplate==4.1.1
 urllib3==2.2.2
     # via
     #   -r requirements/base.txt
+    #   algoliasearch
     #   requests
 vine==5.1.0
     # via
@@ -529,6 +559,10 @@ wcwidth==0.2.13
     #   prompt-toolkit
 xlsxwriter==3.2.0
     # via -r requirements/base.txt
+yarl==1.9.4
+    # via
+    #   -r requirements/base.txt
+    #   aiohttp
 zipp==3.20.0
     # via -r requirements/base.txt
 

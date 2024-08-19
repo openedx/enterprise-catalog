@@ -6,9 +6,21 @@
 #
 accessible-pygments==0.0.5
     # via pydata-sphinx-theme
+aiohappyeyeballs==2.3.7
+    # via
+    #   -r requirements/test.txt
+    #   aiohttp
+aiohttp==3.10.4
+    # via
+    #   -r requirements/test.txt
+    #   algoliasearch
+aiosignal==1.3.1
+    # via
+    #   -r requirements/test.txt
+    #   aiohttp
 alabaster==1.0.0
     # via sphinx
-algoliasearch==3.0.0
+algoliasearch==4.0.0
     # via -r requirements/test.txt
 amqp==5.2.0
     # via
@@ -35,9 +47,14 @@ astroid==3.2.4
     #   -r requirements/test.txt
     #   pylint
     #   pylint-celery
+async-timeout==4.0.3
+    # via
+    #   -r requirements/test.txt
+    #   algoliasearch
 attrs==24.2.0
     # via
     #   -r requirements/test.txt
+    #   aiohttp
     #   jsonschema
     #   referencing
 babel==2.16.0
@@ -54,7 +71,7 @@ billiard==4.2.0
     # via
     #   -r requirements/test.txt
     #   celery
-cachetools==5.4.0
+cachetools==5.5.0
     # via
     #   -r requirements/test.txt
     #   tox
@@ -277,9 +294,9 @@ edx-rest-api-client==5.7.1
     # via -r requirements/test.txt
 edx-toggles==5.2.0
     # via -r requirements/test.txt
-factory-boy==3.3.0
+factory-boy==3.3.1
     # via -r requirements/test.txt
-faker==26.3.0
+faker==27.0.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -288,6 +305,11 @@ filelock==3.15.4
     #   -r requirements/test.txt
     #   tox
     #   virtualenv
+frozenlist==1.4.1
+    # via
+    #   -r requirements/test.txt
+    #   aiohttp
+    #   aiosignal
 h11==0.14.0
     # via
     #   -r requirements/test.txt
@@ -306,6 +328,7 @@ idna==3.7
     #   anyio
     #   httpx
     #   requests
+    #   yarl
 imagesize==1.4.1
     # via sphinx
 inflection==0.5.1
@@ -359,6 +382,11 @@ monotonic==1.6
     # via
     #   -r requirements/test.txt
     #   analytics-python
+multidict==6.0.5
+    # via
+    #   -r requirements/test.txt
+    #   aiohttp
+    #   yarl
 mysqlclient==2.2.4
     # via -r requirements/test.txt
 newrelic==9.13.0
@@ -367,7 +395,7 @@ newrelic==9.13.0
     #   edx-django-utils
 nh3==0.2.18
     # via readme-renderer
-numpy==2.0.1
+numpy==2.1.0
     # via
     #   -r requirements/test.txt
     #   scikit-learn
@@ -423,6 +451,7 @@ pycparser==2.22
 pydantic==2.8.2
     # via
     #   -r requirements/test.txt
+    #   algoliasearch
     #   openai
 pydantic-core==2.20.1
     # via
@@ -491,6 +520,7 @@ pytest-django==4.8.0
 python-dateutil==2.9.0.post0
     # via
     #   -r requirements/test.txt
+    #   algoliasearch
     #   analytics-python
     #   celery
     #   faker
@@ -525,7 +555,6 @@ referencing==0.35.1
 requests==2.32.3
     # via
     #   -r requirements/test.txt
-    #   algoliasearch
     #   analytics-python
     #   edx-drf-extensions
     #   edx-rest-api-client
@@ -559,7 +588,7 @@ semantic-version==2.10.0
     # via
     #   -r requirements/test.txt
     #   edx-drf-extensions
-simplejson==3.19.2
+simplejson==3.19.3
     # via -r requirements/test.txt
 six==1.16.0
     # via
@@ -591,7 +620,7 @@ social-auth-core==4.5.4
     #   -r requirements/test.txt
     #   edx-auth-backends
     #   social-auth-app-django
-soupsieve==2.5
+soupsieve==2.6
     # via beautifulsoup4
 sphinx==8.0.2
     # via
@@ -635,11 +664,11 @@ threadpoolctl==3.5.0
     # via
     #   -r requirements/test.txt
     #   scikit-learn
-tomlkit==0.13.0
+tomlkit==0.13.2
     # via
     #   -r requirements/test.txt
     #   pylint
-tox==4.17.1
+tox==4.18.0
     # via -r requirements/test.txt
 tqdm==4.66.5
     # via
@@ -664,6 +693,7 @@ uritemplate==4.1.1
 urllib3==2.2.2
     # via
     #   -r requirements/test.txt
+    #   algoliasearch
     #   requests
     #   responses
 vine==5.1.0
@@ -682,6 +712,10 @@ wcwidth==0.2.13
     #   prompt-toolkit
 xlsxwriter==3.2.0
     # via -r requirements/test.txt
+yarl==1.9.4
+    # via
+    #   -r requirements/test.txt
+    #   aiohttp
 zipp==3.20.0
     # via -r requirements/test.txt
 
