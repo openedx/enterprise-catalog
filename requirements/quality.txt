@@ -5,7 +5,9 @@
 #    make upgrade
 #
 algoliasearch==3.0.0
-    # via -r requirements/base.txt
+    # via
+    #   -c requirements/constraints.txt
+    #   -r requirements/base.txt
 amqp==5.2.0
     # via
     #   -r requirements/base.txt
@@ -297,7 +299,7 @@ newrelic==9.13.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
-numpy==2.0.1
+numpy==2.1.0
     # via
     #   -r requirements/base.txt
     #   scikit-learn
@@ -438,7 +440,7 @@ semantic-version==2.10.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-simplejson==3.19.2
+simplejson==3.19.3
     # via -r requirements/base.txt
 six==1.16.0
     # via
@@ -492,7 +494,7 @@ threadpoolctl==3.5.0
     # via
     #   -r requirements/base.txt
     #   scikit-learn
-tomlkit==0.13.0
+tomlkit==0.13.2
     # via pylint
 tqdm==4.66.5
     # via

@@ -5,7 +5,9 @@
 #    make upgrade
 #
 algoliasearch==3.0.0
-    # via -r requirements/base.in
+    # via
+    #   -c requirements/constraints.txt
+    #   -r requirements/base.in
 amqp==5.2.0
     # via kombu
 analytics-python==1.4.post1
@@ -214,7 +216,7 @@ mysqlclient==2.2.4
     # via -r requirements/base.in
 newrelic==9.13.0
     # via edx-django-utils
-numpy==2.0.1
+numpy==2.1.0
     # via
     #   scikit-learn
     #   scipy
@@ -299,7 +301,7 @@ scipy==1.14.0
     # via scikit-learn
 semantic-version==2.10.0
     # via edx-drf-extensions
-simplejson==3.19.2
+simplejson==3.19.3
     # via -r requirements/base.in
 six==1.16.0
     # via

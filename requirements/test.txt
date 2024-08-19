@@ -5,7 +5,9 @@
 #    make upgrade
 #
 algoliasearch==3.0.0
-    # via -r requirements/base.txt
+    # via
+    #   -c requirements/constraints.txt
+    #   -r requirements/base.txt
 amqp==5.2.0
     # via
     #   -r requirements/base.txt
@@ -43,7 +45,7 @@ billiard==4.2.0
     # via
     #   -r requirements/base.txt
     #   celery
-cachetools==5.4.0
+cachetools==5.5.0
     # via tox
 celery==5.4.0
     # via
@@ -245,9 +247,9 @@ edx-rest-api-client==5.7.1
     # via -r requirements/base.txt
 edx-toggles==5.2.0
     # via -r requirements/base.txt
-factory-boy==3.3.0
+factory-boy==3.3.1
     # via -r requirements/test.in
-faker==26.3.0
+faker==27.0.0
     # via factory-boy
 filelock==3.15.4
     # via
@@ -321,7 +323,7 @@ newrelic==9.13.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
-numpy==2.0.1
+numpy==2.1.0
     # via
     #   -r requirements/base.txt
     #   scikit-learn
@@ -485,7 +487,7 @@ semantic-version==2.10.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-simplejson==3.19.2
+simplejson==3.19.3
     # via -r requirements/base.txt
 six==1.16.0
     # via
@@ -537,9 +539,9 @@ threadpoolctl==3.5.0
     # via
     #   -r requirements/base.txt
     #   scikit-learn
-tomlkit==0.13.0
+tomlkit==0.13.2
     # via pylint
-tox==4.17.1
+tox==4.18.0
     # via -r requirements/test.in
 tqdm==4.66.5
     # via

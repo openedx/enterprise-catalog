@@ -6,6 +6,7 @@
 #
 algoliasearch==3.0.0
     # via
+    #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
 amqp==5.2.0
@@ -56,7 +57,7 @@ billiard==4.2.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   celery
-cachetools==5.4.0
+cachetools==5.5.0
     # via
     #   -r requirements/test.txt
     #   tox
@@ -330,9 +331,9 @@ edx-toggles==5.2.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-factory-boy==3.3.0
+factory-boy==3.3.1
     # via -r requirements/test.txt
-faker==26.3.0
+faker==27.0.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -435,7 +436,7 @@ newrelic==9.13.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-django-utils
-numpy==2.0.1
+numpy==2.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -652,7 +653,7 @@ semantic-version==2.10.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-drf-extensions
-simplejson==3.19.2
+simplejson==3.19.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -720,12 +721,12 @@ threadpoolctl==3.5.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   scikit-learn
-tomlkit==0.13.0
+tomlkit==0.13.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pylint
-tox==4.17.1
+tox==4.18.0
     # via -r requirements/test.txt
 tqdm==4.66.5
     # via
