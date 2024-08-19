@@ -16,16 +16,17 @@ from enterprise_catalog.apps.api_client.constants import (
     DISCOVERY_AVERAGE_COURSE_REVIEW_CACHE_KEY,
 )
 from enterprise_catalog.apps.catalog.constants import (
+    ALGOLIA_DEFAULT_TIMESTAMP,
     COURSE,
     EXEC_ED_2U_COURSE_TYPE,
     EXEC_ED_2U_READABLE_COURSE_TYPE,
     LEARNER_PATHWAY,
     PROGRAM,
     PROGRAM_TYPES_MAP,
-    VIDEO,
+    VIDEO, LATE_ENROLLMENT_THRESHOLD_DAYS,
 )
 from enterprise_catalog.apps.catalog.models import ContentMetadata
-from enterprise_catalog.apps.catalog.utils import batch_by_pk, localized_utcnow
+from enterprise_catalog.apps.catalog.utils import batch_by_pk, localized_utcnow, to_timestamp, offset_localized_utcnow
 from enterprise_catalog.apps.video_catalog.models import (
     Video,
     VideoSkill,
@@ -1100,6 +1101,9 @@ def _get_course_run(full_course_run):
         'max_effort': full_course_run.get('max_effort'),
         'weeks_to_complete': full_course_run.get('weeks_to_complete'),
         'upgrade_deadline': _get_verified_upgrade_deadline(full_course_run),
+        'enroll_by': _get_course_run_enroll_by_date_timestamp(full_course_run),
+        'is_available': _get_is_available_course_run(full_course_run),
+        'status': full_course_run.get('status'),
     }
     return course_run
 
@@ -1135,9 +1139,12 @@ def get_course_runs(course):
     course_runs = course.get('course_runs') or []
     for full_course_run in course_runs:
         this_course_run = _get_course_run(full_course_run)
-        if this_course_run.get('end'):
-            course_run_end = parser.parse(this_course_run.get('end'))
-            if course_run_end < localized_utcnow():
+        if this_course_run.get('enroll_by'):
+            course_run_enroll_by_datetime = datetime.datetime.fromtimestamp(this_course_run.get('enroll_by'))
+            course_run_late_enrollment_enroll_by_datetime = \
+                course_run_enroll_by_datetime + datetime.timedelta(days=LATE_ENROLLMENT_THRESHOLD_DAYS)
+            # check for runs within the late enrollment threshold
+            if course_run_late_enrollment_enroll_by_datetime < localized_utcnow():
                 # skip old course runs
                 continue
         output.append(_get_course_run(full_course_run))
@@ -1198,7 +1205,43 @@ def _get_verified_upgrade_deadline(full_course_run):
                 vud_datetime = datetime.datetime.strptime(seat.get('upgrade_deadline'), '%Y-%m-%dT%H:%M:%S.%fZ')
             return time.mktime(vud_datetime.timetuple())
     # defaults to year 3000, as algolia cannot filter on null values
-    return (datetime.datetime(3000, 1, 1)).timestamp()
+    return ALGOLIA_DEFAULT_TIMESTAMP
+
+
+def _get_is_available_course_run(full_course_run):
+    is_marketable = full_course_run.get('is_marketable', False)
+    is_enrollable = full_course_run.get('is_enrollable', False)
+    availability = full_course_run.get('availability')
+    is_current_or_upcoming_availability = availability in {'Current', 'Upcoming'}
+    is_available = is_marketable and is_enrollable and is_current_or_upcoming_availability
+    if not is_available:
+        logger.info(
+            f'[_get_is_available_course_run] course run is not available '
+            f'key: {full_course_run.get("key")}, '
+            f'is_marketable: {is_marketable}, '
+            f'is_enrollable: {is_enrollable}, '
+            f'availability: {availability}'
+        )
+    return is_available
+
+def _is_default_algolia_timestamp(timestamp):
+    return timestamp == ALGOLIA_DEFAULT_TIMESTAMP
+
+def _get_course_run_enroll_by_date_timestamp(full_course_run):
+    """
+    Returns the enroll-by date for Exec-ed or OCM courses
+    `_get_verified_upgrade_deadline` retrieves OCM related course run end dates
+    `enrollment_end` corresponds to an Exec-ed related course run end date
+
+    If no end date is provided in either field, it returns the ALGOLIA_DEFAULT_TIMESTAMP
+    since Algolia cannot filter on null values
+    """
+    upgrade_deadline_timestamp = _get_verified_upgrade_deadline(full_course_run=full_course_run)
+    enrollment_end = full_course_run.get('enrollment_end', ALGOLIA_DEFAULT_TIMESTAMP)
+    enrollment_end_timestamp = to_timestamp(enrollment_end)
+    if _is_default_algolia_timestamp(upgrade_deadline_timestamp) == _is_default_algolia_timestamp(enrollment_end):
+        return ALGOLIA_DEFAULT_TIMESTAMP
+    return min(enrollment_end_timestamp, upgrade_deadline_timestamp)
 
 
 def get_course_first_paid_enrollable_seat_price(course):

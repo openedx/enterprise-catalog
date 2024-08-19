@@ -1,9 +1,13 @@
+import datetime
 import json
 
 from enterprise_catalog.apps.catalog.waffle import (
     DISABLE_MODEL_ADMIN_CHANGES_SWITCH,
 )
 
+
+# Algolia timestamp default
+ALGOLIA_DEFAULT_TIMESTAMP = (datetime.datetime(3000, 1, 1)).timestamp()
 
 # ContentMetadata content_type choices
 COURSE = 'course'
@@ -108,6 +112,8 @@ PROGRAM_TYPES_MAP = {
 
 FORCE_INCLUSION_METADATA_TAG_KEY = 'enterprise_force_included'
 
+# Late enrollment threshold
+LATE_ENROLLMENT_THRESHOLD_DAYS = 30
 
 def json_serialized_course_modes():
     """

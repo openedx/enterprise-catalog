@@ -3,10 +3,12 @@ Utility functions for catalog app.
 """
 import hashlib
 import json
-from datetime import datetime
+import time
+from datetime import datetime, timedelta
 from logging import getLogger
 from urllib.parse import urljoin
 
+from dateutil import parser
 from django.conf import settings
 from django.db.models import Q
 from edx_rbac.utils import feature_roles_from_jwt
@@ -138,3 +140,27 @@ def batch_by_pk(ModelClass, extra_filter=Q(), batch_size=10000):
         for item in qs:
             start_pk = item.pk
         qs = ModelClass.objects.filter(pk__gt=start_pk).filter(extra_filter).order_by('pk')[:batch_size]
+
+def to_timestamp(date_str_or_timestamp):
+    """
+    Takes a formatted date string or existing timestamp value
+    and either returns back the timestamp value (no-op)
+    or converts it to an epoch timestamp.
+
+    Ex. to_timestamp("2024-07-30T00:00:00Z") -> 1722297600.0
+
+    The decimal represents a timestamp epoch time down to the millisecond
+
+    This is useful if we need to pass epoch time to an indexable Algolia value
+    which requires it to be in epoch format in order for the indexed field to be
+    filtered/sorted.
+    """
+    try:
+        if isinstance(date_str_or_timestamp, (int, float)):
+            return date_str_or_timestamp
+        parse_datetime = parser.parse(date_str_or_timestamp)
+        timestamp = time.mktime(parse_datetime.timetuple())
+        return timestamp
+    except (ValueError, TypeError) as error:
+        LOGGER.error(f"[to_timestamp][{error}] Could not parse date string: {date_str_or_timestamp}")
+        return None
