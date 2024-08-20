@@ -115,6 +115,13 @@ FORCE_INCLUSION_METADATA_TAG_KEY = 'enterprise_force_included'
 # Late enrollment threshold
 LATE_ENROLLMENT_THRESHOLD_DAYS = 30
 
+RESTRICTED_RUNS_ALLOWED_KEY = 'restricted_runs_allowed'
+
+AGGREGATION_KEY_PREFIX = 'course:'
+
+COURSE_RUN_KEY_PREFIX = 'course-v1:'
+
+
 def json_serialized_course_modes():
     """
     :return: serialized course modes.

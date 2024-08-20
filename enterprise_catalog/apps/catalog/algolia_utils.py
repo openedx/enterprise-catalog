@@ -23,7 +23,8 @@ from enterprise_catalog.apps.catalog.constants import (
     LEARNER_PATHWAY,
     PROGRAM,
     PROGRAM_TYPES_MAP,
-    VIDEO, LATE_ENROLLMENT_THRESHOLD_DAYS,
+    VIDEO,
+    LATE_ENROLLMENT_THRESHOLD_DAYS,
 )
 from enterprise_catalog.apps.catalog.models import ContentMetadata
 from enterprise_catalog.apps.catalog.utils import batch_by_pk, localized_utcnow, to_timestamp, offset_localized_utcnow
