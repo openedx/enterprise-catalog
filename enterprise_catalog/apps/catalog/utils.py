@@ -4,7 +4,7 @@ Utility functions for catalog app.
 import hashlib
 import json
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from logging import getLogger
 from urllib.parse import urljoin
 
@@ -140,6 +140,7 @@ def batch_by_pk(ModelClass, extra_filter=Q(), batch_size=10000):
         for item in qs:
             start_pk = item.pk
         qs = ModelClass.objects.filter(pk__gt=start_pk).filter(extra_filter).order_by('pk')[:batch_size]
+
 
 def to_timestamp(date_str_or_timestamp):
     """
