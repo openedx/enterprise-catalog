@@ -308,6 +308,9 @@ class AlgoliaUtilsTests(TestCase):
                     'min_effort': 10,
                     'max_effort': 14,
                     'weeks_to_complete': 13,
+                    'status': 'Published',
+                    'is_enrollable': True,
+                    'is_marketable': True,
                 }],
                 'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID
             },
@@ -321,6 +324,9 @@ class AlgoliaUtilsTests(TestCase):
                 'max_effort': 14,
                 'weeks_to_complete': 13,
                 'upgrade_deadline': 32503680000.0,
+                'enroll_by': 32503680000.0,
+                'is_available': True,
+                'status': 'Published'
             },
         ),
         (
@@ -344,6 +350,9 @@ class AlgoliaUtilsTests(TestCase):
                     'min_effort': 10,
                     'max_effort': 14,
                     'weeks_to_complete': 13,
+                    'status': 'Published',
+                    'is_enrollable': True,
+                    'is_marketable': True,
                     'seats': [{
                         'type': 'audit',
                         'upgrade_deadline': None,
@@ -364,6 +373,9 @@ class AlgoliaUtilsTests(TestCase):
                 'max_effort': 14,
                 'weeks_to_complete': 13,
                 'upgrade_deadline': 1420386720.0,
+                'enroll_by': 1420386720.0,
+                'is_available': True,
+                'status': 'Published'
             }
         ),
         (
@@ -378,6 +390,9 @@ class AlgoliaUtilsTests(TestCase):
                     'min_effort': 10,
                     'max_effort': 14,
                     'weeks_to_complete': 13,
+                    'status': 'Published',
+                    'is_enrollable': True,
+                    'is_marketable': True,
                     'seats': [{
                         'type': 'verified',
                         'upgrade_deadline': None,
@@ -395,6 +410,9 @@ class AlgoliaUtilsTests(TestCase):
                 'max_effort': 14,
                 'weeks_to_complete': 13,
                 'upgrade_deadline': 32503680000.0,
+                'enroll_by': 32503680000.0,
+                'is_available': True,
+                'status': 'Published'
             }
         )
     )
@@ -459,7 +477,7 @@ class AlgoliaUtilsTests(TestCase):
                         'key': 'course-v1:org+course+1T2000',
                         'uuid': PAST_COURSE_RUN_UUID_1,
                         'pacing_type': 'instructor_paced',
-                        'status': 'published',
+                        'status': 'Published',
                         'is_enrollable': False,
                         'is_marketable': False,
                         'availability': 'Archived',
@@ -473,7 +491,7 @@ class AlgoliaUtilsTests(TestCase):
                         'key': 'course-v1:org+course+1T2021',
                         'uuid': ADVERTISED_COURSE_RUN_UUID,
                         'pacing_type': 'instructor_paced',
-                        'status': 'published',
+                        'status': 'Published',
                         'is_enrollable': True,
                         'is_marketable': True,
                         'availability': 'Current',
@@ -487,7 +505,7 @@ class AlgoliaUtilsTests(TestCase):
                         'key': 'course-v1:org+course+1T3000',
                         'uuid': FUTURE_COURSE_RUN_UUID_1,
                         'pacing_type': 'instructor_paced',
-                        'status': 'published',
+                        'status': 'Published',
                         'is_enrollable': True,
                         'is_marketable': True,
                         'availability': 'Upcoming',
@@ -501,7 +519,7 @@ class AlgoliaUtilsTests(TestCase):
                         'key': 'course-v1:org+course+1T3022',
                         'uuid': FUTURE_COURSE_RUN_UUID_1,
                         'pacing_type': 'instructor_paced',
-                        'status': 'unpublished',
+                        'status': 'Unpublished',
                         'is_enrollable': True,
                         'is_marketable': True,
                         'availability': 'Starting Soon',
@@ -524,7 +542,10 @@ class AlgoliaUtilsTests(TestCase):
                     'min_effort': 2,
                     'max_effort': 6,
                     'weeks_to_complete': 6,
-                    'upgrade_deadline': 32503680000.0
+                    'upgrade_deadline': 32503680000.0,
+                    'enroll_by': 32503680000.0,
+                    'is_available': True,
+                    'status': 'Published'
                 },
                 {
                     'key': 'course-v1:org+course+1T3000',
@@ -535,7 +556,10 @@ class AlgoliaUtilsTests(TestCase):
                     'min_effort': 2,
                     'max_effort': 6,
                     'weeks_to_complete': 6,
-                    'upgrade_deadline': 32503680000.0
+                    'upgrade_deadline': 32503680000.0,
+                    'enroll_by': 32503680000.0,
+                    'is_available': True,
+                    'status': 'Published'
                 },
                 {
                     'key': 'course-v1:org+course+1T3022',
@@ -546,7 +570,10 @@ class AlgoliaUtilsTests(TestCase):
                     'min_effort': 2,
                     'max_effort': 6,
                     'weeks_to_complete': 6,
-                    'upgrade_deadline': 32503680000.0
+                    'upgrade_deadline': 32503680000.0,
+                    'enroll_by': 32503680000.0,
+                    'is_available': False,
+                    'status': 'Unpublished'
                 }
             ],
         ),

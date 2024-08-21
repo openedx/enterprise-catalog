@@ -7,6 +7,7 @@ from dateutil import parser
 from django.core.cache import cache
 from django.db.models import Q
 from django.utils.translation import gettext as _
+from pytz import UTC
 
 from enterprise_catalog.apps.api.v1.utils import is_course_run_active
 from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
@@ -1152,10 +1153,10 @@ def get_course_runs(course):
                 course_run_enroll_by_datetime + datetime.timedelta(days=LATE_ENROLLMENT_THRESHOLD_DAYS)
             # check for runs within the late enrollment threshold
             is_late_enrollment_enroll_by_date_before_now = \
-                course_run_late_enrollment_enroll_by_datetime < localized_utcnow()
+                course_run_late_enrollment_enroll_by_datetime.replace(tzinfo=UTC) < localized_utcnow()
             # check for runs within course run end date
             is_course_run_end_date_before_now = course_run_end < localized_utcnow()
-            if is_late_enrollment_enroll_by_date_before_now and is_course_run_end_date_before_now:
+            if is_late_enrollment_enroll_by_date_before_now or is_course_run_end_date_before_now:
                 # skip old course runs
                 continue
         output.append(_get_course_run(full_course_run))
