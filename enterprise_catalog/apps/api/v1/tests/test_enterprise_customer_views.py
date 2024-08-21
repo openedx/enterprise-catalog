@@ -367,6 +367,12 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         # Create a two catalogs that have the content we're looking for
         content_key = 'fake-key+101x'
         second_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
+        # Add some non-null, but irrelevant restricted runs to this catalog
+        second_catalog.catalog_query.content_filter[RESTRICTED_RUNS_ALLOWED_KEY] = {
+            'something+else1': ['course-v1:something+else+restrictedrun']
+        }
+        second_catalog.catalog_query.save()
+
         relevant_content = ContentMetadataFactory(content_key=content_key)
         self.add_metadata_to_catalog(second_catalog, [relevant_content])
         url = self._get_contains_content_base_url() + '?course_run_ids=' + content_key + \
@@ -374,8 +380,10 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         self.assert_correct_contains_response(url, True)
 
         response = self.client.get(url)
-        catalog_list = response.json()['catalog_list']
+        response_payload = response.json()
+        catalog_list = response_payload['catalog_list']
         assert set(catalog_list) == {str(second_catalog.uuid)}
+        self.assertIsNone(response_payload['restricted_runs_allowed'])
 
     def test_contains_catalog_key_restricted_runs_allowed(self):
         """
@@ -408,12 +416,16 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         # make sure to also request a course key that has no restricted runs,
         # and then assert that it is *not* included in the response payload.
         url = self._get_contains_content_base_url() + \
-            '?course_run_ids=org+key1&course_run_ids=org+key2&course_run_ids=org+key3'
+            '?course_run_ids=org+key1&course_run_ids=org+key2&course_run_ids=org+key3&get_catalog_list=true'
 
         response = self.client.get(url)
         response_payload = response.json()
 
         self.assertTrue(response_payload.get('contains_content_items'))
+        self.assertEqual(
+            set(response_payload['catalog_list']),
+            set([str(catalog.uuid), str(other_catalog.uuid)])
+        )
         self.assertEqual(
             response_payload['restricted_runs_allowed'],
             {
@@ -425,6 +437,67 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
                 'org+key3': {
                     'course-v1:org+key3+restrictedrun': {
                         'catalog_uuids': [str(other_catalog.uuid)]
+                    },
+                },
+            }
+        )
+
+    def test_restricted_course_disallowed_if_course_not_in_catalog(self):
+        """
+        Tests that a requested course with restricted runs is "disallowed"
+        if the course is not part of a customer's catalog.
+        """
+        catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
+        catalog.catalog_query.content_filter[RESTRICTED_RUNS_ALLOWED_KEY] = {
+            'org+key1': ['course-v1:org+key1+restrictedrun']
+        }
+        catalog.catalog_query.save()
+        ContentMetadataFactory(content_key='org+key1')
+        # don't add this content to the catalog
+
+        url = self._get_contains_content_base_url() + '?course_run_ids=org+key1'
+
+        response = self.client.get(url)
+        response_payload = response.json()
+
+        self.assertFalse(response_payload.get('contains_content_items'))
+        self.assertIsNone(response_payload['restricted_runs_allowed'])
+
+    def test_restricted_course_run_allowed_even_if_course_not_in_catalog(self):
+        """
+        Tests that a requested restricted course run is "allowed"
+        even if the course is not part of a customer's catalog. This is necessary
+        because typically restricted runs will not have corresponding
+        `ContentMetadata` records present in the DB, so a lookup via only
+        `EnterpriseCatalog.contains_content_keys` will fail. We rely
+        on the restricted run mapping to ascertain the *implicit* inclusion
+        of a restricted course run in a catalog.
+        """
+        catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
+        catalog.catalog_query.content_filter[RESTRICTED_RUNS_ALLOWED_KEY] = {
+            'org+key1': ['course-v1:org+key1+restrictedrun']
+        }
+        catalog.catalog_query.save()
+        ContentMetadataFactory(content_key='org+key1')
+        # don't add this content to the catalog
+
+        url = self._get_contains_content_base_url() + \
+            '?course_run_ids=course-v1:org+key1+restrictedrun&get_catalog_list=true'
+
+        response = self.client.get(url)
+        response_payload = response.json()
+
+        self.assertTrue(response_payload.get('contains_content_items'))
+        self.assertEqual(
+            response_payload['catalog_list'],
+            [str(catalog.uuid)],
+        )
+        self.assertEqual(
+            response_payload['restricted_runs_allowed'],
+            {
+                'org+key1': {
+                    'course-v1:org+key1+restrictedrun': {
+                        'catalog_uuids': [str(catalog.uuid)]
                     },
                 },
             }

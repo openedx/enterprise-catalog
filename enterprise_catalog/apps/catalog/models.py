@@ -140,6 +140,29 @@ class CatalogQuery(TimeStampedModel):
             for course_key, course_run_list in mapping.items()
         }
 
+    @cached_property
+    def restricted_courses_by_run_key(self):
+        """
+        Returns a reverse mapping of self.restricted_runs_allowed, e.g.
+        ```
+        {
+            "course-v1:edX+FUN+3T2024": "edX+FUN",
+            "course-v1:edX+FUN+3T2025": "edX+FUN",
+            "course-v1:edX+GAMES+3T2024": "edX+GAMES",
+        }
+        ```
+
+        Returns an empty dict if no restricted runs are allowed for this CatalogQuery.
+        """
+        if not self.restricted_runs_allowed:
+            return {}
+
+        restricted_courses_by_run = {}
+        for course_key, restricted_run_list in self.restricted_runs_allowed.items():
+            for run_key in restricted_run_list:
+                restricted_courses_by_run[run_key] = course_key
+        return restricted_courses_by_run
+
     @classmethod
     def get_by_uuid(cls, uuid):
         try:
@@ -238,6 +261,10 @@ class EnterpriseCatalog(TimeStampedModel):
     @cached_property
     def restricted_runs_allowed(self):
         return self.catalog_query.restricted_runs_allowed
+
+    @cached_property
+    def restricted_courses_by_run_key(self):
+        return self.catalog_query.restricted_courses_by_run_key
 
     @cached_property
     def enterprise_customer(self):
