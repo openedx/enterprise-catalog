@@ -1,6 +1,5 @@
 import logging
 import uuid
-from collections import defaultdict
 
 from django.utils.decorators import method_decorator
 from edx_rbac.utils import get_decoded_jwt
@@ -15,8 +14,11 @@ from enterprise_catalog.apps.api.v1.decorators import (
 from enterprise_catalog.apps.api.v1.serializers import ContentMetadataSerializer
 from enterprise_catalog.apps.api.v1.utils import unquote_course_keys
 from enterprise_catalog.apps.api.v1.views.base import BaseViewSet
+from enterprise_catalog.apps.catalog.api import (
+    catalog_contains_any_restricted_course_run,
+    get_restricted_runs_allowed_for_query,
+)
 from enterprise_catalog.apps.catalog.constants import (
-    COURSE_RUN_KEY_PREFIX,
     RESTRICTED_RUNS_ALLOWED_KEY,
 )
 from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
@@ -93,7 +95,7 @@ class EnterpriseCustomerViewSet(BaseViewSet):
             'get_catalogs_containing_specified_content_ids', False
         )
         get_catalog_list = request.GET.get('get_catalog_list', False)
-        course_run_ids = unquote_course_keys(course_run_ids)
+        requested_course_or_run_keys = unquote_course_keys(course_run_ids)
 
         try:
             uuid.UUID(enterprise_uuid)
@@ -106,49 +108,32 @@ class EnterpriseCustomerViewSet(BaseViewSet):
                 f'Error: invalid enterprice customer uuid: "{enterprise_uuid}" provided.',
                 status=HTTP_400_BAD_REQUEST
             )
-        customer_catalogs = list(EnterpriseCatalog.objects.filter(enterprise_uuid=enterprise_uuid))
+        customer_catalogs = list(
+            EnterpriseCatalog.objects.select_related(
+                'catalog_query',
+            ).filter(
+                enterprise_uuid=enterprise_uuid,
+            ))
 
-        any_catalog_contains_content_items = False
         catalogs_that_contain_course = []
         for catalog in customer_catalogs:
-            contains_content_items = catalog.contains_content_keys(course_run_ids + program_uuids)
-            if contains_content_items:
-                any_catalog_contains_content_items = True
-                if not (get_catalogs_containing_specified_content_ids or get_catalog_list):
-                    # Break as soon as we find a catalog that contains the specified content
-                    break
-                catalogs_that_contain_course.append(catalog.uuid)
+            contains_content_items = catalog.contains_content_keys(requested_course_or_run_keys + program_uuids)
+            contains_requested_restricted_items = catalog_contains_any_restricted_course_run(
+                catalog, requested_course_or_run_keys,
+            )
+            if contains_content_items or contains_requested_restricted_items:
+                catalogs_that_contain_course.append(catalog)
 
         response_data = {
-            'contains_content_items': any_catalog_contains_content_items,
+            'contains_content_items': bool(catalogs_that_contain_course),
         }
         if (get_catalogs_containing_specified_content_ids or get_catalog_list):
-            response_data['catalog_list'] = catalogs_that_contain_course
+            response_data['catalog_list'] = [str(catalog.uuid) for catalog in catalogs_that_contain_course]
 
-        response_data[RESTRICTED_RUNS_ALLOWED_KEY] = self._get_restricted_runs_allowed_for_query(
-            course_run_ids, customer_catalogs,
+        response_data[RESTRICTED_RUNS_ALLOWED_KEY] = get_restricted_runs_allowed_for_query(
+            requested_course_or_run_keys, catalogs_that_contain_course,
         )
         return Response(response_data)
-
-    def _get_restricted_runs_allowed_for_query(self, course_run_ids, customer_catalogs):
-        # filter the set of restricted course keys down to only
-        # those requested by the client, and only if those requested keys
-        # are top-level course keys (NOT course run keys).
-        requested_course_keys = {
-            key for key in course_run_ids if not key.startswith(COURSE_RUN_KEY_PREFIX)
-        }
-        serialized_data = defaultdict(lambda: defaultdict(lambda: {'catalog_uuids': set()}))
-        for catalog in customer_catalogs:
-            if not catalog.restricted_runs_allowed:
-                continue
-            for restricted_course_key, restricted_runs in catalog.restricted_runs_allowed.items():
-                if restricted_course_key not in requested_course_keys:
-                    continue
-                course_dict = serialized_data[restricted_course_key]
-                for course_run_key in restricted_runs:
-                    run_dict = course_dict[course_run_key]
-                    run_dict['catalog_uuids'].add(str(catalog.uuid))
-        return serialized_data or None
 
     @action(detail=True, methods=['post'])
     def filter_content_items(self, request, enterprise_uuid, **kwargs):

@@ -17,6 +17,9 @@ from enterprise_catalog.apps.api.v1.serializers import (
 )
 from enterprise_catalog.apps.api.v1.utils import unquote_course_keys
 from enterprise_catalog.apps.api.v1.views.base import BaseViewSet
+from enterprise_catalog.apps.catalog.api import (
+    catalog_contains_any_restricted_course_run,
+)
 from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
 
 
@@ -58,4 +61,9 @@ class EnterpriseCatalogContainsContentItems(BaseViewSet, viewsets.ReadOnlyModelV
 
         enterprise_catalog = self.get_object()
         contains_content_items = enterprise_catalog.contains_content_keys(course_run_ids + program_uuids)
-        return Response({'contains_content_items': contains_content_items})
+        contains_requested_restricted_items = catalog_contains_any_restricted_course_run(
+            enterprise_catalog, course_run_ids,
+        )
+        return Response({
+            'contains_content_items': contains_content_items or contains_requested_restricted_items
+        })
