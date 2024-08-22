@@ -68,6 +68,7 @@ class EnterpriseCatalogCRUDViewSet(BaseViewSet, viewsets.ModelViewSet):
         for which the `rules` predicate checks against.
         """
         # Grant provisioning-admins access to few actions
+        crum.set_current_request(request)
         is_provisioning_admin = self.request.user.has_perm(PERMISSION_HAS_PROVISIONING_ADMIN_ACCESS)
         if self.request_action in ('create', 'partial_update', 'update', 'retrieve', 'list') and \
                 is_provisioning_admin:
