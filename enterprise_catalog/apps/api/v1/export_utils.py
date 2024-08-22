@@ -5,6 +5,7 @@ import math
 from dateutil import parser
 from django.utils.html import strip_tags
 
+from enterprise_catalog.apps.api.constants import LATE_ENROLLMENT_THRESHOLD_DAYS
 from enterprise_catalog.apps.catalog.algolia_utils import ALGOLIA_INDEX_SETTINGS
 
 
@@ -56,6 +57,8 @@ CSV_COURSE_RUN_HEADERS = [
     'Start Date',
     'End Date',
     'Verified Upgrade Deadline',
+    'Enroll-by Date',
+    'Late Enrollment Eligible',
     'Min Effort',
     'Max Effort',
     'Length',
@@ -315,12 +318,20 @@ def course_hit_runs(hit):
     """
     Helper function to extract the course runs (list) or return empty list
     """
-    return hit.get('course_runs', [])
+    course_runs = [
+        course_run
+        for course_run in hit.get('course_runs', [])
+        if course_run.get('is_active') is True
+    ]
+    return course_runs
 
 
 def course_run_to_row(hit, course_run):
     """
     Helper function to construct a CSV row corresponding to a single course_run.
+
+    The order in which you append rows is dependent on the order of CSV_COURSE_RUN_HEADER
+    and must be appended in that order
     """
     csv_row = []
     csv_row.append(hit.get('title'))
@@ -344,6 +355,17 @@ def course_run_to_row(hit, course_run):
         raw_deadline = course_run.get('upgrade_deadline')
         upgrade_deadline = datetime.datetime.fromtimestamp(raw_deadline).strftime(DATE_FORMAT)
     csv_row.append(upgrade_deadline)
+
+    enroll_by = None
+    late_enrollment_eligible = None
+    if course_run.get('enroll_by'):
+        raw_enroll_by_timestamp = course_run.get('enroll_by')
+        enroll_by_dt = datetime.datetime.fromtimestamp(raw_enroll_by_timestamp)
+        enroll_by_late_enrollment_offset = enroll_by_dt + datetime.timedelta(days=LATE_ENROLLMENT_THRESHOLD_DAYS)
+        late_enrollment_eligible = enroll_by_late_enrollment_offset < datetime.datetime.now()
+        enroll_by = enroll_by_dt.strftime(DATE_FORMAT)
+    csv_row.append(enroll_by)
+    csv_row.append(late_enrollment_eligible)
 
     # Min Effort
     csv_row.append(course_run.get('min_effort'))

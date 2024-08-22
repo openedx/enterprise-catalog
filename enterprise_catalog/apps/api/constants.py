@@ -2,6 +2,9 @@
 Constants for api app.
 """
 
+# Late enrollment threshold
+LATE_ENROLLMENT_THRESHOLD_DAYS = 30
+
 # Per-view cache timeouts
 CONTAINS_CONTENT_ITEMS_VIEW_CACHE_TIMEOUT_SECONDS = 60 * 30
 CURATION_CONFIG_READ_ONLY_VIEW_CACHE_TIMEOUT_SECONDS = 60 * 30
