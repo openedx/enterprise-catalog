@@ -337,7 +337,7 @@ edx-opaque-keys==2.10.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-drf-extensions
-edx-rbac==1.9.0
+edx-rbac==1.10.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -351,7 +351,7 @@ edx-toggles==5.2.0
     #   -r requirements/test.txt
 factory-boy==3.3.1
     # via -r requirements/test.txt
-faker==27.0.0
+faker==27.4.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -384,7 +384,7 @@ idna==3.7
     #   anyio
     #   httpx
     #   requests
-importlib-metadata==8.2.0
+importlib-metadata==8.4.0
     # via inflect
 inflect==3.0.2
     # via
@@ -698,7 +698,7 @@ scikit-learn==1.5.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-scipy==1.14.0
+scipy==1.14.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -755,7 +755,7 @@ sqlparse==0.5.1
     #   -r requirements/test.txt
     #   django
     #   django-debug-toolbar
-stevedore==5.2.0
+stevedore==5.3.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt

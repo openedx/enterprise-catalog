@@ -175,7 +175,7 @@ edx-drf-extensions==10.3.0
     #   edx-rbac
 edx-opaque-keys==2.10.0
     # via edx-drf-extensions
-edx-rbac==1.9.0
+edx-rbac==1.10.0
     # via -r requirements/base.in
 edx-rest-api-client==5.7.1
     # via -r requirements/base.in
@@ -297,7 +297,7 @@ rules==3.4
     # via -r requirements/base.in
 scikit-learn==1.5.1
     # via -r requirements/base.in
-scipy==1.14.0
+scipy==1.14.1
     # via scikit-learn
 semantic-version==2.10.0
     # via edx-drf-extensions
@@ -327,7 +327,7 @@ social-auth-core==4.5.4
     #   social-auth-app-django
 sqlparse==0.5.1
     # via django
-stevedore==5.2.0
+stevedore==5.3.0
     # via
     #   code-annotations
     #   edx-django-utils
