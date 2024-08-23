@@ -3,12 +3,10 @@ Utility functions for catalog app.
 """
 import hashlib
 import json
-import time
 from datetime import datetime
 from logging import getLogger
 from urllib.parse import urljoin
 
-from dateutil import parser
 from django.conf import settings
 from django.db.models import Q
 from edx_rbac.utils import feature_roles_from_jwt
@@ -159,9 +157,9 @@ def to_timestamp(date_str_or_timestamp):
     try:
         if isinstance(date_str_or_timestamp, (int, float)):
             return date_str_or_timestamp
-        parse_datetime = parser.parse(date_str_or_timestamp)
-        timestamp = time.mktime(parse_datetime.timetuple())
-        return timestamp
+        dt = datetime.fromisoformat(date_str_or_timestamp)
+        epoch_time = dt.timestamp()
+        return epoch_time
     except (ValueError, TypeError) as error:
         LOGGER.error(f"[to_timestamp][{error}] Could not parse date string: {date_str_or_timestamp}")
         return None
