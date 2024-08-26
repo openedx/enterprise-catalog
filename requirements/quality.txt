@@ -219,7 +219,7 @@ edx-drf-extensions==10.3.0
     # via
     #   -r requirements/base.txt
     #   edx-rbac
-edx-lint==5.3.7
+edx-lint==5.4.0
     # via -r requirements/quality.in
 edx-opaque-keys==2.10.0
     # via
@@ -243,7 +243,7 @@ httpx==0.27.0
     # via
     #   -r requirements/base.txt
     #   openai
-idna==3.7
+idna==3.8
     # via
     #   -r requirements/base.txt
     #   anyio
