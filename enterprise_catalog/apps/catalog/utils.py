@@ -140,11 +140,10 @@ def batch_by_pk(ModelClass, extra_filter=Q(), batch_size=10000):
         qs = ModelClass.objects.filter(pk__gt=start_pk).filter(extra_filter).order_by('pk')[:batch_size]
 
 
-def to_timestamp(date_str_or_timestamp):
+def to_timestamp(datetime_str):
     """
-    Takes a formatted date string or existing timestamp value
-    and either returns back the timestamp value (no-op)
-    or converts it to an epoch timestamp.
+    Takes a formatted date string to
+    convert it to an epoch timestamp.
 
     Ex. to_timestamp("2024-07-30T00:00:00Z") -> 1722297600.0
 
@@ -155,11 +154,9 @@ def to_timestamp(date_str_or_timestamp):
     filtered/sorted.
     """
     try:
-        if isinstance(date_str_or_timestamp, (int, float)):
-            return date_str_or_timestamp
-        dt = datetime.fromisoformat(date_str_or_timestamp)
+        dt = datetime.fromisoformat(datetime_str)
         epoch_time = dt.timestamp()
         return epoch_time
     except (ValueError, TypeError) as error:
-        LOGGER.error(f"[to_timestamp][{error}] Could not parse date string: {date_str_or_timestamp}")
+        LOGGER.error(f"[to_timestamp][{error}] Could not parse date string: {datetime_str}")
         return None

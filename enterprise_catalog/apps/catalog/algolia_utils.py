@@ -1108,7 +1108,8 @@ def _get_course_run(full_course_run):
         'weeks_to_complete': full_course_run.get('weeks_to_complete'),
         'upgrade_deadline': _get_verified_upgrade_deadline(full_course_run),
         'enroll_by': _get_course_run_enroll_by_date_timestamp(full_course_run),
-        'is_available': _get_is_available_course_run(full_course_run),
+        'is_active': _get_is_active_course_run(full_course_run),
+        'is_marketable': full_course_run.get('is_marketable'),
         'status': full_course_run.get('status'),
     }
     return course_run
@@ -1224,7 +1225,7 @@ def _get_verified_upgrade_deadline(full_course_run):
     return ALGOLIA_DEFAULT_TIMESTAMP
 
 
-def _get_is_available_course_run(full_course_run):
+def _get_is_active_course_run(full_course_run):
     """
     Determines if the course run meets the criteria of:
     is_marketable: true
@@ -1232,22 +1233,22 @@ def _get_is_available_course_run(full_course_run):
     availability: 'Current' || 'Upcoming' || 'Starting Soon'
     is_published: 'published'
 
-    It resolves the logic into an indexed field on the course run labeled 'is_available'
+    It resolves the logic into an indexed field on the course run labeled 'is_active'
     """
-    is_active = is_course_run_active(full_course_run)
+    course_run_is_active = is_course_run_active(full_course_run)
     availability = full_course_run.get('availability')
     is_not_archived_availability = availability != 'Archived'
-    is_available = is_active and is_not_archived_availability
-    if not is_available:
+    is_active = course_run_is_active and is_not_archived_availability
+    if not is_active:
         logger.info(
-            f'[_get_is_available_course_run] course run is not available '
+            f'[_get_is_active_course_run] course run is not active '
             f'key: {full_course_run.get("key")}, '
             f'is_marketable: {full_course_run.get("is_marketable")}, '
             f'is_enrollable: {full_course_run.get("is_enrollable")}, '
             f'availability: {availability}, '
             f'status: {full_course_run.get("status")}'
         )
-    return is_available
+    return is_active
 
 
 def _get_course_run_enroll_by_date_timestamp(full_course_run):
@@ -1260,8 +1261,9 @@ def _get_course_run_enroll_by_date_timestamp(full_course_run):
     since Algolia cannot filter on null values
     """
     upgrade_deadline_timestamp = _get_verified_upgrade_deadline(full_course_run=full_course_run)
-    enrollment_end = full_course_run.get('enrollment_end', ALGOLIA_DEFAULT_TIMESTAMP)
-    enrollment_end_timestamp = to_timestamp(enrollment_end)
+    enrollment_end_timestamp = full_course_run.get('enrollment_end', ALGOLIA_DEFAULT_TIMESTAMP)
+    if not isinstance(enrollment_end_timestamp, (int, float)):
+        enrollment_end_timestamp = to_timestamp(enrollment_end_timestamp)
     return min(enrollment_end_timestamp, upgrade_deadline_timestamp)
 
 

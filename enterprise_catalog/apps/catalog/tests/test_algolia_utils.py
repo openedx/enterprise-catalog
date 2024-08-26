@@ -325,7 +325,8 @@ class AlgoliaUtilsTests(TestCase):
                 'weeks_to_complete': 13,
                 'upgrade_deadline': 32503680000.0,
                 'enroll_by': 32503680000.0,
-                'is_available': True,
+                'is_active': True,
+                'is_marketable': True,
                 'status': 'published'
             },
         ),
@@ -374,7 +375,8 @@ class AlgoliaUtilsTests(TestCase):
                 'weeks_to_complete': 13,
                 'upgrade_deadline': 1420386720.0,
                 'enroll_by': 1420386720.0,
-                'is_available': True,
+                'is_active': True,
+                'is_marketable': True,
                 'status': 'published'
             }
         ),
@@ -411,7 +413,8 @@ class AlgoliaUtilsTests(TestCase):
                 'weeks_to_complete': 13,
                 'upgrade_deadline': 32503680000.0,
                 'enroll_by': 32503680000.0,
-                'is_available': True,
+                'is_active': True,
+                'is_marketable': True,
                 'status': 'published'
             }
         )
@@ -544,7 +547,8 @@ class AlgoliaUtilsTests(TestCase):
                     'weeks_to_complete': 6,
                     'upgrade_deadline': 32503680000.0,
                     'enroll_by': 32503680000.0,
-                    'is_available': True,
+                    'is_active': True,
+                    'is_marketable': True,
                     'status': 'published'
                 },
                 {
@@ -558,7 +562,8 @@ class AlgoliaUtilsTests(TestCase):
                     'weeks_to_complete': 6,
                     'upgrade_deadline': 32503680000.0,
                     'enroll_by': 32503680000.0,
-                    'is_available': True,
+                    'is_active': True,
+                    'is_marketable': True,
                     'status': 'published'
                 },
                 {
@@ -572,7 +577,8 @@ class AlgoliaUtilsTests(TestCase):
                     'weeks_to_complete': 6,
                     'upgrade_deadline': 32503680000.0,
                     'enroll_by': 32503680000.0,
-                    'is_available': False,
+                    'is_active': False,
+                    'is_marketable': True,
                     'status': 'unpublished'
                 }
             ],
