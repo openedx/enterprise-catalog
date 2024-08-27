@@ -1258,7 +1258,7 @@ def _get_course_run_enroll_by_date_timestamp(full_course_run):
     since Algolia cannot filter on null values
     """
     upgrade_deadline_timestamp = _get_verified_upgrade_deadline(full_course_run=full_course_run)
-    enrollment_end_timestamp = full_course_run.get('enrollment_end', ALGOLIA_DEFAULT_TIMESTAMP)
+    enrollment_end_timestamp = full_course_run.get('enrollment_end') or ALGOLIA_DEFAULT_TIMESTAMP
     if not isinstance(enrollment_end_timestamp, (int, float)):
         enrollment_end_timestamp = to_timestamp(enrollment_end_timestamp)
     return min(enrollment_end_timestamp, upgrade_deadline_timestamp)
