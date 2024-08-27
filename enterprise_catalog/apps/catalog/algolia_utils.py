@@ -1109,7 +1109,6 @@ def _get_course_run(full_course_run):
         'upgrade_deadline': _get_verified_upgrade_deadline(full_course_run),  # deprecated in favor of `enroll_by`
         'enroll_by': _get_course_run_enroll_by_date_timestamp(full_course_run),
         'is_active': _get_is_active_course_run(full_course_run),
-        'status': full_course_run.get('status'),
     }
     return course_run
 
@@ -1160,7 +1159,7 @@ def get_course_runs(course):
             # check for runs within course run end date
             is_end_date_before_now = course_run_end < localized_utcnow()
         if is_late_enrollment_enroll_by_date_before_now or is_end_date_before_now:
-            # skip old course runs
+            # skip course runs which have ended or elapsed their enroll_by date with late enrollment offset days
             continue
         output.append(this_course_run)
     return output
