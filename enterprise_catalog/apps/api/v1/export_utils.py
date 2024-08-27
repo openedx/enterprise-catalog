@@ -5,7 +5,6 @@ import math
 from dateutil import parser
 from django.utils.html import strip_tags
 
-from enterprise_catalog.apps.api.constants import LATE_ENROLLMENT_THRESHOLD_DAYS
 from enterprise_catalog.apps.catalog.algolia_utils import ALGOLIA_INDEX_SETTINGS
 
 
@@ -18,6 +17,7 @@ CSV_COURSE_HEADERS = [
     'Start',
     'End',
     'Verified Upgrade Deadline',
+    'Enroll-by Date'
     'Program Type',
     'Program Name',
     'Pacing',
@@ -58,7 +58,6 @@ CSV_COURSE_RUN_HEADERS = [
     'End Date',
     'Verified Upgrade Deadline',
     'Enroll-by Date',
-    'Late Enrollment Eligible',
     'Min Effort',
     'Max Effort',
     'Length',
@@ -183,31 +182,35 @@ def course_hit_to_row(hit):
     else:
         csv_row.append(None)
 
-    if hit.get('advertised_course_run'):
-        start_date = None
-        if hit['advertised_course_run'].get('start'):
-            start_date = parser.parse(hit['advertised_course_run']['start']).strftime(DATE_FORMAT)
-        csv_row.append(start_date)
+    empty_advertised_course_run = {
+        'start': None,
+        'end': None,
+        'upgrade_deadline': None,
+        'enroll_by': None,
+        'pacing_type': None,
+        'key': None,
+    }
 
-        end_date = None
-        if hit['advertised_course_run'].get('end'):
-            end_date = parser.parse(hit['advertised_course_run']['end']).strftime(DATE_FORMAT)
-        csv_row.append(end_date)
+    advertised_course_run = hit.get('advertised_course_run', empty_advertised_course_run)
+    if start_date := advertised_course_run.get('start'):
+        start_date = parser.parse(start_date).strftime(DATE_FORMAT)
+    csv_row.append(start_date)
 
-        upgrade_deadline = None
-        if hit['advertised_course_run'].get('upgrade_deadline'):
-            raw_deadline = hit['advertised_course_run']['upgrade_deadline']
-            upgrade_deadline = datetime.datetime.fromtimestamp(raw_deadline).strftime(DATE_FORMAT)
-        csv_row.append(upgrade_deadline)
+    if end_date := advertised_course_run.get('end'):
+        end_date = parser.parse(end_date).strftime(DATE_FORMAT)
+    csv_row.append(end_date)
 
-        pacing_type = hit['advertised_course_run']['pacing_type']
-        key = hit['advertised_course_run'].get('key')
-    else:
-        csv_row.append(None)  # no start date
-        csv_row.append(None)  # no end date
-        csv_row.append(None)  # no upgrade deadline
-        pacing_type = None
-        key = None
+    # upgrade_deadline deprecated in favor of enroll_by
+    if upgrade_deadline := advertised_course_run.get('upgrade_deadline'):
+        upgrade_deadline = datetime.datetime.fromtimestamp(upgrade_deadline).strftime(DATE_FORMAT)
+    csv_row.append(upgrade_deadline)
+
+    if enroll_by := advertised_course_run.get('enroll_by'):
+        enroll_by = datetime.datetime.fromtimestamp(enroll_by).strftime(DATE_FORMAT)
+    csv_row.append(enroll_by)
+
+    pacing_type = advertised_course_run.get('pacing_type')
+    key = advertised_course_run.get('key')
 
     csv_row.append(', '.join(hit.get('programs', [])))
     csv_row.append(', '.join(hit.get('program_titles', [])))
@@ -350,22 +353,16 @@ def course_run_to_row(hit, course_run):
         end_date = parser.parse(course_run.get('end')).strftime(DATE_FORMAT)
     csv_row.append(end_date)
 
+    # upgrade_deadline deprecated in favor of enroll_by
     upgrade_deadline = None
     if course_run.get('upgrade_deadline'):
         raw_deadline = course_run.get('upgrade_deadline')
         upgrade_deadline = datetime.datetime.fromtimestamp(raw_deadline).strftime(DATE_FORMAT)
     csv_row.append(upgrade_deadline)
 
-    enroll_by = None
-    late_enrollment_eligible = None
-    if course_run.get('enroll_by'):
-        raw_enroll_by_timestamp = course_run.get('enroll_by')
-        enroll_by_dt = datetime.datetime.fromtimestamp(raw_enroll_by_timestamp)
-        enroll_by_late_enrollment_offset = enroll_by_dt + datetime.timedelta(days=LATE_ENROLLMENT_THRESHOLD_DAYS)
-        late_enrollment_eligible = enroll_by_late_enrollment_offset < datetime.datetime.now()
-        enroll_by = enroll_by_dt.strftime(DATE_FORMAT)
+    if enroll_by := course_run.get('enroll_by', None):
+        enroll_by = datetime.datetime.fromtimestamp(enroll_by).strftime(DATE_FORMAT)
     csv_row.append(enroll_by)
-    csv_row.append(late_enrollment_eligible)
 
     # Min Effort
     csv_row.append(course_run.get('min_effort'))
