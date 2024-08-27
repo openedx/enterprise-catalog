@@ -17,7 +17,7 @@ CSV_COURSE_HEADERS = [
     'Start',
     'End',
     'Verified Upgrade Deadline',
-    'Enroll-by Date'
+    'Enroll-by Date',
     'Program Type',
     'Program Name',
     'Pacing',
@@ -182,15 +182,7 @@ def course_hit_to_row(hit):
     else:
         csv_row.append(None)
 
-    empty_advertised_course_run = {
-        'start': None,
-        'end': None,
-        'upgrade_deadline': None,
-        'enroll_by': None,
-        'pacing_type': None,
-        'key': None,
-    }
-
+    empty_advertised_course_run = {}
     advertised_course_run = hit.get('advertised_course_run', empty_advertised_course_run)
     if start_date := advertised_course_run.get('start'):
         start_date = parser.parse(start_date).strftime(DATE_FORMAT)
