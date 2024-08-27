@@ -1106,10 +1106,9 @@ def _get_course_run(full_course_run):
         'min_effort': full_course_run.get('min_effort'),
         'max_effort': full_course_run.get('max_effort'),
         'weeks_to_complete': full_course_run.get('weeks_to_complete'),
-        'upgrade_deadline': _get_verified_upgrade_deadline(full_course_run),
+        'upgrade_deadline': _get_verified_upgrade_deadline(full_course_run),  # deprecated in favor of `enroll_by`
         'enroll_by': _get_course_run_enroll_by_date_timestamp(full_course_run),
         'is_active': _get_is_active_course_run(full_course_run),
-        'is_marketable': full_course_run.get('is_marketable'),
         'status': full_course_run.get('status'),
     }
     return course_run
@@ -1146,25 +1145,24 @@ def get_course_runs(course):
     course_runs = course.get('course_runs') or []
     for full_course_run in course_runs:
         this_course_run = _get_course_run(full_course_run)
-        if this_course_run.get('enroll_by') or this_course_run.get('end'):
-            is_late_enrollment_enroll_by_date_before_now = False
-            is_course_run_end_date_before_now = False
-            if this_course_run.get('enroll_by'):
-                course_run_enroll_by_datetime = datetime.datetime.fromtimestamp(this_course_run.get('enroll_by'))
-                # offsets enroll_by date by the late enrollment threshold
-                course_run_late_enrollment_enroll_by_datetime = \
-                    course_run_enroll_by_datetime + datetime.timedelta(days=LATE_ENROLLMENT_THRESHOLD_DAYS)
-                # check for runs within the late enrollment threshold
-                is_late_enrollment_enroll_by_date_before_now = \
-                    course_run_late_enrollment_enroll_by_datetime.replace(tzinfo=UTC) < localized_utcnow()
-            if this_course_run.get('end'):
-                course_run_end = parser.parse(this_course_run.get('end'))
-                # check for runs within course run end date
-                is_course_run_end_date_before_now = course_run_end < localized_utcnow()
-            if is_late_enrollment_enroll_by_date_before_now or is_course_run_end_date_before_now:
-                # skip old course runs
-                continue
-        output.append(_get_course_run(full_course_run))
+        is_late_enrollment_enroll_by_date_before_now = False
+        is_end_date_before_now = False
+        if enroll_by := this_course_run.get('enroll_by'):
+            course_run_enroll_by_datetime = datetime.datetime.fromtimestamp(enroll_by)
+            # offsets enroll_by date by the late enrollment threshold
+            course_run_late_enrollment_enroll_by_datetime = \
+                course_run_enroll_by_datetime + datetime.timedelta(days=LATE_ENROLLMENT_THRESHOLD_DAYS)
+            # check for runs within the late enrollment threshold
+            is_late_enrollment_enroll_by_date_before_now = \
+                course_run_late_enrollment_enroll_by_datetime.replace(tzinfo=UTC) < localized_utcnow()
+        if end := this_course_run.get('end'):
+            course_run_end = parser.parse(end)
+            # check for runs within course run end date
+            is_end_date_before_now = course_run_end < localized_utcnow()
+        if is_late_enrollment_enroll_by_date_before_now or is_end_date_before_now:
+            # skip old course runs
+            continue
+        output.append(this_course_run)
     return output
 
 

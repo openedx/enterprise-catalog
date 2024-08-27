@@ -1,5 +1,5 @@
-import datetime
 import json
+from datetime import datetime
 
 from enterprise_catalog.apps.catalog.waffle import (
     DISABLE_MODEL_ADMIN_CHANGES_SWITCH,
@@ -7,7 +7,7 @@ from enterprise_catalog.apps.catalog.waffle import (
 
 
 # Algolia timestamp default
-ALGOLIA_DEFAULT_TIMESTAMP = (datetime.datetime(3000, 1, 1)).timestamp()
+ALGOLIA_DEFAULT_TIMESTAMP = (datetime(3000, 1, 1)).timestamp()
 
 # ContentMetadata content_type choices
 COURSE = 'course'
