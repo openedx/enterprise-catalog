@@ -308,6 +308,9 @@ class AlgoliaUtilsTests(TestCase):
                     'min_effort': 10,
                     'max_effort': 14,
                     'weeks_to_complete': 13,
+                    'status': 'published',
+                    'is_enrollable': True,
+                    'is_marketable': True,
                 }],
                 'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID
             },
@@ -321,6 +324,8 @@ class AlgoliaUtilsTests(TestCase):
                 'max_effort': 14,
                 'weeks_to_complete': 13,
                 'upgrade_deadline': 32503680000.0,
+                'enroll_by': 32503680000.0,
+                'is_active': True,
             },
         ),
         (
@@ -344,6 +349,9 @@ class AlgoliaUtilsTests(TestCase):
                     'min_effort': 10,
                     'max_effort': 14,
                     'weeks_to_complete': 13,
+                    'status': 'published',
+                    'is_enrollable': True,
+                    'is_marketable': True,
                     'seats': [{
                         'type': 'audit',
                         'upgrade_deadline': None,
@@ -364,6 +372,8 @@ class AlgoliaUtilsTests(TestCase):
                 'max_effort': 14,
                 'weeks_to_complete': 13,
                 'upgrade_deadline': 1420386720.0,
+                'enroll_by': 1420386720.0,
+                'is_active': True,
             }
         ),
         (
@@ -378,6 +388,9 @@ class AlgoliaUtilsTests(TestCase):
                     'min_effort': 10,
                     'max_effort': 14,
                     'weeks_to_complete': 13,
+                    'status': 'published',
+                    'is_enrollable': True,
+                    'is_marketable': True,
                     'seats': [{
                         'type': 'verified',
                         'upgrade_deadline': None,
@@ -395,6 +408,8 @@ class AlgoliaUtilsTests(TestCase):
                 'max_effort': 14,
                 'weeks_to_complete': 13,
                 'upgrade_deadline': 32503680000.0,
+                'enroll_by': 32503680000.0,
+                'is_active': True,
             }
         )
     )
@@ -524,7 +539,9 @@ class AlgoliaUtilsTests(TestCase):
                     'min_effort': 2,
                     'max_effort': 6,
                     'weeks_to_complete': 6,
-                    'upgrade_deadline': 32503680000.0
+                    'upgrade_deadline': 32503680000.0,
+                    'enroll_by': 32503680000.0,
+                    'is_active': True,
                 },
                 {
                     'key': 'course-v1:org+course+1T3000',
@@ -535,7 +552,9 @@ class AlgoliaUtilsTests(TestCase):
                     'min_effort': 2,
                     'max_effort': 6,
                     'weeks_to_complete': 6,
-                    'upgrade_deadline': 32503680000.0
+                    'upgrade_deadline': 32503680000.0,
+                    'enroll_by': 32503680000.0,
+                    'is_active': True,
                 },
                 {
                     'key': 'course-v1:org+course+1T3022',
@@ -546,7 +565,9 @@ class AlgoliaUtilsTests(TestCase):
                     'min_effort': 2,
                     'max_effort': 6,
                     'weeks_to_complete': 6,
-                    'upgrade_deadline': 32503680000.0
+                    'upgrade_deadline': 32503680000.0,
+                    'enroll_by': 32503680000.0,
+                    'is_active': False,
                 }
             ],
         ),

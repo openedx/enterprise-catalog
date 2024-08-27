@@ -138,3 +138,25 @@ def batch_by_pk(ModelClass, extra_filter=Q(), batch_size=10000):
         for item in qs:
             start_pk = item.pk
         qs = ModelClass.objects.filter(pk__gt=start_pk).filter(extra_filter).order_by('pk')[:batch_size]
+
+
+def to_timestamp(datetime_str):
+    """
+    Takes a formatted date string to
+    convert it to an epoch timestamp.
+
+    Ex. to_timestamp("2024-07-30T00:00:00Z") -> 1722297600.0
+
+    The decimal represents a timestamp epoch time down to the millisecond
+
+    This is useful if we need to pass epoch time to an indexable Algolia value
+    which requires it to be in epoch format in order for the indexed field to be
+    filtered/sorted.
+    """
+    try:
+        dt = datetime.fromisoformat(datetime_str)
+        epoch_time = dt.timestamp()
+        return epoch_time
+    except (ValueError, TypeError) as error:
+        LOGGER.error(f"[to_timestamp][{error}] Could not parse date string: {datetime_str}")
+        return None

@@ -7,6 +7,7 @@ from dateutil import parser
 from django.core.cache import cache
 from django.db.models import Q
 from django.utils.translation import gettext as _
+from pytz import UTC
 
 from enterprise_catalog.apps.api.v1.utils import is_course_run_active
 from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
@@ -16,16 +17,22 @@ from enterprise_catalog.apps.api_client.constants import (
     DISCOVERY_AVERAGE_COURSE_REVIEW_CACHE_KEY,
 )
 from enterprise_catalog.apps.catalog.constants import (
+    ALGOLIA_DEFAULT_TIMESTAMP,
     COURSE,
     EXEC_ED_2U_COURSE_TYPE,
     EXEC_ED_2U_READABLE_COURSE_TYPE,
+    LATE_ENROLLMENT_THRESHOLD_DAYS,
     LEARNER_PATHWAY,
     PROGRAM,
     PROGRAM_TYPES_MAP,
     VIDEO,
 )
 from enterprise_catalog.apps.catalog.models import ContentMetadata
-from enterprise_catalog.apps.catalog.utils import batch_by_pk, localized_utcnow
+from enterprise_catalog.apps.catalog.utils import (
+    batch_by_pk,
+    localized_utcnow,
+    to_timestamp,
+)
 from enterprise_catalog.apps.video_catalog.models import (
     Video,
     VideoSkill,
@@ -1099,7 +1106,9 @@ def _get_course_run(full_course_run):
         'min_effort': full_course_run.get('min_effort'),
         'max_effort': full_course_run.get('max_effort'),
         'weeks_to_complete': full_course_run.get('weeks_to_complete'),
-        'upgrade_deadline': _get_verified_upgrade_deadline(full_course_run),
+        'upgrade_deadline': _get_verified_upgrade_deadline(full_course_run),  # deprecated in favor of `enroll_by`
+        'enroll_by': _get_course_run_enroll_by_date_timestamp(full_course_run),
+        'is_active': _get_is_active_course_run(full_course_run),
     }
     return course_run
 
@@ -1135,12 +1144,24 @@ def get_course_runs(course):
     course_runs = course.get('course_runs') or []
     for full_course_run in course_runs:
         this_course_run = _get_course_run(full_course_run)
-        if this_course_run.get('end'):
-            course_run_end = parser.parse(this_course_run.get('end'))
-            if course_run_end < localized_utcnow():
-                # skip old course runs
-                continue
-        output.append(_get_course_run(full_course_run))
+        is_late_enrollment_enroll_by_date_before_now = False
+        is_end_date_before_now = False
+        if enroll_by := this_course_run.get('enroll_by'):
+            course_run_enroll_by_datetime = datetime.datetime.fromtimestamp(enroll_by)
+            # offsets enroll_by date by the late enrollment threshold
+            course_run_late_enrollment_enroll_by_datetime = \
+                course_run_enroll_by_datetime + datetime.timedelta(days=LATE_ENROLLMENT_THRESHOLD_DAYS)
+            # check for runs within the late enrollment threshold
+            is_late_enrollment_enroll_by_date_before_now = \
+                course_run_late_enrollment_enroll_by_datetime.replace(tzinfo=UTC) < localized_utcnow()
+        if end := this_course_run.get('end'):
+            course_run_end = parser.parse(end)
+            # check for runs within course run end date
+            is_end_date_before_now = course_run_end < localized_utcnow()
+        if is_late_enrollment_enroll_by_date_before_now or is_end_date_before_now:
+            # skip course runs which have ended or elapsed their enroll_by date with late enrollment offset days
+            continue
+        output.append(this_course_run)
     return output
 
 
@@ -1198,7 +1219,49 @@ def _get_verified_upgrade_deadline(full_course_run):
                 vud_datetime = datetime.datetime.strptime(seat.get('upgrade_deadline'), '%Y-%m-%dT%H:%M:%S.%fZ')
             return time.mktime(vud_datetime.timetuple())
     # defaults to year 3000, as algolia cannot filter on null values
-    return (datetime.datetime(3000, 1, 1)).timestamp()
+    return ALGOLIA_DEFAULT_TIMESTAMP
+
+
+def _get_is_active_course_run(full_course_run):
+    """
+    Determines if the course run meets the criteria of:
+    is_marketable: true
+    is_enrollable: true
+    availability: 'Current' || 'Upcoming' || 'Starting Soon'
+    is_published: 'published'
+
+    It resolves the logic into an indexed field on the course run labeled 'is_active'
+    """
+    course_run_is_active = is_course_run_active(full_course_run)
+    availability = full_course_run.get('availability')
+    is_not_archived_availability = availability != 'Archived'
+    is_active = course_run_is_active and is_not_archived_availability
+    if not is_active:
+        logger.info(
+            f'[_get_is_active_course_run] course run is not active '
+            f'key: {full_course_run.get("key")}, '
+            f'is_marketable: {full_course_run.get("is_marketable")}, '
+            f'is_enrollable: {full_course_run.get("is_enrollable")}, '
+            f'availability: {availability}, '
+            f'status: {full_course_run.get("status")}'
+        )
+    return is_active
+
+
+def _get_course_run_enroll_by_date_timestamp(full_course_run):
+    """
+    Returns the enroll-by date for Exec-ed or OCM courses
+    `_get_verified_upgrade_deadline` retrieves OCM related course run end dates
+    `enrollment_end` corresponds to an Exec-ed related course run end date
+
+    If no end date is provided in either field, it returns the ALGOLIA_DEFAULT_TIMESTAMP
+    since Algolia cannot filter on null values
+    """
+    upgrade_deadline_timestamp = _get_verified_upgrade_deadline(full_course_run=full_course_run)
+    enrollment_end_timestamp = full_course_run.get('enrollment_end', ALGOLIA_DEFAULT_TIMESTAMP)
+    if not isinstance(enrollment_end_timestamp, (int, float)):
+        enrollment_end_timestamp = to_timestamp(enrollment_end_timestamp)
+    return min(enrollment_end_timestamp, upgrade_deadline_timestamp)
 
 
 def get_course_first_paid_enrollable_seat_price(course):
