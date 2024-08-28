@@ -21,7 +21,7 @@ edx-auth-backends
 edx-celeryutils
 edx-django-release-util
 edx-django-utils
-edx-drf-extensions>=10.2.0  # removes use-jwt-cookie header
+edx-drf-extensions>=10.2.0  # 10.2.0 removes use-jwt-cookie header
 edx_rbac
 edx-rest-api-client
 edx-toggles
