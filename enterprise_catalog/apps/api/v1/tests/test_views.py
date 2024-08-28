@@ -727,6 +727,7 @@ class EnterpriseCatalogCsvDataViewTests(APITestMixin):
             'start': '2015-09-08T00:00:00Z',
             'end': '2015-09-08T00:00:01Z',
             'upgrade_deadline': 32503680000.0,
+            'enroll_by': 32503680000.0,
             'max_effort': 10,
             'min_effort': 1,
             'weeks_to_complete': 1,
@@ -753,11 +754,11 @@ class EnterpriseCatalogCsvDataViewTests(APITestMixin):
     ]}
 
     expected_result_data = (
-        "Title,Partner Name,Start,End,Verified Upgrade Deadline,Program Type,Program Name,Pacing,"
+        "Title,Partner Name,Start,End,Verified Upgrade Deadline,Enroll-by Date,Program Type,Program Name,Pacing,"
         "Level,Price,Language,Subtitles,URL,Short Description,Subjects,Key,Short Key,Skills,Min Effort,"
         "Max Effort,Length,What You’ll Learn,Pre-requisites,Associated Catalogs\r\nCalculus 1B: "
-        "Integration,Massachusetts Institute of Technology,2015-09-08,"
-        "2015-09-08,3000-01-01,Professional Certificate,Totally "
+        "Integration,Massachusetts Institute of Technology,2015-09-08,2015-09-08,"
+        "3000-01-01,3000-01-01,Professional Certificate,Totally "
         'Awesome Program,instructor_paced,Intermediate,100,English,"English, Arabic",edx.org/foo-bar,description,'
         'Math,MITx/18.01.2x/3T2015,course:MITx+18.01.2x,"Probability And Statistics, '
         'Engineering Design Process",1,10,1,learn,interest,"A la carte, Business"\r\n'
@@ -818,18 +819,18 @@ class EnterpriseCatalogCsvDataViewTests(APITestMixin):
         facets = 'language=English'
         response = self.client.get(f'{url}?{facets}')
         assert response.status_code == 200
-        excpected_csv_data = (
-            "Title,Partner Name,Start,End,Verified Upgrade Deadline,Program Type,Program Name,"
+        expected_csv_data = (
+            "Title,Partner Name,Start,End,Verified Upgrade Deadline,Enroll-by Date,Program Type,Program Name,"
             "Pacing,Level,Price,Language,Subtitles,URL,Short Description,Subjects,Key,Short Key,Skills,"
             "Min Effort,Max Effort,Length,What You’ll Learn,Pre-requisites,Associated Catalogs\r\n"
             "Calculus 1B: Integration,Massachusetts Institute of Technology,2015-09-08,"
-            ",,Professional Certificate,Totally Awesome "
+            ",,3000-01-01,Professional Certificate,Totally Awesome "
             'Program,instructor_paced,Intermediate,,English,"English, Arabic",,description,'
             'Math,MITx/18.01.2x/3T2015,course:MITx+18.01.2x,"Probability And Statistics, '
             'Engineering Design Process",1,10,1,learn,interest,"A la carte, Business"\r\n'
         )
         expected_response = {
-            'csv_data': excpected_csv_data
+            'csv_data': expected_csv_data
         }
         assert response.data == expected_response
 
@@ -882,6 +883,7 @@ class EnterpriseCatalogWorkbookViewTests(APITestMixin):
                     "start": "2015-09-08T00:00:00Z",
                     "end": "2015-09-08T00:00:01Z",
                     "upgrade_deadline": 32503680000.0,
+                    "enroll_by": 32503680000.0,
                     "max_effort": 10,
                     "min_effort": 1,
                     "weeks_to_complete": 1
@@ -893,6 +895,7 @@ class EnterpriseCatalogWorkbookViewTests(APITestMixin):
                         "start": "2015-09-08T00:00:00Z",
                         "end": "2015-09-08T00:00:01Z",
                         "upgrade_deadline": 32503680000.0,
+                        "enroll_by": 32503680000.0,
                         "max_effort": 10,
                         "min_effort": 1,
                         "weeks_to_complete": 1
@@ -952,7 +955,8 @@ class EnterpriseCatalogWorkbookViewTests(APITestMixin):
                     "min_effort": 7,
                     "max_effort": 10,
                     "weeks_to_complete": 6,
-                    "upgrade_deadline": 32503680000.0
+                    "upgrade_deadline": 32503680000.0,
+                    "enroll_by": 32503680000.0,
                 },
                 "course_runs": [
 

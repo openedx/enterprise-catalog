@@ -17,6 +17,7 @@ CSV_COURSE_HEADERS = [
     'Start',
     'End',
     'Verified Upgrade Deadline',
+    'Enroll-by Date',
     'Program Type',
     'Program Name',
     'Pacing',
@@ -56,6 +57,7 @@ CSV_COURSE_RUN_HEADERS = [
     'Start Date',
     'End Date',
     'Verified Upgrade Deadline',
+    'Enroll-by Date',
     'Min Effort',
     'Max Effort',
     'Length',
@@ -180,31 +182,27 @@ def course_hit_to_row(hit):
     else:
         csv_row.append(None)
 
-    if hit.get('advertised_course_run'):
-        start_date = None
-        if hit['advertised_course_run'].get('start'):
-            start_date = parser.parse(hit['advertised_course_run']['start']).strftime(DATE_FORMAT)
-        csv_row.append(start_date)
+    empty_advertised_course_run = {}
+    advertised_course_run = hit.get('advertised_course_run', empty_advertised_course_run)
+    if start_date := advertised_course_run.get('start'):
+        start_date = parser.parse(start_date).strftime(DATE_FORMAT)
+    csv_row.append(start_date)
 
-        end_date = None
-        if hit['advertised_course_run'].get('end'):
-            end_date = parser.parse(hit['advertised_course_run']['end']).strftime(DATE_FORMAT)
-        csv_row.append(end_date)
+    if end_date := advertised_course_run.get('end'):
+        end_date = parser.parse(end_date).strftime(DATE_FORMAT)
+    csv_row.append(end_date)
 
-        upgrade_deadline = None
-        if hit['advertised_course_run'].get('upgrade_deadline'):
-            raw_deadline = hit['advertised_course_run']['upgrade_deadline']
-            upgrade_deadline = datetime.datetime.fromtimestamp(raw_deadline).strftime(DATE_FORMAT)
-        csv_row.append(upgrade_deadline)
+    # upgrade_deadline deprecated in favor of enroll_by
+    if upgrade_deadline := advertised_course_run.get('upgrade_deadline'):
+        upgrade_deadline = datetime.datetime.fromtimestamp(upgrade_deadline).strftime(DATE_FORMAT)
+    csv_row.append(upgrade_deadline)
 
-        pacing_type = hit['advertised_course_run']['pacing_type']
-        key = hit['advertised_course_run'].get('key')
-    else:
-        csv_row.append(None)  # no start date
-        csv_row.append(None)  # no end date
-        csv_row.append(None)  # no upgrade deadline
-        pacing_type = None
-        key = None
+    if enroll_by := advertised_course_run.get('enroll_by'):
+        enroll_by = datetime.datetime.fromtimestamp(enroll_by).strftime(DATE_FORMAT)
+    csv_row.append(enroll_by)
+
+    pacing_type = advertised_course_run.get('pacing_type')
+    key = advertised_course_run.get('key')
 
     csv_row.append(', '.join(hit.get('programs', [])))
     csv_row.append(', '.join(hit.get('program_titles', [])))
@@ -315,12 +313,20 @@ def course_hit_runs(hit):
     """
     Helper function to extract the course runs (list) or return empty list
     """
-    return hit.get('course_runs', [])
+    course_runs = [
+        course_run
+        for course_run in hit.get('course_runs', [])
+        if course_run.get('is_active') is True
+    ]
+    return course_runs
 
 
 def course_run_to_row(hit, course_run):
     """
     Helper function to construct a CSV row corresponding to a single course_run.
+
+    The order in which you append rows is dependent on the order of CSV_COURSE_RUN_HEADER
+    and must be appended in that order
     """
     csv_row = []
     csv_row.append(hit.get('title'))
@@ -339,11 +345,16 @@ def course_run_to_row(hit, course_run):
         end_date = parser.parse(course_run.get('end')).strftime(DATE_FORMAT)
     csv_row.append(end_date)
 
+    # upgrade_deadline deprecated in favor of enroll_by
     upgrade_deadline = None
     if course_run.get('upgrade_deadline'):
         raw_deadline = course_run.get('upgrade_deadline')
         upgrade_deadline = datetime.datetime.fromtimestamp(raw_deadline).strftime(DATE_FORMAT)
     csv_row.append(upgrade_deadline)
+
+    if enroll_by := course_run.get('enroll_by', None):
+        enroll_by = datetime.datetime.fromtimestamp(enroll_by).strftime(DATE_FORMAT)
+    csv_row.append(enroll_by)
 
     # Min Effort
     csv_row.append(course_run.get('min_effort'))
