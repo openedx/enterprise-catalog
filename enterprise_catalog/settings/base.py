@@ -107,7 +107,9 @@ LOG_REQUESTS = False
 
 # Enable CORS
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_HEADERS = corsheaders_default_headers
+CORS_ALLOW_HEADERS = corsheaders_default_headers + (
+    'use-jwt-cookie',
+)
 CORS_ORIGIN_WHITELIST = []
 
 ROOT_URLCONF = 'enterprise_catalog.urls'
