@@ -119,11 +119,7 @@ To get a JWT role defined inside your cookie, do the following:
             "enterprise_learner:{another-enterprise-uuid}",
             "enterprise_openedx_operator:*"
         ]
-   #. Soon, you'll make a request to e.g. http://localhost:18160/api/v1/enterprise-catalogs/?format=json.  Before you do this,
-      it's important that you can make the request with an additional header: ``use_jwt_cookie: true``  This tells
-      our auth middleware to "reconstitute" the JWT cookie header and signature into a single JWT from which auth, roles, etc.
-      can be fetched.  You can do this in your browser using a tool like ModHeader, or with something like Postman.
-   #. Make the request.  For the example endpoint above, you should get a response payload that looks like::
+   #. Make a request to e.g. http://localhost:18160/api/v1/enterprise-catalogs/?format=json. For this example endpoint, you should get a response payload that looks like::
 
         {
           "count": 2,
