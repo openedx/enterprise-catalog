@@ -72,7 +72,7 @@ celery==5.4.0
     #   -r requirements/test.txt
     #   django-celery-results
     #   edx-celeryutils
-certifi==2024.7.4
+certifi==2024.8.30
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -351,7 +351,7 @@ edx-toggles==5.2.0
     #   -r requirements/test.txt
 factory-boy==3.3.1
     # via -r requirements/test.txt
-faker==28.0.0
+faker==28.1.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -372,7 +372,7 @@ httpcore==1.0.5
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   httpx
-httpx==0.27.0
+httpx==0.27.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -497,7 +497,7 @@ packaging==24.1
     #   tox
 path==16.16.0
     # via edx-i18n-tools
-pbr==6.0.0
+pbr==6.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -564,7 +564,7 @@ pyjwt[crypto]==2.9.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
-pylint==3.2.6
+pylint==3.2.7
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -837,7 +837,7 @@ xlsxwriter==3.2.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-zipp==3.20.0
+zipp==3.20.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
