@@ -14,13 +14,6 @@ from enterprise_catalog.apps.api.v1.decorators import (
 from enterprise_catalog.apps.api.v1.serializers import ContentMetadataSerializer
 from enterprise_catalog.apps.api.v1.utils import unquote_course_keys
 from enterprise_catalog.apps.api.v1.views.base import BaseViewSet
-from enterprise_catalog.apps.catalog.api import (
-    catalog_contains_any_restricted_course_run,
-    get_restricted_runs_allowed_for_query,
-)
-from enterprise_catalog.apps.catalog.constants import (
-    RESTRICTED_RUNS_ALLOWED_KEY,
-)
 from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
 
 
@@ -108,31 +101,25 @@ class EnterpriseCustomerViewSet(BaseViewSet):
                 f'Error: invalid enterprice customer uuid: "{enterprise_uuid}" provided.',
                 status=HTTP_400_BAD_REQUEST
             )
-        customer_catalogs = list(
-            EnterpriseCatalog.objects.select_related(
-                'catalog_query',
-            ).filter(
-                enterprise_uuid=enterprise_uuid,
-            ))
+        customer_catalogs = EnterpriseCatalog.objects.filter(enterprise_uuid=enterprise_uuid)
 
+        any_catalog_contains_content_items = False
         catalogs_that_contain_course = []
         for catalog in customer_catalogs:
             contains_content_items = catalog.contains_content_keys(requested_course_or_run_keys + program_uuids)
-            contains_requested_restricted_items = catalog_contains_any_restricted_course_run(
-                catalog, requested_course_or_run_keys,
-            )
-            if contains_content_items or contains_requested_restricted_items:
-                catalogs_that_contain_course.append(catalog)
+            if contains_content_items:
+                any_catalog_contains_content_items = True
+                if not (get_catalogs_containing_specified_content_ids or get_catalog_list):
+                    # Break as soon as we find a catalog that contains the specified content
+                    break
+                catalogs_that_contain_course.append(catalog.uuid)
 
         response_data = {
-            'contains_content_items': bool(catalogs_that_contain_course),
+            'contains_content_items': any_catalog_contains_content_items,
         }
         if (get_catalogs_containing_specified_content_ids or get_catalog_list):
-            response_data['catalog_list'] = [str(catalog.uuid) for catalog in catalogs_that_contain_course]
+            response_data['catalog_list'] = catalogs_that_contain_course
 
-        response_data[RESTRICTED_RUNS_ALLOWED_KEY] = get_restricted_runs_allowed_for_query(
-            requested_course_or_run_keys, catalogs_that_contain_course,
-        )
         return Response(response_data)
 
     @action(detail=True, methods=['post'])

@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime, timedelta
 from unittest import mock
 
+import pytest
 import pytz
 from rest_framework import status
 from rest_framework.reverse import reverse
@@ -356,6 +357,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         catalog_list = response.json()['catalog_list']
         assert set(catalog_list) == {str(second_catalog.uuid)}
 
+    @pytest.mark.skip(reason="We need a version of this test for the v2 API.")
     def test_contains_catalog_list_with_content_ids_param(self):
         """
         Verify the contains_content_items endpoint returns a list of catalogs the course is in if the correct
@@ -367,11 +369,6 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         # Create a two catalogs that have the content we're looking for
         content_key = 'fake-key+101x'
         second_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
-        # Add some non-null, but irrelevant restricted runs to this catalog
-        second_catalog.catalog_query.content_filter[RESTRICTED_RUNS_ALLOWED_KEY] = {
-            'something+else1': ['course-v1:something+else+restrictedrun']
-        }
-        second_catalog.catalog_query.save()
 
         relevant_content = ContentMetadataFactory(content_key=content_key)
         self.add_metadata_to_catalog(second_catalog, [relevant_content])
@@ -385,6 +382,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         assert set(catalog_list) == {str(second_catalog.uuid)}
         self.assertIsNone(response_payload['restricted_runs_allowed'])
 
+    @pytest.mark.skip(reason="We need a version of this test for the v2 API.")
     def test_contains_catalog_key_restricted_runs_allowed(self):
         """
         Tests that, when a course key is requested, we also get a response
@@ -442,6 +440,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
             }
         )
 
+    @pytest.mark.skip(reason="We need a version of this test for the v2 API.")
     def test_restricted_course_disallowed_if_course_not_in_catalog(self):
         """
         Tests that a requested course with restricted runs is "disallowed"
@@ -463,6 +462,7 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         self.assertFalse(response_payload.get('contains_content_items'))
         self.assertIsNone(response_payload['restricted_runs_allowed'])
 
+    @pytest.mark.skip(reason="We need a version of this test for the v2 API.")
     def test_restricted_course_run_allowed_even_if_course_not_in_catalog(self):
         """
         Tests that a requested restricted course run is "allowed"
