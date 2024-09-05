@@ -96,6 +96,7 @@ MIDDLEWARE = (
     # tracked via SimpleHistoryAdmin.
     'simple_history.middleware.HistoryRequestMiddleware',
     'edx_django_utils.cache.middleware.RequestCacheMiddleware',
+    'edx_rest_framework_extensions.middleware.RequestCustomAttributesMiddleware',
 )
 
 # https://github.com/dabapps/django-log-request-id
