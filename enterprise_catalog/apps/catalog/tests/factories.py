@@ -127,6 +127,8 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
                 ],
                 'start': '2024-02-12T11:00:00Z',
                 'end': '2026-02-05T11:00:00Z',
+                'fixed_price_price_usd': None,
+                'first_enrollable_paid_seat_price': 50,
             }]
             json_metadata.update({
                 'content_type': COURSE,
@@ -136,6 +138,7 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
                 'advertised_course_run_uuid': str(FAKE_ADVERTISED_COURSE_RUN_UUID),
                 'course_runs': course_runs,
                 'course': self.content_key,
+                'entitlements': [],
             })
         elif self.content_type == COURSE_RUN:
             json_metadata.update({
