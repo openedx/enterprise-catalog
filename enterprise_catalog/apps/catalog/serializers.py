@@ -83,76 +83,66 @@ class NormalizedContentMetadataSerializer(ReadOnlySerializer):
     downstream consumers, who should be able to use this dictionary
     instead of doing their own independent normalization.
 
+    The serializer expects the following keys in the input dictionary:
+    - course: a ContentMetadata object representing the course
+    - [course_run_metadata]: Optionally, a dictionary representing a specific course run's metadata
+
+    When no course run metadata is provided, the serializer will attempt to use the course's advertised course run
+    metadata. If that is not available, the serializer will return None for all fields.
+
     Note that course-type-specific definitions of each of these keys may be more nuanced.
     """
+
     start_date = serializers.SerializerMethodField(help_text='When the course starts')
     end_date = serializers.SerializerMethodField(help_text='When the course ends')
     enroll_by_date = serializers.SerializerMethodField(help_text='The deadline for enrollment')
     content_price = serializers.SerializerMethodField(help_text='The price of a course in USD')
 
     @cached_property
-    def advertised_course_run(self):
-        advertised_course_run_uuid = self.instance.json_metadata.get('advertised_course_run_uuid')
-        return _get_course_run_by_uuid(self.instance.json_metadata, advertised_course_run_uuid)
+    def course(self):
+        return self.instance.get('course')
 
     @cached_property
-    def additional_metadata(self):
-        return self.instance.json_metadata.get('additional_metadata', {})
+    def course_metadata(self):
+        return self.course.json_metadata
+
+    @cached_property
+    def course_run_metadata(self):
+        run_metadata = self.instance.get('course_run_metadata')
+        if run_metadata:
+            return run_metadata
+        advertised_course_run_uuid = self.course_metadata.get('advertised_course_run_uuid')
+        return _get_course_run_by_uuid(self.course_metadata, advertised_course_run_uuid)
 
     @extend_schema_field(serializers.DateTimeField)
-    def get_start_date(self, obj) -> str:
-        if obj.is_exec_ed_2u_course:
-            return self.additional_metadata.get('start_date')
-
-        if not self.advertised_course_run:
+    def get_start_date(self, obj) -> str:  # pylint: disable=unused-argument
+        if not self.course_run_metadata:
             return None
-
-        if start_date_string := self.advertised_course_run.get('start'):
-            return start_date_string
-
-        return None
+        return self.course_run_metadata.get('start')
 
     @extend_schema_field(serializers.DateTimeField)
-    def get_end_date(self, obj) -> str:
-        if obj.is_exec_ed_2u_course:
-            return self.additional_metadata.get('end_date')
-
-        if not self.advertised_course_run:
+    def get_end_date(self, obj) -> str:  # pylint: disable=unused-argument
+        if not self.course_run_metadata:
             return None
-
-        if end_date_string := self.advertised_course_run.get('end'):
-            return end_date_string
-
-        return None
+        return self.course_run_metadata.get('end')
 
     @extend_schema_field(serializers.DateTimeField)
-    def get_enroll_by_date(self, obj) -> str:
-        if not self.advertised_course_run:
+    def get_enroll_by_date(self, obj) -> str:  # pylint: disable=unused-argument
+        if not self.course_run_metadata:
             return None
-
-        if obj.is_exec_ed_2u_course:
-            return (
-                self.advertised_course_run.get('enrollment_end')
-                or self.additional_metadata.get('registration_deadline')
-            )
-
-        upgrade_deadline = None
-
-        all_seats = self.advertised_course_run.get('seats', [])
+        all_seats = self.course_run_metadata.get('seats', [])
         seat = _find_best_mode_seat(all_seats)
+        upgrade_deadline = None
         if seat:
             upgrade_deadline = seat.get('upgrade_deadline_override') or seat.get('upgrade_deadline')
-
-        return upgrade_deadline or self.advertised_course_run.get('enrollment_end')
+        return upgrade_deadline or self.course_run_metadata.get('enrollment_end')
 
     @extend_schema_field(serializers.FloatField)
-    def get_content_price(self, obj) -> float:
-        if obj.is_exec_ed_2u_course:
-            for entitlement in obj.json_metadata.get('entitlements', []):
+    def get_content_price(self, obj) -> float:  # pylint: disable=unused-argument
+        if self.course.is_exec_ed_2u_course:
+            for entitlement in self.course_metadata.get('entitlements', []):
                 if entitlement.get('mode') == CourseMode.PAID_EXECUTIVE_EDUCATION:
                     return entitlement.get('price') or DEFAULT_NORMALIZED_PRICE
-
-        if not self.advertised_course_run:
+        if not self.course_run_metadata:
             return None
-
-        return self.advertised_course_run.get('first_enrollable_paid_seat_price') or DEFAULT_NORMALIZED_PRICE
+        return self.course_run_metadata.get('first_enrollable_paid_seat_price') or DEFAULT_NORMALIZED_PRICE

@@ -169,7 +169,6 @@ def program_hit_to_row(hit):
     return csv_row
 
 
-# pylint: disable=too-many-statements
 def course_hit_to_row(hit):
     """
     Helper function to construct a CSV row according to a single Algolia result course hit.
