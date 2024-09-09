@@ -1394,7 +1394,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         self.assertEqual(response.json()['results'], [])
 
     @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
-    def test_get_content_metadata_content_filters_course_run_Key(self, mock_api_client):
+    def test_get_content_metadata_content_filters_course_run_key(self, mock_api_client):
         """
         Test that the get_content_metadata view GET view will support a filter including
         course run key(s), even when the catalog itself doesn't explictly contain course runs.
