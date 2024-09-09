@@ -261,18 +261,9 @@ def _update_full_content_metadata_course(content_keys, dry_run=False):
             logger.info('No courses were retrieved from course-discovery in this batch.')
             continue
 
-        # Build a dictionary of the metadata that corresponds to the fetched keys to avoid a query for every course
         fetched_course_keys = [course['key'] for course in full_course_dicts]
-
-        reviews_for_courses_dict = DiscoveryApiClient().get_course_reviews(fetched_course_keys)
-
-        metadata_records_for_fetched_keys = ContentMetadata.objects.filter(
-            content_key__in=fetched_course_keys,
-        )
-        metadata_by_key = {
-            metadata.content_key: metadata
-            for metadata in metadata_records_for_fetched_keys
-        }
+        course_reviews_by_content_key = DiscoveryApiClient().get_course_reviews(fetched_course_keys)
+        metadata_by_key = _get_course_records_by_key(fetched_course_keys)
 
         # Iterate through the courses to update the json_metadata field,
         # merging the minimal json_metadata retrieved by
@@ -285,43 +276,11 @@ def _update_full_content_metadata_course(content_keys, dry_run=False):
                 logger.error('Could not find ContentMetadata record for content_key %s.', content_key)
                 continue
 
-            # Merge the full metadata from discovery's /api/v1/courses into the local metadata object.
-            metadata_record.json_metadata.update(course_metadata_dict)
-
-            # Perform more steps to normalize and move keys around
-            # for more consistency across content types.
-            normalized_metadata_input = {
-                'course_metadata': metadata_record.json_metadata,
-            }
-            metadata_record.json_metadata['normalized_metadata'] =\
-                NormalizedContentMetadataSerializer(normalized_metadata_input).data
-            metadata_record.json_metadata['normalized_metadata_by_run'] = {}
-            for run in metadata_record.json_metadata.get('course_runs', []):
-                metadata_record.json_metadata['normalized_metadata_by_run'].update({
-                    run['key']: NormalizedContentMetadataSerializer({
-                        'course_metadata': metadata_record.json_metadata,
-                        'course_run_metadata': run,
-                    }).data
-                })
-
-            if review := reviews_for_courses_dict.get(content_key):
-                metadata_record.json_metadata['reviews_count'] = review.get('reviews_count')
-                metadata_record.json_metadata['avg_course_rating'] = review.get('avg_course_rating')
-
-            # johnnagro ENT-8212 need to retransform after full pull
-            if metadata_record.json_metadata.get(FORCE_INCLUSION_METADATA_TAG_KEY):
-                metadata_record.json_metadata = transform_course_metadata_to_visible(metadata_record.json_metadata)
-
-            modified_content_metadata_records.append(metadata_record)
-            program_content_keys = create_course_associated_programs(
-                course_metadata_dict.get('programs', []),
-                metadata_record,
+            course_review = course_reviews_by_content_key.get(content_key)
+            modified_course_record = _update_single_full_course_record(
+                course_metadata_dict, metadata_record, course_review, dry_run
             )
-            _update_full_content_metadata_program(program_content_keys, dry_run)
-            if dry_run:
-                logger.info('[Dry Run] Updated content metadata json for {}: {}'.format(
-                    content_key, json.dumps(metadata_record.json_metadata)
-                ))
+            modified_content_metadata_records.append(modified_course_record)
 
         if dry_run:
             logger.info('dry_run=True, not updating course metadata')
@@ -345,6 +304,70 @@ def _update_full_content_metadata_course(content_keys, dry_run=False):
     logger.info(
         '{} total course keys were updated and are ready for indexing in Algolia'.format(len(indexable_course_keys))
     )
+
+
+def _get_course_records_by_key(fetched_course_keys):
+    """
+    Helper to fetch a dict of course `ContentMetadata` records by content key.
+    """
+    metadata_records_for_fetched_keys = ContentMetadata.objects.filter(
+        content_key__in=fetched_course_keys,
+    )
+    return {
+        metadata.content_key: metadata
+        for metadata in metadata_records_for_fetched_keys
+    }
+
+
+def _update_single_full_course_record(course_metadata_dict, metadata_record, course_review, dry_run):
+    """
+    Given a fetched dictionary of course content metadata and an option `course_review` record,
+    updates an existing course `ContentMetadata` instance with the "full" dictionary of `json_metadata`
+    for that course.
+    """
+    # Merge the full metadata from discovery's /api/v1/courses into the local metadata object.
+    metadata_record.json_metadata.update(course_metadata_dict)
+
+    _normalize_metadata_record(metadata_record)
+
+    if course_review:
+        metadata_record.json_metadata['reviews_count'] = course_review.get('reviews_count')
+        metadata_record.json_metadata['avg_course_rating'] = course_review.get('avg_course_rating')
+
+    if metadata_record.json_metadata.get(FORCE_INCLUSION_METADATA_TAG_KEY):
+        metadata_record.json_metadata = transform_course_metadata_to_visible(metadata_record.json_metadata)
+
+    if dry_run:
+        logger.info('[Dry Run] Updated course content metadata json for {}: {}'.format(
+            metadata_record.content_key, json.dumps(metadata_record.json_metadata)
+        ))
+
+    program_content_keys = create_course_associated_programs(
+        course_metadata_dict.get('programs', []),
+        metadata_record,
+    )
+    _update_full_content_metadata_program(program_content_keys, dry_run)
+    return metadata_record
+
+
+def _normalize_metadata_record(course_metadata_record):
+    """
+    Perform more steps to normalize and move keys around
+    for more consistency across content types.
+    """
+    normalized_metadata_input = {
+        'course_metadata': course_metadata_record.json_metadata,
+    }
+    course_metadata_record.json_metadata['normalized_metadata'] =\
+        NormalizedContentMetadataSerializer(normalized_metadata_input).data
+    course_metadata_record.json_metadata['normalized_metadata_by_run'] = {}
+    for run in course_metadata_record.json_metadata.get('course_runs', []):
+        course_metadata_record.json_metadata['normalized_metadata_by_run'].update({
+            run['key']: NormalizedContentMetadataSerializer({
+                'course_run_metadata': run,
+                'course_metadata': course_metadata_record.json_metadata,
+            }).data
+        })
 
 
 def _update_full_content_metadata_program(content_keys, dry_run=False):
