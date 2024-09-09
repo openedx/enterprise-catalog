@@ -13,7 +13,7 @@ from enterprise_catalog.apps.catalog.constants import (
     DISCOVERY_PROGRAM_KEY_BATCH_SIZE,
 )
 from enterprise_catalog.apps.catalog.content_metadata_utils import (
-    tansform_force_included_courses,
+    transform_force_included_courses,
 )
 from enterprise_catalog.apps.catalog.utils import batch
 
@@ -301,7 +301,7 @@ class DiscoveryApiClient(BaseOAuthClient):
                     f'attempting to force-include: {forced_aggregation_keys}'
                 )
                 forced_courses = self.fetch_courses_by_keys(forced_aggregation_keys)
-                results += tansform_force_included_courses(forced_courses)
+                results += transform_force_included_courses(forced_courses)
         except Exception as exc:
             LOGGER.exception(
                 f'unable to add unlisted courses for catalog_id: {catalog_query.id}'
@@ -425,12 +425,14 @@ class DiscoveryApiClient(BaseOAuthClient):
 
         return programs
 
-    def fetch_courses_by_keys(self, course_keys):
+    def fetch_courses_by_keys(self, course_keys, additional_params=None):
         """
         Fetches course data from discovery's /api/v1/courses endpoint for the provided course keys.
 
         Args:
             course_keys (list of str): Content keys for Course ContentMetadata objects.
+            additional_params (dict): Optional dict of additional query parameters
+              to send in request for course metadata.
         Returns:
             list of dict: Returns a list of dictionaries where each dictionary represents the course
             data from discovery.
@@ -442,6 +444,7 @@ class DiscoveryApiClient(BaseOAuthClient):
         for course_keys_chunk in batched_course_keys:
             # Discovery expects the keys param to be in the format ?keys=course1,course2,...
             query_params = {'keys': ','.join(course_keys_chunk)}
+            query_params.update(additional_params or {})
             courses.extend(self.get_courses(query_params=query_params))
 
         return courses

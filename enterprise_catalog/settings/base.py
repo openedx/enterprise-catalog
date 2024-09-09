@@ -419,6 +419,10 @@ COURSE_FIELDS_TO_PLUCK_FROM_SEARCH_ALL = os.environ.get(
     DEFAULT_COURSE_FIELDS_TO_PLUCK_FROM_SEARCH_ALL,
 )
 
+# Whether to fetch restricted course runs from the course-discovery
+# /api/v1/courses endpoint
+SHOULD_FETCH_RESTRICTED_COURSE_RUNS = False
+
 # Set up system-to-feature roles mapping for edx-rbac
 SYSTEM_TO_FEATURE_ROLE_MAPPING = {
     # The enterprise catalog admin role is for users who need to perform state altering requests on catalogs
