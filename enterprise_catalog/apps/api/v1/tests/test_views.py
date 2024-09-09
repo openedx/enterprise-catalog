@@ -1394,6 +1394,33 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         self.assertEqual(response.json()['results'], [])
 
     @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
+    def test_get_content_metadata_content_filters_course_run_Key(self, mock_api_client):
+        """
+        Test that the get_content_metadata view GET view will support a filter including
+        course run key(s), even when the catalog itself doesn't explictly contain course runs.
+        """
+        mock_api_client.return_value.get_enterprise_customer.return_value = {
+            'slug': self.enterprise_slug,
+            'enable_learner_portal': True,
+            'modified': str(datetime.now().replace(tzinfo=pytz.UTC)),
+        }
+        course_metadata = ContentMetadataFactory(content_type=COURSE)
+        course_key = course_metadata.content_key
+        course_run_key = course_metadata.json_metadata['course_runs'][0]['key']
+        ContentMetadataFactory(
+            content_type=COURSE_RUN,
+            content_key=course_run_key,
+            parent_content_key=course_key
+        )
+        self.add_metadata_to_catalog(self.enterprise_catalog, [course_metadata])
+
+        url = f'{self._get_content_metadata_url(self.enterprise_catalog)}?content_keys={quote_plus(course_run_key)}'
+        response = self.client.get(url)
+        assert response.data.get('count') == 1
+        result = response.data.get('results')[0]
+        assert get_content_key(result) == course_metadata.content_key
+
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
     @ddt.data(
         False,
         True

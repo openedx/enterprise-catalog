@@ -52,7 +52,7 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
         queryset = self.enterprise_catalog.content_metadata
         content_filter = kwargs.get('content_keys_filter')
         if content_filter:
-            queryset = queryset.filter(content_key__in=content_filter)
+            queryset = self.enterprise_catalog.get_matching_content(content_keys=content_filter)
 
         return queryset.order_by('catalog_queries')
 
