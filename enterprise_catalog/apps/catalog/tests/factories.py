@@ -135,6 +135,7 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
                 'owners': owners,
                 'advertised_course_run_uuid': str(FAKE_ADVERTISED_COURSE_RUN_UUID),
                 'course_runs': course_runs,
+                'course': self.content_key,
             })
         elif self.content_type == COURSE_RUN:
             json_metadata.update({
