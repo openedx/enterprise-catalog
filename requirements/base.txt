@@ -36,12 +36,12 @@ celery==5.4.0
     #   -r requirements/base.in
     #   django-celery-results
     #   edx-celeryutils
-certifi==2024.7.4
+certifi==2024.8.30
     # via
     #   httpcore
     #   httpx
     #   requests
-cffi==1.17.0
+cffi==1.17.1
     # via
     #   cryptography
     #   pynacl
@@ -63,7 +63,7 @@ click-repl==0.3.0
     # via celery
 code-annotations==1.8.0
     # via edx-toggles
-cryptography==43.0.0
+cryptography==43.0.1
     # via
     #   pyjwt
     #   social-auth-core
@@ -76,7 +76,7 @@ diff-match-patch==20230430
     # via django-import-export
 distro==1.9.0
     # via openai
-django==4.2.15
+django==4.2.16
     # via
     #   -c requirements/common_constraints.txt
     #   -c requirements/constraints.txt
@@ -125,7 +125,7 @@ django-import-export==4.1.1
     # via -r requirements/base.in
 django-log-request-id==2.1.0
     # via -r requirements/base.in
-django-model-utils==4.5.1
+django-model-utils==5.0.0
     # via
     #   -r requirements/base.in
     #   edx-celeryutils
@@ -169,15 +169,15 @@ edx-django-utils==5.15.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==10.3.0
+edx-drf-extensions==10.4.0
     # via
     #   -r requirements/base.in
     #   edx-rbac
-edx-opaque-keys==2.10.0
+edx-opaque-keys==2.11.0
     # via edx-drf-extensions
 edx-rbac==1.10.0
     # via -r requirements/base.in
-edx-rest-api-client==5.7.1
+edx-rest-api-client==6.0.0
     # via -r requirements/base.in
 edx-toggles==5.2.0
     # via -r requirements/base.in
@@ -185,7 +185,7 @@ h11==0.14.0
     # via httpcore
 httpcore==1.0.5
     # via httpx
-httpx==0.27.0
+httpx==0.27.2
     # via openai
 idna==3.8
     # via
@@ -216,7 +216,7 @@ mysqlclient==2.2.4
     # via -r requirements/base.in
 newrelic==9.13.0
     # via edx-django-utils
-numpy==2.1.0
+numpy==2.1.1
     # via
     #   scikit-learn
     #   scipy
@@ -228,7 +228,7 @@ openai==1.13.3
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.in
-pbr==6.0.0
+pbr==6.1.0
     # via stevedore
 ply==3.11
     # via djangoql
@@ -238,9 +238,9 @@ psutil==6.0.0
     # via edx-django-utils
 pycparser==2.22
     # via cffi
-pydantic==2.8.2
+pydantic==2.9.0
     # via openai
-pydantic-core==2.20.1
+pydantic-core==2.23.2
     # via pydantic
 pyjwt[crypto]==2.9.0
     # via
@@ -285,7 +285,6 @@ requests==2.32.3
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   requests-oauthlib
-    #   slumber
     #   social-auth-core
 requests-oauthlib==2.0.0
     # via social-auth-core
@@ -293,7 +292,7 @@ rpds-py==0.20.0
     # via
     #   jsonschema
     #   referencing
-rules==3.4
+rules==3.5
     # via -r requirements/base.in
 scikit-learn==1.5.1
     # via -r requirements/base.in
@@ -310,8 +309,6 @@ six==1.16.0
     #   edx-django-release-util
     #   edx-rbac
     #   python-dateutil
-slumber==0.7.1
-    # via edx-rest-api-client
 sniffio==1.3.1
     # via
     #   anyio
@@ -347,7 +344,9 @@ typing-extensions==4.12.2
     #   pydantic
     #   pydantic-core
 tzdata==2024.1
-    # via celery
+    # via
+    #   celery
+    #   pydantic
 uritemplate==4.1.1
     # via drf-spectacular
 urllib3==2.2.2
@@ -361,7 +360,7 @@ wcwidth==0.2.13
     # via prompt-toolkit
 xlsxwriter==3.2.0
     # via -r requirements/base.in
-zipp==3.20.0
+zipp==3.20.1
     # via -r requirements/base.in
 
 # The following packages are considered to be unsafe in a requirements file:
