@@ -422,7 +422,15 @@ class UpdateFullContentMetadataTaskTests(TestCase):
             'course_runs': [{
                 'uuid': course_run_2_uuid,
                 'key': f'course-v1:{course_key_2}+1',
+                'start': '2023-03-01T00:00:00Z',
+                'end': '2023-03-01T00:00:00Z',
                 'first_enrollable_paid_seat_price': None,  # should cause fallback to DEFAULT_NORMALIZED_PRICE
+                'seats': [
+                    {
+                        'type': CourseMode.VERIFIED,
+                        'upgrade_deadline': '2023-02-01T00:00:00Z',
+                    },
+                ],
             }],
         }
 
@@ -452,7 +460,7 @@ class UpdateFullContentMetadataTaskTests(TestCase):
             'advertised_course_run_uuid': course_run_3_uuid,
         }
         course_key_4 = 'edX+superDuperFakeX'
-        course_data_4 = {'key': course_key_4, 'full_course_only_field': 'test_4', 'programs': []}
+        course_data_4 = {'key': course_key_4, 'full_course_only_field': 'test_4', 'programs': [], 'course_runs': []}
 
         non_course_key = 'course-runX'
 
@@ -505,6 +513,19 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         assert metadata_2.json_metadata['aggregation_key'] == f'course:{course_key_2}'
         assert metadata_2.json_metadata['full_course_only_field'] == 'test_2'
         assert metadata_2.json_metadata['normalized_metadata']['content_price'] == DEFAULT_NORMALIZED_PRICE
+        assert metadata_2.json_metadata['normalized_metadata']['start_date'] == '2023-03-01T00:00:00Z'
+        assert metadata_2.json_metadata['normalized_metadata']['end_date'] == '2023-03-01T00:00:00Z'
+        assert metadata_2.json_metadata['normalized_metadata']['enroll_by_date'] == '2023-02-01T00:00:00Z'
+        expected_normalized_metadata_by_run = {
+            course_run['key']: {
+                'start_date': course_run['start'],
+                'end_date': course_run['end'],
+                'enroll_by_date': course_run['seats'][0]['upgrade_deadline'],
+                'content_price': course_run['first_enrollable_paid_seat_price'] or DEFAULT_NORMALIZED_PRICE,
+            }
+            for course_run in metadata_2.json_metadata['course_runs']
+        }
+        assert metadata_2.json_metadata['normalized_metadata_by_run'] == expected_normalized_metadata_by_run
         assert set(program_data.items()).issubset(set(metadata_2.json_metadata['programs'][0].items()))
 
         assert metadata_3.json_metadata['aggregation_key'] == f'course:{course_key_3}'
@@ -512,6 +533,16 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         assert metadata_3.json_metadata['normalized_metadata']['end_date'] == '2023-03-01T00:00:00Z'
         assert metadata_3.json_metadata['normalized_metadata']['enroll_by_date'] == '2023-02-01T00:00:00Z'
         assert metadata_3.json_metadata['normalized_metadata']['content_price'] == 90
+        expected_normalized_metadata_by_run = {
+            course_run['key']: {
+                'start_date': course_run['start'],
+                'end_date': course_run['end'],
+                'enroll_by_date': course_run['seats'][0]['upgrade_deadline'],
+                'content_price': course_run['first_enrollable_paid_seat_price'] or DEFAULT_NORMALIZED_PRICE,
+            }
+            for course_run in metadata_3.json_metadata['course_runs']
+        }
+        assert metadata_3.json_metadata['normalized_metadata_by_run'] == expected_normalized_metadata_by_run
 
         assert metadata_4.json_metadata['aggregation_key'] == f'course:{course_key_4}'
         assert metadata_4.json_metadata['full_course_only_field'] == 'test_4'
@@ -635,20 +666,17 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         course_data = {
             'aggregation_key': f'course:{course_key}',
             'key': course_key,
-            'course_type': 'executive-education-2u',
+            'course_type': EXEC_ED_2U_COURSE_TYPE,
             'course_runs': [{
                 'key': course_run_key,
                 'uuid': course_run_uuid,
-                # Use dummy 2022 dates that we will assert are overwritten.
-                'start': '2022-03-01T00:00:00Z',
-                'end': '2022-03-01T00:00:00Z',
+                # start/end dates are the same across course types
+                'start': '2023-03-01T00:00:00Z',
+                'end': '2023-04-09T23:59:59Z',
+                # `enrollment_end` in place of seat.upgrade_deadline for Exec Ed courses
+                'enrollment_end': '2023-02-01T00:00:00Z',
             }],
             'programs': [],
-            'additional_metadata': {
-                'start_date': '2023-03-01T00:00:00Z',
-                'end_date': '2023-04-09T23:59:59Z',
-                'registration_deadline': '2023-02-01T00:00:00Z',
-            },
             'entitlements': [
                 {
                     'price': 2900,
@@ -685,22 +713,15 @@ class UpdateFullContentMetadataTaskTests(TestCase):
                 'course_type': EXEC_ED_2U_COURSE_TYPE,
                 'course_runs': [{
                     'key': course_run_key,
-                    # Use dummy 2022 dates that we will assert are overwritten.
-                    'start': '2022-03-01T00:00:00Z',
-                    'end': '2022-03-01T00:00:00Z',
+                    # start/end dates are the same across course types
+                    'start': '2023-03-01T00:00:00Z',
+                    'end': '2023-04-09T23:59:59Z',
+                    # `enrollment_end` in place of seat.upgrade_deadline for Exec Ed courses
+                    'enrollment_end': '2023-02-01T00:00:00Z',
                 }],
                 'programs': [],
 
-                # Intentionally exclude additional_metadata that we will assert is added by the
-                # update_full_content_metadata_task.
-                #
-                # 'additional_metadata': {
-                #     'start_date': '2023-03-01T00:00:00Z',
-                #     'end_date': '2023-04-09T23:59:59Z',
-                #     'registration_deadline': '2023-02-01T00:00:00Z',
-                # },
-
-                # Also `advertised_course_run_uuid` is ONLY in the output of /api/v1/courses/, not /api/v1/search/all/
+                # `advertised_course_run_uuid` is ONLY in the output of /api/v1/courses/, not /api/v1/search/all/
                 # 'advertised_course_run_uuid': course_run_uuid,
 
                 # Intentionally exclude net-new fields that we will assert are added by the
@@ -724,10 +745,17 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         # Make sure the field normalization step caused the creation of expected net-new fields.
         course_cm = ContentMetadata.objects.get(content_key=course_key)
         assert course_cm.content_type == COURSE
+
         assert course_cm.json_metadata['normalized_metadata']['start_date'] == '2023-03-01T00:00:00Z'
         assert course_cm.json_metadata['normalized_metadata']['end_date'] == '2023-04-09T23:59:59Z'
         assert course_cm.json_metadata['normalized_metadata']['enroll_by_date'] == '2023-02-01T00:00:00Z'
         assert course_cm.json_metadata['normalized_metadata']['content_price'] == 2900
+
+        normalized_metadata_by_run = course_cm.json_metadata['normalized_metadata_by_run']
+        assert normalized_metadata_by_run[course_run_key]['start_date'] == '2023-03-01T00:00:00Z'
+        assert normalized_metadata_by_run[course_run_key]['end_date'] == '2023-04-09T23:59:59Z'
+        assert normalized_metadata_by_run[course_run_key]['enroll_by_date'] == '2023-02-01T00:00:00Z'
+        assert normalized_metadata_by_run[course_run_key]['content_price'] == 2900
 
         # Make sure the start/end dates are copied from the additional_metadata into the course run dict of the course.
         # This checks that the dummy 2022 dates are overwritten.
