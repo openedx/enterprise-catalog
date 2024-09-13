@@ -48,7 +48,7 @@ from enterprise_catalog.apps.curation.models import (
 
 REQUEST_CACHE_NAMESPACE = 'CURATION_REQUEST_CACHE'
 CONTENT_PER_HIGHLIGHTSET_LIMIT = 24
-HIGHLIGHTSETS_PER_ENTERPRISE_LIMIT = 12
+HIGHLIGHTSETS_PER_ENTERPRISE_LIMIT = 16
 logger = logging.getLogger(__name__)
 
 
