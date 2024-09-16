@@ -142,12 +142,11 @@ def batch_by_pk(ModelClass, extra_filter=Q(), batch_size=10000):
 
 def to_timestamp(datetime_str):
     """
-    Takes a formatted date string to
-    convert it to an epoch timestamp.
+    Takes a formatted date string to convert it to an unix/epoch timestamp.
 
     Ex. to_timestamp("2024-07-30T00:00:00Z") -> 1722297600.0
 
-    The decimal represents a timestamp epoch time down to the millisecond
+    The decimal represents a timestamp epoch time down to the millisecond.
 
     This is useful if we need to pass epoch time to an indexable Algolia value
     which requires it to be in epoch format in order for the indexed field to be
@@ -155,8 +154,25 @@ def to_timestamp(datetime_str):
     """
     try:
         dt = datetime.fromisoformat(datetime_str)
-        epoch_time = dt.timestamp()
-        return epoch_time
-    except (ValueError, TypeError) as error:
-        LOGGER.error(f"[to_timestamp][{error}] Could not parse date string: {datetime_str}")
+        return dt.timestamp()
+    except (ValueError, TypeError) as exc:
+        LOGGER.error(f"[to_timestamp][{exc}] Could not parse date string: {datetime_str}")
         return None
+
+
+def get_course_run_by_uuid(course, course_run_uuid):
+    """
+    Find a course_run based on uuid
+
+    Arguments:
+        course (dict): course dict
+        course_run_uuid (str): uuid to lookup
+
+    Returns:
+        dict: a course_run or None
+    """
+    try:
+        course_run = [run for run in course.get('course_runs', []) if run.get('uuid') == course_run_uuid][0]
+    except IndexError:
+        return None
+    return course_run

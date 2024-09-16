@@ -27,7 +27,7 @@ class NormalizedContentMetadataSerializerTests(TestCase):
         course_content.json_metadata['advertised_course_run_uuid'] = None
 
         normalized_metadata_input = {
-            'course': course_content,
+            'course_metadata': course_content.json_metadata,
         }
         serialized_data = NormalizedContentMetadataSerializer(normalized_metadata_input).data
 
@@ -52,7 +52,7 @@ class NormalizedContentMetadataSerializerTests(TestCase):
         course_content.json_metadata['advertised_course_run_uuid'] = 'the-course-run-uuid'
 
         normalized_metadata_input = {
-            'course': course_content,
+            'course_metadata': course_content.json_metadata,
         }
         if has_course_run:
             normalized_metadata_input['course_run_metadata'] = course_content.json_metadata['course_runs'][0]
@@ -78,7 +78,7 @@ class NormalizedContentMetadataSerializerTests(TestCase):
         ]
         course_content.json_metadata['advertised_course_run_uuid'] = 'the-course-run-uuid'
         normalized_metadata_input = {
-            'course': course_content,
+            'course_metadata': course_content.json_metadata,
         }
         if has_course_run:
             normalized_metadata_input['course_run_metadata'] = course_content.json_metadata['course_runs'][0]
@@ -114,7 +114,7 @@ class NormalizedContentMetadataSerializerTests(TestCase):
         ]
 
         normalized_metadata_input = {
-            'course': course_content,
+            'course_metadata': course_content.json_metadata,
         }
         if has_course_run:
             normalized_metadata_input['course_run_metadata'] = course_content.json_metadata['course_runs'][0]
@@ -139,7 +139,7 @@ class NormalizedContentMetadataSerializerTests(TestCase):
         course_content.json_metadata['course_runs'][0]['enrollment_end'] = actual_deadline
 
         normalized_metadata_input = {
-            'course': course_content,
+            'course_metadata': course_content.json_metadata,
         }
         if has_course_run:
             normalized_metadata_input['course_run_metadata'] = course_content.json_metadata['course_runs'][0]

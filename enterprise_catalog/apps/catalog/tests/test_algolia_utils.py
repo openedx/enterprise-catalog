@@ -16,7 +16,7 @@ from enterprise_catalog.apps.catalog.constants import (
 from enterprise_catalog.apps.catalog.tests.factories import (
     ContentMetadataFactory,
 )
-from enterprise_catalog.apps.catalog.utils import localized_utcnow
+from enterprise_catalog.apps.catalog.utils import localized_utcnow, to_timestamp
 
 
 ADVERTISED_COURSE_RUN_UUID = uuid4()
@@ -25,9 +25,13 @@ FUTURE_COURSE_RUN_UUID_2 = uuid4()
 PAST_COURSE_RUN_UUID_1 = uuid4()
 
 
-def _fake_upgrade_deadline(days_from_now=0):
+def _days_from_now(days_from_now=0):
     deadline = localized_utcnow() + timedelta(days=days_from_now)
     return deadline.strftime('%Y-%m-%dT%H:%M:%SZ')
+
+
+def _days_from_now_timestamp(days_from_now):
+    return to_timestamp(_days_from_now(days_from_now))
 
 
 @ddt.ddt
@@ -48,19 +52,19 @@ class AlgoliaUtilsTests(TestCase):
         {
             'expected_result': True,
             'seats': [
-                {'type': 'verified', 'upgrade_deadline': _fake_upgrade_deadline(100)}
+                {'type': 'verified', 'upgrade_deadline': _days_from_now(100)}
             ],
         },
         {
             'expected_result': True,
             'seats': [
-                {'type': 'something-else', 'upgrade_deadline': _fake_upgrade_deadline(-100)}
+                {'type': 'something-else', 'upgrade_deadline': _days_from_now(-100)}
             ],
         },
         {
             'expected_result': False,
             'seats': [
-                {'type': 'verified', 'upgrade_deadline': _fake_upgrade_deadline(-1)}
+                {'type': 'verified', 'upgrade_deadline': _days_from_now(-1)}
             ],
         },
         {
@@ -326,6 +330,7 @@ class AlgoliaUtilsTests(TestCase):
                 'upgrade_deadline': 32503680000.0,
                 'enroll_by': 32503680000.0,
                 'is_active': True,
+                'content_price': 0.0,
             },
         ),
         (
@@ -358,7 +363,9 @@ class AlgoliaUtilsTests(TestCase):
                     }, {
                         'type': 'verified',
                         'upgrade_deadline': '2015-01-04T15:52:00Z',
+                        'price': '50.00',
                     }],
+                    'first_enrollable_paid_seat_price': 50,
                 }],
                 'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID
             },
@@ -374,6 +381,7 @@ class AlgoliaUtilsTests(TestCase):
                 'upgrade_deadline': 1420386720.0,
                 'enroll_by': 1420386720.0,
                 'is_active': True,
+                'content_price': 50.0,
             }
         ),
         (
@@ -394,7 +402,9 @@ class AlgoliaUtilsTests(TestCase):
                     'seats': [{
                         'type': 'verified',
                         'upgrade_deadline': None,
+                        'price': '50.00',
                     }],
+                    'first_enrollable_paid_seat_price': 50,
                 }],
                 'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID
             },
@@ -410,6 +420,7 @@ class AlgoliaUtilsTests(TestCase):
                 'upgrade_deadline': 32503680000.0,
                 'enroll_by': 32503680000.0,
                 'is_active': True,
+                'content_price': 50.0,
             }
         )
     )
@@ -497,6 +508,12 @@ class AlgoliaUtilsTests(TestCase):
                         'min_effort': 2,
                         'max_effort': 6,
                         'weeks_to_complete': 6,
+                        'seats': [{
+                            'type': 'verified',
+                            'upgrade_deadline': _days_from_now(10),
+                            'price': '50.00',
+                        }],
+                        'first_enrollable_paid_seat_price': 50,
                     },
                     {
                         'key': 'course-v1:org+course+1T3000',
@@ -539,9 +556,10 @@ class AlgoliaUtilsTests(TestCase):
                     'min_effort': 2,
                     'max_effort': 6,
                     'weeks_to_complete': 6,
-                    'upgrade_deadline': 32503680000.0,
-                    'enroll_by': 32503680000.0,
+                    'upgrade_deadline': _days_from_now_timestamp(10),
+                    'enroll_by': _days_from_now_timestamp(10),
                     'is_active': True,
+                    'content_price': 50.0,
                 },
                 {
                     'key': 'course-v1:org+course+1T3000',
@@ -555,6 +573,7 @@ class AlgoliaUtilsTests(TestCase):
                     'upgrade_deadline': 32503680000.0,
                     'enroll_by': 32503680000.0,
                     'is_active': True,
+                    'content_price': 0.0,
                 },
                 {
                     'key': 'course-v1:org+course+1T3022',
@@ -568,6 +587,7 @@ class AlgoliaUtilsTests(TestCase):
                     'upgrade_deadline': 32503680000.0,
                     'enroll_by': 32503680000.0,
                     'is_active': False,
+                    'content_price': 0.0,
                 }
             ],
         ),
@@ -575,10 +595,10 @@ class AlgoliaUtilsTests(TestCase):
     @ddt.unpack
     def test_get_course_runs(self, searchable_course, expected_course_runs):
         """
-        Assert get_advertised_course_runs fetches just enough info about advertised course run
+        Assert get_course_runs returns the expected course runs.
         """
-        upcoming_course_runs = utils.get_course_runs(searchable_course)
-        assert upcoming_course_runs == expected_course_runs
+        actual_course_runs = utils.get_course_runs(searchable_course)
+        assert actual_course_runs == expected_course_runs
 
     @ddt.data(
         (
