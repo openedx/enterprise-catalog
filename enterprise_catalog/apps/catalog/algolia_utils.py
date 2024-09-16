@@ -28,8 +28,12 @@ from enterprise_catalog.apps.catalog.constants import (
     VIDEO,
 )
 from enterprise_catalog.apps.catalog.models import ContentMetadata
+from enterprise_catalog.apps.catalog.serializers import (
+    NormalizedContentMetadataSerializer,
+)
 from enterprise_catalog.apps.catalog.utils import (
     batch_by_pk,
+    get_course_run_by_uuid,
     localized_utcnow,
     to_timestamp,
 )
@@ -201,7 +205,7 @@ def _should_index_course(course_metadata):
     """
     course_json_metadata = course_metadata.json_metadata
     advertised_course_run_uuid = course_json_metadata.get('advertised_course_run_uuid')
-    advertised_course_run = _get_course_run_by_uuid(
+    advertised_course_run = get_course_run_by_uuid(
         course_json_metadata,
         advertised_course_run_uuid,
     )
@@ -440,7 +444,7 @@ def get_course_language(course):
     Returns:
         string: human-readable language name parsed from a language code, or None if language name is not present.
     """
-    advertised_course_run = _get_course_run_by_uuid(course, course.get('advertised_course_run_uuid'))
+    advertised_course_run = get_course_run_by_uuid(course, course.get('advertised_course_run_uuid'))
     if not advertised_course_run:
         return None
 
@@ -459,7 +463,7 @@ def get_course_transcript_languages(course):
     Returns:
         list: a list of available human-readable video transcript languages parsed from a language code.
     """
-    advertised_course_run = _get_course_run_by_uuid(course, course.get('advertised_course_run_uuid'))
+    advertised_course_run = get_course_run_by_uuid(course, course.get('advertised_course_run_uuid'))
     if not advertised_course_run:
         return None
 
@@ -1084,31 +1088,41 @@ def get_course_prerequisites(course):
     return prerequisites
 
 
-def _get_course_run(full_course_run):
+def _get_course_run(course, course_run):
     """
-    Transform a full course run into what we'll index.
+    Transform a course run into what gets indexed in Algolia. Depending on the course type,
+    some metadata may be derived from the top-level course (e.g., for Exec Ed vs. OCM content).
+
+    Date attributes (e.g., `enroll_by`) are recorded as Unix timestamps so Algolia can filter on them.
 
     Arguments:
-        full_course_run (dict): a dictionary representing a course run
+        course (dict): a dictionary representing a course
+        course_run (dict): a dictionary representing a course run
 
     Returns:
-        dict: a subseted and transformed dictionary from full_course_run
+        dict: a subseted and transformed dictionary from course_run
     """
-    if full_course_run is None:
+    if course is None or course_run is None:
         return None
-    # upgrade_deadline is recorded in EPOCH time
+
+    normalized_content_metadata = NormalizedContentMetadataSerializer({
+        'course_metadata': course,
+        'course_run_metadata': course_run,
+    }).data
+
     course_run = {
-        'key': full_course_run.get('key'),
-        'pacing_type': full_course_run.get('pacing_type'),
-        'availability': full_course_run.get('availability'),
-        'start': full_course_run.get('start'),
-        'end': full_course_run.get('end'),
-        'min_effort': full_course_run.get('min_effort'),
-        'max_effort': full_course_run.get('max_effort'),
-        'weeks_to_complete': full_course_run.get('weeks_to_complete'),
-        'upgrade_deadline': _get_verified_upgrade_deadline(full_course_run),  # deprecated in favor of `enroll_by`
-        'enroll_by': _get_course_run_enroll_by_date_timestamp(full_course_run),
-        'is_active': _get_is_active_course_run(full_course_run),
+        'key': course_run.get('key'),
+        'pacing_type': course_run.get('pacing_type'),
+        'availability': course_run.get('availability'),
+        'start': course_run.get('start'),
+        'end': course_run.get('end'),
+        'min_effort': course_run.get('min_effort'),
+        'max_effort': course_run.get('max_effort'),
+        'weeks_to_complete': course_run.get('weeks_to_complete'),
+        'upgrade_deadline': _get_verified_upgrade_deadline(course_run),  # deprecated in favor of `enroll_by`
+        'enroll_by': _get_course_run_enroll_by_date_timestamp(normalized_content_metadata),
+        'content_price': normalized_content_metadata.get('content_price'),
+        'is_active': _get_is_active_course_run(course_run),
     }
     return course_run
 
@@ -1124,10 +1138,10 @@ def get_advertised_course_run(course):
         dict: containing key, pacing_type, start, end, and upgrade deadline
         for the course_run, or None
     """
-    full_course_run = _get_course_run_by_uuid(course, course.get('advertised_course_run_uuid'))
+    full_course_run = get_course_run_by_uuid(course, course.get('advertised_course_run_uuid'))
     if full_course_run is None:
         return None
-    return _get_course_run(full_course_run)
+    return _get_course_run(course, full_course_run)
 
 
 def get_course_runs(course):
@@ -1143,7 +1157,7 @@ def get_course_runs(course):
     output = []
     course_runs = course.get('course_runs') or []
     for full_course_run in course_runs:
-        this_course_run = _get_course_run(full_course_run)
+        this_course_run = _get_course_run(course, full_course_run)
         is_late_enrollment_enroll_by_date_before_now = False
         is_end_date_before_now = False
         if enroll_by := this_course_run.get('enroll_by'):
@@ -1180,24 +1194,6 @@ def get_upcoming_course_runs(course):
     if get_advertised_course_run(course) is not None:
         return len(active_course_runs) - 1
     return len(active_course_runs)
-
-
-def _get_course_run_by_uuid(course, course_run_uuid):
-    """
-    Find a course_run based on uuid
-
-    Arguments:
-        course (dict): course dict
-        course_run_uuid (str): uuid to lookup
-
-    Returns:
-        dict: a course_run or None
-    """
-    try:
-        course_run = [run for run in course.get('course_runs', []) if run.get('uuid') == course_run_uuid][0]
-    except IndexError:
-        return None
-    return course_run
 
 
 def _get_verified_upgrade_deadline(full_course_run):
@@ -1248,20 +1244,17 @@ def _get_is_active_course_run(full_course_run):
     return is_active
 
 
-def _get_course_run_enroll_by_date_timestamp(full_course_run):
+def _get_course_run_enroll_by_date_timestamp(normalized_content_metadata):
     """
-    Returns the enroll-by date for Exec-ed or OCM courses
-    `_get_verified_upgrade_deadline` retrieves OCM related course run end dates
-    `enrollment_end` corresponds to an Exec-ed related course run end date
+    Returns a transformed enroll-by date, converted to a Unix timestamp.
 
-    If no end date is provided in either field, it returns the ALGOLIA_DEFAULT_TIMESTAMP
-    since Algolia cannot filter on null values
+    If no enroll-by date is provided, it returns the ALGOLIA_DEFAULT_TIMESTAMP
+    since Algolia cannot filter on null values.
     """
-    upgrade_deadline_timestamp = _get_verified_upgrade_deadline(full_course_run=full_course_run)
-    enrollment_end_timestamp = full_course_run.get('enrollment_end') or ALGOLIA_DEFAULT_TIMESTAMP
-    if not isinstance(enrollment_end_timestamp, (int, float)):
-        enrollment_end_timestamp = to_timestamp(enrollment_end_timestamp)
-    return min(enrollment_end_timestamp, upgrade_deadline_timestamp)
+    enroll_by_date = normalized_content_metadata.get('enroll_by_date')
+    if not enroll_by_date:
+        return ALGOLIA_DEFAULT_TIMESTAMP
+    return to_timestamp(enroll_by_date)
 
 
 def get_course_first_paid_enrollable_seat_price(course):
@@ -1276,7 +1269,7 @@ def get_course_first_paid_enrollable_seat_price(course):
     """
     # Use advertised course run.
     # If that fails use one of the other active course runs. (The latter is what Discovery does)
-    advertised_course_run = _get_course_run_by_uuid(course, course.get('advertised_course_run_uuid'))
+    advertised_course_run = get_course_run_by_uuid(course, course.get('advertised_course_run_uuid'))
     if advertised_course_run and advertised_course_run.get('first_enrollable_paid_seat_price'):
         return advertised_course_run.get('first_enrollable_paid_seat_price')
 

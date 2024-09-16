@@ -9,8 +9,8 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from enterprise_catalog.apps.api.constants import CourseMode
-
-from .algolia_utils import _get_course_run_by_uuid
+from enterprise_catalog.apps.catalog.constants import EXEC_ED_2U_COURSE_TYPE
+from enterprise_catalog.apps.catalog.utils import get_course_run_by_uuid
 
 
 logger = logging.getLogger(__name__)
@@ -99,20 +99,19 @@ class NormalizedContentMetadataSerializer(ReadOnlySerializer):
     content_price = serializers.SerializerMethodField(help_text='The price of a course in USD')
 
     @cached_property
-    def course(self):
-        return self.instance.get('course')
+    def course_metadata(self):
+        return self.instance.get('course_metadata')
 
     @cached_property
-    def course_metadata(self):
-        return self.course.json_metadata
+    def is_exec_ed_2u_course(self):
+        return self.course_metadata.get('course_type') == EXEC_ED_2U_COURSE_TYPE
 
     @cached_property
     def course_run_metadata(self):
-        run_metadata = self.instance.get('course_run_metadata')
-        if run_metadata:
+        if run_metadata := self.instance.get('course_run_metadata'):
             return run_metadata
         advertised_course_run_uuid = self.course_metadata.get('advertised_course_run_uuid')
-        return _get_course_run_by_uuid(self.course_metadata, advertised_course_run_uuid)
+        return get_course_run_by_uuid(self.course_metadata, advertised_course_run_uuid)
 
     @extend_schema_field(serializers.DateTimeField)
     def get_start_date(self, obj) -> str:  # pylint: disable=unused-argument
@@ -139,7 +138,7 @@ class NormalizedContentMetadataSerializer(ReadOnlySerializer):
 
     @extend_schema_field(serializers.FloatField)
     def get_content_price(self, obj) -> float:  # pylint: disable=unused-argument
-        if self.course.is_exec_ed_2u_course:
+        if self.is_exec_ed_2u_course is True:
             for entitlement in self.course_metadata.get('entitlements', []):
                 if entitlement.get('mode') == CourseMode.PAID_EXECUTIVE_EDUCATION:
                     return entitlement.get('price') or DEFAULT_NORMALIZED_PRICE

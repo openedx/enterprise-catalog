@@ -291,7 +291,7 @@ def _update_full_content_metadata_course(content_keys, dry_run=False):
             # Perform more steps to normalize and move keys around
             # for more consistency across content types.
             normalized_metadata_input = {
-                'course': metadata_record,
+                'course_metadata': metadata_record.json_metadata,
             }
             metadata_record.json_metadata['normalized_metadata'] =\
                 NormalizedContentMetadataSerializer(normalized_metadata_input).data
@@ -299,8 +299,8 @@ def _update_full_content_metadata_course(content_keys, dry_run=False):
             for run in metadata_record.json_metadata.get('course_runs', []):
                 metadata_record.json_metadata['normalized_metadata_by_run'].update({
                     run['key']: NormalizedContentMetadataSerializer({
+                        'course_metadata': metadata_record.json_metadata,
                         'course_run_metadata': run,
-                        'course': metadata_record,
                     }).data
                 })
 
