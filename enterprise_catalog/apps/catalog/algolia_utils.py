@@ -1163,7 +1163,7 @@ def get_course_runs(course):
     for course_run in course_runs:
         this_course_run = _get_course_run(course, course_run)
         has_ended = False
-        is_eligible_for_enrollable = True
+        is_eligible_for_enrollment = True
         if enroll_by := this_course_run.get('enroll_by'):
             # determine whether the course run is late enrollment eligible, based on an
             # enroll_by date that has elapsed the earliest support late enrollment cutoff.
@@ -1172,12 +1172,12 @@ def get_course_runs(course):
                 # the enroll_by date has passed, so determine whether the enroll_by
                 # is still eligible for late enrollment.
                 late_enrollment_cutoff = localized_utcnow() - datetime.timedelta(days=LATE_ENROLLMENT_THRESHOLD_DAYS)
-                is_eligible_for_enrollable = course_run_enroll_by_date > late_enrollment_cutoff
+                is_eligible_for_enrollment = course_run_enroll_by_date > late_enrollment_cutoff
         if end := this_course_run.get('end'):
             course_run_end = parser.parse(end)
             # check for runs within course run end date
             has_ended = course_run_end < localized_utcnow()
-        if has_ended or not is_eligible_for_enrollable:
+        if has_ended or not is_eligible_for_enrollment:
             # skip course runs which have ended or are not eligible for enrollment, taking into account late enrollment.
             continue
         output.append(this_course_run)
