@@ -1126,6 +1126,7 @@ def _get_course_run(course, course_run):
         'has_enroll_by': bool(enroll_by),
         'content_price': normalized_content_metadata.get('content_price'),
         'is_active': _get_is_active_course_run(course_run),
+        'is_late_enrollment_eligible': _get_is_late_enrollment_eligible(course_run),
     }
     return course_run
 
@@ -1246,6 +1247,21 @@ def _get_is_active_course_run(full_course_run):
             f'status: {full_course_run.get("status")}'
         )
     return is_active
+
+
+def _get_is_late_enrollment_eligible(course_run):
+    """
+    Determines if the course run is eligible for late enrollment:
+      * Must not be archived
+      * Must have a marketing URL
+      * Must have seats
+    """
+    is_archived = course_run.get('availability') == 'Archived'
+    has_marketing_url = bool(course_run.get('marketing_url'))
+    has_seats = bool(course_run.get('seats') or [])
+    if is_archived or not has_marketing_url or not has_seats:
+        return False
+    return True
 
 
 def _get_course_run_enroll_by_date_timestamp(normalized_content_metadata):
