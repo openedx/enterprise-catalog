@@ -1258,7 +1258,7 @@ def _get_is_late_enrollment_eligible(course_run):
     """
     is_archived = course_run.get('availability') == 'Archived'
     has_marketing_url = bool(course_run.get('marketing_url'))
-    has_seats = bool(course_run.get('seats') or [])
+    has_seats = bool(course_run.get('seats'))
     if is_archived or not has_marketing_url or not has_seats:
         return False
     return True
