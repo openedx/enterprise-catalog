@@ -1110,6 +1110,8 @@ def _get_course_run(course, course_run):
         'course_run_metadata': course_run,
     }).data
 
+    enroll_by = _get_course_run_enroll_by_date_timestamp(normalized_content_metadata)
+
     course_run = {
         'key': course_run.get('key'),
         'pacing_type': course_run.get('pacing_type'),
@@ -1120,9 +1122,11 @@ def _get_course_run(course, course_run):
         'max_effort': course_run.get('max_effort'),
         'weeks_to_complete': course_run.get('weeks_to_complete'),
         'upgrade_deadline': _get_verified_upgrade_deadline(course_run),  # deprecated in favor of `enroll_by`
-        'enroll_by': _get_course_run_enroll_by_date_timestamp(normalized_content_metadata),
+        'enroll_by': enroll_by,
+        'has_enroll_by': bool(enroll_by),
         'content_price': normalized_content_metadata.get('content_price'),
         'is_active': _get_is_active_course_run(course_run),
+        'is_late_enrollment_eligible': _get_is_late_enrollment_eligible(course_run),
     }
     return course_run
 
@@ -1156,24 +1160,25 @@ def get_course_runs(course):
     """
     output = []
     course_runs = course.get('course_runs') or []
-    for full_course_run in course_runs:
-        this_course_run = _get_course_run(course, full_course_run)
-        is_late_enrollment_enroll_by_date_before_now = False
-        is_end_date_before_now = False
+    for course_run in course_runs:
+        this_course_run = _get_course_run(course, course_run)
+        has_ended = False
+        is_eligible_for_enrollment = True
         if enroll_by := this_course_run.get('enroll_by'):
-            course_run_enroll_by_datetime = datetime.datetime.fromtimestamp(enroll_by)
-            # offsets enroll_by date by the late enrollment threshold
-            course_run_late_enrollment_enroll_by_datetime = \
-                course_run_enroll_by_datetime + datetime.timedelta(days=LATE_ENROLLMENT_THRESHOLD_DAYS)
-            # check for runs within the late enrollment threshold
-            is_late_enrollment_enroll_by_date_before_now = \
-                course_run_late_enrollment_enroll_by_datetime.replace(tzinfo=UTC) < localized_utcnow()
+            # determine whether the course run is late enrollment eligible, based on an
+            # enroll_by date that has elapsed the earliest support late enrollment cutoff.
+            course_run_enroll_by_date = datetime.datetime.fromtimestamp(enroll_by).replace(tzinfo=UTC)
+            if course_run_enroll_by_date < localized_utcnow():
+                # the enroll_by date has passed, so determine whether the enroll_by
+                # is still eligible for late enrollment.
+                late_enrollment_cutoff = localized_utcnow() - datetime.timedelta(days=LATE_ENROLLMENT_THRESHOLD_DAYS)
+                is_eligible_for_enrollment = course_run_enroll_by_date > late_enrollment_cutoff
         if end := this_course_run.get('end'):
             course_run_end = parser.parse(end)
             # check for runs within course run end date
-            is_end_date_before_now = course_run_end < localized_utcnow()
-        if is_late_enrollment_enroll_by_date_before_now or is_end_date_before_now:
-            # skip course runs which have ended or elapsed their enroll_by date with late enrollment offset days
+            has_ended = course_run_end < localized_utcnow()
+        if has_ended or not is_eligible_for_enrollment:
+            # skip course runs which have ended or are not eligible for enrollment, taking into account late enrollment.
             continue
         output.append(this_course_run)
     return output
@@ -1244,6 +1249,21 @@ def _get_is_active_course_run(full_course_run):
     return is_active
 
 
+def _get_is_late_enrollment_eligible(course_run):
+    """
+    Determines if the course run is eligible for late enrollment:
+      * Must not be archived
+      * Must have a marketing URL
+      * Must have seats
+    """
+    is_archived = course_run.get('availability') == 'Archived'
+    has_marketing_url = bool(course_run.get('marketing_url'))
+    has_seats = bool(course_run.get('seats'))
+    if is_archived or not has_marketing_url or not has_seats:
+        return False
+    return True
+
+
 def _get_course_run_enroll_by_date_timestamp(normalized_content_metadata):
     """
     Returns a transformed enroll-by date, converted to a Unix timestamp.
@@ -1253,7 +1273,7 @@ def _get_course_run_enroll_by_date_timestamp(normalized_content_metadata):
     """
     enroll_by_date = normalized_content_metadata.get('enroll_by_date')
     if not enroll_by_date:
-        return ALGOLIA_DEFAULT_TIMESTAMP
+        return None
     return to_timestamp(enroll_by_date)
 
 

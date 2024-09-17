@@ -20,6 +20,7 @@ from enterprise_catalog.apps.catalog.utils import localized_utcnow, to_timestamp
 
 
 ADVERTISED_COURSE_RUN_UUID = uuid4()
+CURRENT_COURSE_RUN_UUID = uuid4()
 FUTURE_COURSE_RUN_UUID_1 = uuid4()
 FUTURE_COURSE_RUN_UUID_2 = uuid4()
 PAST_COURSE_RUN_UUID_1 = uuid4()
@@ -328,8 +329,10 @@ class AlgoliaUtilsTests(TestCase):
                 'max_effort': 14,
                 'weeks_to_complete': 13,
                 'upgrade_deadline': 32503680000.0,
-                'enroll_by': 32503680000.0,
+                'enroll_by': None,
+                'has_enroll_by': False,
                 'is_active': True,
+                'is_late_enrollment_eligible': False,
                 'content_price': 0.0,
             },
         ),
@@ -380,8 +383,10 @@ class AlgoliaUtilsTests(TestCase):
                 'weeks_to_complete': 13,
                 'upgrade_deadline': 1420386720.0,
                 'enroll_by': 1420386720.0,
-                'is_active': True,
+                'has_enroll_by': True,
                 'content_price': 50.0,
+                'is_active': True,
+                'is_late_enrollment_eligible': False,
             }
         ),
         (
@@ -418,9 +423,11 @@ class AlgoliaUtilsTests(TestCase):
                 'max_effort': 14,
                 'weeks_to_complete': 13,
                 'upgrade_deadline': 32503680000.0,
-                'enroll_by': 32503680000.0,
+                'enroll_by': None,
+                'has_enroll_by': False,
+                'content_price': 50,
                 'is_active': True,
-                'content_price': 50.0,
+                'is_late_enrollment_eligible': False,
             }
         )
     )
@@ -495,6 +502,95 @@ class AlgoliaUtilsTests(TestCase):
                         'max_effort': 6,
                         'weeks_to_complete': 6,
                     },
+                    # Late enrollment case (happy path)
+                    {
+                        'key': 'course-v1:org+course+1T2025',
+                        'uuid': CURRENT_COURSE_RUN_UUID,
+                        'pacing_type': 'instructor_paced',
+                        'status': 'published',
+                        'is_enrollable': False,
+                        'is_marketable': False,
+                        'availability': 'Current',
+                        'start': _days_from_now(-20),
+                        'end': "3022-12-31T23:59:00Z",
+                        'min_effort': 2,
+                        'max_effort': 6,
+                        'weeks_to_complete': 6,
+                        'seats': [{
+                            'type': 'verified',
+                            'upgrade_deadline': _days_from_now(-10),  # enroll_by is within the late enrollment cutoff
+                            'price': '50.00',
+                        }],
+                        'first_enrollable_paid_seat_price': 50,
+                        'marketing_url': 'https://openedx.org',
+                    },
+                    # Late enrollment case (exceeds late enrollment threshold)
+                    {
+                        'key': 'course-v1:org+course+1T2026',
+                        'uuid': CURRENT_COURSE_RUN_UUID,
+                        'pacing_type': 'instructor_paced',
+                        'status': 'published',
+                        'is_enrollable': False,
+                        'is_marketable': False,
+                        'availability': 'Current',
+                        'start': _days_from_now(-50),
+                        'end': "3022-12-31T23:59:00Z",
+                        'min_effort': 2,
+                        'max_effort': 6,
+                        'weeks_to_complete': 6,
+                        'seats': [{
+                            'type': 'verified',
+                            'upgrade_deadline': _days_from_now(-40),  # enroll_by is beyond the late enrollment cutoff
+                            'price': '50.00',
+                        }],
+                        'first_enrollable_paid_seat_price': 50,
+                        'marketing_url': 'https://openedx.org',
+                    },
+                    # Late enrollment case (NOT eligible due to Archived; otherwise within the late enrollment cutoff)
+                    {
+                        'key': 'course-v1:org+course+1T2027',
+                        'uuid': CURRENT_COURSE_RUN_UUID,
+                        'pacing_type': 'instructor_paced',
+                        'status': 'published',
+                        'is_enrollable': False,
+                        'is_marketable': False,
+                        'availability': 'Archived',
+                        'start': _days_from_now(-20),
+                        'end': "3022-12-31T23:59:00Z",
+                        'min_effort': 2,
+                        'max_effort': 6,
+                        'weeks_to_complete': 6,
+                        'seats': [{
+                            'type': 'verified',
+                            'upgrade_deadline': _days_from_now(-10),  # enroll_by is within the late enrollment cutoff
+                            'price': '50.00',
+                        }],
+                        'first_enrollable_paid_seat_price': 50,
+                        'marketing_url': 'https://openedx.org',
+                    },
+                    # Late enrollment case (NOT eligible due to null marketing_url; otherwise
+                    # within the late enrollment cutoff)
+                    {
+                        'key': 'course-v1:org+course+1T2028',
+                        'uuid': CURRENT_COURSE_RUN_UUID,
+                        'pacing_type': 'instructor_paced',
+                        'status': 'published',
+                        'is_enrollable': False,
+                        'is_marketable': False,
+                        'availability': 'Current',
+                        'start': _days_from_now(-20),
+                        'end': "3022-12-31T23:59:00Z",
+                        'min_effort': 2,
+                        'max_effort': 6,
+                        'weeks_to_complete': 6,
+                        'seats': [{
+                            'type': 'verified',
+                            'upgrade_deadline': _days_from_now(-10),  # enroll_by is within the late enrollment cutoff
+                            'price': '50.00',
+                        }],
+                        'first_enrollable_paid_seat_price': 50,
+                        'marketing_url': None,
+                    },
                     {
                         'key': 'course-v1:org+course+1T2021',
                         'uuid': ADVERTISED_COURSE_RUN_UUID,
@@ -542,11 +638,59 @@ class AlgoliaUtilsTests(TestCase):
                         'min_effort': 2,
                         'max_effort': 6,
                         'weeks_to_complete': 6,
-                    }
+                    },
                 ],
                 'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID
             },
             [
+                {
+                    'key': 'course-v1:org+course+1T2025',
+                    'pacing_type': 'instructor_paced',
+                    'availability': 'Current',
+                    'start': _days_from_now(-20),
+                    'end': "3022-12-31T23:59:00Z",
+                    'min_effort': 2,
+                    'max_effort': 6,
+                    'weeks_to_complete': 6,
+                    'upgrade_deadline': _days_from_now_timestamp(-10),
+                    'enroll_by': _days_from_now_timestamp(-10),
+                    'has_enroll_by': True,
+                    'content_price': 50,
+                    'is_active': False,
+                    'is_late_enrollment_eligible': True,
+                },
+                {
+                    'key': 'course-v1:org+course+1T2027',
+                    'pacing_type': 'instructor_paced',
+                    'availability': 'Archived',
+                    'start': _days_from_now(-20),
+                    'end': "3022-12-31T23:59:00Z",
+                    'min_effort': 2,
+                    'max_effort': 6,
+                    'weeks_to_complete': 6,
+                    'upgrade_deadline': _days_from_now_timestamp(-10),
+                    'enroll_by': _days_from_now_timestamp(-10),
+                    'has_enroll_by': True,
+                    'content_price': 50,
+                    'is_active': False,
+                    'is_late_enrollment_eligible': False,
+                },
+                {
+                    'key': 'course-v1:org+course+1T2028',
+                    'pacing_type': 'instructor_paced',
+                    'availability': 'Current',
+                    'start': _days_from_now(-20),
+                    'end': "3022-12-31T23:59:00Z",
+                    'min_effort': 2,
+                    'max_effort': 6,
+                    'weeks_to_complete': 6,
+                    'upgrade_deadline': _days_from_now_timestamp(-10),
+                    'enroll_by': _days_from_now_timestamp(-10),
+                    'has_enroll_by': True,
+                    'content_price': 50,
+                    'is_active': False,
+                    'is_late_enrollment_eligible': False,
+                },
                 {
                     'key': 'course-v1:org+course+1T2021',
                     'pacing_type': 'instructor_paced',
@@ -558,8 +702,10 @@ class AlgoliaUtilsTests(TestCase):
                     'weeks_to_complete': 6,
                     'upgrade_deadline': _days_from_now_timestamp(10),
                     'enroll_by': _days_from_now_timestamp(10),
+                    'has_enroll_by': True,
+                    'content_price': 50,
                     'is_active': True,
-                    'content_price': 50.0,
+                    'is_late_enrollment_eligible': False,
                 },
                 {
                     'key': 'course-v1:org+course+1T3000',
@@ -571,9 +717,11 @@ class AlgoliaUtilsTests(TestCase):
                     'max_effort': 6,
                     'weeks_to_complete': 6,
                     'upgrade_deadline': 32503680000.0,
-                    'enroll_by': 32503680000.0,
-                    'is_active': True,
+                    'enroll_by': None,
+                    'has_enroll_by': False,
                     'content_price': 0.0,
+                    'is_active': True,
+                    'is_late_enrollment_eligible': False,
                 },
                 {
                     'key': 'course-v1:org+course+1T3022',
@@ -585,9 +733,11 @@ class AlgoliaUtilsTests(TestCase):
                     'max_effort': 6,
                     'weeks_to_complete': 6,
                     'upgrade_deadline': 32503680000.0,
-                    'enroll_by': 32503680000.0,
-                    'is_active': False,
+                    'enroll_by': None,
+                    'has_enroll_by': False,
                     'content_price': 0.0,
+                    'is_active': False,
+                    'is_late_enrollment_eligible': False,
                 }
             ],
         ),
