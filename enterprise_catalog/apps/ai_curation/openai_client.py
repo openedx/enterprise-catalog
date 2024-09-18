@@ -1,6 +1,7 @@
 import functools
 import json
 import logging
+import re
 
 import backoff
 import requests
@@ -83,6 +84,7 @@ def chat_completions(
     LOGGER.info('[AI_CURATION] [CHAT_COMPLETIONS] Response: [%s]', response.json())
     try:
         response_content = response.json().get('content')
+        response_content = re.sub(r'```json\n?|```', '', response_content)
         if response_format == 'json':
             return json.loads(response_content)
         return response_content
