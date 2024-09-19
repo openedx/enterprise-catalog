@@ -1013,48 +1013,39 @@ def _check_content_association_threshold(catalog_query, metadata_list):
 def get_restricted_runs_from_discovery(metadata, catalog_query, dry_run=False):
     """
     """
-    courses_metadata_by_key = {
-        get_content_key(metadata): metadata for metadata in metadata
+    course_keys_for_query = {
+        get_content_key(metadata) for metadata in metadata
         if get_content_type(metadata) == COURSE
     }
-    
+    # Collect all run keys explicitly marked as "allowed" in the content filter, and also a child of a course that
+    # matches the content filter.
     restricted_run_keys_to_fetch = []
-    for course_key, restricted_run_keys_allowed in catalog_query.restricted_runs_allowed:
-        course_metadata = courses_metadata_by_key.get(course_key)
-        if not course_metadata:
+    for course_key_with_restricted_runs, restricted_run_keys_allowed in catalog_query.restricted_runs_allowed:
+        if not course_key_with_restricted_runs in course_keys_for_query:
             LOGGER.warning(
                 (
                     "Course key %s requested by content-filter for CatalogQuery %s to allow restricted runs, but the "
                     "course did not match the rest of the filter, so its restricted runs will not be included in this "
                     "CatalogQuery."
                 ),
-                course_key,
+                course_key_with_restricted_runs,
                 catalog_query,
             )
             continue
-        run_keys_from_fetched_course = [run.get("key") for run in course_metadata.get("course_runs", [])]
-        for restricted_run_key_allowed in restricted_run_keys_allowed:
-            if restricted_run_key_allowed not in run_keys_from_fetched_course
-                LOGGER.warning(
-                    (
-                        "Restricted course run key %s requested by content-filter for CatalogQuery %s, but the course "
-                        "did not actually contain the run, so this run will not be included in this CatalogQuery."
-                    ),
-                    restricted_run_key_allowed,
-                    catalog_query,
-                )
-                continue
-            restricted_run_keys_to_fetch.append(restricted_run_key_allowed)
+        restricted_run_keys_to_fetch.extend(restricted_run_keys_allowed)
 
-    content_filter = json.dumps()
-    discovery_client = DiscoveryApiClient()
+    # Prepare and make the API call to discovery to actually fetch the restricted runs.
+    content_filter = {
+        'key': restricted_run_keys_to_fetch,
+    }
     request_params = {
         # Omit non-active course runs from the course-discovery results
         'exclude_expired_course_run': True,
-        # Ensure to fetch restricted runs.
+        # Make sure to include restricted runs.
         'include_restricted': 'custom-b2b-enterprise',
     }
-    discovery_client.retrieve_metadata_for_content_filter(content_filter, request_params)
+    discovery_client = DiscoveryApiClient()
+    return discovery_client.retrieve_metadata_for_content_filter(content_filter, request_params)
 
 
 def associate_restricted_runs_with_query(metadata, catalog_query, dry_run=False):
