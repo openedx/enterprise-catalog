@@ -1013,6 +1013,9 @@ def _check_content_association_threshold(catalog_query, metadata_list):
 def get_restricted_runs_from_discovery(metadata, catalog_query, dry_run=False):
     """
     """
+    restricted_runs_allowed = catalog_query.restricted_runs_allowed
+    if not restricted_runs_allowed:
+        return []
     course_keys_for_query = {
         get_content_key(metadata) for metadata in metadata
         if get_content_type(metadata) == COURSE
