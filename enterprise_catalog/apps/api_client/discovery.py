@@ -300,7 +300,7 @@ class DiscoveryApiClient(BaseOAuthClient):
 
         try:
             content_filter = catalog_query.content_filter
-            results.extend(retrieve_metadata_for_content_filter(content_filter, request_params))
+            results.extend(self.retrieve_metadata_for_content_filter(content_filter, request_params))
         except Exception as exc:
             LOGGER.exception(
                 'Could not retrieve content items for catalog query %s: %s',
