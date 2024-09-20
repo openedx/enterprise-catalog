@@ -1013,9 +1013,11 @@ def _check_content_association_threshold(catalog_query, metadata_list):
 def get_restricted_runs_from_discovery(metadata, catalog_query, dry_run=False):
     """
     """
+    # Fast exit if the catalog query's content filter doesn't even specify restricted runs.
     restricted_runs_allowed = catalog_query.restricted_runs_allowed
     if not restricted_runs_allowed:
         return []
+
     course_keys_for_query = {
         get_content_key(metadata) for metadata in metadata
         if get_content_type(metadata) == COURSE
@@ -1023,7 +1025,7 @@ def get_restricted_runs_from_discovery(metadata, catalog_query, dry_run=False):
     # Collect all run keys explicitly marked as "allowed" in the content filter, and also a child of a course that
     # matches the content filter.
     restricted_run_keys_to_fetch = []
-    for course_key_with_restricted_runs, restricted_run_keys_allowed in catalog_query.restricted_runs_allowed:
+    for course_key_with_restricted_runs, restricted_run_keys_allowed in catalog_query.restricted_runs_allowed.items():
         if not course_key_with_restricted_runs in course_keys_for_query:
             LOGGER.warning(
                 (
