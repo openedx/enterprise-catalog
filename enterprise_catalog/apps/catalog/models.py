@@ -1025,7 +1025,7 @@ def get_restricted_runs_from_discovery(metadata, catalog_query, dry_run=False):
     # Collect all run keys explicitly marked as "allowed" in the content filter, and also a child of a course that
     # matches the content filter.
     restricted_run_keys_to_fetch = []
-    for course_key_with_restricted_runs, restricted_run_keys_allowed in catalog_query.restricted_runs_allowed.items():
+    for course_key_with_restricted_runs, restricted_run_keys_allowed in restricted_runs_allowed.items():
         if not course_key_with_restricted_runs in course_keys_for_query:
             LOGGER.warning(
                 (
@@ -1038,6 +1038,10 @@ def get_restricted_runs_from_discovery(metadata, catalog_query, dry_run=False):
             )
             continue
         restricted_run_keys_to_fetch.extend(restricted_run_keys_allowed)
+
+    # Fast exit if none of the courses requested actually match the content filter.
+    if not restricted_run_keys_to_fetch:
+        return []
 
     # Prepare and make the API call to discovery to actually fetch the restricted runs.
     content_filter = {
