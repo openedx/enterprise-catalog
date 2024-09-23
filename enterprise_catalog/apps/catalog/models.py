@@ -1266,6 +1266,9 @@ def update_contentmetadata_from_discovery(catalog_query, dry_run=False):
         catalog_query,
     )
     resticted_run_metadata = get_restricted_runs_from_discovery(
+        # Intentionally pass the un-partitioned metadata list so that we can
+        # discover all restricted runs matching any course that matches the
+        # content_filter, restricted-only or not.
         metadata,
         catalog_query,
         dry_run,
