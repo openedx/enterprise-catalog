@@ -11,6 +11,7 @@ from operator import itemgetter
 from celery import shared_task, states
 from celery.exceptions import Ignore
 from celery_utils.logged_task import LoggedTask
+from django.conf import settings
 from django.db import IntegrityError
 from django.db.models import Prefetch, Q
 from django.db.utils import OperationalError
@@ -43,6 +44,7 @@ from enterprise_catalog.apps.catalog.constants import (
     VIDEO,
 )
 from enterprise_catalog.apps.catalog.content_metadata_utils import (
+    remove_restricted_course_runs,
     transform_course_metadata_to_visible,
 )
 from enterprise_catalog.apps.catalog.models import (
@@ -71,6 +73,10 @@ UNREADY_TASK_RETRY_COUNTDOWN_SECONDS = 60 * 5
 # ENT-4980 every batch "shard" record in Algolia should have all of these that pertain to the course
 EXPLORE_CATALOG_TITLES = ['A la carte', 'Subscription']
 
+# If enabled, query parameter used to fetch additional restricted course runs
+# associated with a course
+QUERY_FOR_RESTRICTED_RUNS = {'include_restricted': 'custom-b2b-enterprise'}
+
 
 def _fetch_courses_by_keys(course_keys):
     """
@@ -81,7 +87,10 @@ def _fetch_courses_by_keys(course_keys):
     Returns:
         list of dict: Returns a list of dictionaries where each dictionary represents the course data from discovery.
     """
-    return DiscoveryApiClient().fetch_courses_by_keys(course_keys)
+    additional_params = None
+    if settings.SHOULD_FETCH_RESTRICTED_COURSE_RUNS:
+        additional_params = QUERY_FOR_RESTRICTED_RUNS
+    return DiscoveryApiClient().fetch_courses_by_keys(course_keys, additional_params=additional_params)
 
 
 def _fetch_programs_by_keys(program_keys):
@@ -284,6 +293,10 @@ def _update_full_content_metadata_course(content_keys, dry_run=False):
             if not metadata_record:
                 logger.error('Could not find ContentMetadata record for content_key %s.', content_key)
                 continue
+
+            # Before we do anything else, we need to prune the restricted
+            # course runs out of the recently fetch course metadata payload.
+            remove_restricted_course_runs(course_metadata_dict)
 
             # Merge the full metadata from discovery's /api/v1/courses into the local metadata object.
             metadata_record.json_metadata.update(course_metadata_dict)

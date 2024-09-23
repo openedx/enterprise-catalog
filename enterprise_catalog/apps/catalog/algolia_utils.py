@@ -9,7 +9,6 @@ from django.db.models import Q
 from django.utils.translation import gettext as _
 from pytz import UTC
 
-from enterprise_catalog.apps.api.v1.utils import is_course_run_active
 from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
 from enterprise_catalog.apps.api_client.constants import (
     COURSE_REVIEW_BASE_AVG_REVIEW_SCORE,
@@ -27,13 +26,17 @@ from enterprise_catalog.apps.catalog.constants import (
     PROGRAM_TYPES_MAP,
     VIDEO,
 )
+from enterprise_catalog.apps.catalog.content_metadata_utils import (
+    get_course_first_paid_enrollable_seat_price,
+    get_course_run_by_uuid,
+    is_course_run_active,
+)
 from enterprise_catalog.apps.catalog.models import ContentMetadata
 from enterprise_catalog.apps.catalog.serializers import (
     NormalizedContentMetadataSerializer,
 )
 from enterprise_catalog.apps.catalog.utils import (
     batch_by_pk,
-    get_course_run_by_uuid,
     localized_utcnow,
     to_timestamp,
 )
@@ -1277,33 +1280,6 @@ def _get_course_run_enroll_by_date_timestamp(normalized_content_metadata):
     return to_timestamp(enroll_by_date)
 
 
-def get_course_first_paid_enrollable_seat_price(course):
-    """
-    Gets the appropriate image to use for course cards.
-
-    Arguments:
-        course (dict): a dictionary representing a course
-
-    Returns:
-        str: the url for the course card image
-    """
-    # Use advertised course run.
-    # If that fails use one of the other active course runs. (The latter is what Discovery does)
-    advertised_course_run = get_course_run_by_uuid(course, course.get('advertised_course_run_uuid'))
-    if advertised_course_run and advertised_course_run.get('first_enrollable_paid_seat_price'):
-        return advertised_course_run.get('first_enrollable_paid_seat_price')
-
-    course_runs = course.get('course_runs') or []
-    active_course_runs = [run for run in course_runs if is_course_run_active(run)]
-    for course_run in sorted(
-        active_course_runs,
-        key=lambda active_course_run: active_course_run['key'].lower(),
-    ):
-        if 'first_enrollable_paid_seat_price' in course_run:
-            return course_run['first_enrollable_paid_seat_price']
-    return None
-
-
 def get_learning_type(content):
     """
     Gets the content's learning type, checking and returning if the content
@@ -1473,6 +1449,16 @@ def get_video_duration(video):
     return video.json_metadata.get('duration')
 
 
+def _first_enrollable_paid_seat_price(course_record):
+    """
+    Returns the course-level first_enrollable_paid_seat_price,
+    or computes it based on the course runs.
+    """
+    if course_value := course_record.get('first_enrollable_paid_seat_price'):
+        return course_value
+    return get_course_first_paid_enrollable_seat_price(course_record)
+
+
 def _algolia_object_from_product(product, algolia_fields):
     """
     Transforms a course or program into an Algolia object.
@@ -1499,7 +1485,7 @@ def _algolia_object_from_product(product, algolia_fields):
             'upcoming_course_runs': get_upcoming_course_runs(searchable_product),
             'skill_names': get_course_skill_names(searchable_product),
             'skills': get_course_skills(searchable_product),
-            'first_enrollable_paid_seat_price': get_course_first_paid_enrollable_seat_price(searchable_product),
+            'first_enrollable_paid_seat_price': _first_enrollable_paid_seat_price(searchable_product),
             'original_image_url': get_course_original_image_url(searchable_product),
             'marketing_url': get_course_marketing_url(searchable_product),
             'outcome': get_course_outcome(searchable_product),

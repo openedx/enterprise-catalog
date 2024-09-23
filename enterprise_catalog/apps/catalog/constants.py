@@ -121,6 +121,8 @@ AGGREGATION_KEY_PREFIX = 'course:'
 
 COURSE_RUN_KEY_PREFIX = 'course-v1:'
 
+COURSE_RUN_RESTRICTION_TYPE_KEY = 'restriction_type'
+
 
 def json_serialized_course_modes():
     """

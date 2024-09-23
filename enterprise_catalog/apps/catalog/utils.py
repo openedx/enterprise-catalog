@@ -158,21 +158,3 @@ def to_timestamp(datetime_str):
     except (ValueError, TypeError) as exc:
         LOGGER.error(f"[to_timestamp][{exc}] Could not parse date string: {datetime_str}")
         return None
-
-
-def get_course_run_by_uuid(course, course_run_uuid):
-    """
-    Find a course_run based on uuid
-
-    Arguments:
-        course (dict): course dict
-        course_run_uuid (str): uuid to lookup
-
-    Returns:
-        dict: a course_run or None
-    """
-    try:
-        course_run = [run for run in course.get('course_runs', []) if run.get('uuid') == course_run_uuid][0]
-    except IndexError:
-        return None
-    return course_run
