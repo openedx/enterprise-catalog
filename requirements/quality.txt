@@ -18,7 +18,7 @@ annotated-types==0.7.0
     # via
     #   -r requirements/base.txt
     #   pydantic
-anyio==4.4.0
+anyio==4.6.0
     # via
     #   -r requirements/base.txt
     #   httpx
@@ -28,7 +28,7 @@ asgiref==3.8.1
     #   -r requirements/base.txt
     #   django
     #   django-cors-headers
-astroid==3.2.4
+astroid==3.3.3
     # via
     #   pylint
     #   pylint-celery
@@ -41,7 +41,7 @@ backoff==1.10.0
     # via
     #   -r requirements/base.txt
     #   analytics-python
-billiard==4.2.0
+billiard==4.2.1
     # via
     #   -r requirements/base.txt
     #   celery
@@ -279,7 +279,7 @@ jsonschema-specifications==2023.12.1
     # via
     #   -r requirements/base.txt
     #   jsonschema
-kombu==5.4.1
+kombu==5.4.2
     # via
     #   -r requirements/base.txt
     #   celery
@@ -317,7 +317,7 @@ pbr==6.1.0
     # via
     #   -r requirements/base.txt
     #   stevedore
-platformdirs==4.3.3
+platformdirs==4.3.6
     # via pylint
 ply==3.11
     # via
@@ -337,11 +337,11 @@ pycparser==2.22
     # via
     #   -r requirements/base.txt
     #   cffi
-pydantic==2.9.1
+pydantic==2.9.2
     # via
     #   -r requirements/base.txt
     #   openai
-pydantic-core==2.23.3
+pydantic-core==2.23.4
     # via
     #   -r requirements/base.txt
     #   pydantic
@@ -355,7 +355,7 @@ pyjwt[crypto]==2.9.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
-pylint==3.2.7
+pylint==3.3.0
     # via
     #   edx-lint
     #   pylint-celery
@@ -371,7 +371,7 @@ pylint-plugin-utils==0.8.2
     #   pylint-django
 pymemcache==4.0.0
     # via -r requirements/base.txt
-pymongo==4.8.0
+pymongo==4.9.1
     # via
     #   -r requirements/base.txt
     #   edx-opaque-keys
@@ -506,6 +506,7 @@ tzdata==2024.1
     # via
     #   -r requirements/base.txt
     #   celery
+    #   kombu
 uritemplate==4.1.1
     # via
     #   -r requirements/base.txt
