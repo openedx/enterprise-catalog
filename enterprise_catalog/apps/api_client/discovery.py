@@ -280,7 +280,7 @@ class DiscoveryApiClient(BaseOAuthClient):
 
         return video_skills
 
-    def get_metadata_by_query(self, catalog_query):
+    def get_metadata_by_query(self, catalog_query, extra_query_params=None):
         """
         Return results from the discovery service's search/all endpoint.
 
@@ -295,7 +295,7 @@ class DiscoveryApiClient(BaseOAuthClient):
             'exclude_expired_course_run': True,
             # Ensure to fetch learner pathways as part of search/all endpoint response.
             'include_learner_pathways': True,
-        }
+        } | extra_query_params
         results = []
 
         try:

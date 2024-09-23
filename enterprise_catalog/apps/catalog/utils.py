@@ -17,7 +17,7 @@ from edx_rest_framework_extensions.auth.jwt.cookies import \
     get_decoded_jwt as get_decoded_jwt_from_cookie
 from pytz import UTC
 
-from enterprise_catalog.apps.catalog.constants import COURSE_RUN
+from enterprise_catalog.apps.catalog.constants import COURSE, COURSE_RUN
 
 
 LOGGER = getLogger(__name__)
@@ -176,3 +176,19 @@ def get_course_run_by_uuid(course, course_run_uuid):
     except IndexError:
         return None
     return course_run
+
+def is_run_restricted(run_metadata_dict):
+    return run_metadata_dict.get('restriction_type') == 'restricted-b2b-enterprise'
+
+def is_content_restricted(metadata_dict):
+    """
+    The given course metadata contains ONLY restricted runs, or the given run is restricted.
+    """
+    content_type = get_content_type(metadata_dict)
+    if content_type == COURSE:
+        run_dicts = metadata_dict.get('course_runs', [])
+        return all(is_run_restricted(run) for run in run_dicts)
+    elif content_type == COURSE_RUN:
+        return is_run_restricted(metadata_dict)
+    # Programs, Learner Pathways, and other content types are never considered "restricted".
+    return False
