@@ -96,6 +96,7 @@ class NormalizedContentMetadataSerializer(ReadOnlySerializer):
     start_date = serializers.SerializerMethodField(help_text='When the course starts')
     end_date = serializers.SerializerMethodField(help_text='When the course ends')
     enroll_by_date = serializers.SerializerMethodField(help_text='The deadline for enrollment')
+    enroll_start_date = serializers.SerializerMethodField(help_text='The date when enrollment starts')
     content_price = serializers.SerializerMethodField(help_text='The price of a course in USD')
 
     @cached_property
@@ -124,6 +125,12 @@ class NormalizedContentMetadataSerializer(ReadOnlySerializer):
         if not self.course_run_metadata:
             return None
         return self.course_run_metadata.get('end')
+
+    @extend_schema_field(serializers.DateTimeField)
+    def get_enroll_start_date(self, obj) -> str:  # pylint: disable=unused-argument
+        if not self.course_run_metadata:
+            return None
+        return self.course_run_metadata.get('enrollment_start')
 
     @extend_schema_field(serializers.DateTimeField)
     def get_enroll_by_date(self, obj) -> str:  # pylint: disable=unused-argument

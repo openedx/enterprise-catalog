@@ -1111,6 +1111,7 @@ def _get_course_run(course, course_run):
     }).data
 
     enroll_by = _get_course_run_enroll_by_date_timestamp(normalized_content_metadata)
+    enroll_start = _get_course_run_enroll_start_date_timestamp(normalized_content_metadata)
 
     course_run = {
         'key': course_run.get('key'),
@@ -1124,6 +1125,8 @@ def _get_course_run(course, course_run):
         'upgrade_deadline': _get_verified_upgrade_deadline(course_run),  # deprecated in favor of `enroll_by`
         'enroll_by': enroll_by,
         'has_enroll_by': bool(enroll_by),
+        'enroll_start': enroll_start,
+        'has_enroll_start': bool(enroll_start),
         'content_price': normalized_content_metadata.get('content_price'),
         'is_active': _get_is_active_course_run(course_run),
         'is_late_enrollment_eligible': _get_is_late_enrollment_eligible(course_run),
@@ -1268,13 +1271,24 @@ def _get_course_run_enroll_by_date_timestamp(normalized_content_metadata):
     """
     Returns a transformed enroll-by date, converted to a Unix timestamp.
 
-    If no enroll-by date is provided, it returns the ALGOLIA_DEFAULT_TIMESTAMP
-    since Algolia cannot filter on null values.
+    If no enroll-by date is provided, it returns None.
     """
     enroll_by_date = normalized_content_metadata.get('enroll_by_date')
     if not enroll_by_date:
         return None
     return to_timestamp(enroll_by_date)
+
+
+def _get_course_run_enroll_start_date_timestamp(normalized_content_metadata):
+    """
+    Returns a transformed enrollment start date, converted to a Unix timestamp.
+
+    If no enrollment_start date is provided, it returns None.
+    """
+    enroll_start_date = normalized_content_metadata.get('enroll_start_date')
+    if not enroll_start_date:
+        return None
+    return to_timestamp(enroll_start_date)
 
 
 def get_course_first_paid_enrollable_seat_price(course):

@@ -428,9 +428,10 @@ class UpdateFullContentMetadataTaskTests(TestCase):
                 'seats': [
                     {
                         'type': CourseMode.VERIFIED,
-                        'upgrade_deadline': '2023-02-01T00:00:00Z',
+                        'upgrade_deadline': '2023-03-15T00:00:00Z',
                     },
                 ],
+                'enrollment_start': '2023-02-01T00:00:00Z',
             }],
         }
 
@@ -455,7 +456,8 @@ class UpdateFullContentMetadataTaskTests(TestCase):
                         "type": str(CourseMode.PROFESSIONAL),
                         "upgrade_deadline": '2022-02-01T00:00:00Z',
                     },
-                ]
+                ],
+                'enrollment_start': '2023-02-01T00:00:00Z',
             }],
             'advertised_course_run_uuid': course_run_3_uuid,
         }
@@ -515,12 +517,14 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         assert metadata_2.json_metadata['normalized_metadata']['content_price'] == DEFAULT_NORMALIZED_PRICE
         assert metadata_2.json_metadata['normalized_metadata']['start_date'] == '2023-03-01T00:00:00Z'
         assert metadata_2.json_metadata['normalized_metadata']['end_date'] == '2023-03-01T00:00:00Z'
-        assert metadata_2.json_metadata['normalized_metadata']['enroll_by_date'] == '2023-02-01T00:00:00Z'
+        assert metadata_2.json_metadata['normalized_metadata']['enroll_by_date'] == '2023-03-15T00:00:00Z'
+        assert metadata_2.json_metadata['normalized_metadata']['enroll_start_date'] == '2023-02-01T00:00:00Z'
         expected_normalized_metadata_by_run = {
             course_run['key']: {
                 'start_date': course_run['start'],
                 'end_date': course_run['end'],
                 'enroll_by_date': course_run['seats'][0]['upgrade_deadline'],
+                'enroll_start_date': course_run['enrollment_start'],
                 'content_price': course_run['first_enrollable_paid_seat_price'] or DEFAULT_NORMALIZED_PRICE,
             }
             for course_run in metadata_2.json_metadata['course_runs']
@@ -538,6 +542,7 @@ class UpdateFullContentMetadataTaskTests(TestCase):
                 'start_date': course_run['start'],
                 'end_date': course_run['end'],
                 'enroll_by_date': course_run['seats'][0]['upgrade_deadline'],
+                'enroll_start_date': course_run['enrollment_start'],
                 'content_price': course_run['first_enrollable_paid_seat_price'] or DEFAULT_NORMALIZED_PRICE,
             }
             for course_run in metadata_3.json_metadata['course_runs']
@@ -551,6 +556,7 @@ class UpdateFullContentMetadataTaskTests(TestCase):
             'start_date': None,
             'end_date': None,
             'enroll_by_date': None,
+            'enroll_start_date': None,
             'content_price': None,
         }
 
