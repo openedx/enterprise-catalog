@@ -7,12 +7,12 @@ from django.test import TestCase
 
 from enterprise_catalog.apps.catalog import algolia_utils as utils
 from enterprise_catalog.apps.catalog.constants import (
+    ALGOLIA_DEFAULT_TIMESTAMP,
     COURSE,
     EXEC_ED_2U_COURSE_TYPE,
     EXEC_ED_2U_READABLE_COURSE_TYPE,
     LEARNER_PATHWAY,
     PROGRAM,
-    ALGOLIA_DEFAULT_TIMESTAMP,
 )
 from enterprise_catalog.apps.catalog.tests.factories import (
     ContentMetadataFactory,
