@@ -1211,6 +1211,15 @@ class Library(models.Model):
         unique=True,
     )
 
+    @property
+    def books(self):
+        prefetch_qs = models.Prefetch(
+            'restricted_books',
+            queryset=RestrictedBook.objects.filter(library=self),
+            to_attr='overwritten_copy',
+        )
+        return self.book_set.prefetch_related(prefetch_qs)
+
     def __str__(self):
         return self.name
 
@@ -1226,13 +1235,20 @@ class AbstractBook(models.Model):
         unique=True,
     )
     libraries = models.ManyToManyField(Library)
-    data = JSONField(
+    _data = JSONField(
+        db_column='data',
         default={},
         blank=True,
         null=True,
         load_kwargs={'object_pairs_hook': collections.OrderedDict},
         dump_kwargs={'indent': 4, 'cls': JSONEncoder, 'separators': (',', ':')},
     )
+
+    @property
+    def data(self):
+        if overwritten_copy := getattr(self, 'overwritten_copy', None):
+            return overwritten_copy[0]._data
+        return self._data
 
 
 class Book(AbstractBook):
@@ -1280,11 +1296,14 @@ from enterprise_catalog.apps.catalog.models import *
 
 boston_pl, _= Library.objects.get_or_create(name='Boston Public Library')
 quincy_pl, _ = Library.objects.get_or_create(name='Quincy Public Library')
-book, _ = Book.objects.get_or_create(title='Moby Dick', data={'ahab': 'dead'})
-restricted_book, _ = RestrictedBook.objects.get_or_create(library=boston_pl, parent_book=book, data={'ahab': 'alive', 'note': 'restricted copy owned only by BPL'})
+moby_dick, _ = Book.objects.get_or_create(title='Moby Dick', _data={'ahab': 'dead'})
+boston_pl.book_set.add(moby_dick)
+quincy_pl.book_set.add(moby_dick)
+ulysses, _ = Book.objects.get_or_create(title='Ulysses', _data={'bloom': 'walking'})
+boston_pl.book_set.add(ulysses)
+quincy_pl.book_set.add(ulysses)
+restricted_book, _ = RestrictedBook.objects.get_or_create(library=boston_pl, parent_book=moby_dic, _data={'ahab': 'alive', 'note': 'restricted copy owned only by BPL'})
 
-restricted_titles = RestrictedBook.objects.filter(library=boston_pl).values_list('title', flat=True)
-book_qs = Book.objects.filter(libraries__in=[boston_pl]).exclude(title__in=restricted_titles).only('title', 'data')
-restricted_qs = RestrictedBook.objects.filter(library=boston_pl).only('title', 'data')
-print(book_qs.union(restricted_qs))
+boston_pl.books.filter(title='Moby Dick')
+quincy_pl.books.filter(title='Moby Dick')
 """
