@@ -1199,6 +1199,7 @@ class CatalogUpdateCommandConfig(ConfigurationModel):
         return {}
 
 
+
 class Library(models.Model):
     class Meta:
         app_label = 'catalog'
@@ -1242,24 +1243,6 @@ class Book(AbstractBook):
         return f"title: {self.title}, data={self.data}"
 
 
-class BookSpecialCopies(models.Model):
-    """
-    Intermediary that fan's out from a canonical book
-    to zero or more special RestrictedBooks copies of the book.
-    """
-    class Meta:
-        app_label = 'catalog'
-
-    book = models.OneToOneField(
-        Book,
-        related_name='special_copies',
-        on_delete=models.deletion.CASCADE,
-    )
-
-    def __str__(self):
-        return f"book={self.book}"
-
-
 class RestrictedBook(AbstractBook):
     """
     A copy of a book that's available only at a specific library.
@@ -1267,15 +1250,18 @@ class RestrictedBook(AbstractBook):
     class Meta:
         app_label = 'catalog'
 
-    parent = models.ForeignKey(
-        BookSpecialCopies,
+    parent_book = models.ForeignKey(
+        Book,
+        null=False,
+        blank=False,
+        related_name='restricted_books',
         on_delete=models.deletion.CASCADE,
     )
     library = models.ForeignKey(
         Library,
         blank=False,
         null=True,
-        related_name='special_copies',
+        related_name='restricted_books',
         on_delete=models.deletion.CASCADE,
     )
 
@@ -1283,22 +1269,22 @@ class RestrictedBook(AbstractBook):
         if not self.id:
             super().save(*args, **kwargs)
 
-        self.title = self.parent.book.title
+        self.title = self.parent_book.title
         super().save(*args, **kwargs)
 
     def __str__(self):
         return f"title: {self.title}, specific_library: {self.library}, data={self.data}"
 
 """
-from enterprise_catalog.apps.catalog.objects import *
+from enterprise_catalog.apps.catalog.models import *
 
-boston_pl = Library.objects.get(name='Boston Public Library')
-quincy_pl = Library.objects.get(name='Quincy Public Library')
+boston_pl, _= Library.objects.get_or_create(name='Boston Public Library')
+quincy_pl, _ = Library.objects.get_or_create(name='Quincy Public Library')
+book, _ = Book.objects.get_or_create(title='Moby Dick', data={'ahab': 'dead'})
+restricted_book, _ = RestrictedBook.objects.get_or_create(library=boston_pl, parent_book=book, data={'ahab': 'alive', 'note': 'restricted copy owned only by BPL'})
 
-boston_copy = boston_pl.books.get(title='Moby Dick')
-boston_copy.library == boston_pl # False
-
-quincy_copy = quincy_pl.books.get(title='Moby Dick')
-quincy_copy.library == quincy_pl # True
-quincy_copy.restrictedbook.data_override
+restricted_titles = RestrictedBook.objects.filter(library=boston_pl).values_list('title', flat=True)
+book_qs = Book.objects.filter(libraries__in=[boston_pl]).exclude(title__in=restricted_titles).only('title', 'data')
+restricted_qs = RestrictedBook.objects.filter(library=boston_pl).only('title', 'data')
+print(book_qs.union(restricted_qs))
 """

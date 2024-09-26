@@ -17,7 +17,6 @@ from enterprise_catalog.apps.catalog.models import (
     EnterpriseCatalogRoleAssignment,
     Library,
     Book,
-    BookSpecialCopies,
     RestrictedBook,
 )
 
@@ -183,23 +182,18 @@ class BookAdmin(admin.ModelAdmin):
     """
     """
 
-@admin.register(BookSpecialCopies)
-class BookAdmin(admin.ModelAdmin):
-    """
-    """
-
 @admin.register(RestrictedBook)
 class RestrictedBookAdmin(admin.ModelAdmin):
     """
     """
     list_display = [
-        'parent',
+        'parent_book',
         'library',
         'data',
     ]
 
     fields = [
-        'parent',
+        'parent_book',
         'library',
         'data',
         'title',
