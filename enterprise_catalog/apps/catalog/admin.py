@@ -15,6 +15,10 @@ from enterprise_catalog.apps.catalog.models import (
     ContentMetadata,
     EnterpriseCatalog,
     EnterpriseCatalogRoleAssignment,
+    Library,
+    Book,
+    BookSpecialCopies,
+    RestrictedBook,
 )
 
 
@@ -167,3 +171,36 @@ class EnterpriseCatalogRoleAssignmentAdmin(UserRoleAssignmentAdmin):
 
     fields = ('user', 'role', 'enterprise_id', 'applies_to_all_contexts')
     form = EnterpriseCatalogRoleAssignmentAdminForm
+
+
+@admin.register(Library)
+class LibraryAdmin(admin.ModelAdmin):
+    """
+    """
+
+@admin.register(Book)
+class BookAdmin(admin.ModelAdmin):
+    """
+    """
+
+@admin.register(BookSpecialCopies)
+class BookAdmin(admin.ModelAdmin):
+    """
+    """
+
+@admin.register(RestrictedBook)
+class RestrictedBookAdmin(admin.ModelAdmin):
+    """
+    """
+    list_display = [
+        'parent',
+        'library',
+        'data',
+    ]
+
+    fields = [
+        'parent',
+        'library',
+        'data',
+        'title',
+    ]

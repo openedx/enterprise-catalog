@@ -1197,3 +1197,108 @@ class CatalogUpdateCommandConfig(ConfigurationModel):
                 'no_async': current_config.no_async,
             }
         return {}
+
+
+class Library(models.Model):
+    class Meta:
+        app_label = 'catalog'
+
+    name = models.CharField(
+        max_length=255,
+        blank=False,
+        null=False,
+        unique=True,
+    )
+
+    def __str__(self):
+        return self.name
+
+
+class AbstractBook(models.Model):
+    class Meta:
+        abstract = True
+
+    title = models.CharField(
+        max_length=255,
+        blank=False,
+        null=False,
+        unique=True,
+    )
+    libraries = models.ManyToManyField(Library)
+    data = JSONField(
+        default={},
+        blank=True,
+        null=True,
+        load_kwargs={'object_pairs_hook': collections.OrderedDict},
+        dump_kwargs={'indent': 4, 'cls': JSONEncoder, 'separators': (',', ':')},
+    )
+
+
+class Book(AbstractBook):
+    class Meta:
+        app_label = 'catalog'
+
+    def __str__(self):
+        return f"title: {self.title}, data={self.data}"
+
+
+class BookSpecialCopies(models.Model):
+    """
+    Intermediary that fan's out from a canonical book
+    to zero or more special RestrictedBooks copies of the book.
+    """
+    class Meta:
+        app_label = 'catalog'
+
+    book = models.OneToOneField(
+        Book,
+        related_name='special_copies',
+        on_delete=models.deletion.CASCADE,
+    )
+
+    def __str__(self):
+        return f"book={self.book}"
+
+
+class RestrictedBook(AbstractBook):
+    """
+    A copy of a book that's available only at a specific library.
+    """
+    class Meta:
+        app_label = 'catalog'
+
+    parent = models.ForeignKey(
+        BookSpecialCopies,
+        on_delete=models.deletion.CASCADE,
+    )
+    library = models.ForeignKey(
+        Library,
+        blank=False,
+        null=True,
+        related_name='special_copies',
+        on_delete=models.deletion.CASCADE,
+    )
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            super().save(*args, **kwargs)
+
+        self.title = self.parent.book.title
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"title: {self.title}, specific_library: {self.library}, data={self.data}"
+
+"""
+from enterprise_catalog.apps.catalog.objects import *
+
+boston_pl = Library.objects.get(name='Boston Public Library')
+quincy_pl = Library.objects.get(name='Quincy Public Library')
+
+boston_copy = boston_pl.books.get(title='Moby Dick')
+boston_copy.library == boston_pl # False
+
+quincy_copy = quincy_pl.books.get(title='Moby Dick')
+quincy_copy.library == quincy_pl # True
+quincy_copy.restrictedbook.data_override
+"""
