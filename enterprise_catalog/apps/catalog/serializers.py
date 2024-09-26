@@ -136,12 +136,18 @@ class NormalizedContentMetadataSerializer(ReadOnlySerializer):
     def get_enroll_by_date(self, obj) -> str:  # pylint: disable=unused-argument
         if not self.course_run_metadata:
             return None
+
+        if self.is_exec_ed_2u_course:
+            return self.course_run_metadata.get('enrollment_end')
+
         all_seats = self.course_run_metadata.get('seats', [])
-        seat = _find_best_mode_seat(all_seats)
+
         upgrade_deadline = None
-        if seat:
+        if seat := _find_best_mode_seat(all_seats):
             upgrade_deadline = seat.get('upgrade_deadline_override') or seat.get('upgrade_deadline')
-        return upgrade_deadline or self.course_run_metadata.get('enrollment_end')
+
+        enrollment_end = self.course_run_metadata.get('enrollment_end')
+        return min(filter(None, [upgrade_deadline, enrollment_end]), default=None)
 
     @extend_schema_field(serializers.FloatField)
     def get_content_price(self, obj) -> float:  # pylint: disable=unused-argument
