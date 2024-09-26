@@ -63,3 +63,9 @@ video_catalog.HistoricalVideoTranscriptSummary:
   ".. no_pii:": "This model has no PII"
 video_catalog.HistoricalVideoSkill:
   ".. no_pii:": "This model has no PII"
+jobs.HistoricalJob:
+  ".. no_pii:": "This model has no PII"
+jobs.HistoricalJobEnterprise:
+  ".. no_pii:": "This model has no PII"
+jobs.HistoricalJobSkill:
+  ".. no_pii:": "This model has no PII"
