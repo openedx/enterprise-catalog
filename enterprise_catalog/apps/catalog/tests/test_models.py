@@ -44,7 +44,7 @@ class TestModels(TestCase):
             content_key='edX+testX',
             content_type=content_type,
         )
-        content_metadata.json_metadata['course_type'] = course_type
+        content_metadata._json_metadata['course_type'] = course_type  # pylint: disable=protected-access
         self.assertEqual(content_metadata.is_exec_ed_2u_course, expected_value)
 
     @ddt.data(
@@ -60,7 +60,7 @@ class TestModels(TestCase):
             content_key='edX+testX',
             content_type=content_type,
         )
-        content_metadata.json_metadata['course_type'] = course_type
+        content_metadata._json_metadata['course_type'] = course_type  # pylint: disable=protected-access
         self.assertEqual(_should_allow_metadata(content_metadata.json_metadata), expected_value)
 
     @override_settings(DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT=0)
@@ -479,7 +479,7 @@ class TestModels(TestCase):
             content_key='the-content-key',
             content_type=COURSE,
         )
-        content_metadata.json_metadata.update({
+        content_metadata._json_metadata.update({  # pylint: disable=protected-access
             'course_type': EXEC_ED_2U_COURSE_TYPE,
             'entitlements': [{
                 'mode': EXEC_ED_2U_ENTITLEMENT_MODE,
@@ -584,9 +584,9 @@ class TestModels(TestCase):
         records = factories.ContentMetadataFactory.create_batch(10, modified=original_modified_time)
 
         for record in records:
-            record.json_metadata['extra_stuff'] = 'foo'
+            record._json_metadata['extra_stuff'] = 'foo'  # pylint: disable=protected-access
 
-        ContentMetadata.objects.bulk_update(records, ['json_metadata'], batch_size=10)
+        ContentMetadata.objects.bulk_update(records, ['_json_metadata'], batch_size=10)
 
         for record in records:
             record.refresh_from_db()
@@ -656,3 +656,515 @@ class TestModels(TestCase):
 
         self.assertIsNone(catalog_query.restricted_runs_allowed)
         self.assertIsNone(catalog.restricted_runs_allowed)
+
+
+@ddt.ddt
+class TestRestrictedRunsModels(TestCase):
+    """
+    Tests for the following models pertaining to the "restricted runs" feature:
+    * RestrictedCourseMetadata
+    * RestrictedRunAllowedForRestrictedCourse
+    """
+
+    @ddt.data(
+        # Skip creating any content metadata at all. The result should be empty.
+        {
+            'create_catalog_query': {
+                '11111111-1111-1111-1111-111111111111': {
+                    'content_filter': {},
+                },
+            },
+            'expected_json_metadata': [],
+            'expected_json_metadata_with_restricted': [],
+        },
+        # Create a simple course and run, but it is not part of the catalog. The result should be empty.
+        {
+            'create_catalog_query': {
+                '11111111-1111-1111-1111-111111111111': {
+                    'content_filter': {},
+                },
+                '22222222-2222-2222-2222-222222222222': {
+                    'content_filter': {},
+                },
+            },
+            'create_content_metadata': {
+                'edX+course': {
+                    'create_runs': {
+                        'course-v1:edX+course+run1': {'is_restricted': False},
+                    },
+                    'json_metadata': {'foobar': 'base metadata'},
+                    'associate_with_catalog_query': '22222222-2222-2222-2222-222222222222',  # different!
+                },
+            },
+            'expected_json_metadata': [],
+            'expected_json_metadata_with_restricted': [],
+        },
+        # Create a simple course and run, associated with the catalog.
+        {
+            'create_catalog_query': {
+                '11111111-1111-1111-1111-111111111111': {
+                    'content_filter': {},
+                },
+            },
+            'create_content_metadata': {
+                'edX+course': {
+                    'create_runs': {
+                        'course-v1:edX+course+run1': {'is_restricted': False},
+                    },
+                    'json_metadata': {'foobar': 'base metadata'},
+                    'associate_with_catalog_query': '11111111-1111-1111-1111-111111111111',
+                },
+            },
+            'expected_json_metadata': [
+                {'foobar': 'base metadata'},
+            ],
+            'expected_json_metadata_with_restricted': [
+                {'foobar': 'base metadata'},
+            ],
+        },
+        # Create a course with a restricted run, but the run is not allowed by the main CatalogQuery.
+        {
+            'create_catalog_query': {
+                '11111111-1111-1111-1111-111111111111': {
+                    'content_filter': {
+                        'restricted_runs_allowed': {
+                            'course:edX+course': [
+                                'course-v1:edX+course+run2',
+                            ],
+                        },
+                    },
+                },
+                '22222222-2222-2222-2222-222222222222': {
+                    'content_filter': {},
+                },
+            },
+            'create_content_metadata': {
+                'edX+course': {
+                    'create_runs': {
+                        'course-v1:edX+course+run1': {'is_restricted': False},
+                        'course-v1:edX+course+run2': {'is_restricted': True},
+                    },
+                    'json_metadata': {'foobar': 'base metadata'},
+                    'associate_with_catalog_query': '11111111-1111-1111-1111-111111111111',
+                },
+            },
+            'create_restricted_courses': {
+                0: {
+                    'content_key': 'edX+course',
+                    'catalog_query': '22222222-2222-2222-2222-222222222222',
+                    'json_metadata': {'foobar': 'override metadata'},
+                },
+            },
+            'create_restricted_run_allowed_for_restricted_course': [
+                {'course': 0, 'run': 'course-v1:edX+course+run2'},
+            ],
+            'expected_json_metadata': [
+                {'foobar': 'base metadata'},
+            ],
+            'expected_json_metadata_with_restricted': [
+                {'foobar': 'base metadata'},
+            ],
+        },
+        # Create a course with both an unrestricted (run1) and restricted run (run2), and the restricted run is allowed
+        # by the CatalogQuery.
+        {
+            'create_catalog_query': {
+                '11111111-1111-1111-1111-111111111111': {
+                    'content_filter': {
+                        'restricted_runs_allowed': {
+                            'course:edX+course': [
+                                'course-v1:edX+course+run2',
+                            ],
+                        },
+                    },
+                },
+            },
+            'create_content_metadata': {
+                'edX+course': {
+                    'create_runs': {
+                        'course-v1:edX+course+run1': {'is_restricted': False},
+                        'course-v1:edX+course+run2': {'is_restricted': True},
+                    },
+                    'json_metadata': {'foobar': 'base metadata'},
+                    'associate_with_catalog_query': '11111111-1111-1111-1111-111111111111',
+                },
+            },
+            'create_restricted_courses': {
+                0: {
+                    'content_key': 'edX+course',
+                    'catalog_query': '11111111-1111-1111-1111-111111111111',
+                    'json_metadata': {'foobar': 'override metadata'},
+                },
+            },
+            'create_restricted_run_allowed_for_restricted_course': [
+                {'course': 0, 'run': 'course-v1:edX+course+run2'},
+            ],
+            'expected_json_metadata': [
+                {'foobar': 'base metadata'},
+            ],
+            'expected_json_metadata_with_restricted': [
+                {'foobar': 'override metadata'},
+            ],
+        },
+        # Create a course with ONLY an unrestricted run (run1), and the restricted run is allowed by the CatalogQuery.
+        {
+            'create_catalog_query': {
+                '11111111-1111-1111-1111-111111111111': {
+                    'content_filter': {
+                        'restricted_runs_allowed': {
+                            'course:edX+course': [
+                                'course-v1:edX+course+run2',
+                            ],
+                        },
+                    },
+                },
+            },
+            'create_content_metadata': {
+                'edX+course': {
+                    'create_runs': {
+                        'course-v1:edX+course+run1': {'is_restricted': True},
+                    },
+                    'json_metadata': {'foobar': 'base metadata'},
+                    'associate_with_catalog_query': '11111111-1111-1111-1111-111111111111',
+                },
+            },
+            'create_restricted_courses': {
+                0: {
+                    'content_key': 'edX+course',
+                    'catalog_query': '11111111-1111-1111-1111-111111111111',
+                    'json_metadata': {'foobar': 'override metadata'},
+                },
+            },
+            'create_restricted_run_allowed_for_restricted_course': [
+                {'course': 0, 'run': 'course-v1:edX+course+run1'},
+            ],
+            'expected_json_metadata': [
+                {'foobar': 'base metadata'},
+            ],
+            'expected_json_metadata_with_restricted': [
+                {'foobar': 'override metadata'},
+            ],
+        },
+    )
+    @ddt.unpack
+    def test_catalog_content_metadata_with_restricted_runs(
+        self,
+        create_catalog_query,
+        create_content_metadata=None,
+        create_restricted_courses=None,
+        create_restricted_run_allowed_for_restricted_course=None,
+        expected_json_metadata=None,
+        expected_json_metadata_with_restricted=None,
+    ):
+        """
+        """
+        catalog_queries = {
+            cq_uuid: factories.CatalogQueryFactory(
+                uuid=cq_uuid,
+                content_filter=cq_info['content_filter'] | {'force_unique': cq_uuid},
+            ) for cq_uuid, cq_info in create_catalog_query.items()
+        }
+        content_metadata = {}
+        create_content_metadata = create_content_metadata or {}
+        for course_key, course_info in create_content_metadata.items():
+            course = factories.ContentMetadataFactory(
+                content_key=course_key,
+                content_type=COURSE,
+                _json_metadata=course_info['json_metadata'],
+            )
+            content_metadata.update({course_key: course})
+            if cq_uuid := course_info['associate_with_catalog_query']:
+                course.catalog_queries.set([catalog_queries[cq_uuid]])
+            for run_key, run_info in course_info['create_runs'].items():
+                run = factories.ContentMetadataFactory(
+                    content_key=run_key,
+                    parent_content_key=course_key,
+                    content_type=COURSE_RUN,
+                )
+                if run_info['is_restricted']:
+                    # pylint: disable=protected-access
+                    run._json_metadata.update({'restriction_type': 'custom-b2b-enterprise'})
+                    run.save()
+                content_metadata.update({run_key: run})
+        restricted_courses = {
+            id: factories.RestrictedCourseMetadataFactory(
+                id=id,
+                content_key=restricted_course_info['content_key'],
+                unrestricted_parent=content_metadata[restricted_course_info['content_key']],
+                catalog_query=catalog_queries[restricted_course_info['catalog_query']],
+                _json_metadata=restricted_course_info['json_metadata'],
+            ) for id, restricted_course_info in create_restricted_courses.items()
+        } if create_restricted_courses else {}
+        for mapping_info in create_restricted_run_allowed_for_restricted_course or []:
+            factories.RestrictedRunAllowedForRestrictedCourseFactory(
+                course=restricted_courses[mapping_info['course']],
+                run=content_metadata[mapping_info['run']],
+            )
+        catalog = factories.EnterpriseCatalogFactory(
+            catalog_query=catalog_queries['11111111-1111-1111-1111-111111111111'],
+        )
+        expected_json_metadata = expected_json_metadata or []
+        expected_json_metadata_with_restricted = expected_json_metadata_with_restricted or []
+        actual_json_metadata = [m.json_metadata for m in catalog.content_metadata]
+        actual_json_metadata_with_restricted = [m.json_metadata for m in catalog.content_metadata_with_restricted]
+        assert actual_json_metadata == expected_json_metadata
+        assert actual_json_metadata_with_restricted == expected_json_metadata_with_restricted
+
+    @ddt.data(
+        # Skip creating any content metadata at all. The result should be empty.
+        {
+            'create_catalog_query': {
+                '11111111-1111-1111-1111-111111111111': {
+                    'content_filter': {},
+                },
+            },
+            'requested_content_keys': ['course-v1:edX+course+run1'],
+            'expected_json_metadata': [],
+            'expected_json_metadata_with_restricted': [],
+        },
+        # Create a simple course and run, but it is not part of the catalog. The result should be empty.
+        {
+            'create_catalog_query': {
+                '11111111-1111-1111-1111-111111111111': {
+                    'content_filter': {},
+                },
+                '22222222-2222-2222-2222-222222222222': {
+                    'content_filter': {},
+                },
+            },
+            'create_content_metadata': {
+                'edX+course': {
+                    'create_runs': {
+                        'course-v1:edX+course+run1': {'is_restricted': False},
+                    },
+                    'json_metadata': {'foobar': 'base metadata'},
+                    'associate_with_catalog_query': '22222222-2222-2222-2222-222222222222',  # different!
+                },
+            },
+            'requested_content_keys': ['course-v1:edX+course+run1'],
+            'expected_json_metadata': [],
+            'expected_json_metadata_with_restricted': [],
+        },
+        # Create a simple course and run, associated with the catalog.
+        {
+            'create_catalog_query': {
+                '11111111-1111-1111-1111-111111111111': {
+                    'content_filter': {},
+                },
+            },
+            'create_content_metadata': {
+                'edX+course': {
+                    'create_runs': {
+                        'course-v1:edX+course+run1': {'is_restricted': False},
+                    },
+                    'json_metadata': {'foobar': 'base metadata'},
+                    'associate_with_catalog_query': '11111111-1111-1111-1111-111111111111',
+                },
+            },
+            'requested_content_keys': ['course-v1:edX+course+run1'],
+            'expected_json_metadata': [
+                {'foobar': 'base metadata'},
+            ],
+            'expected_json_metadata_with_restricted': [
+                {'foobar': 'base metadata'},
+            ],
+        },
+        # Create a course with a restricted run, but the run is not allowed by the main CatalogQuery.
+        {
+            'create_catalog_query': {
+                '11111111-1111-1111-1111-111111111111': {
+                    'content_filter': {
+                        'restricted_runs_allowed': {
+                            'course:edX+course': [
+                                'course-v1:edX+course+run2',
+                            ],
+                        },
+                    },
+                },
+                '22222222-2222-2222-2222-222222222222': {
+                    'content_filter': {},
+                },
+            },
+            'create_content_metadata': {
+                'edX+course': {
+                    'create_runs': {
+                        'course-v1:edX+course+run1': {'is_restricted': False},
+                        'course-v1:edX+course+run2': {'is_restricted': True},
+                    },
+                    'json_metadata': {'foobar': 'base metadata'},
+                    'associate_with_catalog_query': '11111111-1111-1111-1111-111111111111',
+                },
+            },
+            'create_restricted_courses': {
+                0: {
+                    'content_key': 'edX+course',
+                    # Not the caller's catalog!
+                    'catalog_query': '22222222-2222-2222-2222-222222222222',
+                    'json_metadata': {'foobar': 'override metadata'},
+                },
+            },
+            'create_restricted_run_allowed_for_restricted_course': [
+                {'course': 0, 'run': 'course-v1:edX+course+run2'},
+            ],
+            'requested_content_keys': ['course-v1:edX+course+run2'],
+            'expected_json_metadata': [
+                # run2 was not found because it is restricted.
+            ],
+            'expected_json_metadata_with_restricted': [
+                # run2 was not found because it is not allowed by the caller's catalog.
+            ],
+        },
+        # Create a course with both an unrestricted (run1) and restricted run (run2), and the
+        # restricted run is allowed by the CatalogQuery. Request the UNRESTRICTED run (run1) anyway
+        # and assert that the override course metadata is returned.
+        {
+            'create_catalog_query': {
+                '11111111-1111-1111-1111-111111111111': {
+                    'content_filter': {
+                        'restricted_runs_allowed': {
+                            'course:edX+course': [
+                                'course-v1:edX+course+run2',
+                            ],
+                        },
+                    },
+                },
+            },
+            'create_content_metadata': {
+                'edX+course': {
+                    'create_runs': {
+                        'course-v1:edX+course+run1': {'is_restricted': False},
+                        'course-v1:edX+course+run2': {'is_restricted': True},
+                    },
+                    'json_metadata': {'foobar': 'base metadata'},
+                    'associate_with_catalog_query': '11111111-1111-1111-1111-111111111111',
+                },
+            },
+            'create_restricted_courses': {
+                0: {
+                    'content_key': 'edX+course',
+                    'catalog_query': '11111111-1111-1111-1111-111111111111',
+                    'json_metadata': {'foobar': 'override metadata'},
+                },
+            },
+            'create_restricted_run_allowed_for_restricted_course': [
+                {'course': 0, 'run': 'course-v1:edX+course+run2'},
+            ],
+            'requested_content_keys': ['course-v1:edX+course+run1'],
+            'expected_json_metadata': [
+                {'foobar': 'base metadata'},
+            ],
+            'expected_json_metadata_with_restricted': [
+                # We supply the override course metadata *even though* the
+                # requested content key represents an unrestricted run.
+                {'foobar': 'override metadata'},
+            ],
+        },
+        # Create a course with ONLY an unrestricted run (run1), and the restricted run is allowed by the CatalogQuery.
+        {
+            'create_catalog_query': {
+                '11111111-1111-1111-1111-111111111111': {
+                    'content_filter': {
+                        'restricted_runs_allowed': {
+                            'course:edX+course': [
+                                'course-v1:edX+course+run2',
+                            ],
+                        },
+                    },
+                },
+            },
+            'create_content_metadata': {
+                'edX+course': {
+                    'create_runs': {
+                        'course-v1:edX+course+run1': {'is_restricted': True},
+                    },
+                    'json_metadata': {'foobar': 'base metadata'},
+                    'associate_with_catalog_query': '11111111-1111-1111-1111-111111111111',
+                },
+            },
+            'create_restricted_courses': {
+                0: {
+                    'content_key': 'edX+course',
+                    'catalog_query': '11111111-1111-1111-1111-111111111111',
+                    'json_metadata': {'foobar': 'override metadata'},
+                },
+            },
+            'create_restricted_run_allowed_for_restricted_course': [
+                {'course': 0, 'run': 'course-v1:edX+course+run1'},
+            ],
+            'requested_content_keys': ['course-v1:edX+course+run1'],
+            'expected_json_metadata': [
+                # The RUN is invisible to the requester because it is restricted, so the COURSE
+                # should not be found either.
+            ],
+            'expected_json_metadata_with_restricted': [
+                {'foobar': 'override metadata'},
+            ],
+        },
+    )
+    @ddt.unpack
+    def test_get_matching_content_with_restricted_runs(
+        self,
+        create_catalog_query,
+        create_content_metadata=None,
+        create_restricted_courses=None,
+        create_restricted_run_allowed_for_restricted_course=None,
+        requested_content_keys=None,
+        expected_json_metadata=None,
+        expected_json_metadata_with_restricted=None,
+    ):
+        """
+        """
+        catalog_queries = {
+            cq_uuid: factories.CatalogQueryFactory(
+                uuid=cq_uuid,
+                content_filter=cq_info['content_filter'] | {'force_unique': cq_uuid},
+            ) for cq_uuid, cq_info in create_catalog_query.items()
+        }
+        content_metadata = {}
+        create_content_metadata = create_content_metadata or {}
+        for course_key, course_info in create_content_metadata.items():
+            course = factories.ContentMetadataFactory(
+                content_key=course_key,
+                content_type=COURSE,
+                _json_metadata=course_info['json_metadata'],
+            )
+            content_metadata.update({course_key: course})
+            if cq_uuid := course_info['associate_with_catalog_query']:
+                course.catalog_queries.set([catalog_queries[cq_uuid]])
+            for run_key, run_info in course_info['create_runs'].items():
+                run = factories.ContentMetadataFactory(
+                    content_key=run_key,
+                    parent_content_key=course_key,
+                    content_type=COURSE_RUN,
+                )
+                if run_info['is_restricted']:
+                    # pylint: disable=protected-access
+                    run._json_metadata.update({'restriction_type': 'custom-b2b-enterprise'})
+                    run.save()
+                content_metadata.update({run_key: run})
+        restricted_courses = {
+            id: factories.RestrictedCourseMetadataFactory(
+                id=id,
+                content_key=restricted_course_info['content_key'],
+                unrestricted_parent=content_metadata[restricted_course_info['content_key']],
+                catalog_query=catalog_queries[restricted_course_info['catalog_query']],
+                _json_metadata=restricted_course_info['json_metadata'],
+            ) for id, restricted_course_info in create_restricted_courses.items()
+        } if create_restricted_courses else {}
+        for mapping_info in create_restricted_run_allowed_for_restricted_course or []:
+            factories.RestrictedRunAllowedForRestrictedCourseFactory(
+                course=restricted_courses[mapping_info['course']],
+                run=content_metadata[mapping_info['run']],
+            )
+        catalog = factories.EnterpriseCatalogFactory(
+            catalog_query=catalog_queries['11111111-1111-1111-1111-111111111111'],
+        )
+        requested_content_keys = requested_content_keys or []
+        expected_json_metadata = expected_json_metadata or []
+        expected_json_metadata_with_restricted = expected_json_metadata_with_restricted or []
+        actual_json_metadata = [m.json_metadata for m in catalog.get_matching_content(requested_content_keys)]
+        actual_json_metadata_with_restricted = [
+            m.json_metadata for m in catalog.get_matching_content(requested_content_keys, include_restricted=True)
+        ]
+        assert actual_json_metadata == expected_json_metadata
+        assert actual_json_metadata_with_restricted == expected_json_metadata_with_restricted
