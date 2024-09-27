@@ -239,11 +239,50 @@ class EnterpriseCatalog(TimeStampedModel):
         Helper to retrieve the content metadata associated with the catalog.
 
         Returns:
-            Queryset: The queryset of associated content metadata
+            Queryset of ContentMetadata: The queryset of associated content metadata
         """
         if not self.catalog_query:
             return ContentMetadata.objects.none()
-        return self.catalog_query.contentmetadata_set.all()
+        return self.catalog_query.contentmetadata_set.prefetch_related(
+            'restricted_run_allowed_for_restricted_course'
+        ).filter(
+            # Exclude all restricted runs (heuristic is that a run is assumed
+            # restricted if it is mapped to a restricted course via
+            # RestrictedRunAllowedForRestrictedCourse).
+            restricted_run_allowed_for_restricted_course__isnull=True,
+        )
+
+    @property
+    def content_metadata_with_restricted(self):
+        """
+        Same as self.content_metadata, but dynamically replace course json_metadata
+        with the correct version containing restricted runs allowed by the current
+        catalog query.
+
+        The technique to dynamically override ContentMetadata.json_metadata is a
+        combination of two things:
+        1. This method setting the `restricted_course_metadata_for_catalog_query`
+           attribute in the queryset to get the correct RestrictedCourseMetadata, and
+        2. The ContentMetdata.json_metadata attribute being a property that
+           dynamically uses (1) or falls back to the stored value in _json_metadata.
+
+        Returns:
+            Queryset of ContentMetadata: Same as self.content_metadata, but courses may have augmented
+            json_metadata.
+        """
+        if not self.catalog_query:
+            return ContentMetadata.objects.none()
+        related_contentmetadata = self.catalog_query.contentmetadata_set
+        # Provide json_metadata overrides via dynamic attribute if any restricted runs are allowed.
+        if self.catalog_query.restricted_runs_allowed:
+            # FYI: prefetch causes a performance penalty by introducing a 2nd database query.
+            prefetch_qs = models.Prefetch(
+                'restricted_courses',
+                queryset=RestrictedCourseMetadata.objects.filter(catalog_query=self.catalog_query),
+                to_attr='restricted_course_metadata_for_catalog_query',
+            )
+            related_contentmetadata = related_contentmetadata.prefetch_related(prefetch_qs)
+        return related_contentmetadata.all()
 
     @cached_property
     def restricted_runs_allowed(self):
@@ -311,7 +350,7 @@ class EnterpriseCatalog(TimeStampedModel):
         items_not_found = distinct_content_keys - found_content_keys
         return [{'content_key': item} for item in items_not_found], items_not_included, items_found
 
-    def get_matching_content(self, content_keys):
+    def get_matching_content(self, content_keys, include_restricted=False):
         """
         Returns the set of content contained within this catalog that matches
         any of the course keys, course run keys, or programs keys specified by
@@ -348,15 +387,35 @@ class EnterpriseCatalog(TimeStampedModel):
         # (if any) to handle the following case:
         #   - catalog contains courses and the specified content_keys are course run ids.
         searched_metadata = ContentMetadata.objects.filter(content_key__in=content_keys)
+        if include_restricted and self.catalog_query.restricted_runs_allowed:
+            # Only hide restricted runs that are not allowed by the current catalog.
+            searched_metadata = searched_metadata.prefetch_related(
+                'restricted_run_allowed_for_restricted_course'
+            ).exclude(
+                # Find all restricted runs allowed by a RestrictedCourseMetadata related to the
+                # current CatalogQuery. Do NOT exclude those.
+                ~Q(restricted_run_allowed_for_restricted_course__course__catalog_query=self.catalog_query)
+                # Exclude all other restricted runs. A run is assumed of type restricted if it
+                # is related to at least one RestrictedRunAllowedForRestrictedCourse.
+                & Q(restricted_run_allowed_for_restricted_course__isnull=False)
+            )
+        else:
+            # Hide ALL restricted runs.
+            searched_metadata = searched_metadata.exclude(
+                restricted_run_allowed_for_restricted_course__isnull=False
+            )
         parent_content_keys = {
             metadata.parent_content_key
             for metadata in searched_metadata
             if metadata.parent_content_key
         }
         query |= Q(content_key__in=parent_content_keys)
-        return self.content_metadata.filter(query)
+        if include_restricted:
+            return self.content_metadata_with_restricted.filter(query)
+        else:
+            return self.content_metadata.filter(query)
 
-    def contains_content_keys(self, content_keys):
+    def contains_content_keys(self, content_keys, include_restricted=False):
         """
         Determines whether the given ``content_keys`` are part of the catalog.
 
@@ -373,10 +432,10 @@ class EnterpriseCatalog(TimeStampedModel):
             in the ``content_keys`` list (to handle cases when a catalog contains only courses,
             but course run keys are provided in the ``content_keys`` argument).
         """
-        included_content = self.get_matching_content(content_keys)
+        included_content = self.get_matching_content(content_keys, include_restricted=include_restricted)
         return included_content.exists()
 
-    def filter_content_keys(self, content_keys):
+    def filter_content_keys(self, content_keys, include_restricted=False):
         """
         Determines whether content_keys are part of the catalog.
 
@@ -406,7 +465,11 @@ class EnterpriseCatalog(TimeStampedModel):
         query = Q(content_key__in=content_keys) | Q(parent_content_key__in=content_keys)
 
         items_included = set()
-        for content in self.content_metadata.filter(query).all():
+        if include_restricted:
+            accessible_metadata_qs = self.content_metadata_with_restricted
+        else:
+            accessible_metadata_qs = self.content_metadata
+        for content in accessible_metadata_qs.filter(query).all():
             if content.content_key in content_keys:
                 items_included.add(content.content_key)
             elif content.parent_content_key in content_keys:
@@ -555,13 +618,12 @@ class ContentMetadataManager(models.Manager):
         super().bulk_update(objs, fields, batch_size=batch_size)
 
 
-class ContentMetadata(TimeStampedModel):
+class BaseContentMetadata(TimeStampedModel):
     """
-    Stores the JSON metadata for a piece of content, such as a course, course run, or program.
-    The metadata is retrieved from the Discovery service /search/all endpoint.
-
-    .. no_pii:
+    Common ContentMetadata fields.
     """
+    class Meta:
+        abstract = True
 
     content_uuid = models.UUIDField(
         null=True,
@@ -574,7 +636,6 @@ class ContentMetadata(TimeStampedModel):
             "in the enterprise environment."
         )
     )
-
     content_key = models.CharField(
         max_length=255,
         blank=False,
@@ -599,31 +660,20 @@ class ContentMetadata(TimeStampedModel):
             "The key represents this content's parent. For example for course_runs content their parent course key."
         )
     )
-
-    # one course can be associated with many programs and one program can contain many courses.
-    associated_content_metadata = models.ManyToManyField('self', blank=True)
-
-    json_metadata = JSONField(
+    _json_metadata = JSONField(
         default={},
         blank=True,
         null=True,
         load_kwargs={'object_pairs_hook': collections.OrderedDict},
         dump_kwargs={'indent': 4, 'cls': JSONEncoder, 'separators': (',', ':')},
+        db_column='json_metadata',
         help_text=_(
             "The metadata about a particular piece content as retrieved from the discovery service's search/all "
             "endpoint results, specified as a JSON object."
         )
     )
-    catalog_queries = models.ManyToManyField(CatalogQuery)
-
-    history = HistoricalRecords()
 
     objects = ContentMetadataManager()
-
-    class Meta:
-        verbose_name = _("Content Metadata")
-        verbose_name_plural = _("Content Metadata")
-        app_label = 'catalog'
 
     @property
     def is_exec_ed_2u_course(self):
@@ -653,6 +703,14 @@ class ContentMetadata(TimeStampedModel):
         """
         return cls.objects.filter(parent_content_key=content_metadata.content_key)
 
+    @property
+    def json_metadata(self):
+        return self._json_metadata
+
+    @json_metadata.setter
+    def json_metadata(self, new_json_metadata):
+        self._json_metadata = new_json_metadata
+
     def __str__(self):
         """
         Return human-readable string representation.
@@ -662,6 +720,121 @@ class ContentMetadata(TimeStampedModel):
                 content_key=self.content_key
             )
         )
+
+
+class ContentMetadata(BaseContentMetadata):
+    """
+    Stores the JSON metadata for a piece of content, such as a course, course run, or program.
+    The metadata is retrieved from the Discovery service /search/all endpoint.
+
+    .. no_pii:
+    """
+    class Meta:
+        verbose_name = _("Content Metadata")
+        verbose_name_plural = _("Content Metadata")
+        app_label = 'catalog'
+
+    # one course can be associated with many programs and one program can contain many courses.
+    associated_content_metadata = models.ManyToManyField('self', blank=True)
+
+    # one course can be part of many CatalogQueries and one CatalogQuery can contain many courses.
+    catalog_queries = models.ManyToManyField(CatalogQuery)
+
+    history = HistoricalRecords()
+
+    @property
+    def json_metadata(self):
+        """
+        Use the CatalogQuery-specific version of a course json_metadata if one exists
+        (potentially containing restricted runs allowed by that CatatlogQuery),
+        otherwise fall back to the standard unrestricted-only version.
+        """
+        restricted_course_metadata_for_catalog_query = getattr(
+            self,
+            'restricted_course_metadata_for_catalog_query',
+            None,
+        )
+        # Truthy means that the requester wants to see restricted runs AND restricted
+        # runs were actually found for this specific course and the requester's
+        # specific Catalog.
+        if restricted_course_metadata_for_catalog_query:
+            # pylint: disable=protected-access, unsubscriptable-object
+            return restricted_course_metadata_for_catalog_query[0]._json_metadata
+        return self._json_metadata
+
+    @json_metadata.setter
+    def json_metadata(self, new_json_metadata):
+        self._json_metadata = new_json_metadata
+
+
+class RestrictedCourseMetadata(BaseContentMetadata):
+    """
+    Copies of courses, but one copy for each CatalogQuery which explicitly
+    allows any restricted runs of the course.
+
+    .. no_pii:
+    """
+    class Meta:
+        verbose_name = _("Restricted Content Metadata")
+        verbose_name_plural = _("Restricted Content Metadata")
+        app_label = 'catalog'
+        unique_together = ('content_key', 'catalog_query')
+
+    history = HistoricalRecords()
+
+    # Overwrite content_key from BaseContentMetadata in order to change unique
+    # to False. Use unique_together to allow multiple copies of the same course
+    # (one for each catalog query.
+    content_key = models.CharField(
+        max_length=255,
+        blank=False,
+        null=False,
+        unique=False,
+        help_text=_(
+            "The key that represents a piece of content, such as a course, course run, or program."
+        )
+    )
+    unrestricted_parent = models.ForeignKey(
+        ContentMetadata,
+        blank=False,
+        null=True,
+        related_name='restricted_courses',
+        on_delete=models.deletion.SET_NULL,
+    )
+    catalog_query = models.ForeignKey(
+        CatalogQuery,
+        blank=False,
+        null=True,
+        related_name='restricted_content_metadata',
+        on_delete=models.deletion.SET_NULL,
+    )
+    history = HistoricalRecords()
+
+
+class RestrictedRunAllowedForRestrictedCourse(TimeStampedModel):
+    """
+    Mapping table to relate RestrictedCourseMetadata objects to restricted runs in ContentMetadata.
+
+    A run should be mapped to a restricted course IFF the RestrictedCourseMetadata's
+    catalog query explicitly allows the run. This mapping table should be generated by the
+    update-content-metadata task.
+
+    .. no_pii:
+    """
+    course = models.ForeignKey(
+        RestrictedCourseMetadata,
+        blank=False,
+        null=True,
+        related_name='restricted_run_allowed_for_restricted_course',
+        on_delete=models.deletion.SET_NULL,
+    )
+    run = models.ForeignKey(
+        ContentMetadata,
+        blank=False,
+        null=True,
+        related_name='restricted_run_allowed_for_restricted_course',
+        on_delete=models.deletion.SET_NULL,
+    )
 
 
 def content_metadata_with_type_course():
@@ -719,12 +892,12 @@ def _get_defaults_from_metadata(entry, exists=False):
             if value := entry.get(field):
                 entry_minimal[field] = value
         if entry_minimal:
-            defaults.update({'json_metadata': entry_minimal})
+            defaults.update({'_json_metadata': entry_minimal})
     elif not exists or (content_type != 'course'):
         # Update json_metadata for non-courses when ContentMetadata object already exists. Also,
         # always include json_metadata (regardless of content type) if ContentMetadata object
         # does not yet exist in the database.
-        defaults.update({'json_metadata': entry})
+        defaults.update({'_json_metadata': entry})
     return defaults
 
 
@@ -777,9 +950,9 @@ def _update_existing_content_metadata(existing_metadata_defaults, existing_metad
         content_metadata = existing_metadata_by_key.get(defaults['content_key'])
         if content_metadata:
             for key, value in defaults.items():
-                if key == 'json_metadata':
+                if key == '_json_metadata':
                     # merge new json_metadata with old json_metadata (i.e., don't replace it fully)
-                    content_metadata.json_metadata.update(value)
+                    content_metadata._json_metadata.update(value)  # pylint: disable=protected-access
                 else:
                     # replace attributes with new values
                     setattr(content_metadata, key, value)
@@ -790,7 +963,7 @@ def _update_existing_content_metadata(existing_metadata_defaults, existing_metad
         for metadata in metadata_list:
             LOGGER.info(f"[Dry Run] Skipping Content Metadata update: {metadata}")
     else:
-        metadata_fields_to_update = ['content_key', 'parent_content_key', 'content_type', 'json_metadata']
+        metadata_fields_to_update = ['content_key', 'parent_content_key', 'content_type', '_json_metadata']
         batch_size = settings.UPDATE_EXISTING_CONTENT_METADATA_BATCH_SIZE
         for batched_metadata in batch(metadata_list, batch_size=batch_size):
             try:

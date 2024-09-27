@@ -287,7 +287,7 @@ def _update_full_content_metadata_course(content_keys, dry_run=False):
         else:
             ContentMetadata.objects.bulk_update(
                 modified_content_metadata_records,
-                ['json_metadata'],
+                ['_json_metadata'],
                 batch_size=10,
             )
 
@@ -326,13 +326,14 @@ def _update_single_full_course_record(course_metadata_dict, metadata_record, cou
     for that course.
     """
     # Merge the full metadata from discovery's /api/v1/courses into the local metadata object.
-    metadata_record.json_metadata.update(course_metadata_dict)
+    metadata_record._json_metadata.update(course_metadata_dict)  # pylint: disable=protected-access
 
     _normalize_metadata_record(metadata_record)
 
     if course_review:
-        metadata_record.json_metadata['reviews_count'] = course_review.get('reviews_count')
-        metadata_record.json_metadata['avg_course_rating'] = course_review.get('avg_course_rating')
+        # pylint: disable=protected-access
+        metadata_record._json_metadata['reviews_count'] = course_review.get('reviews_count')
+        metadata_record._json_metadata['avg_course_rating'] = course_review.get('avg_course_rating')
 
     if metadata_record.json_metadata.get(FORCE_INCLUSION_METADATA_TAG_KEY):
         metadata_record.json_metadata = transform_course_metadata_to_visible(metadata_record.json_metadata)
@@ -358,11 +359,12 @@ def _normalize_metadata_record(course_metadata_record):
     normalized_metadata_input = {
         'course_metadata': course_metadata_record.json_metadata,
     }
-    course_metadata_record.json_metadata['normalized_metadata'] =\
+    # pylint: disable=protected-access
+    course_metadata_record._json_metadata['normalized_metadata'] =\
         NormalizedContentMetadataSerializer(normalized_metadata_input).data
-    course_metadata_record.json_metadata['normalized_metadata_by_run'] = {}
+    course_metadata_record._json_metadata['normalized_metadata_by_run'] = {}
     for run in course_metadata_record.json_metadata.get('course_runs', []):
-        course_metadata_record.json_metadata['normalized_metadata_by_run'].update({
+        course_metadata_record._json_metadata['normalized_metadata_by_run'].update({
             run['key']: NormalizedContentMetadataSerializer({
                 'course_run_metadata': run,
                 'course_metadata': course_metadata_record.json_metadata,
@@ -413,7 +415,7 @@ def _update_full_content_metadata_program(content_keys, dry_run=False):
                 logger.error('Could not find ContentMetadata record for content_key %s.', content_key)
                 continue
 
-            metadata_record.json_metadata.update(program_metadata_dict)
+            metadata_record._json_metadata.update(program_metadata_dict)  # pylint: disable=protected-access
             modified_content_metadata_records.append(metadata_record)
 
         if dry_run:
@@ -421,7 +423,7 @@ def _update_full_content_metadata_program(content_keys, dry_run=False):
         else:
             ContentMetadata.objects.bulk_update(
                 modified_content_metadata_records,
-                ['json_metadata'],
+                ['_json_metadata'],
                 batch_size=10,
             )
 
@@ -1200,7 +1202,12 @@ def fetch_missing_course_metadata_task(self, force=False, dry_run=False):  # pyl
     that are embedded inside a program.
     """
     logger.info('[FETCH_MISSING_METADATA] fetch_missing_course_metadata_task task started.')
-    program_metadata_list = ContentMetadata.objects.filter(content_type=PROGRAM).values_list('json_metadata', flat=True)
+    program_metadata_list = ContentMetadata.objects.filter(
+        content_type=PROGRAM
+    ).values_list(
+        '_json_metadata',
+        flat=True,
+    )
     course_keys = set()
     for program_metadata in program_metadata_list:
         if program_metadata is not None:
@@ -1266,7 +1273,7 @@ def fetch_missing_pathway_metadata_task(self, force=False, dry_run=False):  # py
     )
 
     learner_pathway_metadata_list = ContentMetadata.objects.filter(content_type=LEARNER_PATHWAY).values_list(
-        'json_metadata', flat=True,
+        '_json_metadata', flat=True,
     )
     program_uuids = set()
     course_keys = set()
