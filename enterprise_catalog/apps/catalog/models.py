@@ -568,13 +568,11 @@ class ContentMetadataManager(models.Manager):
         super().bulk_update(objs, fields, batch_size=batch_size)
 
 
-class ContentMetadata(TimeStampedModel):
+class BaseContentMetadata(TimeStampedModel):
     """
-    Stores the JSON metadata for a piece of content, such as a course, course run, or program.
-    The metadata is retrieved from the Discovery service /search/all endpoint.
-
-    .. no_pii:
     """
+    class Meta:
+        abstract = True
 
     content_uuid = models.UUIDField(
         null=True,
@@ -587,7 +585,6 @@ class ContentMetadata(TimeStampedModel):
             "in the enterprise environment."
         )
     )
-
     content_key = models.CharField(
         max_length=255,
         blank=False,
@@ -612,11 +609,7 @@ class ContentMetadata(TimeStampedModel):
             "The key represents this content's parent. For example for course_runs content their parent course key."
         )
     )
-
-    # one course can be associated with many programs and one program can contain many courses.
-    associated_content_metadata = models.ManyToManyField('self', blank=True)
-
-    json_metadata = JSONField(
+    _json_metadata = JSONField(
         default={},
         blank=True,
         null=True,
@@ -627,16 +620,9 @@ class ContentMetadata(TimeStampedModel):
             "endpoint results, specified as a JSON object."
         )
     )
-    catalog_queries = models.ManyToManyField(CatalogQuery)
 
     history = HistoricalRecords()
-
     objects = ContentMetadataManager()
-
-    class Meta:
-        verbose_name = _("Content Metadata")
-        verbose_name_plural = _("Content Metadata")
-        app_label = 'catalog'
 
     @property
     def is_exec_ed_2u_course(self):
@@ -675,6 +661,67 @@ class ContentMetadata(TimeStampedModel):
                 content_key=self.content_key
             )
         )
+
+
+class ContentMetadata(BaseContentMetadata):
+    """
+    Stores the JSON metadata for a piece of content, such as a course, course run, or program.
+    The metadata is retrieved from the Discovery service /search/all endpoint.
+
+    .. no_pii:
+    """
+    class Meta:
+        verbose_name = _("Content Metadata")
+        verbose_name_plural = _("Content Metadata")
+        app_label = 'catalog'
+
+    # one course can be associated with many programs and one program can contain many courses.
+    associated_content_metadata = models.ManyToManyField('self', blank=True)
+
+    # one course can be part of many CatalogQueries and one CatalogQuery can contain many courses.
+    catalog_queries = models.ManyToManyField(CatalogQuery)
+
+    @property
+    def json_metadata(self):
+        if restricted_metadata_for_catalog_query := getattr(self, 'restricted_metadata_for_catalog_query', None):
+            return restricted_metadata_for_catalog_query[0]._json_metadata
+        return self._json_metadata
+
+
+class RestrictedContentMetadata(BaseContentMetadata):
+    """
+    .. no_pii:
+    """
+    class Meta:
+        verbose_name = _("Restricted Content Metadata")
+        verbose_name_plural = _("Restricted Content Metadata")
+        app_label = 'catalog'
+        unique_together = ('content_key', 'catalog_query')
+
+    content_key = models.CharField(
+        max_length=255,
+        blank=False,
+        null=False,
+        unique=False,
+        help_text=_(
+            "The key that represents a piece of content, such as a course, course run, or program."
+        )
+    )
+    unrestricted_parent = models.ForeignKey(
+        ContentMetadata,
+        blank=False,
+        null=True,
+        related_name='restricted_content_metadata',
+        on_delete=models.deletion.SET_NULL,
+    )
+    # one restricted course or course run can
+    catalog_query = models.ForeignKey(
+        CatalogQuery,
+        blank=False,
+        null=True,
+        related_name='restricted_content_metadata',
+        on_delete=models.deletion.SET_NULL,
+    )
 
 
 def content_metadata_with_type_course():
