@@ -58,6 +58,7 @@ CSV_COURSE_RUN_HEADERS = [
     'End Date',
     'Verified Upgrade Deadline',
     'Enroll-by Date',
+    'Price',
     'Min Effort',
     'Max Effort',
     'Length',
@@ -200,12 +201,16 @@ def _base_csv_row_data(hit):
     if enroll_by := advertised_course_run.get('enroll_by'):
         enroll_by = datetime.datetime.fromtimestamp(enroll_by).strftime(DATE_FORMAT)
 
+    if content_price := advertised_course_run.get('content_price'):
+        content_price = math.trunc(float(content_price))
+
     return {
         'title': title,
         'partner_name': partner_name,
         'start_date': start_date,
         'end_date': end_date,
         'enroll_by': enroll_by,
+        'price': content_price,
         'aggregation_key': aggregation_key,
         'course_run_key': course_run_key,
         'language': language,
@@ -248,7 +253,7 @@ def course_hit_to_row(hit):
     csv_row.append(pacing_type)
 
     csv_row.append(hit.get('level_type'))
-    csv_row.append(hit.get('first_enrollable_paid_seat_price'))
+    csv_row.append(row_data.get('price'))
     csv_row.append(row_data.get('language'))
     csv_row.append(row_data.get('transcript_languages'))
     csv_row.append(row_data.get('marketing_url'))
@@ -276,15 +281,13 @@ def exec_ed_course_to_row(hit):
     """
     row_data = _base_csv_row_data(hit)
     csv_row = []
+
     csv_row.append(row_data.get('title'))
     csv_row.append(row_data.get('partners'))
-
     csv_row.append(row_data.get('start_date'))
     csv_row.append(row_data.get('end_date'))
     csv_row.append(row_data.get('enroll_by'))
-
-    price = float(hit['entitlements'][0]['price'])
-    csv_row.append(math.trunc(price))
+    csv_row.append(row_data.get('price'))
     csv_row.append(row_data.get('language'))
     csv_row.append(row_data.get('transcript_languages'))
     csv_row.append(row_data.get('marketing_url'))
@@ -348,6 +351,9 @@ def course_run_to_row(hit, course_run):
     if enroll_by := course_run.get('enroll_by', None):
         enroll_by = datetime.datetime.fromtimestamp(enroll_by).strftime(DATE_FORMAT)
     csv_row.append(enroll_by)
+
+    # Price
+    csv_row.append(course_run.get('content_price'))
 
     # Min Effort
     csv_row.append(course_run.get('min_effort'))
