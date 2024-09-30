@@ -6,6 +6,7 @@ import time
 from dateutil import parser
 from django.core.cache import cache
 from django.db.models import Q
+from django.utils.dateparse import parse_datetime
 from django.utils.translation import gettext as _
 from pytz import UTC
 
@@ -254,10 +255,7 @@ def _has_enroll_by_deadline_passed(course_json_metadata, advertised_course_run):
         additional_metadata = course_json_metadata.get('additional_metadata') or {}
         registration_deadline = additional_metadata.get('registration_deadline')
         if registration_deadline:
-            enroll_by_deadline_timestamp = datetime.datetime.strptime(
-                registration_deadline,
-                '%Y-%m-%dT%H:%M:%S%z',
-            ).timestamp()
+            enroll_by_deadline_timestamp = parse_datetime(registration_deadline).timestamp()
     else:
         enroll_by_deadline_timestamp = _get_verified_upgrade_deadline(advertised_course_run)
 
@@ -719,7 +717,7 @@ def get_pathway_created_date(pathway):
     """
     created = pathway.get('created')
     if created:
-        created_datetime = datetime.datetime.strptime(created, '%Y-%m-%dT%H:%M:%SZ')
+        created_datetime = parse_datetime(created)
         return time.mktime(created_datetime.timetuple())
     return None
 
@@ -1217,10 +1215,7 @@ def _get_verified_upgrade_deadline(full_course_run):
     seats = full_course_run.get('seats') or []
     for seat in seats:
         if seat.get('type') == 'verified' and 'upgrade_deadline' in seat and seat.get('upgrade_deadline') is not None:
-            try:
-                vud_datetime = datetime.datetime.strptime(seat.get('upgrade_deadline'), '%Y-%m-%dT%H:%M:%SZ')
-            except ValueError:
-                vud_datetime = datetime.datetime.strptime(seat.get('upgrade_deadline'), '%Y-%m-%dT%H:%M:%S.%fZ')
+            vud_datetime = parse_datetime(seat.get('upgrade_deadline'))
             return time.mktime(vud_datetime.timetuple())
     # defaults to year 3000, as algolia cannot filter on null values
     return ALGOLIA_DEFAULT_TIMESTAMP
