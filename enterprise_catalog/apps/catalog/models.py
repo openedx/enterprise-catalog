@@ -7,6 +7,7 @@ from config_models.models import ConfigurationModel
 from django.conf import settings
 from django.db import IntegrityError, OperationalError, models, transaction
 from django.db.models import Q
+from django.db.models.functions import Coalesce
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 from edx_rbac.models import UserRole, UserRoleAssignment
@@ -1220,6 +1221,26 @@ class Library(models.Model):
         )
         return self.book_set.prefetch_related(prefetch_qs)
 
+    def get_books_with_restricted_data(self):
+        """
+        Returns a queryset of books for this library. 
+        If a restricted version of the book exists, the restricted book's data is returned.
+        Otherwise, the regular book data is returned.
+        """
+        restricted_books = RestrictedBook.objects.filter(
+            parent_book=models.OuterRef('pk'),
+            library=self
+        ).values('_data')
+
+        return Book.objects.filter(libraries=self).annotate(
+            restricted_data=models.Subquery(restricted_books),
+            final_data=Coalesce(models.Subquery(restricted_books), models.F('_data')),
+            is_restricted=Coalesce(
+                models.Subquery(restricted_books.values('pk')),
+                models.Value(False),
+                output_field=models.BooleanField(),
+            )
+        )
     def __str__(self):
         return self.name
 
@@ -1302,8 +1323,12 @@ quincy_pl.book_set.add(moby_dick)
 ulysses, _ = Book.objects.get_or_create(title='Ulysses', _data={'bloom': 'walking'})
 boston_pl.book_set.add(ulysses)
 quincy_pl.book_set.add(ulysses)
-restricted_book, _ = RestrictedBook.objects.get_or_create(library=boston_pl, parent_book=moby_dic, _data={'ahab': 'alive', 'note': 'restricted copy owned only by BPL'})
+restricted_book, _ = RestrictedBook.objects.get_or_create(library=boston_pl, parent_book=moby_dick, _data={'ahab': 'alive', 'note': 'restricted copy owned only by BPL'})
 
 boston_pl.books.filter(title='Moby Dick')
 quincy_pl.books.filter(title='Moby Dick')
+
+boston_pl.books.filter(title='Ulysses')
+quincy_pl.books.filter(title='Ulysses')
+quincy_pl.get_books_with_restricted_data()
 """
