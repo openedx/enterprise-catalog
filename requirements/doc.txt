@@ -32,7 +32,7 @@ asgiref==3.8.1
     #   -r requirements/test.txt
     #   django
     #   django-cors-headers
-astroid==3.3.3
+astroid==3.3.4
     # via
     #   -r requirements/test.txt
     #   pylint
@@ -142,7 +142,7 @@ diff-match-patch==20230430
     # via
     #   -r requirements/test.txt
     #   django-import-export
-dill==0.3.8
+dill==0.3.9
     # via
     #   -r requirements/test.txt
     #   pylint
@@ -281,7 +281,7 @@ edx-toggles==5.2.0
     # via -r requirements/test.txt
 factory-boy==3.3.1
     # via -r requirements/test.txt
-faker==29.0.0
+faker==30.0.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -363,7 +363,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.4
     # via -r requirements/test.txt
-newrelic==9.13.0
+newrelic==10.0.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
@@ -410,7 +410,7 @@ ply==3.11
     # via
     #   -r requirements/test.txt
     #   djangoql
-prompt-toolkit==3.0.47
+prompt-toolkit==3.0.48
     # via
     #   -r requirements/test.txt
     #   click-repl
@@ -447,7 +447,7 @@ pyjwt[crypto]==2.9.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
-pylint==3.3.0
+pylint==3.3.1
     # via
     #   -r requirements/test.txt
     #   edx-lint
@@ -650,7 +650,7 @@ typing-extensions==4.12.2
     #   pydantic
     #   pydantic-core
     #   pydata-sphinx-theme
-tzdata==2024.1
+tzdata==2024.2
     # via
     #   -r requirements/test.txt
     #   celery
@@ -670,7 +670,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.26.5
+virtualenv==20.26.6
     # via
     #   -r requirements/test.txt
     #   tox
