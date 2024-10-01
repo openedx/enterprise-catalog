@@ -721,7 +721,7 @@ class ContentMetadata(BaseContentMetadata):
         )
         if restricted_course_metadata_for_catalog_query:
             # pylint: disable=protected-access
-            return restricted_course_metadata_for_catalog_query.first()._json_metadata
+            return restricted_course_metadata_for_catalog_query[0]._json_metadata
         return self._json_metadata
 
 
