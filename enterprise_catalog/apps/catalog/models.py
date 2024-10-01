@@ -7,6 +7,7 @@ from config_models.models import ConfigurationModel
 from django.conf import settings
 from django.db import IntegrityError, OperationalError, models, transaction
 from django.db.models import Q
+from django.db.models.functions import Coalesce
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 from edx_rbac.models import UserRole, UserRoleAssignment
@@ -1197,3 +1198,137 @@ class CatalogUpdateCommandConfig(ConfigurationModel):
                 'no_async': current_config.no_async,
             }
         return {}
+
+
+
+class Library(models.Model):
+    class Meta:
+        app_label = 'catalog'
+
+    name = models.CharField(
+        max_length=255,
+        blank=False,
+        null=False,
+        unique=True,
+    )
+
+    @property
+    def books(self):
+        prefetch_qs = models.Prefetch(
+            'restricted_books',
+            queryset=RestrictedBook.objects.filter(library=self),
+            to_attr='overwritten_copy',
+        )
+        return self.book_set.prefetch_related(prefetch_qs)
+
+    def get_books_with_restricted_data(self):
+        """
+        Returns a queryset of books for this library. 
+        If a restricted version of the book exists, the restricted book's data is returned.
+        Otherwise, the regular book data is returned.
+        """
+        restricted_books = RestrictedBook.objects.filter(
+            parent_book=models.OuterRef('pk'),
+            library=self
+        ).values('_data')
+
+        return Book.objects.filter(libraries=self).annotate(
+            restricted_data=models.Subquery(restricted_books),
+            final_data=Coalesce(models.Subquery(restricted_books), models.F('_data')),
+            is_restricted=Coalesce(
+                models.Subquery(restricted_books.values('pk')),
+                models.Value(False),
+                output_field=models.BooleanField(),
+            )
+        )
+    def __str__(self):
+        return self.name
+
+
+class AbstractBook(models.Model):
+    class Meta:
+        abstract = True
+
+    title = models.CharField(
+        max_length=255,
+        blank=False,
+        null=False,
+        unique=True,
+    )
+    libraries = models.ManyToManyField(Library)
+    _data = JSONField(
+        db_column='data',
+        default={},
+        blank=True,
+        null=True,
+        load_kwargs={'object_pairs_hook': collections.OrderedDict},
+        dump_kwargs={'indent': 4, 'cls': JSONEncoder, 'separators': (',', ':')},
+    )
+
+    @property
+    def data(self):
+        if overwritten_copy := getattr(self, 'overwritten_copy', None):
+            return overwritten_copy[0]._data
+        return self._data
+
+
+class Book(AbstractBook):
+    class Meta:
+        app_label = 'catalog'
+
+    def __str__(self):
+        return f"title: {self.title}, data={self.data}"
+
+
+class RestrictedBook(AbstractBook):
+    """
+    A copy of a book that's available only at a specific library.
+    """
+    class Meta:
+        app_label = 'catalog'
+
+    parent_book = models.ForeignKey(
+        Book,
+        null=False,
+        blank=False,
+        related_name='restricted_books',
+        on_delete=models.deletion.CASCADE,
+    )
+    library = models.ForeignKey(
+        Library,
+        blank=False,
+        null=True,
+        related_name='restricted_books',
+        on_delete=models.deletion.CASCADE,
+    )
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            super().save(*args, **kwargs)
+
+        self.title = self.parent_book.title
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"title: {self.title}, specific_library: {self.library}, data={self.data}"
+
+"""
+from enterprise_catalog.apps.catalog.models import *
+
+boston_pl, _= Library.objects.get_or_create(name='Boston Public Library')
+quincy_pl, _ = Library.objects.get_or_create(name='Quincy Public Library')
+moby_dick, _ = Book.objects.get_or_create(title='Moby Dick', _data={'ahab': 'dead'})
+boston_pl.book_set.add(moby_dick)
+quincy_pl.book_set.add(moby_dick)
+ulysses, _ = Book.objects.get_or_create(title='Ulysses', _data={'bloom': 'walking'})
+boston_pl.book_set.add(ulysses)
+quincy_pl.book_set.add(ulysses)
+restricted_book, _ = RestrictedBook.objects.get_or_create(library=boston_pl, parent_book=moby_dick, _data={'ahab': 'alive', 'note': 'restricted copy owned only by BPL'})
+
+boston_pl.books.filter(title='Moby Dick')
+quincy_pl.books.filter(title='Moby Dick')
+
+boston_pl.books.filter(title='Ulysses')
+quincy_pl.books.filter(title='Ulysses')
+quincy_pl.get_books_with_restricted_data()
+"""
