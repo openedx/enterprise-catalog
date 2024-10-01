@@ -256,7 +256,27 @@ class EnterpriseCatalog(TimeStampedModel):
         """
         if not self.catalog_query:
             return ContentMetadata.objects.none()
-        return self.catalog_query.contentmetadata_set.all()
+        return self.catalog_query.contentmetadata_set.filter(restricted_run=False)
+        # NOTE: json override doesn't need be disabled because
+        # self.catalog_query.contentmetadata_set is not annotated with
+        # overrides.
+
+    @property
+    def content_metadata_with_restricted(self):
+        """
+        Helper to retrieve the content metadata associated with the catalog.
+
+        Returns:
+            Queryset: The queryset of associated content metadata
+        """
+        if not self.catalog_query:
+            return ContentMetadata.objects.none()
+        prefetch_qs = models.Prefetch(
+            'restricted_courses',
+            queryset=RestrictedCourseMetadata.objects.filter(catalog_query=self.catalog_query),
+            to_attr='restricted_course_metadata_for_catalog_query',
+        )
+        return self.catalog_query.contentmetadata_set.prefetch_related(prefetch_qs)
 
     @cached_property
     def restricted_runs_allowed(self):
@@ -324,7 +344,7 @@ class EnterpriseCatalog(TimeStampedModel):
         items_not_found = distinct_content_keys - found_content_keys
         return [{'content_key': item} for item in items_not_found], items_not_included, items_found
 
-    def get_matching_content(self, content_keys):
+    def get_matching_content(self, content_keys, include_restricted=False):
         """
         Returns the set of content contained within this catalog that matches
         any of the course keys, course run keys, or programs keys specified by
@@ -367,7 +387,10 @@ class EnterpriseCatalog(TimeStampedModel):
             if metadata.parent_content_key
         }
         query |= Q(content_key__in=parent_content_keys)
-        return self.content_metadata.filter(query)
+        if include_restricted:
+            return self.content_metadata_with_restricted.filter(query)
+        else:
+            return self.content_metadata.filter(query)
 
     def contains_content_keys(self, content_keys):
         """
@@ -683,12 +706,18 @@ class ContentMetadata(BaseContentMetadata):
 
     @property
     def json_metadata(self):
-        if restricted_metadata_for_catalog_query := getattr(self, 'restricted_metadata_for_catalog_query', None):
-            return restricted_metadata_for_catalog_query[0]._json_metadata
+        restricted_course_metadata_for_catalog_query = getattr(
+            self,
+            'restricted_course_metadata_for_catalog_query',
+            None,
+        )
+        if restricted_course_metadata_for_catalog_query:
+            # pylint: disable=protected-access
+            return restricted_course_metadata_for_catalog_query.first()._json_metadata
         return self._json_metadata
 
 
-class RestrictedContentMetadata(BaseContentMetadata):
+class RestrictedCourseMetadata(BaseContentMetadata):
     """
     .. no_pii:
     """
@@ -698,6 +727,9 @@ class RestrictedContentMetadata(BaseContentMetadata):
         app_label = 'catalog'
         unique_together = ('content_key', 'catalog_query')
 
+    # Overwrite content_key from BaseContentMetadata in order to change unique
+    # to False. Use unique_together to allow multiple copies of the same course
+    # (one for each catalog query.
     content_key = models.CharField(
         max_length=255,
         blank=False,
@@ -707,14 +739,6 @@ class RestrictedContentMetadata(BaseContentMetadata):
             "The key that represents a piece of content, such as a course, course run, or program."
         )
     )
-    unrestricted_parent = models.ForeignKey(
-        ContentMetadata,
-        blank=False,
-        null=True,
-        related_name='restricted_content_metadata',
-        on_delete=models.deletion.SET_NULL,
-    )
-    # one restricted course or course run can
     catalog_query = models.ForeignKey(
         CatalogQuery,
         blank=False,
