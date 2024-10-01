@@ -747,6 +747,13 @@ class RestrictedCourseMetadata(BaseContentMetadata):
             "The key that represents a piece of content, such as a course, course run, or program."
         )
     )
+    unrestricted_parent = models.ForeignKey(
+        ContentMetadata,
+        blank=False,
+        null=True,
+        related_name='restricted_courses',
+        on_delete=models.deletion.SET_NULL,
+    )
     catalog_query = models.ForeignKey(
         CatalogQuery,
         blank=False,
