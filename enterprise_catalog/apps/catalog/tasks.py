@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 @shared_task(base=LoggedTask)
 def compare_catalog_queries_to_filters_task():
     logger.info('compare_catalog_queries_to_filters starting...')
+    # NOTE: No need to exclude restricted runs because they are already filtered out via content_type.
     for content_metadata in ContentMetadata.objects.filter(content_type=COURSE):
         for enterprise_catalog in EnterpriseCatalog.objects.all():
             try:

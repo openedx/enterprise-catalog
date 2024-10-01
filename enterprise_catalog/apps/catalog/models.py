@@ -1283,3 +1283,48 @@ class CatalogUpdateCommandConfig(ConfigurationModel):
                 'no_async': current_config.no_async,
             }
         return {}
+
+"""
+SPIKE TEST:
+
+1. First, reset the sqlite database:
+
+rm enterprise_catalog/default.db && python manage.py migrate && python manage.py shell
+
+2. Then, paste everything below into the python shell:
+
+from enterprise_catalog.apps.catalog.models import *
+from enterprise_catalog.apps.catalog.tests.factories import *
+catalog = EnterpriseCatalogFactory()
+catalog_query = catalog.catalog_query
+
+course_mixed = ContentMetadataFactory(content_key='mixed_course', content_type='course')
+course_mixed.catalog_queries.set(CatalogQuery.objects.all())
+course_mixed_run1 = ContentMetadataFactory(content_key='course_mixed_run1', content_type='courserun')
+course_mixed_run2 = ContentMetadataFactory(content_key='course_mixed_run2', content_type='courserun', is_restricted_run=True)
+course_mixed_run2.catalog_queries.set(CatalogQuery.objects.all())
+# TODO: create restricted course for mixed course
+
+course_unicorn = ContentMetadataFactory(content_key='unicorn_course', content_type='course')
+course_unicorn.catalog_queries.set(CatalogQuery.objects.all())
+course_unicorn_run1 = ContentMetadataFactory(content_key='course_unicorn_run1', content_type='courserun', is_restricted_run=True)
+course_unicorn_run1.catalog_queries.set(CatalogQuery.objects.all())
+restricted_course_unicorn, _ = RestrictedCourseMetadata.objects.get_or_create(
+    content_key = course_unicorn.content_key,
+    content_type = course_unicorn.content_type,
+)
+restricted_course_unicorn.catalog_query = CatalogQuery.objects.first()
+restricted_course_unicorn.unrestricted_parent = course_unicorn
+restricted_course_unicorn.save()
+
+assert catalog.content_metadata[1].json_metadata
+assert not catalog.content_metadata_with_restricted[2].json_metadata
+
+assert catalog.get_matching_content(['mixed_course'], include_restricted=False)[0].json_metadata
+assert catalog.get_matching_content(['mixed_course'], include_restricted=True)[0].json_metadata
+assert catalog.get_matching_content(['unicorn_course'], include_restricted=False)[0].json_metadata
+assert not catalog.get_matching_content(['unicorn_course'], include_restricted=True)[0].json_metadata
+
+assert len(catalog.get_matching_content(['course_unicorn_run1'], include_restricted=False)) == 0
+assert len(catalog.get_matching_content(['course_unicorn_run1'], include_restricted=True)) == 1
+"""
