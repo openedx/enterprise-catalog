@@ -256,7 +256,7 @@ class EnterpriseCatalog(TimeStampedModel):
         """
         if not self.catalog_query:
             return ContentMetadata.objects.none()
-        return self.catalog_query.contentmetadata_set.filter(restricted_run=False)
+        return self.catalog_query.contentmetadata_set.filter(is_restricted_run=False)
         # NOTE: json override doesn't need be disabled because
         # self.catalog_query.contentmetadata_set is not annotated with
         # overrides.
@@ -697,6 +697,14 @@ class ContentMetadata(BaseContentMetadata):
         verbose_name = _("Content Metadata")
         verbose_name_plural = _("Content Metadata")
         app_label = 'catalog'
+
+    is_restricted_run = models.BooleanField(
+        default=False,
+        blank=False,
+        help_text=_(
+            "If true, cause this run to be included in various v2 endpoints."
+        ),
+    )
 
     # one course can be associated with many programs and one program can contain many courses.
     associated_content_metadata = models.ManyToManyField('self', blank=True)
