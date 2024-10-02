@@ -731,6 +731,7 @@ class EnterpriseCatalogCsvDataViewTests(APITestMixin):
             'max_effort': 10,
             'min_effort': 1,
             'weeks_to_complete': 1,
+            'content_price': 100,
         },
         'outcome': '<p>learn</p>',
         'prerequisites_raw': '<p>interest</p>',
@@ -777,8 +778,8 @@ class EnterpriseCatalogCsvDataViewTests(APITestMixin):
     def _get_mock_algolia_hits_with_missing_values(self):
         mock_hits_missing_values = copy.deepcopy(self.mock_algolia_hits)
         mock_hits_missing_values['hits'][0]['advertised_course_run'].pop('upgrade_deadline')
+        mock_hits_missing_values['hits'][0]['advertised_course_run'].pop('content_price')
         mock_hits_missing_values['hits'][0].pop('marketing_url')
-        mock_hits_missing_values['hits'][0].pop('first_enrollable_paid_seat_price')
         mock_hits_missing_values['hits'][0]['advertised_course_run']['end'] = None
         return mock_hits_missing_values
 

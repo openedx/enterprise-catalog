@@ -58,6 +58,7 @@ CSV_COURSE_RUN_HEADERS = [
     'End Date',
     'Verified Upgrade Deadline',
     'Enroll-by Date',
+    'Price',
     'Min Effort',
     'Max Effort',
     'Length',
@@ -210,7 +211,10 @@ def course_hit_to_row(hit):
 
     csv_row.append(hit.get('level_type'))
 
-    csv_row.append(hit.get('first_enrollable_paid_seat_price'))
+    if content_price := advertised_course_run.get('content_price'):
+        content_price = math.trunc(float(content_price))
+    csv_row.append(content_price)
+
     csv_row.append(hit.get('language'))
     csv_row.append(', '.join(hit.get('transcript_languages', [])))
     csv_row.append(hit.get('marketing_url'))
@@ -283,8 +287,12 @@ def exec_ed_course_to_row(hit):
     adv_course_run = hit.get('advertised_course_run', {})
     key = adv_course_run.get('key')
 
-    price = float(hit['entitlements'][0]['price'])
-    csv_row.append(math.trunc(price))
+    empty_advertised_course_run = {}
+    advertised_course_run = hit.get('advertised_course_run', empty_advertised_course_run)
+    if content_price := advertised_course_run.get('content_price'):
+        content_price = math.trunc(float(content_price))
+    csv_row.append(content_price)
+
     csv_row.append(hit.get('language'))
     csv_row.append(', '.join(hit.get('transcript_languages', [])))
     csv_row.append(hit.get('marketing_url'))
@@ -354,6 +362,10 @@ def course_run_to_row(hit, course_run):
     if enroll_by := course_run.get('enroll_by', None):
         enroll_by = datetime.datetime.fromtimestamp(enroll_by).strftime(DATE_FORMAT)
     csv_row.append(enroll_by)
+
+    if content_price := course_run.get('content_price'):
+        content_price = math.trunc(float(content_price))
+    csv_row.append(content_price)
 
     # Min Effort
     csv_row.append(course_run.get('min_effort'))
