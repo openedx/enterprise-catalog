@@ -381,6 +381,11 @@ class EnterpriseCatalog(TimeStampedModel):
         # (if any) to handle the following case:
         #   - catalog contains courses and the specified content_keys are course run ids.
         searched_metadata = ContentMetadata.objects.filter(content_key__in=content_keys)
+        if include_restricted:
+            # TODO: searched_metadata needs to exclude restricted runs that this catalog query is not allowed to see.
+            pass
+        else:
+            searched_metadata = searched_metadata.exclude(is_restricted_run=True)
         parent_content_keys = {
             metadata.parent_content_key
             for metadata in searched_metadata
