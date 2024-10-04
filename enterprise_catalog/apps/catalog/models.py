@@ -398,7 +398,7 @@ class EnterpriseCatalog(TimeStampedModel):
         else:
             return self.content_metadata.filter(query)
 
-    def contains_content_keys(self, content_keys):
+    def contains_content_keys(self, content_keys, include_restricted=False):
         """
         Determines whether the given ``content_keys`` are part of the catalog.
 
@@ -415,7 +415,7 @@ class EnterpriseCatalog(TimeStampedModel):
             in the ``content_keys`` list (to handle cases when a catalog contains only courses,
             but course run keys are provided in the ``content_keys`` argument).
         """
-        included_content = self.get_matching_content(content_keys)
+        included_content = self.get_matching_content(content_keys, include_restricted=include_restricted)
         return included_content.exists()
 
     def filter_content_keys(self, content_keys):
