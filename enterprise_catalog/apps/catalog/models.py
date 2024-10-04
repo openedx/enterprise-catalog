@@ -418,7 +418,7 @@ class EnterpriseCatalog(TimeStampedModel):
         included_content = self.get_matching_content(content_keys, include_restricted=include_restricted)
         return included_content.exists()
 
-    def filter_content_keys(self, content_keys):
+    def filter_content_keys(self, content_keys, include_restricted=False):
         """
         Determines whether content_keys are part of the catalog.
 
@@ -448,7 +448,11 @@ class EnterpriseCatalog(TimeStampedModel):
         query = Q(content_key__in=content_keys) | Q(parent_content_key__in=content_keys)
 
         items_included = set()
-        for content in self.content_metadata.filter(query).all():
+        if include_restricted:
+            accessible_metadata_qs = self.content_metadata_with_restricted
+        else:
+            accessible_metadata_qs = self.content_metadata
+        for content in accessible_metadata_qs.filter(query).all():
             if content.content_key in content_keys:
                 items_included.add(content.content_key)
             elif content.parent_content_key in content_keys:
