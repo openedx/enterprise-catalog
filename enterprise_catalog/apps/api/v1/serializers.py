@@ -32,6 +32,7 @@ from enterprise_catalog.apps.curation.models import (
     HighlightSet,
 )
 from enterprise_catalog.apps.video_catalog.models import Video, VideoSkill
+from enterprise_catalog.apps.jobs.models import Job, JobSkill, JobEnterprise
 
 
 logger = logging.getLogger(__name__)
@@ -510,3 +511,44 @@ class VideoSerializer(serializers.ModelSerializer):
             'json_metadata', 'summary_transcripts', 'parent_content_metadata', 'skills',
         ]
         lookup_field = 'edx_video_id'
+
+
+class JobSkillSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the `JobSkill` model.
+    """
+
+    class Meta:
+        model = JobSkill
+        fields = ["skill_id", "name"]
+
+
+class JobSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the `Job` model.
+    """
+
+    skills = JobSkillSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Job
+        fields = [
+            "job_id",
+            "external_id",
+            "title",
+            "description",
+        ]
+        lookup_field = "job_id"
+
+
+class JobEnterpriseSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the `JobEnterprise` model.
+    """
+
+    jobs = JobSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = JobEnterprise
+        fields = ["enterprise_uuid", "jobs"]
+        lookup_field = "enterprise_uuid"

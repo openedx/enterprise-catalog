@@ -53,6 +53,9 @@ from enterprise_catalog.apps.api.v1.views.enterprise_customer import (
 from enterprise_catalog.apps.api.v1.views.video_catalog import (
     VideoReadOnlyViewSet,
 )
+from enterprise_catalog.apps.api.v1.views.enterprise_jobs import (
+    EnterpriseJobReadOnlyViewSet,
+)
 
 
 app_name = 'v1'
@@ -127,6 +130,11 @@ urlpatterns = [
         'catalog-queries/get_content_filter_hash',
         CatalogQueryViewSet.as_view({'get': 'get_content_filter_hash'}),
         name='get-content-filter-hash'
+    ),
+    re_path(
+        r"^enterprise-jobs/(?P<enterprise_uuid>[-\w]+)$",
+        EnterpriseJobReadOnlyViewSet.as_view({"get": "retrieve"}),
+        name="enterprise-jobs",
     ),
 ]
 
