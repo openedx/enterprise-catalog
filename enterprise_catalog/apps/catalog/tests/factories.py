@@ -80,7 +80,7 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
     parent_content_key = None
 
     @factory.lazy_attribute
-    def json_metadata(self):
+    def _json_metadata(self):
         json_metadata = {
             'key': self.content_key,
             'aggregation_key': f'{self.content_type}:{self.content_key}',
