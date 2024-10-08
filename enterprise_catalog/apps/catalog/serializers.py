@@ -147,8 +147,9 @@ class NormalizedContentMetadataSerializer(ReadOnlySerializer):
     def get_content_price(self, obj) -> float:  # pylint: disable=unused-argument
         if not self.course_run_metadata:
             return None
-        if self.course_run_metadata.get('fixed_price_usd'):
-            return float(self.course_run_metadata.get('fixed_price_usd'))
+        # To be uncommented out after fix forward
+        # if self.course_run_metadata.get('fixed_price_usd'):
+        #     return float(self.course_run_metadata.get('fixed_price_usd'))
         if self.is_exec_ed_2u_course is True:
             for entitlement in self.course_metadata.get('entitlements', []):
                 if entitlement.get('price') and entitlement.get('mode') == CourseMode.PAID_EXECUTIVE_EDUCATION:
