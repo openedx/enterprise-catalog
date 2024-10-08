@@ -121,4 +121,3 @@ class EnterpriseCustomerViewSetV2(EnterpriseCustomerViewSet):
         # If we've made it here without finding a matching ContentMetadata record,
         # assume no matching record exists and raise a 404.
         raise NotFound(detail='No matching content in any catalog for this customer')
-

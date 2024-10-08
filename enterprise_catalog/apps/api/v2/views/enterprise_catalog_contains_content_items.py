@@ -38,4 +38,3 @@ class EnterpriseCatalogContainsContentItemsV2(EnterpriseCatalogContainsContentIt
             include_restricted=True,
         )
         return Response({'contains_content_items': contains_content_items})
-
