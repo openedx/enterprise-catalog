@@ -49,13 +49,14 @@ class DiscoveryApiClient(BaseOAuthClient):
         """
         return (self.BACKOFF_FACTOR * (2 ** (attempt_count - 1)))
 
-    def _retrieve_metadata_for_content_filter(self, content_filter, page, request_params):
+    def _retrieve_metadata_page_for_content_filter(self, content_filter, page, request_params):
         """
         Makes a request to discovery's /search/all/ endpoint with the specified
         content_filter, page, and request_params
         """
         LOGGER.info(f'Retrieving results from course-discovery for page {page}...')
         attempts = 0
+        request_params_with_page = request_params | {'page': page}
         while True:
             attempts = attempts + 1
             successful = True
@@ -64,7 +65,7 @@ class DiscoveryApiClient(BaseOAuthClient):
                 response = self.client.post(
                     DISCOVERY_SEARCH_ALL_ENDPOINT,
                     json=content_filter,
-                    params=request_params,
+                    params=request_params_with_page,
                     timeout=self.HTTP_TIMEOUT,
                 )
                 successful = response.status_code < 400
@@ -98,6 +99,34 @@ class DiscoveryApiClient(BaseOAuthClient):
                 f'response body: {response.text}'
             )
             raise err
+
+    def retrieve_metadata_for_content_filter(self, content_filter, request_params):
+        """
+        """
+        request_params_customized = request_params | {
+            # Increase number of results per page for the course-discovery response
+            'page_size': 100,
+            # Ensure paginated results are consistently ordered by `aggregation_key` and `start`
+            'ordering': 'aggregation_key,start',
+        }
+        page = 1
+        results = []
+        try:
+            response = self._retrieve_metadata_page_for_content_filter(content_filter, page, request_params_customized)
+            results += response.get('results', [])
+            # Traverse all pages and concatenate results
+            while response.get('next'):
+                page += 1
+                response = self._retrieve_metadata_page_for_content_filter(content_filter, page, request_params_customized)
+                results += response.get('results', [])
+        except Exception as exc:
+            LOGGER.exception(
+                'Could not retrieve content items from course-discovery (page %s): %s',
+                page,
+                exc,
+            )
+            raise exc
+        return results
 
     def _retrieve_course_reviews(self, request_params):
         """
@@ -251,7 +280,7 @@ class DiscoveryApiClient(BaseOAuthClient):
 
         return video_skills
 
-    def get_metadata_by_query(self, catalog_query):
+    def get_metadata_by_query(self, catalog_query, extra_query_params=None):
         """
         Return results from the discovery service's search/all endpoint.
 
@@ -264,30 +293,17 @@ class DiscoveryApiClient(BaseOAuthClient):
         request_params = {
             # Omit non-active course runs from the course-discovery results
             'exclude_expired_course_run': True,
-            # Increase number of results per page for the course-discovery response
-            'page_size': 100,
-            # Ensure paginated results are consistently ordered by `aggregation_key` and `start`
-            'ordering': 'aggregation_key,start',
             # Ensure to fetch learner pathways as part of search/all endpoint response.
             'include_learner_pathways': True,
-        }
-
-        page = 1
+        } | extra_query_params
         results = []
+
         try:
             content_filter = catalog_query.content_filter
-            response = self._retrieve_metadata_for_content_filter(content_filter, page, request_params)
-            results += response.get('results', [])
-            # Traverse all pages and concatenate results
-            while response.get('next'):
-                page += 1
-                request_params.update({'page': page})
-                response = self._retrieve_metadata_for_content_filter(content_filter, page, request_params)
-                results += response.get('results', [])
+            results.extend(self.retrieve_metadata_for_content_filter(content_filter, request_params))
         except Exception as exc:
             LOGGER.exception(
-                'Could not retrieve content items from course-discovery (page %s) for catalog query %s: %s',
-                page,
+                'Could not retrieve content items for catalog query %s: %s',
                 catalog_query,
                 exc,
             )

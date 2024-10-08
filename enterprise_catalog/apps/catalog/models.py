@@ -20,7 +20,7 @@ from enterprise_catalog.apps.api.v1.utils import (
     get_most_recent_modified_time,
     update_query_parameters,
 )
-from enterprise_catalog.apps.api_client.discovery import CatalogQueryMetadata
+from enterprise_catalog.apps.api_client.discovery import CatalogQueryMetadata, DiscoveryApiClient
 from enterprise_catalog.apps.api_client.enterprise_cache import (
     EnterpriseCustomerDetails,
 )
@@ -46,6 +46,7 @@ from enterprise_catalog.apps.catalog.utils import (
     get_content_type,
     get_content_uuid,
     get_parent_content_key,
+    is_content_restricted,
     localized_utcnow,
 )
 
@@ -629,6 +630,22 @@ class ContentMetadata(TimeStampedModel):
     )
     catalog_queries = models.ManyToManyField(CatalogQuery)
 
+    # Restricted runs receive their own parallel M2M mapping with CatalogQuery
+    # primarily because we don't want restricted runs to impact any existing
+    # logic as we roll out support.
+    #
+    # The queries we write generally don't include runs directly, so the
+    # `catalog_queries` field above generally doesn't relate course runs
+    # directly to CatalogQuery objects. As a result, downstream code broadly
+    # assumes that a run belongs to a CatalogQuery to which its parent course
+    # also belongs. Relating runs directly to CatalogQueries is a fundamental
+    # departure from the original architecture and base assumptions, hence the
+    # new field just to be on the safe side.
+    catalog_queries_for_restricted_course_run = models.ManyToManyField(
+        CatalogQuery,
+        related_name='restricted_course_runs',
+    )
+
     history = HistoricalRecords()
 
     objects = ContentMetadataManager()
@@ -994,6 +1011,69 @@ def _check_content_association_threshold(catalog_query, metadata_list):
     return False
 
 
+def get_restricted_runs_from_discovery(metadata_including_restricted, catalog_query, dry_run=False):
+    """
+    """
+    # Fast exit if the catalog query's content filter doesn't even specify restricted runs.
+    restricted_runs_allowed = catalog_query.restricted_runs_allowed
+    if not restricted_runs_allowed:
+        return []
+
+    course_keys_matching_query = {
+        get_content_key(metadata) for metadata in metadata_including_restricted
+        if get_content_type(metadata) == COURSE
+    }
+    # Collect all run keys explicitly marked as "allowed" in the content filter, and also a child of a course that
+    # matches the content filter.
+    restricted_run_keys_to_fetch = []
+    for course_key_with_restricted_runs, restricted_run_keys_allowed in restricted_runs_allowed.items():
+        if not course_key_with_restricted_runs in course_keys_matching_query:
+            LOGGER.warning(
+                (
+                    "Course key %s requested by content-filter for CatalogQuery %s to allow restricted runs, but the "
+                    "course did not match the rest of the filter, so its restricted runs will not be included in this "
+                    "CatalogQuery."
+                ),
+                course_key_with_restricted_runs,
+                catalog_query,
+            )
+            continue
+        restricted_run_keys_to_fetch.extend(restricted_run_keys_allowed)
+
+    # Fast exit if none of the courses requested actually match the content filter.
+    if not restricted_run_keys_to_fetch:
+        return []
+
+    # Prepare and make the API call to discovery to actually fetch the restricted runs.
+    content_filter = {
+        'key': restricted_run_keys_to_fetch,
+    }
+    request_params = {
+        # Omit non-active course runs from the course-discovery results
+        'exclude_expired_course_run': True,
+        # Make sure to include restricted runs.
+        'include_restricted': 'custom-b2b-enterprise',
+    }
+    discovery_client = DiscoveryApiClient()
+    return discovery_client.retrieve_metadata_for_content_filter(content_filter, request_params)
+
+
+def associate_restricted_runs_with_query(metadata, catalog_query, dry_run=False):
+    """
+    """
+    metadata_list = create_content_metadata(metadata, catalog_query, dry_run)
+    if dry_run:
+        old_restricted_runs_count = catalog_query.restricted_course_runs.count()
+        new_restricted_runs_count = len(metadata_list)
+        if old_restricted_runs_count != new_restricted_runs_count:
+            LOGGER.info('[Dry Run] Updated restricted_course_runs count ({} -> {}) for {}'.format(
+                old_restricted_runs_count, new_restricted_runs_count, catalog_query))
+    else:
+        catalog_query.restricted_course_runs.set(metadata_list, clear=True)
+    associated_content_keys = [metadata.content_key for metadata in metadata_list]
+    return associated_content_keys
+
+
 def associate_content_metadata_with_query(metadata, catalog_query, dry_run=False):
     """
     Creates or updates a ContentMetadata object for each entry in `metadata`,
@@ -1129,37 +1209,93 @@ def update_contentmetadata_from_discovery(catalog_query, dry_run=False):
     Returns:
         list of str: Returns the content keys that were associated from the query results.
     """
-
+    # Generate a content filter without the `restricted_runs_allowed` key which
+    # discovery doesn't understand anyway.
+    content_filter_clean = {k: v for k, v in catalog_query.content_filter.items() if k != 'restricted_runs_allowed'}
+    discovery_client = DiscoveryApiClient()
     try:
-        # metadata will be an empty dict if unavailable from cache or API.
-        metadata = CatalogQueryMetadata(catalog_query).metadata
+        # Fetch all content metadata matching the content filter, restricted or not.
+        # (metadata will be an empty dict if unavailable from cache or API.)
+        metadata = discovery_client.get_metadata_by_query(
+            content_filter_clean,
+            extra_query_params={"include_restricted": "custom-b2b-enterprise"},
+        )
     except Exception as exc:
         LOGGER.exception(f'update_contentmetadata_from_discovery failed {catalog_query}')
         raise exc
 
-    # associate content metadata with a catalog query only when we get valid results
-    # back from the discovery service. if metadata is `None`, an error occurred while
-    # calling discovery and we should not proceed with the below association logic.
-    if metadata:
-        metadata_content_keys = [get_content_key(entry) for entry in metadata]
-        LOGGER.info(
-            'Retrieved %d content items (%d unique) from course-discovery for catalog query %s',
-            len(metadata_content_keys),
-            len(set(metadata_content_keys)),
-            catalog_query,
-        )
+    # `None` likely means nothing matched the content filter, so exit early.
+    if not metadata:
+        return []
 
-        associated_content_keys = associate_content_metadata_with_query(metadata, catalog_query, dry_run)
-        LOGGER.info(
-            'Associated %d content items (%d unique) with catalog query %s',
-            len(associated_content_keys),
-            len(set(associated_content_keys)),
-            catalog_query,
-        )
+    # Partition metadata dicts by unrestricted vs. restricted.
+    restricted_metadata = []
+    unrestricted_metadata = []
+    for metadata_dict in metadata:
+        if is_content_restricted(metadata_dict):
+            restricted_metadata += metadata_dict
+        else:
+            unrestricted_metadata += metadata_dict
 
-        return associated_content_keys
+    # First pass, associate unrestricted content metadata with this CatalogQuery.
+    unrestricted_metadata_content_keys = [get_content_key(entry) for entry in unrestricted_metadata]
+    LOGGER.info(
+        'Retrieved %d unrestricted content items (%d unique) from course-discovery for catalog query %s',
+        len(unrestricted_metadata_content_keys),
+        len(set(unrestricted_metadata_content_keys)),
+        catalog_query,
+    )
+    associated_content_keys = associate_content_metadata_with_query(metadata, catalog_query, dry_run)
+    LOGGER.info(
+        'Associated %d content items (%d unique) with catalog query %s',
+        len(associated_content_keys),
+        len(set(associated_content_keys)),
+        catalog_query,
+    )
 
-    return []
+    # At this point, we know the `unrestricted_metadata` partition contains
+    # courses and runs that should be related to the CatalogQuery as restricted
+    # content, but it's still only a subset of restricted content that needs to
+    # be related. What's missing are any restricted runs that didn't match the
+    # original content filter, but whose parent (course) key DID match.
+    restricted_metadata_content_keys = [get_content_key(entry) for entry in restricted_metadata]
+    LOGGER.info(
+        'Retrieved %d restricted content items (%d unique) from course-discovery for catalog query %s',
+        len(restricted_metadata_content_keys),
+        len(set(restricted_metadata_content_keys)),
+        catalog_query,
+    )
+    resticted_run_metadata = get_restricted_runs_from_discovery(
+        # Intentionally pass the un-partitioned metadata list so that we can
+        # discover all restricted runs matching any course that matches the
+        # content_filter, restricted-only or not.
+        metadata,
+        catalog_query,
+        dry_run,
+    )
+    associated_restricted_run_keys = associate_restricted_runs_with_query(
+        # Union the following metadata lists:
+        # * `restricted_metadata`:
+        #     Includes any restricted-only courses, or restricted runs directly
+        #     matching the content filter, BUT not necessarily all restricted
+        #     runs beneath matching courses.
+        # * `restricted_run_metadata`:
+        #     Includes all restricted runs part of any course matching the
+        #     content filter, BUT no restricted-only courses.
+        restricted_metadata | resticted_run_metadata,
+        catalog_query,
+        dry_run
+    )
+    LOGGER.info(
+        'Associated %d restricted runs (%d unique) with catalog query %s',
+        len(associated_restricted_run_keys),
+        len(set(associated_restricted_run_keys)),
+        catalog_query,
+    )
+
+    # Consumers expect only the keys associated via the ContentMetadata.catalog_queries M2M field, not including
+    # restricted runs associated via the ContentMetadata.catalog_queries_for_restricted_course_run M2M field.
+    return associated_content_keys
 
 
 class CatalogUpdateCommandConfig(ConfigurationModel):
