@@ -76,7 +76,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         """
         Helper to get the get_content_metadata endpoint url for a given catalog
         """
-        return reverse('api:v1:get-content-metadata', kwargs={'uuid': enterprise_catalog.uuid})
+        return reverse('api:v2:get-content-metadata-v2', kwargs={'uuid': enterprise_catalog.uuid})
 
     def _get_expected_json_metadata(self, content_metadata, is_learner_portal_enabled):  # pylint: disable=too-many-statements
         """
@@ -360,6 +360,23 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
             json.dumps(actual_metadata, sort_keys=True),
             json.dumps(expected_metadata, sort_keys=True),
         )
+
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
+    @ddt.data(
+        False,
+        True
+    )
+    def test_get_content_metadata_restricted(self, learner_portal_enabled, mock_api_client):
+        """
+        Verify the get_content_metadata endpoint returns all the metadata associated with a particular catalog
+        """
+        mock_api_client.return_value.get_enterprise_customer.return_value = {
+            'slug': self.enterprise_slug,
+            'enable_learner_portal': learner_portal_enabled,
+            'modified': str(datetime.now().replace(tzinfo=pytz.UTC)),
+        }
+        
+
 
     @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
     @ddt.data(
