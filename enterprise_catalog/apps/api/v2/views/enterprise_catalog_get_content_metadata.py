@@ -13,6 +13,9 @@ class EnterpriseCatalogGetContentMetadataV2(EnterpriseCatalogGetContentMetadata)
         queryset = self.enterprise_catalog.content_metadata_with_restricted
         content_filter = kwargs.get('content_keys_filter')
         if content_filter:
-            queryset = self.enterprise_catalog.get_matching_content(content_keys=content_filter, include_restricted=True)
+            queryset = self.enterprise_catalog.get_matching_content(
+                content_keys=content_filter,
+                include_restricted=True
+            )
 
         return queryset.order_by('catalog_queries')
