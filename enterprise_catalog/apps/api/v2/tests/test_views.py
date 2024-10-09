@@ -43,6 +43,7 @@ from enterprise_catalog.apps.catalog.tests.factories import (
     CatalogQueryFactory,
     ContentMetadataFactory,
     EnterpriseCatalogFactory,
+    RestrictedCourseMetadataFactory
 )
 from enterprise_catalog.apps.catalog.utils import (
     enterprise_proxy_login_url,
@@ -216,33 +217,71 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
             'enable_learner_portal': learner_portal_enabled,
             'modified': str(datetime.now().replace(tzinfo=pytz.UTC)),
         }
+        combined_course_content_key = 'combined_course'
+        combined_course_run_1_content_key = 'combined_course_run_1'
+        combined_course_run_2_content_key = 'combined_course_run_2'
+        fully_restricted_course_content_key = 'fully_restricted_course'
+        fully_restricted_course_run_1_content_key = 'fully_restricted_course_run_1'
 
         catalog = EnterpriseCatalogFactory()
-        catalog_query = catalog.catalog_query
-        course_mixed = ContentMetadataFactory(content_key='mixed_course', content_type='course')
-        course_mixed.catalog_queries.set(CatalogQuery.objects.all())
-        course_mixed_run1 = ContentMetadataFactory(content_key='course_mixed_run1', content_type='courserun')
-        course_mixed_run2 = ContentMetadataFactory(content_key='course_mixed_run2', content_type='courserun',
-                                                   is_restricted_run=True)
-        course_mixed_run2.catalog_queries.set(CatalogQuery.objects.all())
-        # TODO: create restricted course for mixed course
-        course_unicorn = ContentMetadataFactory(content_key='unicorn_course', content_type='course')
-        course_unicorn.catalog_queries.set(CatalogQuery.objects.all())
-        course_unicorn_run1 = ContentMetadataFactory(content_key='course_unicorn_run1', content_type='courserun',
-                                                     is_restricted_run=True)
-        course_unicorn_run1.catalog_queries.set(CatalogQuery.objects.all())
-        restricted_course_unicorn, _ = RestrictedCourseMetadata.objects.get_or_create(
-            content_key=course_unicorn.content_key,
-            content_type=course_unicorn.content_type,
+        combined_course = ContentMetadataFactory(content_key=combined_course_content_key, content_type=COURSE)
+        combined_course_run_1 = ContentMetadataFactory(
+            content_key=combined_course_run_1_content_key,
+            content_type=COURSE_RUN
         )
-        restricted_course_unicorn.catalog_query = CatalogQuery.objects.first()
-        restricted_course_unicorn.unrestricted_parent = course_unicorn
-        restricted_course_unicorn.save()
-        assert catalog.content_metadata[1].json_metadata
-        assert not catalog.content_metadata_with_restricted[2].json_metadata
-        assert catalog.get_matching_content(['mixed_course'], include_restricted=False)[0].json_metadata
-        assert catalog.get_matching_content(['mixed_course'], include_restricted=True)[0].json_metadata
-        assert catalog.get_matching_content(['unicorn_course'], include_restricted=False)[0].json_metadata
-        assert not catalog.get_matching_content(['unicorn_course'], include_restricted=True)[0].json_metadata
-        assert len(catalog.get_matching_content(['course_unicorn_run1'], include_restricted=False)) == 0
-        assert len(catalog.get_matching_content(['course_unicorn_run1'], include_restricted=True)) == 1
+        combined_course_run_2 = RestrictedCourseMetadataFactory(
+            content_key=combined_course_run_2_content_key,
+            content_type=COURSE_RUN,
+        )
+        # TODO: create restricted course for mixed course
+        fully_restricted_course = ContentMetadataFactory(
+            content_key=fully_restricted_course_content_key,
+            content_type=COURSE
+        )
+        fully_restricted_course_run_1 = RestrictedCourseMetadataFactory(
+            content_key=fully_restricted_course_run_1_content_key,
+            content_type=COURSE_RUN,
+        )
+        for course_entity in [
+            combined_course,
+            combined_course_run_2,
+            fully_restricted_course,
+            fully_restricted_course_run_1
+        ]:
+            course_entity.catalog_queries.set(CatalogQuery.objects.all())
+
+        restricted_course_metadata, _ = RestrictedCourseMetadata.objects.get_or_create(
+            content_key=fully_restricted_course.content_key,
+            content_type=fully_restricted_course.content_type,
+        )
+        restricted_course_metadata.catalog_query = CatalogQuery.objects.first()
+        restricted_course_metadata.unrestricted_parent = fully_restricted_course
+        restricted_course_metadata.save()
+
+        self.assertIsNotNone(catalog.content_metadata[1].json_metadata)
+        self.assertIsNone(catalog.content_metadata_with_restricted[2].json_metadata)
+        self.assertIsNotNone(catalog.get_matching_content(
+            [combined_course_content_key],
+            include_restricted=False
+        )[0].json_metadata)
+        self.assertIsNotNone(catalog.get_matching_content(
+            [combined_course_content_key],
+            include_restricted=True
+        )[0].json_metadata)
+        self.assertIsNotNone(catalog.get_matching_content(
+            [fully_restricted_course_content_key],
+            include_restricted=False
+        )[0].json_metadata)
+        self.assertIsNone(catalog.get_matching_content(
+            [fully_restricted_course_content_key],
+            include_restricted=True
+        )[0].json_metadata)
+
+        self.assertEqual(
+            len(catalog.get_matching_content([fully_restricted_course_run_1_content_key], include_restricted=False)),
+            0
+        )
+        self.assertEqual(
+            len(catalog.get_matching_content([fully_restricted_course_run_1_content_key], include_restricted=True)),
+            1
+        )
