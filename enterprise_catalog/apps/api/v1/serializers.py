@@ -31,6 +31,7 @@ from enterprise_catalog.apps.curation.models import (
     HighlightedContent,
     HighlightSet,
 )
+from enterprise_catalog.apps.jobs.models import Job
 from enterprise_catalog.apps.video_catalog.models import Video, VideoSkill
 
 
@@ -510,3 +511,17 @@ class VideoSerializer(serializers.ModelSerializer):
             'json_metadata', 'summary_transcripts', 'parent_content_metadata', 'skills',
         ]
         lookup_field = 'edx_video_id'
+
+
+class JobSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the `Job` model.
+    """
+
+    class Meta:
+        model = Job
+        fields = [
+            "job_id",
+            "external_id",
+            "title"
+        ]

@@ -13,6 +13,7 @@ class JobFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Job
 
+    job_id = FuzzyInteger(0, 100)
     title = FuzzyText(length=32)
     description = FuzzyText(length=255)
 
@@ -25,6 +26,7 @@ class JobEnterpriseFactory(factory.django.DjangoModelFactory):
         model = JobEnterprise
 
     enterprise_uuid = factory.LazyFunction(uuid4)
+    job = factory.SubFactory(JobFactory)
 
 
 class JobSkillFactory(factory.django.DjangoModelFactory):
