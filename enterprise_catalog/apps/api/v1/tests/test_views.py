@@ -958,6 +958,7 @@ class EnterpriseCatalogWorkbookViewTests(APITestMixin):
                     "weeks_to_complete": 6,
                     "upgrade_deadline": 32503680000.0,
                     "enroll_by": 32503680000.0,
+                    "content_price": 2843.00
                 },
                 "course_runs": [
 
