@@ -246,4 +246,3 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         assert not catalog.get_matching_content(['unicorn_course'], include_restricted=True)[0].json_metadata
         assert len(catalog.get_matching_content(['course_unicorn_run1'], include_restricted=False)) == 0
         assert len(catalog.get_matching_content(['course_unicorn_run1'], include_restricted=True)) == 1
-
