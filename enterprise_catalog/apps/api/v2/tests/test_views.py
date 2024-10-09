@@ -37,13 +37,14 @@ from enterprise_catalog.apps.catalog.models import (
     CatalogQuery,
     ContentMetadata,
     EnterpriseCatalog,
-    RestrictedCourseMetadata
+    RestrictedCourseMetadata,
 )
 from enterprise_catalog.apps.catalog.tests.factories import (
     CatalogQueryFactory,
     ContentMetadataFactory,
     EnterpriseCatalogFactory,
-    RestrictedCourseMetadataFactory
+    RestrictedCourseMetadataFactory,
+    RestrictedRunAllowedForRestrictedCourseFactory
 )
 from enterprise_catalog.apps.catalog.utils import (
     enterprise_proxy_login_url,
@@ -234,13 +235,9 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
             content_type=COURSE_RUN,
         )
         # TODO: create restricted course for mixed course
-        fully_restricted_course = ContentMetadataFactory(
-            content_key=fully_restricted_course_content_key,
-            content_type=COURSE
-        )
-        fully_restricted_course_run_1 = RestrictedCourseMetadataFactory(
-            content_key=fully_restricted_course_run_1_content_key,
-            content_type=COURSE_RUN,
+        fully_restricted_course = RestrictedCourseMetadataFactory(content_key=fully_restricted_course_content_key)
+        fully_restricted_course_run_1 = RestrictedRunAllowedForRestrictedCourseFactory(
+            content_key=fully_restricted_course_run_1_content_key
         )
         for course_entity in [
             combined_course,
