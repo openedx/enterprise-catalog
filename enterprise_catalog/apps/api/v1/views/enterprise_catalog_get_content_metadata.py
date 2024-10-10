@@ -1,3 +1,4 @@
+from asyncio.log import logger
 from collections import OrderedDict
 
 from django.shortcuts import get_object_or_404
@@ -13,6 +14,7 @@ from enterprise_catalog.apps.api.v1.pagination import (
     PageNumberWithSizePagination,
 )
 from enterprise_catalog.apps.api.v1.serializers import ContentMetadataSerializer
+from enterprise_catalog.apps.api.v1.utils import is_any_course_run_active
 from enterprise_catalog.apps.api.v1.views.base import BaseViewSet
 from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
 
@@ -95,6 +97,24 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
 
         return self.get_content_metadata(request, traverse_pagination, content_keys_filter)
 
+    def is_active(self, item):
+        """
+        Determines if a content item is active.
+        Args:
+            item (ContentMetadata): The content metadata item to check.
+        Returns:
+            bool: True if the item is active, False otherwise.
+                For courses, checks if any course run is active.
+                For other content types, always returns True.
+        """
+        if item.content_type == 'course':
+            active = is_any_course_run_active(
+                item.json_metadata.get('course_runs', []))
+            if not active:
+                logger.debug(f'[get_content_metadata]: Content item {item.content_key} is not active.')
+            return active
+        return True
+
     @action(detail=True)
     def get_content_metadata(self, request, traverse_pagination, content_keys_filter):
         """
@@ -106,6 +126,9 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
         provided content keys being returned.
         """
         queryset = self.filter_queryset(self.get_queryset(content_keys_filter=content_keys_filter))
+        logger.debug(f'[get_content_metadata]: Original queryset length: {len(queryset)}, {self.enterprise_catalog}')
+        queryset = [item for item in queryset if self.is_active(item)]
+        logger.debug(f'[get_content_metadata]: Filtered queryset length: {len(queryset)}, {self.enterprise_catalog}')
         context = self.get_serializer_context()
         context['enterprise_catalog'] = self.enterprise_catalog
         page = self.paginate_queryset(queryset)

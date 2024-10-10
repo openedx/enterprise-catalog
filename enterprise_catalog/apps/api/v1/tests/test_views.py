@@ -1518,6 +1518,98 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         False,
         True
     )
+    def test_get_content_metadata_non_active_courses(self, learner_portal_enabled, mock_api_client):
+        """
+        Verify the get_content_metadata endpoint returns only active courses associated with a particular catalog
+        """
+        mock_api_client.return_value.get_enterprise_customer.return_value = {
+            'slug': self.enterprise_slug,
+            'enable_learner_portal': learner_portal_enabled,
+            'modified': str(datetime.now().replace(tzinfo=pytz.UTC)),
+        }
+        # Create enough metadata to force pagination
+        inactive_course = ContentMetadataFactory.create(content_type=COURSE)
+        active_course = ContentMetadataFactory.create(content_type=COURSE)
+        program = ContentMetadataFactory.create(content_type=PROGRAM)
+        pathway = ContentMetadataFactory.create(content_type=LEARNER_PATHWAY)
+        # important to actually link the course runs to the parent course
+        course_runs = ContentMetadataFactory.create_batch(
+            api_settings.PAGE_SIZE,
+            content_type=COURSE_RUN,
+            parent_content_key=active_course.content_key,
+        )
+        inactive_course_runs = ContentMetadataFactory.create_batch(
+            api_settings.PAGE_SIZE,
+            content_type=COURSE_RUN,
+            parent_content_key=inactive_course.content_key,
+        )
+        for run in inactive_course_runs:
+            # Setting both 'is_enrollable' or 'is_marketable' to False will mark the course as inactive
+            run.json_metadata['is_enrollable'] = False
+            run.json_metadata['is_marketable'] = False
+            run.save()
+
+        inactive_course.json_metadata['course_runs'] = [
+            run.json_metadata for run in inactive_course_runs]
+        inactive_course.save()
+        active_course.json_metadata['course_runs'] = [
+            run.json_metadata for run in course_runs]
+        active_course.save()
+
+        metadata = course_runs + [inactive_course,
+                                  active_course, program, pathway]
+        self.add_metadata_to_catalog(self.enterprise_catalog, metadata)
+        url = self._get_content_metadata_url(self.enterprise_catalog)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_data = response.json()
+        # excluded expire course (API won't return it)
+        self.assertEqual((response_data['count']), len(metadata) - 1)
+        self.assertEqual(
+            uuid.UUID(response_data['uuid']), self.enterprise_catalog.uuid)
+        self.assertEqual(response_data['title'], self.enterprise_catalog.title)
+        self.assertEqual(uuid.UUID(
+            response_data['enterprise_customer']), self.enterprise_catalog.enterprise_uuid)
+
+        second_page_response = self.client.get(response_data['next'])
+        self.assertEqual(second_page_response.status_code, status.HTTP_200_OK)
+        second_response_data = second_page_response.json()
+        self.assertIsNone(second_response_data['next'])
+
+        # Check that the union of both pages' data is equal to the whole set of metadata
+        expected_metadata = sorted(
+            [
+                self._get_expected_json_metadata(item, learner_portal_enabled)
+                # since the course is expired, we won't get it back from get_content_metadata endpoint
+                for item in metadata if item != inactive_course
+            ],
+            key=get_content_key,
+        )
+        actual_metadata = sorted(
+            response_data['results'] + second_response_data['results'],
+            key=get_content_key,
+        )
+        self.assertEqual(
+            json.dumps(actual_metadata, sort_keys=True),
+            json.dumps(expected_metadata, sort_keys=True),
+        )
+        # Iterate through response_data results and verify active status for courses
+        for item in response_data['results']:
+            if item['content_type'] == 'course':
+                self.assertTrue(
+                    item['active'], f"Course {item['key']} should be active")
+
+        # Do the same for the second page
+        for item in second_response_data['results']:
+            if item['content_type'] == 'course':
+                self.assertTrue(
+                    item['active'], f"Course {item['key']} should be active")
+
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
+    @ddt.data(
+        False,
+        True
+    )
     def test_get_content_metadata_traverse_pagination(self, learner_portal_enabled, mock_api_client):
         """
         Verify the get_content_metadata endpoint returns all metadata on one page if the traverse pagination query
