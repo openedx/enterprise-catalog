@@ -29,9 +29,7 @@ class ContentMetadataSerializerTests(TestCase):
         Test that the content metadata serializer will transform product source data within the json metadata field
         from a string to a dict.
         """
-        json_metadata = self.content_metadata_item.json_metadata
-        json_metadata['product_source'] = '2u'
-        self.content_metadata_item.json_metadata = json_metadata
+        self.content_metadata_item._json_metadata.update({'product_source': '2u'})  # pylint: disable=protected-access
         self.content_metadata_item.save()
         serialized_data = ContentMetadataSerializer(self.content_metadata_item)
         assert serialized_data.data.get('product_source') == {

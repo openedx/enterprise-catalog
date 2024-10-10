@@ -223,7 +223,7 @@ class FetchMissingCourseMetadataTaskTests(TestCase):
         """
         test_course = 'course:edX+testX'
         course_content_metadata = ContentMetadataFactory.create(content_type=COURSE)
-        ContentMetadataFactory.create(content_type=PROGRAM, json_metadata={
+        ContentMetadataFactory.create(content_type=PROGRAM, _json_metadata={
             'courses': [
                 course_content_metadata.json_metadata,
                 {
@@ -489,7 +489,7 @@ class UpdateFullContentMetadataTaskTests(TestCase):
         # the normalized metadata serializer.
         metadata_4 = ContentMetadataFactory(content_type=COURSE, content_key=course_key_4)
         metadata_4.catalog_queries.set([self.catalog_query])
-        metadata_4.json_metadata['advertised_course_run_uuid'] = None
+        metadata_4._json_metadata['advertised_course_run_uuid'] = None  # pylint: disable=protected-access
         metadata_4.save()
         non_course_metadata = ContentMetadataFactory(content_type=COURSE_RUN, content_key=non_course_key)
         non_course_metadata.catalog_queries.set([self.catalog_query])
@@ -714,7 +714,7 @@ class UpdateFullContentMetadataTaskTests(TestCase):
 
         # Simulate a pre-existing ContentMetadata object freshly seeded using the response from /api/v1/search/all/
         course_metadata = ContentMetadataFactory.create(
-            content_type=COURSE, content_key=course_key, json_metadata={
+            content_type=COURSE, content_key=course_key, _json_metadata={
                 'aggregation_key': 'course:edX+testX',
                 'key': 'edX+testX',
                 'course_type': EXEC_ED_2U_COURSE_TYPE,
@@ -801,7 +801,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         self.course_metadata_published.catalog_queries.set([self.enterprise_catalog_query])
         self.course_metadata_published.tags.set([self.tag1])
         self.course_metadata_unpublished = ContentMetadataFactory(content_type=COURSE, content_key='course-2')
-        self.course_metadata_unpublished.json_metadata.get('course_runs')[0].update({
+        # pylint: disable=protected-access
+        self.course_metadata_unpublished._json_metadata.get('course_runs')[0].update({
             'status': 'unpublished',
         })
         self.course_metadata_unpublished.catalog_queries.set([self.enterprise_catalog_query])
@@ -821,7 +822,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             content_type=COURSE_RUN,
             parent_content_key='course-2',
         )
-        self.course_run_metadata_unpublished.json_metadata.update({
+        self.course_run_metadata_unpublished._json_metadata.update({
             'status': 'unpublished',
         })
         self.course_run_metadata_unpublished.catalog_queries.set([course_run_catalog_query])
@@ -874,7 +875,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         short_description_string = "ayylmao".join(["" for x in range(50000)])
         full_description_string = "foobar".join(["" for x in range(50000)])
         too_big_sized_course = ContentMetadataFactory(content_type=COURSE, content_key='test-course-2')
-        too_big_sized_course.json_metadata.update(
+        too_big_sized_course._json_metadata.update(  # pylint: disable=protected-access
             {"short_description": short_description_string, "full_description": full_description_string}
         )
         too_big_sized_course.save()
@@ -1216,7 +1217,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         program_2 = ContentMetadataFactory(content_type=PROGRAM, content_key='program-2')
 
         # Make program-2 hidden to make it "non-indexable". Later we will assert that it will not get indexed.
-        program_2.json_metadata.update({
+        program_2._json_metadata.update({  # pylint: disable=protected-access
             'hidden': True,
         })
         program_2.save()
@@ -1324,7 +1325,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         program_2.catalog_queries.set([self.enterprise_catalog_query])
 
         # Make program-2 hidden to make it "non-indexable". Later we will assert that it will not get indexed.
-        program_2.json_metadata.update({
+        program_2._json_metadata.update({  # pylint: disable=protected-access
             'hidden': True,
         })
         program_2.save()
@@ -1635,7 +1636,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         program_1.catalog_queries.set([self.enterprise_catalog_query])
 
         # Make program-2 hidden to make it "non-indexable". Later we will assert that it will not get indexed.
-        program_2.json_metadata.update({
+        program_2._json_metadata.update({  # pylint: disable=protected-access
             'hidden': True,
         })
         program_2.save()
@@ -1772,7 +1773,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         program_for_main_course = ContentMetadataFactory(content_type=PROGRAM, content_key='program-1')
         # Make the program hidden to make it "non-indexable", but ensure that it still gets indexed due to being related
         # to an indexable course.
-        program_for_main_course.json_metadata.update({
+        program_for_main_course._json_metadata.update({  # pylint: disable=protected-access
             'hidden': True,
         })
         program_for_main_course.save()
@@ -1780,7 +1781,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         program_for_pathway.catalog_queries.set([self.enterprise_catalog_query])
         # Make the program hidden to make it "non-indexable", but ensure that it still gets indexed due to being related
         # to an indexable pathway.
-        program_for_pathway.json_metadata.update({
+        program_for_pathway._json_metadata.update({  # pylint: disable=protected-access
             'hidden': True,
         })
         program_for_pathway.save()
