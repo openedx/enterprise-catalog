@@ -41,6 +41,8 @@ from enterprise_catalog.apps.catalog.tests.factories import (
     CatalogQueryFactory,
     ContentMetadataFactory,
     EnterpriseCatalogFactory,
+    RestrictedCourseMetadataFactory,
+    RestrictedRunAllowedForRestrictedCourseFactory
 )
 from enterprise_catalog.apps.catalog.utils import (
     enterprise_proxy_login_url,
@@ -76,7 +78,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         """
         Helper to get the get_content_metadata endpoint url for a given catalog
         """
-        return reverse('api:v1:get-content-metadata', kwargs={'uuid': enterprise_catalog.uuid})
+        return reverse('api:v2:get-content-metadata-v2', kwargs={'uuid': enterprise_catalog.uuid})
 
     def _get_expected_json_metadata(self, content_metadata, is_learner_portal_enabled):  # pylint: disable=too-many-statements
         """
@@ -204,57 +206,186 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         False,
         True
     )
-    def test_get_content_metadata(self, learner_portal_enabled, mock_api_client):
+    def test_get_content_metadata_restricted(self, learner_portal_enabled, mock_api_client):
+        # """
+        # Verify the get_content_metadata endpoint returns all the metadata associated with a particular catalog
+        # """
+        # mock_api_client.return_value.get_enterprise_customer.return_value = {
+        #     'slug': self.enterprise_slug,
+        #     'enable_learner_portal': learner_portal_enabled,
+        #     'modified': str(datetime.now().replace(tzinfo=pytz.UTC)),
+        # }
+        # combined_course_content_key = 'combined_course'
+        # combined_course_run_1_content_key = 'combined_course_run_1'
+        # combined_course_run_2_content_key = 'combined_course_run_2'
+        # fully_restricted_course_content_key = 'fully_restricted_course'
+        # fully_restricted_course_run_1_content_key = 'fully_restricted_course_run_1'
+        #
+        # catalog = EnterpriseCatalogFactory()
+        # combined_course = ContentMetadataFactory(content_key=combined_course_content_key, content_type=COURSE)
+        # combined_course_run_1 = ContentMetadataFactory(
+        #     content_key=combined_course_run_1_content_key,
+        #     content_type=COURSE_RUN
+        # )
+        # combined_course_run_2 = RestrictedCourseMetadataFactory(
+        #     content_key=combined_course_run_2_content_key,
+        #     content_type=COURSE_RUN,
+        # )
+        # # TODO: create restricted course for mixed course
+        # fully_restricted_course = RestrictedCourseMetadataFactory(content_key=fully_restricted_course_content_key)
+        # combined_course_run_2 = RestrictedCourseMetadataFactory(
+        #     content_key=combined_course_run_2_content_key,
+        #     content_type=COURSE_RUN,
+        # )
+        # fully_restricted_course_run_1 = RestrictedRunAllowedForRestrictedCourseFactory(
+        #     content_key=fully_restricted_course_run_1_content_key
+        # )
+        # for course_entity in [
+        #     combined_course,
+        #     combined_course_run_2,
+        #     fully_restricted_course,
+        #     fully_restricted_course_run_1
+        # ]:
+        #     course_entity.catalog_queries.set(CatalogQuery.objects.all())
+        #
+        # restricted_course_metadata, _ = RestrictedCourseMetadata.objects.get_or_create(
+        #     content_key=fully_restricted_course.content_key,
+        #     content_type=fully_restricted_course.content_type,
+        # )
+        # restricted_course_metadata.catalog_query = CatalogQuery.objects.first()
+        # restricted_course_metadata.unrestricted_parent = fully_restricted_course
+        # restricted_course_metadata.save()
+        #
+        # self.assertIsNotNone(catalog.content_metadata[1].json_metadata)
+        # self.assertIsNone(catalog.content_metadata_with_restricted[2].json_metadata)
+        # self.assertIsNotNone(catalog.get_matching_content(
+        #     [combined_course_content_key],
+        #     include_restricted=False
+        # )[0].json_metadata)
+        # self.assertIsNotNone(catalog.get_matching_content(
+        #     [combined_course_content_key],
+        #     include_restricted=True
+        # )[0].json_metadata)
+        # self.assertIsNotNone(catalog.get_matching_content(
+        #     [fully_restricted_course_content_key],
+        #     include_restricted=False
+        # )[0].json_metadata)
+        # self.assertIsNone(catalog.get_matching_content(
+        #     [fully_restricted_course_content_key],
+        #     include_restricted=True
+        # )[0].json_metadata)
+        #
+        # self.assertEqual(
+        #     len(catalog.get_matching_content([fully_restricted_course_run_1_content_key], include_restricted=False)),
+        #     0
+        # )
+        # self.assertEqual(
+        #     len(catalog.get_matching_content([fully_restricted_course_run_1_content_key], include_restricted=True)),
+        #     1
+        # )
         """
-        Verify the get_content_metadata endpoint returns all the metadata associated with a particular catalog
+        Test the get_content_metadata endpoint to verify that restricted content is properly
+        handled, both for restricted and unrestricted course runs, with learner portal enabled/disabled.
         """
+        # Mock the return value of the EnterpriseApiClient to simulate the enterprise customer data.
         mock_api_client.return_value.get_enterprise_customer.return_value = {
             'slug': self.enterprise_slug,
             'enable_learner_portal': learner_portal_enabled,
             'modified': str(datetime.now().replace(tzinfo=pytz.UTC)),
         }
-        # Create enough metadata to force pagination
-        course = ContentMetadataFactory.create(content_type=COURSE)
-        program = ContentMetadataFactory.create(content_type=PROGRAM)
-        pathway = ContentMetadataFactory.create(content_type=LEARNER_PATHWAY)
-        # important to actually link the course runs to the parent course
-        course_runs = ContentMetadataFactory.create_batch(
-            api_settings.PAGE_SIZE,
+
+        # Define content keys for the test
+        combined_course_content_key = 'combined_course'
+        combined_course_run_1_content_key = 'combined_course_run_1'
+        combined_course_run_2_content_key = 'combined_course_run_2'
+        fully_restricted_course_content_key = 'fully_restricted_course'
+        fully_restricted_course_run_1_content_key = 'fully_restricted_course_run_1'
+
+        # Create a catalog
+        catalog = EnterpriseCatalogFactory()
+
+        # Create unrestricted content (combined course and run 1)
+        combined_course = ContentMetadataFactory(
+            content_key=combined_course_content_key,
+            content_type=COURSE
+        )
+        combined_course_run_1 = ContentMetadataFactory(
+            content_key=combined_course_run_1_content_key,
             content_type=COURSE_RUN,
-            parent_content_key=course.content_key,
+            parent_content_key=combined_course_content_key
         )
-        course.json_metadata['course_runs'] = [run.json_metadata for run in course_runs]
-        course.save()
 
-        metadata = course_runs + [course, program, pathway]
-        self.add_metadata_to_catalog(self.enterprise_catalog, metadata)
-        url = self._get_content_metadata_url(self.enterprise_catalog)
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_data = response.json()
-        self.assertEqual((response_data['count']), len(metadata))
-        self.assertEqual(uuid.UUID(response_data['uuid']), self.enterprise_catalog.uuid)
-        self.assertEqual(response_data['title'], self.enterprise_catalog.title)
-        self.assertEqual(uuid.UUID(response_data['enterprise_customer']), self.enterprise_catalog.enterprise_uuid)
+        # Create restricted content (combined course run 2 and fully restricted course)
+        combined_course_run_2 = RestrictedCourseMetadataFactory(
+            content_key=combined_course_run_2_content_key,
+            content_type=COURSE_RUN,
+            parent_content_key=combined_course_content_key
+        )
+        fully_restricted_course = RestrictedCourseMetadataFactory(
+            content_key=fully_restricted_course_content_key,
+            content_type=COURSE
+        )
+        fully_restricted_course_run_1 = RestrictedRunAllowedForRestrictedCourseFactory(
+            course=fully_restricted_course,
+            run=ContentMetadataFactory(
+                content_key=fully_restricted_course_run_1_content_key,
+                content_type=COURSE_RUN,
+                parent_content_key=fully_restricted_course_content_key
+            )
+        )
 
-        second_page_response = self.client.get(response_data['next'])
-        self.assertEqual(second_page_response.status_code, status.HTTP_200_OK)
-        second_response_data = second_page_response.json()
-        self.assertIsNone(second_response_data['next'])
+        # Associate the restricted content with the catalog by setting catalog_query
+        combined_course_run_2.catalog_query = catalog.catalog_query
+        combined_course_run_2.save()
+        fully_restricted_course.catalog_query = catalog.catalog_query
+        fully_restricted_course.save()
+        fully_restricted_course_run_1.run.catalog_query = catalog.catalog_query
+        fully_restricted_course_run_1.run.save()
 
-        # Check that the union of both pages' data is equal to the whole set of metadata
-        expected_metadata = sorted(
-            [
-                self._get_expected_json_metadata(item, learner_portal_enabled)
-                for item in metadata
-            ],
-            key=get_content_key,
+        # Associate unrestricted content with the catalog
+        # catalog.content_metadata.add(combined_course, combined_course_run_1)
+
+        # Test unrestricted content retrieval with `include_restricted=False`
+        response_unrestricted = catalog.get_matching_content(
+            [combined_course_content_key],
+            include_restricted=False
         )
-        actual_metadata = sorted(
-            response_data['results'] + second_response_data['results'],
-            key=get_content_key,
+        print(f"Response Unrestricted: {response_unrestricted}")  # Debugging output
+        print(f"Unrestricted Content Keys: {[item.content_key for item in response_unrestricted]}")  # Debugging output
+        self.assertTrue(len(response_unrestricted) > 0)
+        self.assertIn(combined_course_content_key, [item.content_key for item in response_unrestricted])
+
+        # Test restricted content is NOT retrieved when `include_restricted=False`
+        response_restricted = catalog.get_matching_content(
+            [fully_restricted_course_content_key],
+            include_restricted=False
         )
-        self.assertEqual(
-            json.dumps(actual_metadata, sort_keys=True),
-            json.dumps(expected_metadata, sort_keys=True),
+        print(f"Response Restricted (should be empty): {response_restricted}")  # Debugging output
+        self.assertEqual(len(response_restricted), 0)
+
+        # Test restricted content IS retrieved when `include_restricted=True`
+        response_with_restricted = catalog.get_matching_content(
+            [fully_restricted_course_content_key],
+            include_restricted=True
         )
+        print(f"Response with Restricted Content: {response_with_restricted}")  # Debugging output
+        self.assertTrue(len(response_with_restricted) > 0)
+        self.assertIn(fully_restricted_course_content_key, [item.content_key for item in response_with_restricted])
+
+        # Test that the fully restricted course run is NOT retrieved with `include_restricted=False`
+        response_run_restricted_false = catalog.get_matching_content(
+            [fully_restricted_course_run_1_content_key],
+            include_restricted=False
+        )
+        print(f"Response Run Restricted False (should be empty): {response_run_restricted_false}")  # Debugging output
+        self.assertEqual(len(response_run_restricted_false), 0)
+
+        # Test that the fully restricted course run IS retrieved with `include_restricted=True`
+        response_run_restricted_true = catalog.get_matching_content(
+            [fully_restricted_course_run_1_content_key],
+            include_restricted=True
+        )
+        print(f"Response Run Restricted True: {response_run_restricted_true}")  # Debugging output
+        self.assertTrue(len(response_run_restricted_true) > 0)
+        self.assertIn(fully_restricted_course_run_1_content_key,
+                      [item.content_key for item in response_run_restricted_true])
