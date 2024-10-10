@@ -18,6 +18,8 @@ from enterprise_catalog.apps.catalog.models import (
     EnterpriseCatalog,
     EnterpriseCatalogFeatureRole,
     EnterpriseCatalogRoleAssignment,
+    RestrictedCourseMetadata,
+    RestrictedRunAllowedForRestrictedCourse,
 )
 from enterprise_catalog.apps.core.models import User
 
@@ -80,7 +82,7 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
     parent_content_key = None
 
     @factory.lazy_attribute
-    def json_metadata(self):
+    def _json_metadata(self):
         json_metadata = {
             'key': self.content_key,
             'aggregation_key': f'{self.content_type}:{self.content_key}',
@@ -185,6 +187,31 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
                 },
             })
         return json_metadata
+
+
+class RestrictedCourseMetadataFactory(factory.django.DjangoModelFactory):
+    """
+    Test factory for the `RestrictedCourseMetadata` model.
+    """
+    class Meta:
+        model = RestrictedCourseMetadata
+
+    content_key = factory.Faker('bothify', text='??????????+####')
+    content_uuid = factory.LazyFunction(uuid4)
+    content_type = COURSE
+    parent_content_key = None
+    _json_metadata = {}  # Callers are encouraged to set this.
+
+
+class RestrictedRunAllowedForRestrictedCourseFactory(factory.django.DjangoModelFactory):
+    """
+    Test factory for the `RestrictedRunAllowedForRestrictedCourse` model.
+    """
+    class Meta:
+        model = RestrictedRunAllowedForRestrictedCourse
+
+    course = factory.SubFactory(RestrictedCourseMetadataFactory)
+    run = factory.SubFactory(ContentMetadataFactory)
 
 
 class UserFactory(factory.django.DjangoModelFactory):

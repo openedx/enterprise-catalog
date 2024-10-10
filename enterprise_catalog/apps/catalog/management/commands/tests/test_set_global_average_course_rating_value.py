@@ -25,13 +25,13 @@ class TestSetGlobalAverageCourseRatingValue(TestCase):
         """
         ContentMetadataFactory(
             content_type='course',
-            json_metadata={'avg_course_rating': 5, 'reviews_count': 20}
+            _json_metadata={'avg_course_rating': 5, 'reviews_count': 20}
         )
         ContentMetadataFactory(
             content_type='course',
-            json_metadata={'avg_course_rating': 4, 'reviews_count': 10}
+            _json_metadata={'avg_course_rating': 4, 'reviews_count': 10}
         )
-        ContentMetadataFactory(json_metadata={})
+        ContentMetadataFactory(_json_metadata={})
         call_command(self.command_name)
         expected_total_average = ((5 * 20) + (4 * 10)) / 30
 

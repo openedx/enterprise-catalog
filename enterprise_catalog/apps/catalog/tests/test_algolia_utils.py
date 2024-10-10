@@ -126,7 +126,7 @@ class AlgoliaUtilsTests(TestCase):
         }
         course_metadata = ContentMetadataFactory.create(
             content_type=COURSE,
-            json_metadata=json_metadata,
+            _json_metadata=json_metadata,
         )
         # pylint: disable=protected-access
         assert utils._should_index_course(course_metadata) is expected_result
@@ -996,7 +996,7 @@ class AlgoliaUtilsTests(TestCase):
         ContentMetadataFactory.create(
             content_key=program_metadata['courses'][0]['key'],
             content_type=COURSE,
-            json_metadata=course_metadata,
+            _json_metadata=course_metadata,
         )
         skill_names = utils.get_program_skill_names(program_metadata)
         self.assertEqual(sorted(skill_names), sorted(expected_skill_names))
@@ -1269,7 +1269,7 @@ class AlgoliaUtilsTests(TestCase):
         ContentMetadataFactory.create(
             content_key=program_metadata['courses'][0]['key'],
             content_type=COURSE,
-            json_metadata=course_metadata,
+            _json_metadata=course_metadata,
         )
         program_subjects = utils.get_program_subjects(program_metadata)
         self.assertEqual(sorted(expected_subjects), sorted(program_subjects))
@@ -1311,7 +1311,7 @@ class AlgoliaUtilsTests(TestCase):
             ContentMetadataFactory.create(
                 content_key=program_metadata['courses'][i]['key'],
                 content_type=COURSE,
-                json_metadata=course_metadata[i],
+                _json_metadata=course_metadata[i],
             )
         program_level_type = utils.get_program_level_type(program_metadata)
         self.assertEqual(expected_level_type, program_level_type)
@@ -1420,12 +1420,12 @@ class AlgoliaUtilsTests(TestCase):
             ContentMetadataFactory.create(
                 content_key=pathway_metadata['steps'][i]['courses'][i]['key'],
                 content_type=COURSE,
-                json_metadata=json_metadata[i],
+                _json_metadata=json_metadata[i],
             )
             ContentMetadataFactory.create(
                 content_key=pathway_metadata['steps'][i]['programs'][i]['uuid'],
                 content_type=PROGRAM,
-                json_metadata=json_metadata[i],
+                _json_metadata=json_metadata[i],
             )
 
         pathway_availability = utils.get_pathway_availability(pathway_metadata)
@@ -1526,12 +1526,12 @@ class AlgoliaUtilsTests(TestCase):
             ContentMetadataFactory.create(
                 content_key=pathway_metadata['steps'][i]['courses'][i]['key'],
                 content_type=COURSE,
-                json_metadata=json_metadata[0],
+                _json_metadata=json_metadata[0],
             )
             ContentMetadataFactory.create(
                 content_key=pathway_metadata['steps'][i]['programs'][i]['uuid'],
                 content_type=PROGRAM,
-                json_metadata=json_metadata[1],
+                _json_metadata=json_metadata[1],
             )
         pathway_partners = utils.get_pathway_partners(pathway_metadata)
         self.assertEqual(expected_partners, pathway_partners)
@@ -1586,12 +1586,12 @@ class AlgoliaUtilsTests(TestCase):
             ContentMetadataFactory.create(
                 content_key=pathway_metadata['steps'][i]['courses'][i]['key'],
                 content_type=COURSE,
-                json_metadata=json_metadata[0],
+                _json_metadata=json_metadata[0],
             )
             ContentMetadataFactory.create(
                 content_key=pathway_metadata['steps'][i]['programs'][i]['uuid'],
                 content_type=PROGRAM,
-                json_metadata=json_metadata[1],
+                _json_metadata=json_metadata[1],
             )
         pathway_subjects = utils.get_pathway_subjects(pathway_metadata)
         self.assertEqual(sorted(expected_subjects), sorted(pathway_subjects))

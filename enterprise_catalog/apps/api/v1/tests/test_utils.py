@@ -69,10 +69,10 @@ class ApiUtilsTests(TestCase):
         """
         Test that archived content will increment the count.
         """
-        content_1 = ContentMetadataFactory.create(json_metadata={'course_run_statuses': ['archived']})
-        content_2 = ContentMetadataFactory.create(json_metadata={'course_run_statuses': ['unpublished', 'archived']})
+        content_1 = ContentMetadataFactory.create(_json_metadata={'course_run_statuses': ['archived']})
+        content_2 = ContentMetadataFactory.create(_json_metadata={'course_run_statuses': ['unpublished', 'archived']})
         # if there's at least one published course run, the content should not be considered archived
-        content_3 = ContentMetadataFactory.create(json_metadata={'course_run_statuses': ['published', 'archived']})
+        content_3 = ContentMetadataFactory.create(_json_metadata={'course_run_statuses': ['published', 'archived']})
 
         highlighted_content_1 = HighlightedContentFactory(content_metadata=content_1)
         highlighted_content_2 = HighlightedContentFactory(content_metadata=content_2)
