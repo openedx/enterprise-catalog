@@ -145,10 +145,14 @@ class NormalizedContentMetadataSerializer(ReadOnlySerializer):
 
     @extend_schema_field(serializers.FloatField)
     def get_content_price(self, obj) -> float:  # pylint: disable=unused-argument
-        if self.is_exec_ed_2u_course is True:
-            for entitlement in self.course_metadata.get('entitlements', []):
-                if entitlement.get('mode') == CourseMode.PAID_EXECUTIVE_EDUCATION:
-                    return entitlement.get('price') or DEFAULT_NORMALIZED_PRICE
         if not self.course_run_metadata:
             return None
-        return self.course_run_metadata.get('first_enrollable_paid_seat_price') or DEFAULT_NORMALIZED_PRICE
+        if self.course_run_metadata.get('fixed_price_usd'):
+            return float(self.course_run_metadata.get('fixed_price_usd'))
+        if self.is_exec_ed_2u_course is True:
+            for entitlement in self.course_metadata.get('entitlements', []):
+                if entitlement.get('price') and entitlement.get('mode') == CourseMode.PAID_EXECUTIVE_EDUCATION:
+                    return float(entitlement.get('price'))
+        if self.course_run_metadata.get('first_enrollable_paid_seat_price'):
+            return float(self.course_run_metadata.get('first_enrollable_paid_seat_price'))
+        return DEFAULT_NORMALIZED_PRICE

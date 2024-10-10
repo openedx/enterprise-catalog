@@ -20,6 +20,7 @@ from enterprise_catalog.apps.catalog.constants import (
     COURSE,
     COURSE_RUN,
     EXEC_ED_2U_COURSE_TYPE,
+    FORCE_INCLUSION_METADATA_TAG_KEY,
     LEARNER_PATHWAY,
     PROGRAM,
 )
@@ -2197,7 +2198,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # Mock data
         content_keys = ['course1', 'course2']
         full_course_dicts = [
-            {'key': 'course1', 'title': 'Course 1'},
+            {'key': 'course1', 'title': 'Course 1', FORCE_INCLUSION_METADATA_TAG_KEY: True},
             {'key': 'course2', 'title': 'Course 2'}
         ]
         reviews_for_courses_dict = {

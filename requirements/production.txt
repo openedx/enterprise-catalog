@@ -174,7 +174,7 @@ djangorestframework==3.15.2
     #   edx-drf-extensions
 djangorestframework-xml==2.0.0
     # via -r requirements/base.txt
-dnspython==2.6.1
+dnspython==2.7.0
     # via
     #   -r requirements/base.txt
     #   pymongo
@@ -190,7 +190,7 @@ edx-celeryutils==1.3.0
     # via -r requirements/base.txt
 edx-django-release-util==1.4.0
     # via -r requirements/base.txt
-edx-django-utils==5.15.0
+edx-django-utils==5.16.0
     # via
     #   -r requirements/base.txt
     #   django-config-models
@@ -221,7 +221,7 @@ h11==0.14.0
     # via
     #   -r requirements/base.txt
     #   httpcore
-httpcore==1.0.5
+httpcore==1.0.6
     # via
     #   -r requirements/base.txt
     #   httpx
@@ -275,11 +275,11 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.4
     # via -r requirements/base.txt
-newrelic==9.13.0
+newrelic==10.0.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
-numpy==2.1.1
+numpy==2.1.2
     # via
     #   -r requirements/base.txt
     #   scikit-learn
@@ -301,7 +301,7 @@ ply==3.11
     # via
     #   -r requirements/base.txt
     #   djangoql
-prompt-toolkit==3.0.47
+prompt-toolkit==3.0.48
     # via
     #   -r requirements/base.txt
     #   click-repl
@@ -331,7 +331,7 @@ pyjwt[crypto]==2.9.0
     #   social-auth-core
 pymemcache==4.0.0
     # via -r requirements/base.txt
-pymongo==4.9.1
+pymongo==4.10.1
     # via
     #   -r requirements/base.txt
     #   edx-opaque-keys
@@ -458,7 +458,7 @@ typing-extensions==4.12.2
     #   openai
     #   pydantic
     #   pydantic-core
-tzdata==2024.1
+tzdata==2024.2
     # via
     #   -r requirements/base.txt
     #   celery

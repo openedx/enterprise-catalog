@@ -128,7 +128,7 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
         queryset = self.filter_queryset(self.get_queryset(content_keys_filter=content_keys_filter))
         logger.debug(f'[get_content_metadata]: Original queryset length: {len(queryset)}, {self.enterprise_catalog}')
         queryset = [item for item in queryset if self.is_active(item)]
-        logger.debug(f'[get_content_metadata]: Filtered queryset length: {len(queryset)}, {self.enterprise_catalog}') 
+        logger.debug(f'[get_content_metadata]: Filtered queryset length: {len(queryset)}, {self.enterprise_catalog}')
         context = self.get_serializer_context()
         context['enterprise_catalog'] = self.enterprise_catalog
         page = self.paginate_queryset(queryset)

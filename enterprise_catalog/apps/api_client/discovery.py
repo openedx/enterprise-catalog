@@ -21,6 +21,7 @@ from .base_oauth import BaseOAuthClient
 from .constants import (
     DISCOVERY_COURSE_REVIEWS_ENDPOINT,
     DISCOVERY_COURSES_ENDPOINT,
+    DISCOVERY_JOBS_SKILLS_ENDPOINT,
     DISCOVERY_OFFSET_SIZE,
     DISCOVERY_PROGRAMS_ENDPOINT,
     DISCOVERY_SEARCH_ALL_ENDPOINT,
@@ -49,13 +50,14 @@ class DiscoveryApiClient(BaseOAuthClient):
         """
         return (self.BACKOFF_FACTOR * (2 ** (attempt_count - 1)))
 
-    def _retrieve_metadata_for_content_filter(self, content_filter, page, request_params):
+    def _retrieve_metadata_page_for_content_filter(self, content_filter, page, request_params):
         """
         Makes a request to discovery's /search/all/ endpoint with the specified
         content_filter, page, and request_params
         """
         LOGGER.info(f'Retrieving results from course-discovery for page {page}...')
         attempts = 0
+        request_params_with_page = request_params | {'page': page}
         while True:
             attempts = attempts + 1
             successful = True
@@ -64,7 +66,7 @@ class DiscoveryApiClient(BaseOAuthClient):
                 response = self.client.post(
                     DISCOVERY_SEARCH_ALL_ENDPOINT,
                     json=content_filter,
-                    params=request_params,
+                    params=request_params_with_page,
                     timeout=self.HTTP_TIMEOUT,
                 )
                 successful = response.status_code < 400
@@ -98,6 +100,41 @@ class DiscoveryApiClient(BaseOAuthClient):
                 f'response body: {response.text}'
             )
             raise err
+
+    def retrieve_metadata_for_content_filter(self, content_filter, request_params):
+        """
+        Given a content filter and query params dict, makes one or more requests to the
+        discovery service to fetch search results based on the filter and concatenates
+        all results into a returned list.
+        """
+        request_params_customized = request_params | {
+            # Increase number of results per page for the course-discovery response
+            'page_size': 100,
+            # Ensure paginated results are consistently ordered by `aggregation_key` and `start`
+            'ordering': 'aggregation_key,start',
+        }
+        page = 1
+        results = []
+        try:
+            response = self._retrieve_metadata_page_for_content_filter(
+                content_filter, page, request_params_customized,
+            )
+            results += response.get('results', [])
+            # Traverse all pages and concatenate results
+            while response.get('next'):
+                page += 1
+                response = self._retrieve_metadata_page_for_content_filter(
+                    content_filter, page, request_params_customized,
+                )
+                results += response.get('results', [])
+        except Exception as exc:
+            LOGGER.exception(
+                'Could not retrieve content items from course-discovery (page %s): %s',
+                page,
+                exc,
+            )
+            raise exc
+        return results
 
     def _retrieve_course_reviews(self, request_params):
         """
@@ -251,7 +288,70 @@ class DiscoveryApiClient(BaseOAuthClient):
 
         return video_skills
 
-    def get_metadata_by_query(self, catalog_query):
+    def _retrieve_jobs_skills(self, request_params):
+        """
+        Makes a request to discovery's taxonomy/api/v1/jobs paginated endpoint
+        """
+        page = request_params.get('page', 1)
+        LOGGER.info(f'Retrieving video skills from course-discovery for page {page}...')
+        attempts = 0
+        while True:
+            attempts = attempts + 1
+            successful = True
+            exception = None
+            try:
+                response = self.client.get(
+                    DISCOVERY_JOBS_SKILLS_ENDPOINT,
+                    params=request_params,
+                    timeout=self.HTTP_TIMEOUT,
+                )
+                successful = response.status_code < 400
+                elapsed_seconds = response.elapsed.total_seconds()
+                LOGGER.info(
+                    f'Retrieved jobs skills results from course-discovery for page {page} in '
+                    f'retrieve_jobs_skills_seconds={elapsed_seconds} seconds.'
+                )
+            except requests.exceptions.RequestException as err:
+                exception = err
+                LOGGER.exception(f'Error while retrieving jobs skills results from course-discovery for page {page}')
+                successful = False
+            if attempts <= self.MAX_RETRIES and not successful:
+                sleep_seconds = self._calculate_backoff(attempts)
+                LOGGER.warning(
+                    f'failed request detected from {DISCOVERY_JOBS_SKILLS_ENDPOINT}, '
+                    'backing-off before retrying, '
+                    f'sleeping {sleep_seconds} seconds...'
+                )
+                time.sleep(sleep_seconds)
+            else:
+                if exception:
+                    raise exception
+                break
+        try:
+            return response.json()
+        except requests.exceptions.JSONDecodeError as err:
+            LOGGER.exception(
+                f'Invalid JSON while retrieving jobs skills results from course-discovery for page {page}, '
+                f'resonse status code: {response.status_code}, '
+                f'response body: {response.text}'
+            )
+            raise err
+
+    def get_jobs_skills(self, page=1):
+        """
+        Return results from the discovery service's taxonomy/api/v1/jobs endpoint
+        """
+        results = []
+        request_params = {'page': page}
+        try:
+            response = self._retrieve_jobs_skills(request_params)
+            results = response.get('results', [])
+            return results, response.get('next')
+        except Exception as exc:
+            LOGGER.exception(f'Could not retrieve jobs and skills from course-discovery (page {page}) {exc}')
+            raise exc
+
+    def get_metadata_by_query(self, catalog_query, extra_query_params=None):
         """
         Return results from the discovery service's search/all endpoint.
 
@@ -264,30 +364,17 @@ class DiscoveryApiClient(BaseOAuthClient):
         request_params = {
             # Omit non-active course runs from the course-discovery results
             'exclude_expired_course_run': True,
-            # Increase number of results per page for the course-discovery response
-            'page_size': 100,
-            # Ensure paginated results are consistently ordered by `aggregation_key` and `start`
-            'ordering': 'aggregation_key,start',
             # Ensure to fetch learner pathways as part of search/all endpoint response.
             'include_learner_pathways': True,
-        }
-
-        page = 1
+        } | (extra_query_params or {})
         results = []
+
         try:
             content_filter = catalog_query.content_filter
-            response = self._retrieve_metadata_for_content_filter(content_filter, page, request_params)
-            results += response.get('results', [])
-            # Traverse all pages and concatenate results
-            while response.get('next'):
-                page += 1
-                request_params.update({'page': page})
-                response = self._retrieve_metadata_for_content_filter(content_filter, page, request_params)
-                results += response.get('results', [])
+            results.extend(self.retrieve_metadata_for_content_filter(content_filter, request_params))
         except Exception as exc:
             LOGGER.exception(
-                'Could not retrieve content items from course-discovery (page %s) for catalog query %s: %s',
-                page,
+                'Could not retrieve content items for catalog query %s: %s',
                 catalog_query,
                 exc,
             )

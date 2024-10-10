@@ -49,6 +49,7 @@ from enterprise_catalog.apps.catalog.utils import (
     get_parent_content_key,
     localized_utcnow,
 )
+from enterprise_catalog.apps.jobs.tests.factories import JobEnterpriseFactory
 from enterprise_catalog.apps.video_catalog.tests.factories import (
     VideoFactory,
     VideoSkillFactory,
@@ -731,6 +732,7 @@ class EnterpriseCatalogCsvDataViewTests(APITestMixin):
             'max_effort': 10,
             'min_effort': 1,
             'weeks_to_complete': 1,
+            'content_price': 100,
         },
         'outcome': '<p>learn</p>',
         'prerequisites_raw': '<p>interest</p>',
@@ -777,8 +779,8 @@ class EnterpriseCatalogCsvDataViewTests(APITestMixin):
     def _get_mock_algolia_hits_with_missing_values(self):
         mock_hits_missing_values = copy.deepcopy(self.mock_algolia_hits)
         mock_hits_missing_values['hits'][0]['advertised_course_run'].pop('upgrade_deadline')
+        mock_hits_missing_values['hits'][0]['advertised_course_run'].pop('content_price')
         mock_hits_missing_values['hits'][0].pop('marketing_url')
-        mock_hits_missing_values['hits'][0].pop('first_enrollable_paid_seat_price')
         mock_hits_missing_values['hits'][0]['advertised_course_run']['end'] = None
         return mock_hits_missing_values
 
@@ -2397,3 +2399,44 @@ class VideoReadOnlyViewSetTests(APITestMixin):
         self.assertEqual(response.data['summary_transcripts'][0], self.video_transcript_summary.summary)
         parent_key = response.data['parent_content_metadata'].get('key')
         self.assertEqual(parent_key, self.video.parent_content_metadata.content_key)
+
+
+@ddt.ddt
+class EnterpriseJobReadOnlyViewSetTests(APITestMixin):
+    """
+    Tests for the EnterpriseJobReadOnlyViewSet.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.set_up_catalog_learner()
+        self.enterprise = JobEnterpriseFactory()
+
+        self.job = self.enterprise.job
+        self.enterprise_uuid = str(self.enterprise.enterprise_uuid)
+
+    def test_retrieve_enterprise_jobs(self):
+        """
+        Verify the viewset retrieves the correct jobs for the given enterprise.
+        """
+        url = reverse('api:v1:enterprise-jobs', kwargs={
+            'enterprise_uuid': self.enterprise_uuid,
+        })
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['results'][0]['title'], self.job.title)
+        self.assertEqual(response.data['results'][0]['job_id'], self.job.job_id)
+
+    def test_retrieve_nonexistent_enterprise(self):
+        """
+        Verify the viewset returns 404 for a nonexistent enterprise.
+        """
+        url = reverse('api:v1:enterprise-jobs', kwargs={
+            'enterprise_uuid': '25c4e096-82d7-4002-946c-1ea87c6af920',
+        })
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.data['results'], [])
