@@ -166,6 +166,14 @@ class CatalogQuery(TimeStampedModel):
             f"and content_filter '{self.pretty_print_content_filter()}'>"
         )
 
+    def short_str_for_listings(self):
+        """
+        Return *short* human-readable string representation for listings.
+        """
+        return (
+            f"<CatalogQuery: ({self.id}) with UUID '{self.uuid}'>"
+        )
+
 
 class EnterpriseCatalog(TimeStampedModel):
     """
@@ -715,11 +723,7 @@ class BaseContentMetadata(TimeStampedModel):
         """
         Return human-readable string representation.
         """
-        return (
-            "<ContentMetadata for '{content_key}'>".format(
-                content_key=self.content_key
-            )
-        )
+        return f"<{self.__class__.__name__} for '{self.content_key}'>"
 
 
 class ContentMetadata(BaseContentMetadata):
@@ -775,8 +779,8 @@ class RestrictedCourseMetadata(BaseContentMetadata):
     .. no_pii:
     """
     class Meta:
-        verbose_name = _("Restricted Content Metadata")
-        verbose_name_plural = _("Restricted Content Metadata")
+        verbose_name = _("Restricted Course Metadata")
+        verbose_name_plural = _("Restricted Course Metadata")
         app_label = 'catalog'
         unique_together = ('content_key', 'catalog_query')
 
@@ -809,6 +813,12 @@ class RestrictedCourseMetadata(BaseContentMetadata):
         on_delete=models.deletion.SET_NULL,
     )
     history = HistoricalRecords()
+
+    def __str__(self):
+        """
+        Return human-readable string representation.
+        """
+        return f"<{self.__class__.__name__} for '{self.content_key}' and CatalogQuery ({self.catalog_query.id})>"
 
 
 class RestrictedRunAllowedForRestrictedCourse(TimeStampedModel):

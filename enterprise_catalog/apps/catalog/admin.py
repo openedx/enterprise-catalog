@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import reverse
-from django.utils.html import format_html
+from django.utils.html import format_html, format_html_join
+from django.utils.safestring import mark_safe
 from edx_rbac.admin import UserRoleAssignmentAdmin
 
 from enterprise_catalog.apps.catalog.constants import (
@@ -15,7 +16,18 @@ from enterprise_catalog.apps.catalog.models import (
     ContentMetadata,
     EnterpriseCatalog,
     EnterpriseCatalogRoleAssignment,
+    RestrictedCourseMetadata,
+    RestrictedRunAllowedForRestrictedCourse,
 )
+
+
+def _html_list_from_objects(objs, viewname, str_callback=None):
+    str_callback = str_callback or str
+    return format_html_join(
+        sep=mark_safe('<br>'),
+        format_string='<a href="{}">{}</a>',
+        args_generator=((reverse(viewname, args=[obj.pk]), str_callback(obj)) for obj in objs),
+    )
 
 
 class UnchangeableMixin(admin.ModelAdmin):
@@ -59,17 +71,99 @@ class ContentMetadataAdmin(UnchangeableMixin):
     )
     readonly_fields = (
         'associated_content_metadata',
-        'catalog_queries',
-        'get_catalog',
+        'get_catalog_queries',
+        'get_catalogs',
+        'get_restricted_courses',
         'modified',
     )
+    exclude = (
+        'catalog_queries',
+    )
+
+    @admin.display(description='Catalog Queries')
+    def get_catalog_queries(self, obj):
+        catalog_queries = obj.catalog_queries.all()
+        return _html_list_from_objects(
+            objs=catalog_queries,
+            viewname="admin:catalog_catalogquery_change",
+            str_callback=lambda cq: cq.short_str_for_listings(),
+        )
 
     @admin.display(description='Enterprise Catalogs')
-    def get_catalog(self, obj):
+    def get_catalogs(self, obj):
         catalogs = EnterpriseCatalog.objects.filter(
             catalog_query_id__in=obj.catalog_queries.all().values_list('id')
         )
-        return f"{list(catalogs)}"
+        return _html_list_from_objects(catalogs, "admin:catalog_enterprisecatalog_change")
+
+    @admin.display(description='Restricted For Courses')
+    def get_restricted_courses(self, obj):
+        restricted_runs_allowed_for_restricted_course = RestrictedRunAllowedForRestrictedCourse.objects.select_related(
+            'course',
+        ).filter(
+            run=obj,
+        )
+        restricted_courses = (relationship.course for relationship in restricted_runs_allowed_for_restricted_course)
+        return _html_list_from_objects(restricted_courses, "admin:catalog_contentmetadata_change")
+
+
+@admin.register(RestrictedCourseMetadata)
+class RestrictedCourseMetadataAdmin(UnchangeableMixin):
+    """ Admin configuration for the custom RestrictedCourseMetadata model. """
+    list_display = (
+        'content_key',
+        'get_catalog_query_for_list',
+        'get_unrestricted_parent',
+    )
+    search_fields = (
+        'content_key',
+        'catalog_query',
+    )
+    readonly_fields = (
+        'get_catalog_query',
+        'get_catalogs',
+        'get_restricted_runs_allowed',
+        'modified',
+    )
+    exclude = (
+        'catalog_query',
+    )
+
+    @admin.display(
+        description='Catalog Query'
+    )
+    def get_catalog_query_for_list(self, obj):
+        link = reverse("admin:catalog_catalogquery_change", args=[obj.catalog_query.id])
+        return format_html('<a href="{}">{}</a>', link, obj.catalog_query.short_str_for_listings())
+
+    @admin.display(
+        description='Catalog Query'
+    )
+    def get_catalog_query(self, obj):
+        link = reverse("admin:catalog_catalogquery_change", args=[obj.catalog_query.id])
+        return format_html('<a href="{}">{}</a>', link, obj.catalog_query.pretty_print_content_filter())
+
+    @admin.display(
+        description='Unrestricted Parent'
+    )
+    def get_unrestricted_parent(self, obj):
+        link = reverse("admin:catalog_contentmetadata_change", args=[obj.unrestricted_parent.id])
+        return format_html('<a href="{}">{}</a>', link, str(obj.unrestricted_parent))
+
+    @admin.display(description='Enterprise Catalogs')
+    def get_catalogs(self, obj):
+        catalogs = EnterpriseCatalog.objects.filter(catalog_query=obj.catalog_query)
+        return _html_list_from_objects(catalogs, "admin:catalog_enterprisecatalog_change")
+
+    @admin.display(description='Restricted Runs Allowed')
+    def get_restricted_runs_allowed(self, obj):
+        restricted_runs_allowed_for_restricted_course = RestrictedRunAllowedForRestrictedCourse.objects.select_related(
+            'run',
+        ).filter(
+            course=obj,
+        )
+        restricted_runs = (relationship.run for relationship in restricted_runs_allowed_for_restricted_course)
+        return _html_list_from_objects(restricted_runs, "admin:catalog_contentmetadata_change")
 
 
 @admin.register(CatalogQuery)
