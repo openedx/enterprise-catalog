@@ -270,7 +270,8 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
             course_entity.save()
 
         # Associate unrestricted content with the catalog
-        # catalog.content_metadata.add(combined_course, combined_course_run_1)
+        metadata = [combined_course, combined_course_run_1]
+        self.add_metadata_to_catalog(catalog, metadata)
 
         # Test unrestricted content retrieval with `include_restricted=False`
         response_unrestricted = catalog.get_matching_content(
