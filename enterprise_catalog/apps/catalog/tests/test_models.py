@@ -808,14 +808,14 @@ class TestRestrictedRunsModels(TestCase):
                 },
             },
             'create_restricted_courses': {
-                0: {
+                1: {
                     'content_key': 'edX+course',
                     'catalog_query': '22222222-2222-2222-2222-222222222222',
                     'json_metadata': {'foobar': 'override metadata'},
                 },
             },
             'create_restricted_run_allowed_for_restricted_course': [
-                {'course': 0, 'run': 'course-v1:edX+course+run2'},
+                {'course': 1, 'run': 'course-v1:edX+course+run2'},
             ],
             'expected_json_metadata': [
                 {'foobar': 'base metadata'},
@@ -849,14 +849,14 @@ class TestRestrictedRunsModels(TestCase):
                 },
             },
             'create_restricted_courses': {
-                0: {
+                1: {
                     'content_key': 'edX+course',
                     'catalog_query': '11111111-1111-1111-1111-111111111111',
                     'json_metadata': {'foobar': 'override metadata'},
                 },
             },
             'create_restricted_run_allowed_for_restricted_course': [
-                {'course': 0, 'run': 'course-v1:edX+course+run2'},
+                {'course': 1, 'run': 'course-v1:edX+course+run2'},
             ],
             'expected_json_metadata': [
                 {'foobar': 'base metadata'},
@@ -888,14 +888,14 @@ class TestRestrictedRunsModels(TestCase):
                 },
             },
             'create_restricted_courses': {
-                0: {
+                1: {
                     'content_key': 'edX+course',
                     'catalog_query': '11111111-1111-1111-1111-111111111111',
                     'json_metadata': {'foobar': 'override metadata'},
                 },
             },
             'create_restricted_run_allowed_for_restricted_course': [
-                {'course': 0, 'run': 'course-v1:edX+course+run1'},
+                {'course': 1, 'run': 'course-v1:edX+course+run1'},
             ],
             'expected_json_metadata': [
                 {'foobar': 'base metadata'},
@@ -1022,7 +1022,7 @@ class TestRestrictedRunsModels(TestCase):
                 },
             },
             'create_restricted_courses': {
-                0: {
+                1: {
                     'content_key': 'edX+course',
                     # Not the caller's catalog!
                     'catalog_query': '22222222-2222-2222-2222-222222222222',
@@ -1030,7 +1030,7 @@ class TestRestrictedRunsModels(TestCase):
                 },
             },
             'create_restricted_run_allowed_for_restricted_course': [
-                {'course': 0, 'run': 'course-v1:edX+course+run2'},
+                {'course': 1, 'run': 'course-v1:edX+course+run2'},
             ],
             'requested_content_keys': ['course-v1:edX+course+run2'],
             'expected_json_metadata': [
@@ -1066,14 +1066,14 @@ class TestRestrictedRunsModels(TestCase):
                 },
             },
             'create_restricted_courses': {
-                0: {
+                1: {
                     'content_key': 'edX+course',
                     'catalog_query': '11111111-1111-1111-1111-111111111111',
                     'json_metadata': {'foobar': 'override metadata'},
                 },
             },
             'create_restricted_run_allowed_for_restricted_course': [
-                {'course': 0, 'run': 'course-v1:edX+course+run2'},
+                {'course': 1, 'run': 'course-v1:edX+course+run2'},
             ],
             'requested_content_keys': ['course-v1:edX+course+run1'],
             'expected_json_metadata': [
@@ -1110,14 +1110,14 @@ class TestRestrictedRunsModels(TestCase):
                 },
             },
             'create_restricted_courses': {
-                0: {
+                1: {
                     'content_key': 'edX+course',
                     'catalog_query': '11111111-1111-1111-1111-111111111111',
                     'json_metadata': {'foobar': 'override metadata'},
                 },
             },
             'create_restricted_run_allowed_for_restricted_course': [
-                {'course': 0, 'run': 'course-v1:edX+course+run1'},
+                {'course': 1, 'run': 'course-v1:edX+course+run1'},
             ],
             'requested_content_keys': ['course-v1:edX+course+run1'],
             'expected_json_metadata': [
