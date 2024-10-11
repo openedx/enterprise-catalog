@@ -21,9 +21,17 @@ from enterprise_catalog.apps.catalog.models import (
 )
 
 
-def _html_list_from_objects(objs, viewname, str_callback=None):
-    str_callback = str_callback or str
+def _html_list_from_objects(objs, viewname, str_callback=str):
+    """
+    Get a pretty, clickable list of objects.
+
+    Args:
+      objs (iterable of Django ORM objects): List/queryset of objects to display.
+      viewname (str): The `viewname` representing the django admin "change" view for the objects in obj.
+      str_callback (callable): Optionally, a function to stringify one object for display purposes.
+    """
     return format_html_join(
+        # I already tried proper HTML lists, but they format really weird in django admin.
         sep=mark_safe('<br>'),
         format_string='<a href="{}">{}</a>',
         args_generator=((reverse(viewname, args=[obj.pk]), str_callback(obj)) for obj in objs),
@@ -73,7 +81,8 @@ class ContentMetadataAdmin(UnchangeableMixin):
         'associated_content_metadata',
         'get_catalog_queries',
         'get_catalogs',
-        'get_restricted_courses',
+        'get_restricted_courses_for_this_course',
+        'get_restricted_courses_for_this_restricted_run',
         'modified',
     )
     exclude = (
@@ -96,15 +105,31 @@ class ContentMetadataAdmin(UnchangeableMixin):
         )
         return _html_list_from_objects(catalogs, "admin:catalog_enterprisecatalog_change")
 
-    @admin.display(description='Restricted For Courses')
-    def get_restricted_courses(self, obj):
+    @admin.display(description='Restricted Courses For This Course')
+    def get_restricted_courses_for_this_course(self, obj):
+        restricted_courses = RestrictedCourseMetadata.objects.filter(unrestricted_parent=obj)
+        return _html_list_from_objects(restricted_courses, "admin:catalog_restrictedcoursemetadata_change")
+
+    @admin.display(description='Restricted Courses For This Restricted Run')
+    def get_restricted_courses_for_this_restricted_run(self, obj):
         restricted_runs_allowed_for_restricted_course = RestrictedRunAllowedForRestrictedCourse.objects.select_related(
             'course',
         ).filter(
             run=obj,
         )
         restricted_courses = (relationship.course for relationship in restricted_runs_allowed_for_restricted_course)
-        return _html_list_from_objects(restricted_courses, "admin:catalog_contentmetadata_change")
+        return _html_list_from_objects(restricted_courses, "admin:catalog_restrictedcoursemetadata_change")
+
+    def get_form(self, *args, **kwargs):
+        addl_help_texts = {
+            'get_restricted_courses_for_this_course': (
+                'If this is a course, list any "restricted" versions of this course.'
+            ),
+            'get_restricted_courses_for_this_restricted_run': (
+                'If this is a restricted run, list all RestrictedCourses to which it is related.'
+            ),
+        }
+        return super().get_form(*args, **(kwargs | {'help_texts': addl_help_texts}))
 
 
 @admin.register(RestrictedCourseMetadata)
