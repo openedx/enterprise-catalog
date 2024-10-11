@@ -14,14 +14,19 @@ from django.test import TestCase, override_settings
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
     COURSE_RUN,
+    COURSE_RUN_RESTRICTION_TYPE_KEY,
     EXEC_ED_2U_COURSE_TYPE,
     EXEC_ED_2U_ENTITLEMENT_MODE,
     PROGRAM,
+    QUERY_FOR_RESTRICTED_RUNS,
     RESTRICTED_RUNS_ALLOWED_KEY,
+    RESTRICTION_FOR_B2B,
 )
 from enterprise_catalog.apps.catalog.models import (
     ContentMetadata,
+    RestrictedCourseMetadata,
     _should_allow_metadata,
+    synchronize_restricted_content,
     update_contentmetadata_from_discovery,
 )
 from enterprise_catalog.apps.catalog.tests import factories
@@ -1166,3 +1171,214 @@ class TestRestrictedRunsModels(TestCase):
         ]
         assert actual_json_metadata == expected_json_metadata
         assert actual_json_metadata_with_restricted == expected_json_metadata_with_restricted
+
+    def test_store_canonical_record(self):
+        """
+        Test that the canonical record is stored with all restricted runs.
+        """
+        content_metadata_dict = {
+            'key': 'edX+course',
+            'uuid': '11111111-1111-1111-1111-111111111111',
+            'content_type': COURSE,
+            'course_runs': [
+                {
+                    'key': 'course-v1:edX+course+run1',
+                    'is_restricted': False,
+                    'status': 'published',
+                },
+                {
+                    'key': 'course-v1:edX+course+run2',
+                    'is_restricted': True,
+                    'status': 'unpublished',
+                    COURSE_RUN_RESTRICTION_TYPE_KEY: RESTRICTION_FOR_B2B,
+                },
+                {
+                    'key': 'course-v1:edX+course+run3',
+                    'is_restricted': True,
+                    'status': 'other',
+                    COURSE_RUN_RESTRICTION_TYPE_KEY: RESTRICTION_FOR_B2B,
+                },
+            ],
+        }
+        parent_record = factories.ContentMetadataFactory.create(
+            content_key='edX+course',
+            content_type=COURSE,
+        )
+
+        record = RestrictedCourseMetadata.store_canonical_record(content_metadata_dict)
+
+        self.assertEqual(record.json_metadata['course_runs'], content_metadata_dict['course_runs'])
+        self.assertEqual(record.content_key, content_metadata_dict['key'])
+        self.assertEqual(record.content_uuid, content_metadata_dict['uuid'])
+        self.assertEqual(record.content_type, content_metadata_dict['content_type'])
+        self.assertEqual(record.unrestricted_parent, parent_record)
+        self.assertIsNone(record.catalog_query)
+
+    def test_store_record_with_query(self):
+        """
+        Tests that a restricted course to be associated with a particular query
+        stores only course run information for unrestricted courses and restricted
+        courses allowed by the query.
+        """
+        catalog_query = factories.CatalogQueryFactory(
+            content_filter={
+                'restricted_runs_allowed': {
+                    'course:edX+course': [
+                        'course-v1:edX+course+run2',
+                    ],
+                },
+            },
+        )
+        content_metadata_dict = {
+            'key': 'edX+course',
+            'uuid': '11111111-1111-1111-1111-111111111111',
+            'content_type': COURSE,
+            'course_runs': [
+                {
+                    'key': 'course-v1:edX+course+run1',
+                    'is_restricted': False,
+                    'status': 'published',
+                },
+                {
+                    'key': 'course-v1:edX+course+run2',
+                    'is_restricted': True,
+                    COURSE_RUN_RESTRICTION_TYPE_KEY: RESTRICTION_FOR_B2B,
+                    'status': 'unpublished',
+                },
+                {
+                    'key': 'course-v1:edX+course+run3',
+                    'is_restricted': True,
+                    COURSE_RUN_RESTRICTION_TYPE_KEY: RESTRICTION_FOR_B2B,
+                    'status': 'other',
+                },
+            ],
+        }
+        parent_record = factories.ContentMetadataFactory.create(
+            content_key='edX+course',
+            content_type=COURSE,
+        )
+
+        record = RestrictedCourseMetadata.store_record_with_query(
+            content_metadata_dict,
+            catalog_query,
+        )
+
+        self.assertEqual(
+            record.json_metadata['course_runs'],
+            [
+                {
+                    'key': 'course-v1:edX+course+run1',
+                    'is_restricted': False,
+                    'status': 'published',
+                },
+                {
+                    'key': 'course-v1:edX+course+run2',
+                    'is_restricted': True,
+                    COURSE_RUN_RESTRICTION_TYPE_KEY: RESTRICTION_FOR_B2B,
+                    'status': 'unpublished',
+                },
+            ],
+        )
+        self.assertEqual(
+            record.json_metadata['course_run_keys'],
+            ['course-v1:edX+course+run1', 'course-v1:edX+course+run2'],
+        )
+        self.assertEqual(
+            record.json_metadata['course_run_statuses'],
+            ['published', 'unpublished'],
+        )
+        self.assertEqual(record.content_key, content_metadata_dict['key'])
+        self.assertEqual(record.content_uuid, content_metadata_dict['uuid'])
+        self.assertEqual(record.content_type, content_metadata_dict['content_type'])
+        self.assertEqual(record.unrestricted_parent, parent_record)
+        self.assertEqual(record.catalog_query, catalog_query)
+
+    @override_settings(SHOULD_FETCH_RESTRICTED_COURSE_RUNS=False)
+    @mock.patch('enterprise_catalog.apps.catalog.models.DiscoveryApiClient')
+    def test_synchronize_restricted_content_feature_disabled(self, mock_client):
+        result = synchronize_restricted_content(mock.ANY)
+
+        self.assertEqual([], result)
+        self.assertFalse(mock_client.called)
+
+    @override_settings(SHOULD_FETCH_RESTRICTED_COURSE_RUNS=True)
+    @mock.patch('enterprise_catalog.apps.catalog.models.DiscoveryApiClient')
+    def test_synchronize_restricted_content_query_has_no_restricted_content(self, mock_client):
+        catalog_query = factories.CatalogQueryFactory(
+            content_filter={'foo': 'bar'},
+        )
+        result = synchronize_restricted_content(catalog_query)
+
+        self.assertEqual([], result)
+        self.assertFalse(mock_client.called)
+
+    @override_settings(DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT=0)
+    @override_settings(SHOULD_FETCH_RESTRICTED_COURSE_RUNS=True)
+    @mock.patch('enterprise_catalog.apps.catalog.models.DiscoveryApiClient')
+    def test_synchronize_restricted_content(self, mock_client):
+        """
+        Tests that ``synchronize_restricted_content()`` creates restricted
+        records.
+        """
+        catalog_query = factories.CatalogQueryFactory(
+            content_filter={
+                'restricted_runs_allowed': {
+                    'course:edX+course': [
+                        'course-v1:edX+course+run2',
+                    ],
+                },
+            },
+        )
+        content_metadata_dict = {
+            'key': 'edX+course',
+            'uuid': '11111111-1111-1111-1111-111111111111',
+            'content_type': COURSE,
+            'course_runs': [
+                {
+                    'key': 'course-v1:edX+course+run1',
+                    'is_restricted': False,
+                    'status': 'published',
+                },
+                {
+                    'key': 'course-v1:edX+course+run2',
+                    'is_restricted': True,
+                    COURSE_RUN_RESTRICTION_TYPE_KEY: RESTRICTION_FOR_B2B,
+                    'status': 'unpublished',
+                },
+                {
+                    'key': 'course-v1:edX+course+run3',
+                    'is_restricted': True,
+                    COURSE_RUN_RESTRICTION_TYPE_KEY: RESTRICTION_FOR_B2B,
+                    'status': 'other',
+                },
+            ],
+        }
+        parent_record = factories.ContentMetadataFactory.create(
+            content_key='edX+course',
+            content_type=COURSE,
+        )
+        mock_retrieve = mock_client.return_value.retrieve_metadata_for_content_filter
+        mock_retrieve.return_value = [
+            content_metadata_dict,
+        ]
+
+        result = synchronize_restricted_content(catalog_query)
+
+        mock_retrieve.assert_called_once_with(
+            {
+                'content_type': 'course',
+                'key': ['edX+course'],
+            },
+            QUERY_FOR_RESTRICTED_RUNS,
+        )
+        self.assertEqual(result, [content_metadata_dict['key']])
+        self.assertIsNotNone(RestrictedCourseMetadata.objects.get(
+            content_key=content_metadata_dict['key'],
+            unrestricted_parent=parent_record,
+            catalog_query=None,
+        ))
+        self.assertIsNotNone(RestrictedCourseMetadata.objects.get(
+            content_key=content_metadata_dict['key'],
+            unrestricted_parent=parent_record,
+            catalog_query=catalog_query,
+        ))

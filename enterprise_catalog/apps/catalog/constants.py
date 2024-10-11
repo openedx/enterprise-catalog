@@ -116,6 +116,9 @@ FORCE_INCLUSION_METADATA_TAG_KEY = 'enterprise_force_included'
 LATE_ENROLLMENT_THRESHOLD_DAYS = 30
 
 RESTRICTED_RUNS_ALLOWED_KEY = 'restricted_runs_allowed'
+COURSE_RUN_RESTRICTION_TYPE_KEY = 'restriction_type'
+RESTRICTION_FOR_B2B = 'custom-b2b-enterprise'
+QUERY_FOR_RESTRICTED_RUNS = {'include_restricted': RESTRICTION_FOR_B2B}
 
 AGGREGATION_KEY_PREFIX = 'course:'
 

@@ -133,6 +133,9 @@ class RestrictedCourseMetadataAdmin(UnchangeableMixin):
         description='Catalog Query'
     )
     def get_catalog_query_for_list(self, obj):
+        if not obj.catalog_query:
+            return None
+
         link = reverse("admin:catalog_catalogquery_change", args=[obj.catalog_query.id])
         return format_html('<a href="{}">{}</a>', link, obj.catalog_query.short_str_for_listings())
 
@@ -140,6 +143,9 @@ class RestrictedCourseMetadataAdmin(UnchangeableMixin):
         description='Catalog Query'
     )
     def get_catalog_query(self, obj):
+        if not obj.catalog_query:
+            return None
+
         link = reverse("admin:catalog_catalogquery_change", args=[obj.catalog_query.id])
         return format_html('<a href="{}">{}</a>', link, obj.catalog_query.pretty_print_content_filter())
 

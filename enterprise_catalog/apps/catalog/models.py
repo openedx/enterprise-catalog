@@ -1,4 +1,5 @@
 import collections
+import copy
 import json
 from logging import getLogger
 from uuid import uuid4
@@ -20,7 +21,10 @@ from enterprise_catalog.apps.api.v1.utils import (
     get_most_recent_modified_time,
     update_query_parameters,
 )
-from enterprise_catalog.apps.api_client.discovery import CatalogQueryMetadata
+from enterprise_catalog.apps.api_client.discovery import (
+    CatalogQueryMetadata,
+    DiscoveryApiClient,
+)
 from enterprise_catalog.apps.api_client.enterprise_cache import (
     EnterpriseCustomerDetails,
 )
@@ -32,11 +36,16 @@ from enterprise_catalog.apps.catalog.constants import (
     CONTENT_TYPE_CHOICES,
     COURSE,
     COURSE_RUN,
+    COURSE_RUN_RESTRICTION_TYPE_KEY,
     EXEC_ED_2U_COURSE_TYPE,
     EXEC_ED_2U_ENTITLEMENT_MODE,
     PROGRAM,
+    QUERY_FOR_RESTRICTED_RUNS,
     RESTRICTED_RUNS_ALLOWED_KEY,
     json_serialized_course_modes,
+)
+from enterprise_catalog.apps.catalog.content_metadata_utils import (
+    get_course_first_paid_enrollable_seat_price,
 )
 from enterprise_catalog.apps.catalog.utils import (
     batch,
@@ -685,12 +694,10 @@ class BaseContentMetadata(TimeStampedModel):
 
     @property
     def is_exec_ed_2u_course(self):
-        # pylint: disable=no-member
         return self.content_type == COURSE and self.json_metadata.get('course_type') == EXEC_ED_2U_COURSE_TYPE
 
     @property
     def aggregation_key(self):
-        # pylint: disable=no-member
         return self.json_metadata.get('aggregation_key')
 
     @classmethod
@@ -818,7 +825,72 @@ class RestrictedCourseMetadata(BaseContentMetadata):
         """
         Return human-readable string representation.
         """
-        return f"<{self.__class__.__name__} for '{self.content_key}' and CatalogQuery ({self.catalog_query.id})>"
+        catalog_query_id = self.catalog_query.id if self.catalog_query else None
+        return f"<{self.__class__.__name__} for '{self.content_key}' and CatalogQuery ({catalog_query_id})>"
+
+    @classmethod
+    def _store_record(cls, course_metadata_dict, catalog_query=None):
+        """
+        Given a course metadata dictionary, stores a corresponding
+        ``RestrictedContentMetadata`` record. Raises if the content key
+        is not of type 'course', or if a corresponding unrestricted parent
+        record cannot be found.
+        """
+        content_type = course_metadata_dict.get('content_type')
+        if content_type != COURSE:
+            raise Exception('Can only store RestrictedContentMetadata with content type of course')
+
+        course_key = course_metadata_dict['key']
+        parent_record = ContentMetadata.objects.get(content_key=course_key, content_type=COURSE)
+        record, _ = cls.objects.update_or_create(
+            content_key=course_key,
+            content_uuid=course_metadata_dict['uuid'],
+            content_type=COURSE,
+            unrestricted_parent=parent_record,
+            catalog_query=catalog_query,
+            defaults={
+                '_json_metadata': course_metadata_dict,
+            },
+        )
+        return record
+
+    @classmethod
+    def store_canonical_record(cls, course_metadata_dict):
+        return cls._store_record(course_metadata_dict)
+
+    @classmethod
+    def store_record_with_query(cls, course_metadata_dict, catalog_query):
+        filtered_metadata = cls.filter_restricted_runs(course_metadata_dict, catalog_query)
+        return cls._store_record(filtered_metadata, catalog_query)
+
+    @classmethod
+    def filter_restricted_runs(cls, course_metadata_dict, catalog_query):
+        """
+        Returns a copy of ``course_metadata_dict`` whose course_runs list
+        contains only unrestricted runs and restricted runs that are allowed
+        by the provided ``catalog_query``.
+        """
+        filtered_metadata = copy.deepcopy(course_metadata_dict)
+        allowed_restricted_runs = catalog_query.restricted_runs_allowed.get(course_metadata_dict['key'], [])
+
+        allowed_runs = []
+        allowed_statuses = set()
+        allowed_keys = []
+
+        for run in filtered_metadata['course_runs']:
+            if run.get(COURSE_RUN_RESTRICTION_TYPE_KEY) is None or run['key'] in allowed_restricted_runs:
+                allowed_runs.append(run)
+                allowed_statuses.add(run['status'])
+                allowed_keys.append(run['key'])
+
+        filtered_metadata['course_runs'] = allowed_runs
+        filtered_metadata['course_run_keys'] = allowed_keys
+        filtered_metadata['course_run_statuses'] = sorted(list(allowed_statuses))
+        filtered_metadata['first_enrollable_paid_seat_price'] = get_course_first_paid_enrollable_seat_price(
+            filtered_metadata,
+        )
+
+        return filtered_metadata
 
 
 class RestrictedRunAllowedForRestrictedCourse(TimeStampedModel):
@@ -1180,7 +1252,7 @@ def associate_content_metadata_with_query(metadata, catalog_query, dry_run=False
     metadata_list = create_content_metadata(metadata, catalog_query, dry_run)
     # Stop gap if the new metadata list is extremely different from the current one
     if _check_content_association_threshold(catalog_query, metadata_list):
-        return catalog_query.contentmetadata_set.values_list('content_key', flat=True)
+        return list(catalog_query.contentmetadata_set.values_list('content_key', flat=True))
     # Setting `clear=True` will remove all prior relationships between
     # the CatalogQuery's associated ContentMetadata objects
     # before setting all new relationships from `metadata_list`.
@@ -1307,29 +1379,65 @@ def update_contentmetadata_from_discovery(catalog_query, dry_run=False):
         LOGGER.exception(f'update_contentmetadata_from_discovery failed {catalog_query}')
         raise exc
 
+    if not metadata:
+        return []
+
     # associate content metadata with a catalog query only when we get valid results
     # back from the discovery service. if metadata is `None`, an error occurred while
     # calling discovery and we should not proceed with the below association logic.
-    if metadata:
-        metadata_content_keys = [get_content_key(entry) for entry in metadata]
-        LOGGER.info(
-            'Retrieved %d content items (%d unique) from course-discovery for catalog query %s',
-            len(metadata_content_keys),
-            len(set(metadata_content_keys)),
-            catalog_query,
+    metadata_content_keys = [get_content_key(entry) for entry in metadata]
+    LOGGER.info(
+        'Retrieved %d content items (%d unique) from course-discovery for catalog query %s',
+        len(metadata_content_keys),
+        len(set(metadata_content_keys)),
+        catalog_query,
+    )
+
+    associated_content_keys = associate_content_metadata_with_query(metadata, catalog_query, dry_run)
+    LOGGER.info(
+        'Associated %d content items (%d unique) with catalog query %s',
+        len(associated_content_keys),
+        len(set(associated_content_keys)),
+        catalog_query,
+    )
+
+    restricted_content_keys = synchronize_restricted_content(catalog_query, dry_run=dry_run)
+    return associated_content_keys + restricted_content_keys
+
+
+def synchronize_restricted_content(catalog_query, dry_run=False):
+    """
+    Fetch and assoicate any permitted restricted couress for the given catalog_query.
+    """
+    if not getattr(settings, 'SHOULD_FETCH_RESTRICTED_COURSE_RUNS', False):
+        return []
+
+    if not catalog_query.restricted_runs_allowed:
+        return []
+
+    restricted_course_keys = list(catalog_query.restricted_runs_allowed.keys())
+    content_filter = {
+        'content_type': 'course',
+        'key': restricted_course_keys,
+    }
+    discovery_client = DiscoveryApiClient()
+    course_payload = discovery_client.retrieve_metadata_for_content_filter(
+        content_filter, QUERY_FOR_RESTRICTED_RUNS,
+    )
+
+    restricted_course_keys = []
+    for course_dict in course_payload:
+        LOGGER.info('Storing restricted course %s for catalog_query %s', course_dict.get('key'), catalog_query.id)
+        if dry_run:
+            continue
+
+        RestrictedCourseMetadata.store_canonical_record(course_dict)
+        restricted_course_record = RestrictedCourseMetadata.store_record_with_query(
+            course_dict, catalog_query,
         )
+        restricted_course_keys.append(restricted_course_record.content_key)
 
-        associated_content_keys = associate_content_metadata_with_query(metadata, catalog_query, dry_run)
-        LOGGER.info(
-            'Associated %d content items (%d unique) with catalog query %s',
-            len(associated_content_keys),
-            len(set(associated_content_keys)),
-            catalog_query,
-        )
-
-        return associated_content_keys
-
-    return []
+    return restricted_course_keys
 
 
 class CatalogUpdateCommandConfig(ConfigurationModel):
