@@ -207,82 +207,6 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         True
     )
     def test_get_content_metadata_restricted(self, learner_portal_enabled, mock_api_client):
-        # """
-        # Verify the get_content_metadata endpoint returns all the metadata associated with a particular catalog
-        # """
-        # mock_api_client.return_value.get_enterprise_customer.return_value = {
-        #     'slug': self.enterprise_slug,
-        #     'enable_learner_portal': learner_portal_enabled,
-        #     'modified': str(datetime.now().replace(tzinfo=pytz.UTC)),
-        # }
-        # combined_course_content_key = 'combined_course'
-        # combined_course_run_1_content_key = 'combined_course_run_1'
-        # combined_course_run_2_content_key = 'combined_course_run_2'
-        # fully_restricted_course_content_key = 'fully_restricted_course'
-        # fully_restricted_course_run_1_content_key = 'fully_restricted_course_run_1'
-        #
-        # catalog = EnterpriseCatalogFactory()
-        # combined_course = ContentMetadataFactory(content_key=combined_course_content_key, content_type=COURSE)
-        # combined_course_run_1 = ContentMetadataFactory(
-        #     content_key=combined_course_run_1_content_key,
-        #     content_type=COURSE_RUN
-        # )
-        # combined_course_run_2 = RestrictedCourseMetadataFactory(
-        #     content_key=combined_course_run_2_content_key,
-        #     content_type=COURSE_RUN,
-        # )
-        # # TODO: create restricted course for mixed course
-        # fully_restricted_course = RestrictedCourseMetadataFactory(content_key=fully_restricted_course_content_key)
-        # combined_course_run_2 = RestrictedCourseMetadataFactory(
-        #     content_key=combined_course_run_2_content_key,
-        #     content_type=COURSE_RUN,
-        # )
-        # fully_restricted_course_run_1 = RestrictedRunAllowedForRestrictedCourseFactory(
-        #     content_key=fully_restricted_course_run_1_content_key
-        # )
-        # for course_entity in [
-        #     combined_course,
-        #     combined_course_run_2,
-        #     fully_restricted_course,
-        #     fully_restricted_course_run_1
-        # ]:
-        #     course_entity.catalog_queries.set(CatalogQuery.objects.all())
-        #
-        # restricted_course_metadata, _ = RestrictedCourseMetadata.objects.get_or_create(
-        #     content_key=fully_restricted_course.content_key,
-        #     content_type=fully_restricted_course.content_type,
-        # )
-        # restricted_course_metadata.catalog_query = CatalogQuery.objects.first()
-        # restricted_course_metadata.unrestricted_parent = fully_restricted_course
-        # restricted_course_metadata.save()
-        #
-        # self.assertIsNotNone(catalog.content_metadata[1].json_metadata)
-        # self.assertIsNone(catalog.content_metadata_with_restricted[2].json_metadata)
-        # self.assertIsNotNone(catalog.get_matching_content(
-        #     [combined_course_content_key],
-        #     include_restricted=False
-        # )[0].json_metadata)
-        # self.assertIsNotNone(catalog.get_matching_content(
-        #     [combined_course_content_key],
-        #     include_restricted=True
-        # )[0].json_metadata)
-        # self.assertIsNotNone(catalog.get_matching_content(
-        #     [fully_restricted_course_content_key],
-        #     include_restricted=False
-        # )[0].json_metadata)
-        # self.assertIsNone(catalog.get_matching_content(
-        #     [fully_restricted_course_content_key],
-        #     include_restricted=True
-        # )[0].json_metadata)
-        #
-        # self.assertEqual(
-        #     len(catalog.get_matching_content([fully_restricted_course_run_1_content_key], include_restricted=False)),
-        #     0
-        # )
-        # self.assertEqual(
-        #     len(catalog.get_matching_content([fully_restricted_course_run_1_content_key], include_restricted=True)),
-        #     1
-        # )
         """
         Test the get_content_metadata endpoint to verify that restricted content is properly
         handled, both for restricted and unrestricted course runs, with learner portal enabled/disabled.
@@ -335,12 +259,15 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         )
 
         # Associate the restricted content with the catalog by setting catalog_query
-        combined_course_run_2.catalog_query = catalog.catalog_query
-        combined_course_run_2.save()
-        fully_restricted_course.catalog_query = catalog.catalog_query
-        fully_restricted_course.save()
-        fully_restricted_course_run_1.run.catalog_query = catalog.catalog_query
-        fully_restricted_course_run_1.run.save()
+        for course_entity in [
+            combined_course,
+            combined_course_run_1,
+            combined_course_run_2,
+            fully_restricted_course,
+            fully_restricted_course_run_1,
+        ]:
+            course_entity.catalog_query = catalog.catalog_query
+            course_entity.save()
 
         # Associate unrestricted content with the catalog
         # catalog.content_metadata.add(combined_course, combined_course_run_1)
