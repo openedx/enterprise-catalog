@@ -49,12 +49,6 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         # Delete any existing ContentMetadata records.
         ContentMetadata.objects.all().delete()
 
-    def _get_content_metadata_url(self, enterprise_catalog):
-        """
-        Helper to get the get_content_metadata endpoint url for a given catalog
-        """
-        return reverse('api:v2:get-content-metadata-v2', kwargs={'uuid': enterprise_catalog.uuid})
-
     def _create_objects_and_relationships(
         self,
         create_catalog_query,
