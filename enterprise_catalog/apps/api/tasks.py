@@ -11,6 +11,7 @@ from operator import itemgetter
 from celery import shared_task, states
 from celery.exceptions import Ignore
 from celery_utils.logged_task import LoggedTask
+from django.conf import settings
 from django.db import IntegrityError
 from django.db.models import Prefetch, Q
 from django.db.utils import OperationalError
@@ -518,6 +519,11 @@ def index_enterprise_catalog_in_algolia_task(self, force=False, dry_run=False): 
             f'{_reindex_algolia_prefix(dry_run)} invoking task with arguments force={force}, dry_run={dry_run}.'
         )
         courses_content_metadata = ContentMetadata.objects.filter(content_type=COURSE)
+        # Make sure the courses we consider for indexing actually contain restricted runs so that
+        # "unicorn" courses (i.e. courses that contain only restricted runs) do not get discarded by
+        # partition_course_keys_for_indexing() for not having an advertised run.
+        if getattr(settings, 'SHOULD_INDEX_COURSES_WITH_RESTRICTED_RUNS', False):
+            courses_content_metadata = courses_content_metadata.prefetch_restricted_overrides()
         indexable_course_keys, nonindexable_course_keys = partition_course_keys_for_indexing(
             courses_content_metadata,
         )
@@ -852,6 +858,15 @@ def _get_algolia_products_for_batch(
     ).prefetch_related(
         Prefetch('catalog_queries', queryset=all_catalog_queries),
     )
+    if getattr(settings, 'SHOULD_INDEX_COURSES_WITH_RESTRICTED_RUNS', False):
+        # Make the courses that we index actually contain restricted runs in the payload.
+        content_metadata_no_courseruns = content_metadata_no_courseruns.prefetch_restricted_overrides()
+        # Also just prefetch the rest of the restricted courses which will
+        # allow us to find all catalog_queries explicitly allowing a restricted
+        # run for each course.
+        content_metadata_no_courseruns = content_metadata_no_courseruns.prefetch_related(
+            'restricted_courses__catalog_query'
+        )
     # Perform filtering of non-indexable objects in-memory because the list may be too long to shove into a SQL query.
     content_metadata_no_courseruns = [
         cm for cm in content_metadata_no_courseruns
@@ -888,6 +903,18 @@ def _get_algolia_products_for_batch(
             # Course runs should contribute their UUIDs to the parent course.
             content_key = metadata.parent_content_key
         associated_catalog_queries = metadata.catalog_queries.all()
+        if metadata.content_type == COURSE and getattr(settings, 'SHOULD_INDEX_COURSES_WITH_RESTRICTED_RUNS', False):
+            # "unicorn" courses (i.e. courses with only restricted runs) should only be indexed for
+            # catalog queries that explicitly allow runs in those courses. We can tell that a course
+            # has only restricted runs simply by checking that it normally doesn't have an
+            # advertised run. "Normally" means checking the `_json_metadata` attribute instead of
+            # `json_metadata`.
+            # pylint: disable=protected-access
+            is_unrestricted_course_advertised = bool(metadata._json_metadata.get('advertised_course_run_uuid'))
+            if not is_unrestricted_course_advertised:
+                associated_catalog_queries = (
+                    rc.catalog_query for rc in metadata.restricted_courses.exclude(catalog_query=None)
+                )
         for video in videos:
             if (metadata.content_type == COURSE_RUN
                     and video.parent_content_metadata.content_key == metadata.content_key):

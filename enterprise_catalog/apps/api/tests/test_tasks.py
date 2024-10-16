@@ -9,7 +9,7 @@ from unittest import mock
 
 import ddt
 from celery import states
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django_celery_results.models import TaskResult
 
 from enterprise_catalog.apps.academy.tests.factories import AcademyFactory
@@ -33,6 +33,8 @@ from enterprise_catalog.apps.catalog.tests.factories import (
     CatalogQueryFactory,
     ContentMetadataFactory,
     EnterpriseCatalogFactory,
+    RestrictedCourseMetadataFactory,
+    RestrictedRunAllowedForRestrictedCourseFactory,
 )
 from enterprise_catalog.apps.catalog.utils import localized_utcnow
 
@@ -980,6 +982,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 assert set(object_queries_titles) == {str(query.title) for query in catalog_queries}
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
+    @override_settings(SHOULD_INDEX_COURSES_WITH_RESTRICTED_RUNS=True)
     def test_index_algolia_program_common_uuids_only(self, mock_search_client):
         """
         Assert that when a program contains multiple courses, that program only inherits the UUIDs common to all
@@ -1076,6 +1079,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         assert expected_program_call_args == actual_program_call_args
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
+    @override_settings(SHOULD_INDEX_COURSES_WITH_RESTRICTED_RUNS=True)
     def test_index_algolia_program_unindexable_content(self, mock_search_client):
         """
         Assert that when a program contains ANY unindexable courses, that program is not indexed for any catalog
@@ -1197,6 +1201,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         ]
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
+    @override_settings(SHOULD_INDEX_COURSES_WITH_RESTRICTED_RUNS=True)
     def test_index_algolia_published_course_to_program(self, mock_search_client):
         """
         Assert that only only "indexable" objects are indexed, particularly when an unpublished course is associated
@@ -1300,6 +1305,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
+    @override_settings(SHOULD_INDEX_COURSES_WITH_RESTRICTED_RUNS=True)
     def test_index_algolia_unpublished_course_to_program(self, mock_search_client):
         """
         Assert that only only "indexable" objects are indexed, particularly when an unpublished course is associated
@@ -1408,6 +1414,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
+    @override_settings(SHOULD_INDEX_COURSES_WITH_RESTRICTED_RUNS=True)
     def test_index_algolia_published_course_to_pathway(self, mock_search_client,):
         """
         Assert that only only "indexable" objects are indexed, particularly when a published course is associated with a
@@ -1507,6 +1514,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
+    @override_settings(SHOULD_INDEX_COURSES_WITH_RESTRICTED_RUNS=True)
     def test_index_algolia_unpublished_course_to_pathway(self, mock_search_client):
         """
         Assert that only only "indexable" objects are indexed, particularly when an unpublished course is associated
@@ -1610,6 +1618,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
+    @override_settings(SHOULD_INDEX_COURSES_WITH_RESTRICTED_RUNS=True)
     def test_index_algolia_program_to_pathway(self, mock_search_client):
         """
         Assert that only only "indexable" objects are indexed, particularly when a hidden, and non-hidden program is
@@ -1746,74 +1755,136 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
-    # pylint: disable=too-many-statements
-    def test_index_algolia_all_uuids(self, mock_search_client):
+    @override_settings(SHOULD_INDEX_COURSES_WITH_RESTRICTED_RUNS=True)
+    # pylint: disable=protected-access
+    def test_index_algolia_restricted_runs_mixed_course(self, mock_search_client):
         """
         Assert that the correct data is sent to Algolia index, with the expected enterprise
-        catalog and enterprise customer associations.
+        catalog and enterprise customer associations *with restricted runs in the picture*.
 
         This DAG represents the complete test environment:
 
-        ┌─────────┐┌────────────────────┐┌─────────────────────┐
-        │program-2││*courserun_published││courserun_unpublished│
-        └┬────────┘└┬──┬────────────────┘└┬────────────────────┘
-        ┌▽──────────▽┐┌▽────────────────┐┌▽─────────────────┐
-        │*pathway-2  ││*course_published││course_unpublished│
-        └────────────┘└┬──┬──────────┬──┘└┬───────┬─────────┘
-              ┌────────▽┐┌▽─────────┐│┌───▽──────┐│
-              │program-1││*pathway-1│││*program-3││
-              └─────────┘└──────────┘│└┬─────────┘│
-                                    ┌▽─▽──────────▽┐
-                                    │ *pathway-3   │
-                                    └──────────────┘
-        * = indexable
+        ┌────────────────────────────────────┐
+        │ self.course_run_metadata_published │
+        └┬───────────────────────────────────┘
+         | ┌────────────────────────────────────┐
+         | │ courserun_restricted_for_catalog_A │
+         | └┬───────────────────────────────────┘
+         |  | ┌────────────────────────────────────┐
+         |  | │ courserun_restricted_for_catalog_B │
+         |  | └┬───────────────────────────────────┘
+         |  |  |
+        ┌▽──▽──▽─────────────────────────┐
+        │ self.course_metadata_published │
+        └────────────────────────────────┘
         """
         self.maxDiff = None
         algolia_data = self._set_up_factory_data_for_algolia()
-        program_for_main_course = ContentMetadataFactory(content_type=PROGRAM, content_key='program-1')
-        # Make the program hidden to make it "non-indexable", but ensure that it still gets indexed due to being related
-        # to an indexable course.
-        program_for_main_course._json_metadata.update({  # pylint: disable=protected-access
-            'hidden': True,
+
+        catalog_A = EnterpriseCatalogFactory()
+        catalog_B = EnterpriseCatalogFactory()
+
+        self.course_metadata_published.catalog_queries.set([
+            self.enterprise_catalog_query,
+            catalog_A.catalog_query,
+            catalog_B.catalog_query,
+        ])
+
+        # Disconnect the standard course run from any catalog query to make
+        # this test simpler and more consistent with the real world (in the
+        # real world, runs are not usually associated with any catalog queries
+        # directly).
+        self.course_run_metadata_published.catalog_queries.set([])
+
+        # Create the ContentMetadata objects for each restricted run.
+        courserun_restricted_for_catalog_A = ContentMetadataFactory(
+            content_type=COURSE_RUN,
+            content_key='courserun_restricted_for_catalog_A',
+            parent_content_key=self.course_metadata_published.content_key,
+        )
+        courserun_restricted_for_catalog_B = ContentMetadataFactory(
+            content_type=COURSE_RUN,
+            content_key='courserun_restricted_for_catalog_B',
+            parent_content_key=self.course_metadata_published.content_key,
+        )
+
+        # Update the content filters of each catalog query to explicitly allow
+        # their respective restricted runs.
+        catalog_A.catalog_query.content_filter.update({
+            'restricted_runs_allowed': {
+                f'course:{self.course_metadata_published.content_key}': [
+                    courserun_restricted_for_catalog_A.content_key,
+                ]
+            }
         })
-        program_for_main_course.save()
-        program_for_pathway = ContentMetadataFactory(content_type=PROGRAM, content_key='program-2')
-        program_for_pathway.catalog_queries.set([self.enterprise_catalog_query])
-        # Make the program hidden to make it "non-indexable", but ensure that it still gets indexed due to being related
-        # to an indexable pathway.
-        program_for_pathway._json_metadata.update({  # pylint: disable=protected-access
-            'hidden': True,
+        catalog_A.catalog_query.save()
+        catalog_B.catalog_query.content_filter.update({
+            'restricted_runs_allowed': {
+                f'course:{self.course_metadata_published.content_key}': [
+                    courserun_restricted_for_catalog_B.content_key,
+                ]
+            }
         })
-        program_for_pathway.save()
-        pathway_for_course = ContentMetadataFactory(content_type=LEARNER_PATHWAY, content_key='pathway-1')
-        pathway_for_courserun = ContentMetadataFactory(content_type=LEARNER_PATHWAY, content_key='pathway-2')
+        catalog_B.catalog_query.save()
 
-        # pathway-2 is indexable, but since it is not associated with any other indexable object that is in a catalog
-        # query, it will not be indexed unless we add it directly to a catalog query.
-        pathway_for_courserun.catalog_queries.set([self.enterprise_catalog_query])
+        # Create the RestrictedCourseMetadata objects, respresenting different
+        # views of the same course from the perspective of different catalog
+        # queries.
+        restricted_course_for_catalog_A = RestrictedCourseMetadataFactory(
+            content_type=COURSE,
+            content_key=self.course_metadata_published.content_key,
+            unrestricted_parent=self.course_metadata_published,
+            catalog_query=catalog_A.catalog_query,
+            _json_metadata=self.course_metadata_published._json_metadata | {
+                'advertised_course_run_uuid': courserun_restricted_for_catalog_A.content_uuid,
+                'foobar': 'override metadata from restricted_course_for_catalog_A',
+            },
+        )
+        restricted_course_for_catalog_A._json_metadata['course_runs'].append(
+            courserun_restricted_for_catalog_A._json_metadata,
+        )
+        restricted_course_for_catalog_B = RestrictedCourseMetadataFactory(
+            content_type=COURSE,
+            content_key=self.course_metadata_published.content_key,
+            unrestricted_parent=self.course_metadata_published,
+            catalog_query=catalog_B.catalog_query,
+            _json_metadata=self.course_metadata_published._json_metadata | {
+                'advertised_course_run_uuid': courserun_restricted_for_catalog_B.content_uuid,
+                'foobar': 'override metadata from restricted_course_for_catalog_B',
+            },
+        )
+        restricted_course_for_catalog_B._json_metadata['course_runs'].append(
+            courserun_restricted_for_catalog_B._json_metadata,
+        )
 
-        # Set up a program and pathway, both intended to be associated to the unpublished course to test that the course
-        # does not get indexed through association.  The pathway also needs to be associated directly with the main
-        # course so that it will actually have UUIDs and be included in the output.
-        program_for_unpublished_course = ContentMetadataFactory(content_type=PROGRAM, content_key='program-3')
-        program_for_unpublished_course.catalog_queries.set([self.enterprise_catalog_query])
-        pathway_for_unpublished_course = ContentMetadataFactory(content_type=LEARNER_PATHWAY, content_key='pathway-3')
+        # Create the "canonical" restricted course.  This is a convenience
+        # record for simplifying algolia indexing.
+        restricted_course_canonical = RestrictedCourseMetadataFactory(
+            content_type=COURSE,
+            content_key=self.course_metadata_published.content_key,
+            unrestricted_parent=self.course_metadata_published,
+            catalog_query=None,
+            _json_metadata=self.course_metadata_published._json_metadata | {
+                'advertised_course_run_uuid': courserun_restricted_for_catalog_B.content_uuid,
+                'foobar': 'override metadata from restricted_course_canonical',
+            },
+        )
+        restricted_course_canonical._json_metadata['course_runs'].extend([
+            courserun_restricted_for_catalog_A._json_metadata,
+            courserun_restricted_for_catalog_B._json_metadata,
+        ])
 
-        # associate program and pathway with the course
-        self.course_metadata_published.associated_content_metadata.set(
-            [program_for_main_course, pathway_for_course, pathway_for_unpublished_course]
+        # Finally, connect all the restricted runs to their correct
+        # RestrictedCourseMetadata objects. This association is only read by
+        # the algolia indexing logic to determine the catalog queries
+        # associated with a unicorn course.
+        RestrictedRunAllowedForRestrictedCourseFactory(
+            course=restricted_course_for_catalog_A,
+            run=courserun_restricted_for_catalog_A,
         )
-        # associate pathway with the course run
-        self.course_run_metadata_published.associated_content_metadata.set(
-            [pathway_for_courserun]
-        )
-        # associate pathway with the program
-        program_for_pathway.associated_content_metadata.set(
-            [pathway_for_courserun]
-        )
-        # associate unpublished course with the program and pathway made for testing it.
-        self.course_metadata_unpublished.associated_content_metadata.set(
-            [program_for_unpublished_course, pathway_for_unpublished_course]
+        RestrictedRunAllowedForRestrictedCourseFactory(
+            course=restricted_course_for_catalog_B,
+            run=courserun_restricted_for_catalog_B,
         )
 
         actual_algolia_products_sent = None
@@ -1825,12 +1896,12 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             actual_algolia_products_sent = list(products_iterable)
         mock_search_client().replace_all_objects.side_effect = mock_replace_all_objects
 
-        with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
+        with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS + ['foobar']):
             with self.assertLogs(level='INFO') as info_logs:
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert ' 15 products found.' in products_found_log_records[0]
+        assert ' 3 products found.' in products_found_log_records[0]
 
         # create expected data to be added/updated in the Algolia index.
         expected_algolia_objects_to_index = []
@@ -1838,134 +1909,252 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         expected_algolia_objects_to_index.append({
             'key': algolia_data['course_metadata_published'].content_key,
             'objectID': f'course-{published_course_uuid}-catalog-uuids-0',
-            'enterprise_catalog_uuids': algolia_data['catalog_uuids'],
+            'enterprise_catalog_uuids': sorted([
+                str(self.enterprise_catalog_courses.uuid),
+                str(catalog_A.uuid),
+                str(catalog_B.uuid),
+            ]),
             'academy_uuids': algolia_data['academy_uuids'],
             'academy_tags': algolia_data['academy_tags'],
+            'foobar': 'override metadata from restricted_course_canonical',
         })
         expected_algolia_objects_to_index.append({
             'key': algolia_data['course_metadata_published'].content_key,
             'objectID': f'course-{published_course_uuid}-customer-uuids-0',
-            'enterprise_customer_uuids': algolia_data['customer_uuids'],
+            'enterprise_customer_uuids': sorted([
+                str(self.enterprise_catalog_courses.enterprise_uuid),
+                str(catalog_A.enterprise_uuid),
+                str(catalog_B.enterprise_uuid),
+            ]),
             'academy_uuids': algolia_data['academy_uuids'],
             'academy_tags': algolia_data['academy_tags'],
+            'foobar': 'override metadata from restricted_course_canonical',
         })
         expected_algolia_objects_to_index.append({
             'key': algolia_data['course_metadata_published'].content_key,
             'objectID': f'course-{published_course_uuid}-catalog-query-uuids-0',
-            'enterprise_catalog_query_uuids': sorted(algolia_data['query_uuids']),
-            'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
+            'enterprise_catalog_query_uuids': sorted([
+                str(self.enterprise_catalog_courses.catalog_query.uuid),
+                str(catalog_A.catalog_query.uuid),
+                str(catalog_B.catalog_query.uuid),
+            ]),
+            'enterprise_catalog_query_titles': sorted([
+                self.enterprise_catalog_courses.catalog_query.title,
+                catalog_A.catalog_query.title,
+                catalog_B.catalog_query.title,
+            ]),
             'academy_uuids': algolia_data['academy_uuids'],
             'academy_tags': algolia_data['academy_tags'],
+            'foobar': 'override metadata from restricted_course_canonical',
         })
 
-        expected_algolia_program_objects3 = []
-        program_uuid = program_for_unpublished_course.json_metadata.get('uuid')
-        expected_algolia_program_objects3.append({
-            'objectID': f'program-{program_uuid}-catalog-uuids-0',
-            'enterprise_catalog_uuids': [str(self.enterprise_catalog_courses.uuid)],
-            'academy_uuids': algolia_data['academy_uuids'],
-            'academy_tags': [],
-        })
-        expected_algolia_program_objects3.append({
-            'objectID': f'program-{program_uuid}-customer-uuids-0',
-            'enterprise_customer_uuids': [str(self.enterprise_catalog_courses.enterprise_uuid)],
-            'academy_uuids': algolia_data['academy_uuids'],
-            'academy_tags': [],
-        })
-        expected_algolia_program_objects3.append({
-            'objectID': f'program-{program_uuid}-catalog-query-uuids-0',
-            'enterprise_catalog_query_uuids': [str(self.enterprise_catalog_courses.catalog_query.uuid)],
-            'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
-            'academy_uuids': algolia_data['academy_uuids'],
-            'academy_tags': [],
-        })
+        # Verify replace_all_objects is called with the correct Algolia object data.
+        expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
+        actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
+        assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
-        expected_algolia_pathway_objects = []
-        pathway_uuid = pathway_for_course.json_metadata.get('uuid')
-        expected_algolia_pathway_objects.append({
-            'key': pathway_for_course.content_key,
-            'objectID': f'learnerpathway-{pathway_uuid}-catalog-uuids-0',
-            'enterprise_catalog_uuids': algolia_data['catalog_uuids'],
-            'academy_uuids': algolia_data['academy_uuids'],
-            'academy_tags': algolia_data['academy_tags'],
-        })
-        expected_algolia_pathway_objects.append({
-            'key': pathway_for_course.content_key,
-            'objectID': f'learnerpathway-{pathway_uuid}-customer-uuids-0',
-            'enterprise_customer_uuids': algolia_data['customer_uuids'],
-            'academy_uuids': algolia_data['academy_uuids'],
-            'academy_tags': algolia_data['academy_tags'],
-        })
-        expected_algolia_pathway_objects.append({
-            'key': pathway_for_course.content_key,
-            'objectID': f'learnerpathway-{pathway_uuid}-catalog-query-uuids-0',
-            'enterprise_catalog_query_uuids': sorted(algolia_data['query_uuids']),
-            'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
-            'academy_uuids': algolia_data['academy_uuids'],
-            'academy_tags': algolia_data['academy_tags'],
-        })
+    @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
+    @override_settings(SHOULD_INDEX_COURSES_WITH_RESTRICTED_RUNS=True)
+    # pylint: disable=protected-access
+    def test_index_algolia_restricted_runs_unicorn_course(self, mock_search_client):
+        """
+        Assert that the correct data is sent to Algolia index, with the expected enterprise
+        catalog and enterprise customer associations *with restricted runs in
+        the picture, and no unrestricted runs at all*.
 
-        expected_algolia_pathway_objects2 = []
-        pathway_uuid = pathway_for_courserun.json_metadata.get('uuid')
-        expected_algolia_pathway_objects2.append({
-            'key': pathway_for_courserun.content_key,
-            'objectID': f'learnerpathway-{pathway_uuid}-catalog-uuids-0',
-            'enterprise_catalog_uuids': [str(self.enterprise_catalog_courses.uuid)],
-            'academy_uuids': algolia_data['academy_uuids'],
-            'academy_tags': [],
-        })
-        expected_algolia_pathway_objects2.append({
-            'key': pathway_for_courserun.content_key,
-            'objectID': f'learnerpathway-{pathway_uuid}-customer-uuids-0',
-            'enterprise_customer_uuids': [str(self.enterprise_catalog_courses.enterprise_uuid)],
-            'academy_uuids': algolia_data['academy_uuids'],
-            'academy_tags': [],
-        })
-        expected_algolia_pathway_objects2.append({
-            'key': pathway_for_courserun.content_key,
-            'objectID': f'learnerpathway-{pathway_uuid}-catalog-query-uuids-0',
-            'enterprise_catalog_query_uuids': [str(self.enterprise_catalog_courses.catalog_query.uuid)],
-            'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
-            'academy_uuids': algolia_data['academy_uuids'],
-            'academy_tags': [],
-        })
+        This DAG represents the complete test environment:
 
-        expected_algolia_pathway_objects3 = []
-        pathway_key = pathway_for_unpublished_course.content_key
-        pathway_uuid = pathway_for_unpublished_course.json_metadata.get('uuid')
-        expected_algolia_pathway_objects3.append({
-            'key': pathway_key,
-            'objectID': f'learnerpathway-{pathway_uuid}-catalog-uuids-0',
-            'enterprise_catalog_uuids': algolia_data['catalog_uuids'],
-            'academy_uuids': algolia_data['academy_uuids'],
-            'academy_tags': algolia_data['academy_tags'],
-        })
-        expected_algolia_pathway_objects3.append({
-            'key': pathway_key,
-            'objectID': f'learnerpathway-{pathway_uuid}-customer-uuids-0',
-            'enterprise_customer_uuids': algolia_data['customer_uuids'],
-            'academy_uuids': algolia_data['academy_uuids'],
-            'academy_tags': algolia_data['academy_tags'],
-        })
-        expected_algolia_pathway_objects3.append({
-            'key': pathway_key,
-            'objectID': f'learnerpathway-{pathway_uuid}-catalog-query-uuids-0',
-            'enterprise_catalog_query_uuids': sorted(algolia_data['query_uuids']),
-            'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
-            'academy_uuids': algolia_data['academy_uuids'],
-            'academy_tags': algolia_data['academy_tags'],
-        })
+           ┌────────────────────────────────────┐
+           │ courserun_restricted_for_catalog_A │
+           └┬───────────────────────────────────┘
+            | ┌────────────────────────────────────┐
+            | │ courserun_restricted_for_catalog_B │
+            | └┬───────────────────────────────────┘
+            |  |
+        ┌───▽──▽─────────────────────────┐
+        │ self.course_metadata_published │
+        └────────────────────────────────┘
+        """
+        self.maxDiff = None
+        algolia_data = self._set_up_factory_data_for_algolia()
 
-        expected_algolia_objects_to_index = (
-            expected_algolia_objects_to_index
-            + expected_algolia_program_objects3
-            + expected_algolia_pathway_objects
-            + expected_algolia_pathway_objects2
-            + expected_algolia_pathway_objects3
+        catalog_A = EnterpriseCatalogFactory()
+        catalog_B = EnterpriseCatalogFactory()
+
+        self.course_metadata_published.catalog_queries.set([
+            # This is the important thing for this test.  The default catalog
+            # query is associated with the course under test, but in algolia it
+            # should NOT be associated with the course because there are no
+            # unrestricted runs available for it.
+            self.enterprise_catalog_query,
+            # These, however, should still appear in algolia as associated.
+            catalog_A.catalog_query,
+            catalog_B.catalog_query,
+        ])
+
+        # Drop the standard course run since this test has no unrestricted runs at all.
+        self.course_run_metadata_published.delete()
+        # Drop all runs from the standard course ContentMetadata object.
+        # This is another important aspect of this test---normally courses are
+        # NOT indexed if they lack an advertised course run. This course WILL
+        # be indexed anyway because its canonical restricted course variant
+        # does have an advertised course run.
+        self.course_metadata_published._json_metadata['course_runs'] = []
+        self.course_metadata_published._json_metadata['advertised_course_run_uuid'] = None
+        self.course_metadata_published.save()
+
+        # Create the ContentMetadata objects for each restricted run.
+        courserun_restricted_for_catalog_A = ContentMetadataFactory(
+            content_type=COURSE_RUN,
+            content_key='courserun_restricted_for_catalog_A',
+            parent_content_key=self.course_metadata_published.content_key,
+        )
+        courserun_restricted_for_catalog_B = ContentMetadataFactory(
+            content_type=COURSE_RUN,
+            content_key='courserun_restricted_for_catalog_B',
+            parent_content_key=self.course_metadata_published.content_key,
         )
 
-        # verify replace_all_objects is called with the correct Algolia object data
-        # on the first invocation and with programs/pathways only on the second invocation.
+        # Update the content filters of each catalog query to explicitly allow
+        # their respective restricted runs.
+        catalog_A.catalog_query.content_filter.update({
+            'restricted_runs_allowed': {
+                f'course:{self.course_metadata_published.content_key}': [
+                    courserun_restricted_for_catalog_A.content_key,
+                ]
+            }
+        })
+        catalog_A.catalog_query.save()
+        catalog_B.catalog_query.content_filter.update({
+            'restricted_runs_allowed': {
+                f'course:{self.course_metadata_published.content_key}': [
+                    courserun_restricted_for_catalog_B.content_key,
+                ]
+            }
+        })
+        catalog_B.catalog_query.save()
+
+        # Create the RestrictedCourseMetadata objects, respresenting different
+        # views of the same course from the perspective of different catalog
+        # queries.
+        restricted_course_for_catalog_A = RestrictedCourseMetadataFactory(
+            content_type=COURSE,
+            content_key=self.course_metadata_published.content_key,
+            unrestricted_parent=self.course_metadata_published,
+            catalog_query=catalog_A.catalog_query,
+            _json_metadata=self.course_metadata_published._json_metadata | {
+                'advertised_course_run_uuid': courserun_restricted_for_catalog_A.content_uuid,
+                'foobar': 'override metadata from restricted_course_for_catalog_A',
+            },
+        )
+        restricted_course_for_catalog_A._json_metadata['course_runs'] = [
+            courserun_restricted_for_catalog_A._json_metadata
+        ]
+        restricted_course_for_catalog_A.save()
+        restricted_course_for_catalog_B = RestrictedCourseMetadataFactory(
+            content_type=COURSE,
+            content_key=self.course_metadata_published.content_key,
+            unrestricted_parent=self.course_metadata_published,
+            catalog_query=catalog_B.catalog_query,
+            _json_metadata=self.course_metadata_published._json_metadata | {
+                'advertised_course_run_uuid': courserun_restricted_for_catalog_B.content_uuid,
+                'foobar': 'override metadata from restricted_course_for_catalog_B',
+            },
+        )
+        restricted_course_for_catalog_B._json_metadata['course_runs'] = [
+            courserun_restricted_for_catalog_B._json_metadata,
+        ]
+        restricted_course_for_catalog_B.save()
+        restricted_course_canonical = RestrictedCourseMetadataFactory(
+            content_type=COURSE,
+            content_key=self.course_metadata_published.content_key,
+            unrestricted_parent=self.course_metadata_published,
+            catalog_query=None,
+            _json_metadata=self.course_metadata_published._json_metadata | {
+                'advertised_course_run_uuid': courserun_restricted_for_catalog_B.content_uuid,
+                'foobar': 'override metadata from restricted_course_canonical',
+            },
+        )
+
+        # Create the "canonical" restricted course.  This is a convenience
+        # record for simplifying algolia indexing.
+        restricted_course_canonical._json_metadata['course_runs'] = [
+            courserun_restricted_for_catalog_A._json_metadata,
+            courserun_restricted_for_catalog_B._json_metadata,
+        ]
+        restricted_course_canonical.save()
+
+        # Finally, connect all the restricted runs to their correct
+        # RestrictedCourseMetadata objects. This association is only read by
+        # the algolia indexing logic to determine the catalog queries
+        # associated with a unicorn course.
+        RestrictedRunAllowedForRestrictedCourseFactory(
+            course=restricted_course_for_catalog_A,
+            run=courserun_restricted_for_catalog_A,
+        )
+        RestrictedRunAllowedForRestrictedCourseFactory(
+            course=restricted_course_for_catalog_B,
+            run=courserun_restricted_for_catalog_B,
+        )
+
+        actual_algolia_products_sent = None
+
+        # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
+        # result into `actual_algolia_products_sent` for unit testing.
+        def mock_replace_all_objects(products_iterable):
+            nonlocal actual_algolia_products_sent
+            actual_algolia_products_sent = list(products_iterable)
+        mock_search_client().replace_all_objects.side_effect = mock_replace_all_objects
+
+        with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS + ['foobar']):
+            with self.assertLogs(level='INFO') as info_logs:
+                tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
+
+        products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
+        assert ' 3 products found.' in products_found_log_records[0]
+
+        # create expected data to be added/updated in the Algolia index.
+        expected_algolia_objects_to_index = []
+        published_course_uuid = algolia_data['course_metadata_published'].json_metadata.get('uuid')
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-catalog-uuids-0',
+            'enterprise_catalog_uuids': sorted([
+                str(catalog_A.uuid),
+                str(catalog_B.uuid),
+            ]),
+            'academy_uuids': [],
+            'academy_tags': [],
+            'foobar': 'override metadata from restricted_course_canonical',
+        })
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-customer-uuids-0',
+            'enterprise_customer_uuids': sorted([
+                str(catalog_A.enterprise_uuid),
+                str(catalog_B.enterprise_uuid),
+            ]),
+            'academy_uuids': [],
+            'academy_tags': [],
+            'foobar': 'override metadata from restricted_course_canonical',
+        })
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-catalog-query-uuids-0',
+            'enterprise_catalog_query_uuids': sorted([
+                str(catalog_A.catalog_query.uuid),
+                str(catalog_B.catalog_query.uuid),
+            ]),
+            'enterprise_catalog_query_titles': sorted([
+                catalog_A.catalog_query.title,
+                catalog_B.catalog_query.title,
+            ]),
+            'academy_uuids': [],
+            'academy_tags': [],
+            'foobar': 'override metadata from restricted_course_canonical',
+        })
+
+        # Verify replace_all_objects is called with the correct Algolia object data.
         expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
         actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
@@ -2280,3 +2469,229 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         self.assertEqual(mock_update_content_metadata_program.call_count, 2)
         self.assertEqual(mock_create_course_associated_programs.call_count, 2)
+
+    @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
+    @override_settings(SHOULD_INDEX_COURSES_WITH_RESTRICTED_RUNS=True)
+    # pylint: disable=too-many-statements
+    def test_index_algolia_all_uuids(self, mock_search_client):
+        """
+        Assert that the correct data is sent to Algolia index, with the expected enterprise
+        catalog and enterprise customer associations.
+
+        This DAG represents the complete test environment:
+
+        ┌─────────┐┌────────────────────┐┌─────────────────────┐
+        │program-2││*courserun_published││courserun_unpublished│
+        └┬────────┘└┬──┬────────────────┘└┬────────────────────┘
+        ┌▽──────────▽┐┌▽────────────────┐┌▽─────────────────┐
+        │*pathway-2  ││*course_published││course_unpublished│
+        └────────────┘└┬──┬──────────┬──┘└┬───────┬─────────┘
+              ┌────────▽┐┌▽─────────┐│┌───▽──────┐│
+              │program-1││*pathway-1│││*program-3││
+              └─────────┘└──────────┘│└┬─────────┘│
+                                    ┌▽─▽──────────▽┐
+                                    │ *pathway-3   │
+                                    └──────────────┘
+        * = indexable
+        """
+        self.maxDiff = None
+        algolia_data = self._set_up_factory_data_for_algolia()
+        program_for_main_course = ContentMetadataFactory(content_type=PROGRAM, content_key='program-1')
+        # Make the program hidden to make it "non-indexable", but ensure that it still gets indexed due to being related
+        # to an indexable course.
+        program_for_main_course._json_metadata.update({  # pylint: disable=protected-access
+            'hidden': True,
+        })
+        program_for_main_course.save()
+        program_for_pathway = ContentMetadataFactory(content_type=PROGRAM, content_key='program-2')
+        program_for_pathway.catalog_queries.set([self.enterprise_catalog_query])
+        # Make the program hidden to make it "non-indexable", but ensure that it still gets indexed due to being related
+        # to an indexable pathway.
+        program_for_pathway._json_metadata.update({  # pylint: disable=protected-access
+            'hidden': True,
+        })
+        program_for_pathway.save()
+        pathway_for_course = ContentMetadataFactory(content_type=LEARNER_PATHWAY, content_key='pathway-1')
+        pathway_for_courserun = ContentMetadataFactory(content_type=LEARNER_PATHWAY, content_key='pathway-2')
+
+        # pathway-2 is indexable, but since it is not associated with any other indexable object that is in a catalog
+        # query, it will not be indexed unless we add it directly to a catalog query.
+        pathway_for_courserun.catalog_queries.set([self.enterprise_catalog_query])
+
+        # Set up a program and pathway, both intended to be associated to the unpublished course to test that the course
+        # does not get indexed through association.  The pathway also needs to be associated directly with the main
+        # course so that it will actually have UUIDs and be included in the output.
+        program_for_unpublished_course = ContentMetadataFactory(content_type=PROGRAM, content_key='program-3')
+        program_for_unpublished_course.catalog_queries.set([self.enterprise_catalog_query])
+        pathway_for_unpublished_course = ContentMetadataFactory(content_type=LEARNER_PATHWAY, content_key='pathway-3')
+
+        # associate program and pathway with the course
+        self.course_metadata_published.associated_content_metadata.set(
+            [program_for_main_course, pathway_for_course, pathway_for_unpublished_course]
+        )
+        # associate pathway with the course run
+        self.course_run_metadata_published.associated_content_metadata.set(
+            [pathway_for_courserun]
+        )
+        # associate pathway with the program
+        program_for_pathway.associated_content_metadata.set(
+            [pathway_for_courserun]
+        )
+        # associate unpublished course with the program and pathway made for testing it.
+        self.course_metadata_unpublished.associated_content_metadata.set(
+            [program_for_unpublished_course, pathway_for_unpublished_course]
+        )
+
+        actual_algolia_products_sent = None
+
+        # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
+        # result into `actual_algolia_products_sent` for unit testing.
+        def mock_replace_all_objects(products_iterable):
+            nonlocal actual_algolia_products_sent
+            actual_algolia_products_sent = list(products_iterable)
+        mock_search_client().replace_all_objects.side_effect = mock_replace_all_objects
+
+        with mock.patch('enterprise_catalog.apps.api.tasks.ALGOLIA_FIELDS', self.ALGOLIA_FIELDS):
+            with self.assertLogs(level='INFO') as info_logs:
+                tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
+
+        products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
+        assert ' 15 products found.' in products_found_log_records[0]
+
+        # create expected data to be added/updated in the Algolia index.
+        expected_algolia_objects_to_index = []
+        published_course_uuid = algolia_data['course_metadata_published'].json_metadata.get('uuid')
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-catalog-uuids-0',
+            'enterprise_catalog_uuids': algolia_data['catalog_uuids'],
+            'academy_uuids': algolia_data['academy_uuids'],
+            'academy_tags': algolia_data['academy_tags'],
+        })
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-customer-uuids-0',
+            'enterprise_customer_uuids': algolia_data['customer_uuids'],
+            'academy_uuids': algolia_data['academy_uuids'],
+            'academy_tags': algolia_data['academy_tags'],
+        })
+        expected_algolia_objects_to_index.append({
+            'key': algolia_data['course_metadata_published'].content_key,
+            'objectID': f'course-{published_course_uuid}-catalog-query-uuids-0',
+            'enterprise_catalog_query_uuids': sorted(algolia_data['query_uuids']),
+            'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
+            'academy_uuids': algolia_data['academy_uuids'],
+            'academy_tags': algolia_data['academy_tags'],
+        })
+
+        expected_algolia_program_objects3 = []
+        program_uuid = program_for_unpublished_course.json_metadata.get('uuid')
+        expected_algolia_program_objects3.append({
+            'objectID': f'program-{program_uuid}-catalog-uuids-0',
+            'enterprise_catalog_uuids': [str(self.enterprise_catalog_courses.uuid)],
+            'academy_uuids': algolia_data['academy_uuids'],
+            'academy_tags': [],
+        })
+        expected_algolia_program_objects3.append({
+            'objectID': f'program-{program_uuid}-customer-uuids-0',
+            'enterprise_customer_uuids': [str(self.enterprise_catalog_courses.enterprise_uuid)],
+            'academy_uuids': algolia_data['academy_uuids'],
+            'academy_tags': [],
+        })
+        expected_algolia_program_objects3.append({
+            'objectID': f'program-{program_uuid}-catalog-query-uuids-0',
+            'enterprise_catalog_query_uuids': [str(self.enterprise_catalog_courses.catalog_query.uuid)],
+            'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
+            'academy_uuids': algolia_data['academy_uuids'],
+            'academy_tags': [],
+        })
+
+        expected_algolia_pathway_objects = []
+        pathway_uuid = pathway_for_course.json_metadata.get('uuid')
+        expected_algolia_pathway_objects.append({
+            'key': pathway_for_course.content_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-catalog-uuids-0',
+            'enterprise_catalog_uuids': algolia_data['catalog_uuids'],
+            'academy_uuids': algolia_data['academy_uuids'],
+            'academy_tags': algolia_data['academy_tags'],
+        })
+        expected_algolia_pathway_objects.append({
+            'key': pathway_for_course.content_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-customer-uuids-0',
+            'enterprise_customer_uuids': algolia_data['customer_uuids'],
+            'academy_uuids': algolia_data['academy_uuids'],
+            'academy_tags': algolia_data['academy_tags'],
+        })
+        expected_algolia_pathway_objects.append({
+            'key': pathway_for_course.content_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-catalog-query-uuids-0',
+            'enterprise_catalog_query_uuids': sorted(algolia_data['query_uuids']),
+            'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
+            'academy_uuids': algolia_data['academy_uuids'],
+            'academy_tags': algolia_data['academy_tags'],
+        })
+
+        expected_algolia_pathway_objects2 = []
+        pathway_uuid = pathway_for_courserun.json_metadata.get('uuid')
+        expected_algolia_pathway_objects2.append({
+            'key': pathway_for_courserun.content_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-catalog-uuids-0',
+            'enterprise_catalog_uuids': [str(self.enterprise_catalog_courses.uuid)],
+            'academy_uuids': algolia_data['academy_uuids'],
+            'academy_tags': [],
+        })
+        expected_algolia_pathway_objects2.append({
+            'key': pathway_for_courserun.content_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-customer-uuids-0',
+            'enterprise_customer_uuids': [str(self.enterprise_catalog_courses.enterprise_uuid)],
+            'academy_uuids': algolia_data['academy_uuids'],
+            'academy_tags': [],
+        })
+        expected_algolia_pathway_objects2.append({
+            'key': pathway_for_courserun.content_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-catalog-query-uuids-0',
+            'enterprise_catalog_query_uuids': [str(self.enterprise_catalog_courses.catalog_query.uuid)],
+            'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
+            'academy_uuids': algolia_data['academy_uuids'],
+            'academy_tags': [],
+        })
+
+        expected_algolia_pathway_objects3 = []
+        pathway_key = pathway_for_unpublished_course.content_key
+        pathway_uuid = pathway_for_unpublished_course.json_metadata.get('uuid')
+        expected_algolia_pathway_objects3.append({
+            'key': pathway_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-catalog-uuids-0',
+            'enterprise_catalog_uuids': algolia_data['catalog_uuids'],
+            'academy_uuids': algolia_data['academy_uuids'],
+            'academy_tags': algolia_data['academy_tags'],
+        })
+        expected_algolia_pathway_objects3.append({
+            'key': pathway_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-customer-uuids-0',
+            'enterprise_customer_uuids': algolia_data['customer_uuids'],
+            'academy_uuids': algolia_data['academy_uuids'],
+            'academy_tags': algolia_data['academy_tags'],
+        })
+        expected_algolia_pathway_objects3.append({
+            'key': pathway_key,
+            'objectID': f'learnerpathway-{pathway_uuid}-catalog-query-uuids-0',
+            'enterprise_catalog_query_uuids': sorted(algolia_data['query_uuids']),
+            'enterprise_catalog_query_titles': [self.enterprise_catalog_courses.catalog_query.title],
+            'academy_uuids': algolia_data['academy_uuids'],
+            'academy_tags': algolia_data['academy_tags'],
+        })
+
+        expected_algolia_objects_to_index = (
+            expected_algolia_objects_to_index
+            + expected_algolia_program_objects3
+            + expected_algolia_pathway_objects
+            + expected_algolia_pathway_objects2
+            + expected_algolia_pathway_objects3
+        )
+
+        # verify replace_all_objects is called with the correct Algolia object data
+        # on the first invocation and with programs/pathways only on the second invocation.
+        expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
+        actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
+        assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
