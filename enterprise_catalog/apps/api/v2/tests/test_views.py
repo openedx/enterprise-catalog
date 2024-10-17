@@ -137,7 +137,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         create_content_metadata=None,
         create_restricted_courses=None,
         create_restricted_run_allowed_for_restricted_course=None,
-        ):
+    ):
         """
         Test the get_content_metadata endpoint to verify that restricted content is properly
         handled, both for restricted and unrestricted course runs
