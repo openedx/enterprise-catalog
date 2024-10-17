@@ -1,5 +1,4 @@
 import ddt
-from rest_framework.reverse import reverse
 
 from enterprise_catalog.apps.api.v1.tests.mixins import APITestMixin
 from enterprise_catalog.apps.catalog.constants import (
