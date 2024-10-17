@@ -217,7 +217,6 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
             ['edX+course'],
             include_restricted=False
         )
-        print(f"Response Restricted (should be empty): {response_restricted}")
         self.assertEqual(len(response_restricted), 1)
         self.assertIn('edX+course', [item.content_key for item in response_restricted])
 
@@ -226,7 +225,6 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
             ['edX+course'],
             include_restricted=True
         )
-        print(f"Response with Restricted Content: {response_with_restricted}")  # Debugging output
         self.assertTrue(len(response_with_restricted) > 0)
         self.assertIn('edX+course', [item.content_key for item in response_with_restricted])
 
