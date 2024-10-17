@@ -424,6 +424,10 @@ COURSE_FIELDS_TO_PLUCK_FROM_SEARCH_ALL = os.environ.get(
 # /api/v1/courses endpoint
 SHOULD_FETCH_RESTRICTED_COURSE_RUNS = False
 
+# Whether to consider restricted runs at all (fetched via
+# SHOULD_FETCH_RESTRICTED_COURSE_RUNS) during algolia indexing.
+SHOULD_INDEX_COURSES_WITH_RESTRICTED_RUNS = False
+
 # Set up system-to-feature roles mapping for edx-rbac
 SYSTEM_TO_FEATURE_ROLE_MAPPING = {
     # The enterprise catalog admin role is for users who need to perform state altering requests on catalogs

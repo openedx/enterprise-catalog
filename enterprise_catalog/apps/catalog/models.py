@@ -293,12 +293,10 @@ class EnterpriseCatalog(TimeStampedModel):
         # Provide json_metadata overrides via dynamic attribute if any restricted runs are allowed.
         if self.catalog_query.restricted_runs_allowed:
             # FYI: prefetch causes a performance penalty by introducing a 2nd database query.
-            prefetch_qs = models.Prefetch(
-                'restricted_courses',
-                queryset=RestrictedCourseMetadata.objects.filter(catalog_query=self.catalog_query),
-                to_attr='restricted_course_metadata_for_catalog_query',
+            related_contentmetadata = related_contentmetadata.prefetch_restricted_overrides(
+                catalog_query=self.catalog_query,
             )
-            related_contentmetadata = related_contentmetadata.prefetch_related(prefetch_qs)
+
         return related_contentmetadata.all()
 
     @cached_property
@@ -615,6 +613,29 @@ class EnterpriseCatalog(TimeStampedModel):
         return xapi_activity_id
 
 
+class ContentMetadataQuerySet(models.QuerySet):
+    """
+    Customer queryset for ContentMetadata providing convenience methods to augment the results.
+    """
+
+    def prefetch_restricted_overrides(self, catalog_query=None):
+        """
+        Augment this queryset by fetching "override" metadata if any exist for a given
+        CatalogQuery.  The `json_metadata` attribute of courses returned by this new
+        queryset will be overridden if a related RestrictedCourseMetadata exists.
+        """
+        # If catalog_query is None, look for the "canonical" RestrictedCourseMetadata
+        # object which has a NULL catalog_query.
+        catalog_query_filter = {'catalog_query': catalog_query} if catalog_query else {'catalog_query__isnull': True}
+        return self.prefetch_related(
+            models.Prefetch(
+                'restricted_courses',
+                queryset=RestrictedCourseMetadata.objects.filter(**catalog_query_filter),
+                to_attr='restricted_course_metadata_for_catalog_query',
+            )
+        )
+
+
 class ContentMetadataManager(models.Manager):
     """
     Customer manager for ContentMetadata that forces the `modified` field
@@ -752,6 +773,8 @@ class ContentMetadata(BaseContentMetadata):
     catalog_queries = models.ManyToManyField(CatalogQuery)
 
     history = HistoricalRecords()
+
+    objects = ContentMetadataManager().from_queryset(ContentMetadataQuerySet)()
 
     @property
     def json_metadata(self):
