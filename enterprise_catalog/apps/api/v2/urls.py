@@ -14,6 +14,7 @@ from enterprise_catalog.apps.api.v2.views.enterprise_customer import (
     EnterpriseCustomerViewSetV2,
 )
 
+
 app_name = 'v2'
 
 router = DefaultRouter()
