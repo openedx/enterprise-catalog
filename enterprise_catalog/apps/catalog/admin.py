@@ -193,8 +193,23 @@ class RestrictedCourseMetadataAdmin(UnchangeableMixin):
         ).filter(
             course=obj,
         )
-        restricted_runs = (relationship.run for relationship in restricted_runs_allowed_for_restricted_course)
+        restricted_runs = [
+            relationship.run for relationship in restricted_runs_allowed_for_restricted_course
+            if relationship.run
+        ]
         return _html_list_from_objects(restricted_runs, "admin:catalog_contentmetadata_change")
+
+
+@admin.register(RestrictedRunAllowedForRestrictedCourse)
+class RestrictedRunAllowedForRestrictedCourseAdmin(UnchangeableMixin):
+    """
+    Admin class to show restricted course <-> run relationships.
+    """
+    list_display = (
+        'id',
+        'course',
+        'run',
+    )
 
 
 @admin.register(CatalogQuery)

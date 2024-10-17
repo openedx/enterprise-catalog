@@ -206,7 +206,7 @@ class HighlightedContent(TimeStampedModel):
         """
         if not self.content_metadata:
             return None
-        return self.content_metadata.json_metadata.get('title')  # pylint: disable=no-member
+        return self.content_metadata.json_metadata.get('title')
 
     @property
     def course_run_statuses(self):
@@ -215,7 +215,7 @@ class HighlightedContent(TimeStampedModel):
         """
         if not self.content_metadata:
             return None
-        return self.content_metadata.json_metadata.get('course_run_statuses')  # pylint: disable=no-member
+        return self.content_metadata.json_metadata.get('course_run_statuses')
 
     @property
     def card_image_url(self):
@@ -232,14 +232,13 @@ class HighlightedContent(TimeStampedModel):
         # aside: pylint doesn't know that self.content_metadata.json_metadata is dict-like, so we have to silence all
         # the warnings.
         if content_type == COURSE:
-            return self.content_metadata.json_metadata.get('image_url')  # pylint: disable=no-member
+            return self.content_metadata.json_metadata.get('image_url')
         if content_type == COURSE_RUN:
-            return self.content_metadata.json_metadata.get('image_url')  # pylint: disable=no-member
+            return self.content_metadata.json_metadata.get('image_url')
         elif content_type == PROGRAM:
-            return self.content_metadata.json_metadata.get('card_image_url')  # pylint: disable=no-member
+            return self.content_metadata.json_metadata.get('card_image_url')
         elif content_type == LEARNER_PATHWAY:
             try:
-                # pylint: disable=invalid-sequence-index
                 return self.content_metadata.json_metadata['card_image']['card']['url']
             except (KeyError, TypeError):
                 # KeyError covers the case where any of the keys along the path are missing,
@@ -271,9 +270,9 @@ class HighlightedContent(TimeStampedModel):
         content_type = self.content_type
         owners = []
         if content_type == COURSE:
-            owners = self.content_metadata.json_metadata.get('owners')  # pylint: disable=no-member
+            owners = self.content_metadata.json_metadata.get('owners')
         elif content_type == PROGRAM:
-            owners = self.content_metadata.json_metadata.get('authoring_organizations')  # pylint: disable=no-member
+            owners = self.content_metadata.json_metadata.get('authoring_organizations')
 
         return [
             {
