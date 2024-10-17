@@ -1,21 +1,10 @@
-from datetime import datetime
-from datetime import datetime
-from unittest import mock
-
 import ddt
-import pytz
-from django.conf import settings
-from django.utils.text import slugify
 from rest_framework.reverse import reverse
-from six.moves.urllib.parse import quote_plus
 
 from enterprise_catalog.apps.api.v1.tests.mixins import APITestMixin
-from enterprise_catalog.apps.api.v1.utils import is_any_course_run_active
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
     COURSE_RUN,
-    EXEC_ED_2U_COURSE_TYPE,
-    PROGRAM,
 )
 from enterprise_catalog.apps.catalog.models import (
     ContentMetadata,
@@ -26,10 +15,6 @@ from enterprise_catalog.apps.catalog.tests.factories import (
     EnterpriseCatalogFactory,
     RestrictedCourseMetadataFactory,
     RestrictedRunAllowedForRestrictedCourseFactory
-)
-from enterprise_catalog.apps.catalog.utils import (
-    enterprise_proxy_login_url,
-    get_parent_content_key,
 )
 
 
@@ -48,12 +33,6 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
 
         # Delete any existing ContentMetadata records.
         ContentMetadata.objects.all().delete()
-
-    def _get_content_metadata_url(self, enterprise_catalog):
-        """
-        Helper to get the get_content_metadata endpoint url for a given catalog
-        """
-        return reverse('api:v2:get-content-metadata-v2', kwargs={'uuid': enterprise_catalog.uuid})
 
     def _create_objects_and_relationships(
         self,
