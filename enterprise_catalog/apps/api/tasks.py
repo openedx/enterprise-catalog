@@ -283,6 +283,14 @@ def _update_full_content_metadata_course(content_keys, dry_run=False):
             )
             modified_content_metadata_records.append(modified_course_record)
 
+            program_content_keys = create_course_associated_programs(
+                course_metadata_dict.get('programs', []),
+                modified_metadata_record,
+            )
+            _update_full_content_metadata_program(program_content_keys, dry_run)
+
+            _update_full_restricted_course_metadata(modified_metadata_record, course_review, dry_run)
+
         if dry_run:
             logger.info('dry_run=True, not updating course metadata')
         else:
@@ -344,11 +352,6 @@ def _update_single_full_course_record(course_metadata_dict, metadata_record, cou
             metadata_record.content_key, json.dumps(metadata_record.json_metadata)
         ))
 
-    program_content_keys = create_course_associated_programs(
-        course_metadata_dict.get('programs', []),
-        metadata_record,
-    )
-    _update_full_content_metadata_program(program_content_keys, dry_run)
     return metadata_record
 
 
@@ -372,6 +375,28 @@ def _normalize_metadata_record(course_metadata_record):
             }).data
         })
 
+
+def _update_full_restricted_course_metadata(modified_metadata_record, course_review, dry_run):
+    """
+    """
+    restricted_courses = list(modified_metadata_record.restricted_courses.all())
+    if not restricted_courses:
+        return
+
+    # Fetch from /api/v1/courses with restricted content included, call result `restricted_metadata`.
+    restricted_metadata = None
+
+    for restricted_course in restricted_courses:
+        if restricted_course.catalog_query:
+            record = RestrictedCourseMetadata.store_record_with_query(
+                restricted_metadata, restricted_course.catalog_query,
+            )
+            modified_restricted_record = _update_single_full_course_record(
+                restricted_metadata, record, course_review, dry_run,
+            )
+            modified_restricted_record.save()
+        
+    
 
 def _update_full_content_metadata_program(content_keys, dry_run=False):
     """
