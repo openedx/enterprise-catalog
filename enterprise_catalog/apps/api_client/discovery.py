@@ -512,7 +512,7 @@ class DiscoveryApiClient(BaseOAuthClient):
 
         return programs
 
-    def fetch_courses_by_keys(self, course_keys):
+    def fetch_courses_by_keys(self, course_keys, extra_query_params=None):
         """
         Fetches course data from discovery's /api/v1/courses endpoint for the provided course keys.
 
@@ -529,6 +529,8 @@ class DiscoveryApiClient(BaseOAuthClient):
         for course_keys_chunk in batched_course_keys:
             # Discovery expects the keys param to be in the format ?keys=course1,course2,...
             query_params = {'keys': ','.join(course_keys_chunk)}
+            if extra_query_params:
+                query_params.update(extra_query_params)
             courses.extend(self.get_courses(query_params=query_params))
 
         return courses
