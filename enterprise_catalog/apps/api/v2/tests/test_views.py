@@ -47,8 +47,8 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         super().setUp()
         # Set up catalog.has_learner_access permissions
         self.set_up_catalog_learner()
-        # self.enterprise_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
-        # self.enterprise_catalog.catalog_query.save()
+        self.enterprise_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
+        self.enterprise_catalog.catalog_query.save()
 
         # Delete any existing ContentMetadata records.
         ContentMetadata.objects.all().delete()
@@ -464,7 +464,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         # Create a course with both an unrestricted (run1) and restricted run (run2), and the restricted run is allowed
         # by the CatalogQuery.
         {
-            'learner_portal_enabled': False,
+            'learner_portal_enabled': True,
             'create_catalog_query': {
                 '11111111-1111-1111-1111-111111111111': {
                     'content_filter': {
@@ -482,7 +482,15 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
                         'course-v1:edX+course+run1': {'is_restricted': False},
                         'course-v1:edX+course+run2': {'is_restricted': True},
                     },
-                    'json_metadata': {'foobar': 'base metadata'},
+                    'json_metadata': {
+                        'key': 'edX+course',
+                        'course_runs': [
+                            {
+                                'key': 'course-v1:edX+course+run1',
+                                'status': 'active'
+                             },
+                        ],
+                    },
                     'associate_with_catalog_query': '11111111-1111-1111-1111-111111111111',
                 },
             },
@@ -490,7 +498,19 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
                 1: {
                     'content_key': 'edX+course',
                     'catalog_query': '11111111-1111-1111-1111-111111111111',
-                    'json_metadata': {'foobar': 'override metadata'},
+                    'json_metadata': {
+                        'key': 'edX+course',
+                        'course_runs': [
+                            {
+                                'key': 'course-v1:edX+course+run1',
+                                'status': 'active'
+                             },
+                            {
+                                'key': 'course-v1:edX+course+run2',
+                                'status': 'active'
+                            },
+                        ],
+                    },
                 },
             },
             'create_restricted_run_allowed_for_restricted_course': [
@@ -498,7 +518,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
             ],
         },
         {
-            'learner_portal_enabled': True,
+            'learner_portal_enabled': False,
             'create_catalog_query': {
                 '11111111-1111-1111-1111-111111111111': {
                     'content_filter': {
@@ -558,23 +578,23 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
             create_restricted_courses,
             create_restricted_run_allowed_for_restricted_course,
         )
+        main_catalog.enterprise_uuid = self.enterprise_uuid
+        main_catalog.save()
 
-        # ContentMetadataFactory.reset_sequence(10)
-        # metadata = ContentMetadataFactory.create_batch(api_settings.PAGE_SIZE)
         filtered_content_keys = [
             'edX+course',
             'course-v1:edX+course+run1',
             'course-v1:edX+course+run2',
         ]
         url = self._get_content_metadata_url(main_catalog)
-        # for filter_content_key in filtered_content_keys:
-        #     url += f"&content_keys={filter_content_key}"
+        for filter_content_key in filtered_content_keys:
+            url += f"&content_keys={filter_content_key}"
 
         response = self.client.get(
             url,
             {'content_keys': filtered_content_keys}
         )
-        print(f'response: {response}')
+        print(f'response: {response.data}')
         assert response.data.get('count') == int(api_settings.PAGE_SIZE / 2)
         for result in response.data.get('results'):
             assert get_content_key(result) in filtered_content_keys
