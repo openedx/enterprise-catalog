@@ -39,6 +39,7 @@ from enterprise_catalog.apps.catalog.constants import (
     FORCE_INCLUSION_METADATA_TAG_KEY,
     LEARNER_PATHWAY,
     PROGRAM,
+    QUERY_FOR_RESTRICTED_RUNS,
     REINDEX_TASK_BATCH_SIZE,
     TASK_BATCH_SIZE,
     VIDEO,
@@ -73,7 +74,7 @@ UNREADY_TASK_RETRY_COUNTDOWN_SECONDS = 60 * 5
 EXPLORE_CATALOG_TITLES = ['A la carte', 'Subscription']
 
 
-def _fetch_courses_by_keys(course_keys):
+def _fetch_courses_by_keys(course_keys, extra_query_params=None):
     """
     Fetches course data from discovery's /api/v1/courses endpoint for the provided course keys.
 
@@ -82,7 +83,7 @@ def _fetch_courses_by_keys(course_keys):
     Returns:
         list of dict: Returns a list of dictionaries where each dictionary represents the course data from discovery.
     """
-    return DiscoveryApiClient().fetch_courses_by_keys(course_keys)
+    return DiscoveryApiClient().fetch_courses_by_keys(course_keys, extra_query_params=extra_query_params)
 
 
 def _fetch_programs_by_keys(program_keys):
@@ -283,6 +284,14 @@ def _update_full_content_metadata_course(content_keys, dry_run=False):
             )
             modified_content_metadata_records.append(modified_course_record)
 
+            program_content_keys = create_course_associated_programs(
+                course_metadata_dict.get('programs', []),
+                modified_course_record,
+            )
+            _update_full_content_metadata_program(program_content_keys, dry_run)
+
+            _update_full_restricted_course_metadata(modified_course_record, course_review, dry_run)
+
         if dry_run:
             logger.info('dry_run=True, not updating course metadata')
         else:
@@ -307,6 +316,44 @@ def _update_full_content_metadata_course(content_keys, dry_run=False):
     )
 
 
+def _update_full_restricted_course_metadata(modified_metadata_record, course_review, dry_run):
+    """
+    For all restricted courses whose parent is ``modified_metadata_record``, does a full
+    update of metadata and restricted run relationships.
+    """
+    restricted_courses = list(modified_metadata_record.restricted_courses.all())
+    if not restricted_courses:
+        return
+
+    # Fetch from /api/v1/courses with restricted content included
+    metadata_list = _fetch_courses_by_keys(
+        [modified_metadata_record.content_key],
+        extra_query_params=QUERY_FOR_RESTRICTED_RUNS,
+    )
+    if not metadata_list:
+        raise Exception(
+            f'No restricted course metadata could be fetched for {modified_metadata_record.content_key}'
+        )
+
+    full_restricted_metadata = metadata_list[0]
+
+    for restricted_course in restricted_courses:
+        # First, update the restricted course record's json metadata to use the full metadata
+        # from above.
+        restricted_course.update_metadata(full_restricted_metadata, is_full_update=True)
+        # Second, if it's not the canonical copy of the restricted course,
+        # we have to reset the restricted course *run* relationships.
+        if restricted_course.catalog_query:
+            restricted_course.update_course_run_relationships()
+
+        # Last, run the "standard" transformations below to update with the full
+        # course metadata, do normalization, etc.
+        _update_single_full_course_record(
+            full_restricted_metadata, restricted_course, course_review, dry_run, skip_json_metadata_update=True,
+        )
+        restricted_course.save()
+
+
 def _get_course_records_by_key(fetched_course_keys):
     """
     Helper to fetch a dict of course `ContentMetadata` records by content key.
@@ -320,14 +367,17 @@ def _get_course_records_by_key(fetched_course_keys):
     }
 
 
-def _update_single_full_course_record(course_metadata_dict, metadata_record, course_review, dry_run):
+def _update_single_full_course_record(
+    course_metadata_dict, metadata_record, course_review, dry_run, skip_json_metadata_update=False,
+):
     """
     Given a fetched dictionary of course content metadata and an option `course_review` record,
     updates an existing course `ContentMetadata` instance with the "full" dictionary of `json_metadata`
     for that course.
     """
-    # Merge the full metadata from discovery's /api/v1/courses into the local metadata object.
-    metadata_record._json_metadata.update(course_metadata_dict)  # pylint: disable=protected-access
+    if not skip_json_metadata_update:
+        # Merge the full metadata from discovery's /api/v1/courses into the local metadata object.
+        metadata_record._json_metadata.update(course_metadata_dict)  # pylint: disable=protected-access
 
     _normalize_metadata_record(metadata_record)
 
@@ -344,11 +394,6 @@ def _update_single_full_course_record(course_metadata_dict, metadata_record, cou
             metadata_record.content_key, json.dumps(metadata_record.json_metadata)
         ))
 
-    program_content_keys = create_course_associated_programs(
-        course_metadata_dict.get('programs', []),
-        metadata_record,
-    )
-    _update_full_content_metadata_program(program_content_keys, dry_run)
     return metadata_record
 
 
