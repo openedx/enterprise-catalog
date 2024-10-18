@@ -53,8 +53,6 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         # Delete any existing ContentMetadata records.
         ContentMetadata.objects.all().delete()
 
-
-
     def _get_content_metadata_url(self, enterprise_catalog):
         """
         Helper to get the get_content_metadata endpoint url for a given catalog
@@ -488,7 +486,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
                             {
                                 'key': 'course-v1:edX+course+run1',
                                 'status': 'active'
-                             },
+                            },
                         ],
                     },
                     'associate_with_catalog_query': '11111111-1111-1111-1111-111111111111',
@@ -504,7 +502,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
                             {
                                 'key': 'course-v1:edX+course+run1',
                                 'status': 'active'
-                             },
+                            },
                             {
                                 'key': 'course-v1:edX+course+run2',
                                 'status': 'active'
