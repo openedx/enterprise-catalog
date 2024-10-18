@@ -170,102 +170,69 @@ def program_hit_to_row(hit):
     return csv_row
 
 
-def _base_csv_row_data(hit):
-    """ Returns the formatted, shared attributes common across all course types. """
-    title = hit.get('title')
-    aggregation_key = hit.get('aggregation_key')
-    language = hit.get('language')
-    transcript_languages = ', '.join(hit.get('transcript_languages', []))
-    marketing_url = hit.get('marketing_url')
-    short_description = strip_tags(hit.get('short_description', ''))
-    subjects = ', '.join(hit.get('subjects', []))
-    skills = ', '.join([skill['name'] for skill in hit.get('skills', [])])
-    outcome = strip_tags(hit.get('outcome', ''))  # What You’ll Learn
-
-    # FIXME: currently ignores partner names when a course has multiple partners
-    partner_name = hit['partners'][0]['name'] if hit.get('partners') else None
-
-    empty_advertised_course_run = {}
-    advertised_course_run = hit.get('advertised_course_run', empty_advertised_course_run)
-    advertised_course_run_key = advertised_course_run.get('key')
-    min_effort = advertised_course_run.get('min_effort')
-    max_effort = advertised_course_run.get('max_effort')
-    weeks_to_complete = advertised_course_run.get('weeks_to_complete')  # Length
-
-    if start_date := advertised_course_run.get('start'):
-        start_date = parser.parse(start_date).strftime(DATE_FORMAT)
-
-    if end_date := advertised_course_run.get('end'):
-        end_date = parser.parse(end_date).strftime(DATE_FORMAT)
-
-    if enroll_by := advertised_course_run.get('enroll_by'):
-        enroll_by = datetime.datetime.fromtimestamp(enroll_by).strftime(DATE_FORMAT)
-
-    content_price = None
-    if content_price := advertised_course_run.get('content_price'):
-        content_price = math.trunc(float(content_price))
-    return {
-        'title': title,
-        'partner_name': partner_name,
-        'start_date': start_date,
-        'end_date': end_date,
-        'enroll_by': enroll_by,
-        'aggregation_key': aggregation_key,
-        'advertised_course_run_key': advertised_course_run_key,
-        'language': language,
-        'transcript_languages': transcript_languages,
-        'marketing_url': marketing_url,
-        'short_description': short_description,
-        'subjects': subjects,
-        'skills': skills,
-        'min_effort': min_effort,
-        'max_effort': max_effort,
-        'weeks_to_complete': weeks_to_complete,
-        'outcome': outcome,
-        'advertised_course_run': advertised_course_run,
-        'content_price': content_price
-    }
-
-
 def course_hit_to_row(hit):
     """
     Helper function to construct a CSV row according to a single Algolia result course hit.
     """
-    row_data = _base_csv_row_data(hit)
     csv_row = []
-    csv_row.append(row_data.get('title'))
-    csv_row.append(row_data.get('partner_name'))
+    csv_row.append(hit.get('title'))
 
-    advertised_course_run = row_data.get('advertised_course_run')
+    if hit.get('partners'):
+        csv_row.append(hit['partners'][0]['name'])
+    else:
+        csv_row.append(None)
 
-    csv_row.append(row_data.get('start_date'))
-    csv_row.append(row_data.get('end_date'))
+    empty_advertised_course_run = {}
+    advertised_course_run = hit.get('advertised_course_run', empty_advertised_course_run)
+    if start_date := advertised_course_run.get('start'):
+        start_date = parser.parse(start_date).strftime(DATE_FORMAT)
+    csv_row.append(start_date)
+
+    if end_date := advertised_course_run.get('end'):
+        end_date = parser.parse(end_date).strftime(DATE_FORMAT)
+    csv_row.append(end_date)
 
     # upgrade_deadline deprecated in favor of enroll_by
     if upgrade_deadline := advertised_course_run.get('upgrade_deadline'):
         upgrade_deadline = datetime.datetime.fromtimestamp(upgrade_deadline).strftime(DATE_FORMAT)
     csv_row.append(upgrade_deadline)
-    csv_row.append(row_data.get('enroll_by'))
+
+    if enroll_by := advertised_course_run.get('enroll_by'):
+        enroll_by = datetime.datetime.fromtimestamp(enroll_by).strftime(DATE_FORMAT)
+    csv_row.append(enroll_by)
+
+    pacing_type = advertised_course_run.get('pacing_type')
+    key = advertised_course_run.get('key')
+
     csv_row.append(', '.join(hit.get('programs', [])))
     csv_row.append(', '.join(hit.get('program_titles', [])))
 
-    pacing_type = advertised_course_run.get('pacing_type')
     csv_row.append(pacing_type)
 
     csv_row.append(hit.get('level_type'))
-    csv_row.append(row_data.get('content_price'))
-    csv_row.append(row_data.get('language'))
-    csv_row.append(row_data.get('transcript_languages'))
-    csv_row.append(row_data.get('marketing_url'))
-    csv_row.append(row_data.get('short_description'))
-    csv_row.append(row_data.get('subjects'))
-    csv_row.append(row_data.get('advertised_course_run_key'))
-    csv_row.append(row_data.get('aggregation_key'))
-    csv_row.append(row_data.get('skills'))
-    csv_row.append(row_data.get('min_effort'))
-    csv_row.append(row_data.get('max_effort'))
-    csv_row.append(row_data.get('weeks_to_complete'))
-    csv_row.append(row_data.get('outcome'))
+
+    if content_price := advertised_course_run.get('content_price'):
+        content_price = math.trunc(float(content_price))
+    csv_row.append(content_price)
+
+    csv_row.append(hit.get('language'))
+    csv_row.append(', '.join(hit.get('transcript_languages', [])))
+    csv_row.append(hit.get('marketing_url'))
+    csv_row.append(strip_tags(hit.get('short_description', '')))
+
+    csv_row.append(', '.join(hit.get('subjects', [])))
+    csv_row.append(key)
+    csv_row.append(hit.get('aggregation_key'))
+
+    skills = [skill['name'] for skill in hit.get('skills', [])]
+    csv_row.append(', '.join(skills))
+
+    advertised_course_run = hit.get('advertised_course_run', {})
+    csv_row.append(advertised_course_run.get('min_effort'))
+    csv_row.append(advertised_course_run.get('max_effort'))
+    csv_row.append(advertised_course_run.get('weeks_to_complete'))  # Length
+
+    csv_row.append(strip_tags(hit.get('outcome', '')))  # What You’ll Learn
 
     csv_row.append(strip_tags(hit.get('prerequisites_raw', '')))  # Pre-requisites
 
@@ -275,32 +242,75 @@ def course_hit_to_row(hit):
     return csv_row
 
 
+def fetch_and_format_registration_date(obj):
+    enroll_by_date = obj.get('registration_deadline')
+    stripped_enroll_by = enroll_by_date.split("T")[0]
+    formatted_enroll_by = None
+    try:
+        enroll_by_datetime_obj = datetime.datetime.strptime(stripped_enroll_by, '%Y-%m-%d')
+        formatted_enroll_by = enroll_by_datetime_obj.strftime('%m-%d-%Y')
+    except ValueError as exc:
+        logger.info(f"Unable to format registration deadline, failed with error: {exc}")
+    return formatted_enroll_by
+
+
 def exec_ed_course_to_row(hit):
     """
     Helper function to construct a CSV row according to a single executive education course hit.
     """
-    row_data = _base_csv_row_data(hit)
     csv_row = []
-    csv_row.append(row_data.get('title'))
-    csv_row.append(row_data.get('partners'))
+    csv_row.append(hit.get('title'))
 
-    csv_row.append(row_data.get('start_date'))
-    csv_row.append(row_data.get('end_date'))
-    csv_row.append(row_data.get('enroll_by'))
+    if hit.get('partners'):
+        csv_row.append(hit['partners'][0]['name'])
+    else:
+        csv_row.append(None)
+    if hit.get('additional_metadata'):
+        start_date = None
+        additional_md = hit['additional_metadata']
+        if additional_md.get('start_date'):
+            start_date = parser.parse(additional_md['start_date']).strftime(DATE_FORMAT)
+        csv_row.append(start_date)
 
-    csv_row.append(row_data.get('content_price'))
-    csv_row.append(row_data.get('language'))
-    csv_row.append(row_data.get('transcript_languages'))
-    csv_row.append(row_data.get('marketing_url'))
-    csv_row.append(row_data.get('short_description'))
-    csv_row.append(row_data.get('subjects'))
-    csv_row.append(row_data.get('advertised_course_run_key'))
-    csv_row.append(row_data.get('aggregation_key'))
-    csv_row.append(row_data.get('skills'))
-    csv_row.append(row_data.get('min_effort'))
-    csv_row.append(row_data.get('max_effort'))
-    csv_row.append(row_data.get('weeks_to_complete'))
-    csv_row.append(row_data.get('outcome'))
+        end_date = None
+        if additional_md.get('end_date'):
+            end_date = parser.parse(additional_md['end_date']).strftime(DATE_FORMAT)
+        csv_row.append(end_date)
+        formatted_enroll_by = fetch_and_format_registration_date(additional_md)
+    else:
+        csv_row.append(None)  # no start date
+        csv_row.append(None)  # no end date
+        formatted_enroll_by = None
+
+    csv_row.append(formatted_enroll_by)
+
+    adv_course_run = hit.get('advertised_course_run', {})
+    key = adv_course_run.get('key')
+
+    empty_advertised_course_run = {}
+    advertised_course_run = hit.get('advertised_course_run', empty_advertised_course_run)
+    if content_price := advertised_course_run.get('content_price'):
+        content_price = math.trunc(float(content_price))
+    csv_row.append(content_price)
+
+    csv_row.append(hit.get('language'))
+    csv_row.append(', '.join(hit.get('transcript_languages', [])))
+    csv_row.append(hit.get('marketing_url'))
+    csv_row.append(strip_tags(hit.get('short_description', '')))
+
+    csv_row.append(', '.join(hit.get('subjects', [])))
+    csv_row.append(key)
+    csv_row.append(hit.get('aggregation_key'))
+
+    skills = [skill['name'] for skill in hit.get('skills', [])]
+    csv_row.append(', '.join(skills))
+
+    csv_row.append(adv_course_run.get('min_effort'))
+    csv_row.append(adv_course_run.get('max_effort'))
+    csv_row.append(adv_course_run.get('weeks_to_complete'))  # Length
+
+    csv_row.append(strip_tags(hit.get('outcome', '')))  # What You’ll Learn
+
     csv_row.append(strip_tags(hit.get('full_description', '')))
 
     return csv_row
