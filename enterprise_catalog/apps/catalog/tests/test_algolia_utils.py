@@ -9,10 +9,12 @@ from enterprise_catalog.apps.catalog import algolia_utils as utils
 from enterprise_catalog.apps.catalog.constants import (
     ALGOLIA_DEFAULT_TIMESTAMP,
     COURSE,
+    COURSE_RUN_RESTRICTION_TYPE_KEY,
     EXEC_ED_2U_COURSE_TYPE,
     EXEC_ED_2U_READABLE_COURSE_TYPE,
     LEARNER_PATHWAY,
     PROGRAM,
+    RESTRICTION_FOR_B2B,
 )
 from enterprise_catalog.apps.catalog.tests.factories import (
     ContentMetadataFactory,
@@ -338,6 +340,7 @@ class AlgoliaUtilsTests(TestCase):
                 'is_active': True,
                 'is_late_enrollment_eligible': False,
                 'content_price': 0.0,
+                'restriction_type': None,
             },
         ),
         (
@@ -397,6 +400,7 @@ class AlgoliaUtilsTests(TestCase):
                 'content_price': 50.0,
                 'is_active': True,
                 'is_late_enrollment_eligible': False,
+                'restriction_type': None,
             }
         ),
         (
@@ -440,6 +444,7 @@ class AlgoliaUtilsTests(TestCase):
                 'content_price': 50,
                 'is_active': True,
                 'is_late_enrollment_eligible': False,
+                'restriction_type': None,
             }
         )
     )
@@ -657,6 +662,21 @@ class AlgoliaUtilsTests(TestCase):
                         'max_effort': 6,
                         'weeks_to_complete': 6,
                     },
+                    {
+                        'key': 'course-v1:org+course+1T3022',
+                        'uuid': FUTURE_COURSE_RUN_UUID_1,
+                        'pacing_type': 'instructor_paced',
+                        'status': 'unpublished',
+                        'is_enrollable': True,
+                        'is_marketable': False,
+                        'availability': 'Starting Soon',
+                        'start': "3000-01-04T00:00:00Z",
+                        'end': "3022-12-31T23:59:00Z",
+                        'min_effort': 2,
+                        'max_effort': 6,
+                        'weeks_to_complete': 6,
+                        COURSE_RUN_RESTRICTION_TYPE_KEY: RESTRICTION_FOR_B2B,
+                    },
                 ],
                 'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID
             },
@@ -678,6 +698,7 @@ class AlgoliaUtilsTests(TestCase):
                     'content_price': 0.0,
                     'is_active': False,
                     'is_late_enrollment_eligible': True,
+                    'restriction_type': None,
                 },
                 {
                     'key': 'course-v1:org+course+1T2027',
@@ -696,6 +717,7 @@ class AlgoliaUtilsTests(TestCase):
                     'content_price': 0.0,
                     'is_active': False,
                     'is_late_enrollment_eligible': False,
+                    'restriction_type': None,
                 },
                 {
                     'key': 'course-v1:org+course+1T2028',
@@ -714,6 +736,7 @@ class AlgoliaUtilsTests(TestCase):
                     'content_price': 0.0,
                     'is_active': False,
                     'is_late_enrollment_eligible': False,
+                    'restriction_type': None,
                 },
                 {
                     'key': 'course-v1:org+course+1T2021',
@@ -732,6 +755,7 @@ class AlgoliaUtilsTests(TestCase):
                     'content_price': 50,
                     'is_active': True,
                     'is_late_enrollment_eligible': False,
+                    'restriction_type': None,
                 },
                 {
                     'key': 'course-v1:org+course+1T3000',
@@ -750,6 +774,7 @@ class AlgoliaUtilsTests(TestCase):
                     'content_price': 0.0,
                     'is_active': True,
                     'is_late_enrollment_eligible': False,
+                    'restriction_type': None,
                 },
                 {
                     'key': 'course-v1:org+course+1T3022',
@@ -768,7 +793,27 @@ class AlgoliaUtilsTests(TestCase):
                     'content_price': 0.0,
                     'is_active': False,
                     'is_late_enrollment_eligible': False,
-                }
+                    'restriction_type': None,
+                },
+                {
+                    'key': 'course-v1:org+course+1T3022',
+                    'pacing_type': 'instructor_paced',
+                    'availability': 'Starting Soon',
+                    'start': "3000-01-04T00:00:00Z",
+                    'end': "3022-12-31T23:59:00Z",
+                    'min_effort': 2,
+                    'max_effort': 6,
+                    'weeks_to_complete': 6,
+                    'upgrade_deadline': 32503680000.0,
+                    'enroll_by': None,
+                    'enroll_start': None,
+                    'has_enroll_by': False,
+                    'has_enroll_start': False,
+                    'content_price': 0.0,
+                    'is_active': False,
+                    'is_late_enrollment_eligible': False,
+                    'restriction_type': RESTRICTION_FOR_B2B,
+                },
             ],
         ),
     )

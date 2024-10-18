@@ -1293,15 +1293,13 @@ class TestRestrictedRunsModels(TestCase):
             ['published', 'unpublished'],
         )
         self.assertEqual(record.content_key, content_metadata_dict['key'])
-        self.assertEqual(record.content_uuid, content_metadata_dict['uuid'])
+        self.assertEqual(str(record.content_uuid), content_metadata_dict['uuid'])
         self.assertEqual(record.content_type, content_metadata_dict['content_type'])
         self.assertEqual(record.unrestricted_parent, parent_record)
         self.assertEqual(record.catalog_query, catalog_query)
         self.assertEqual(
-            list(record.restricted_run_allowed_for_restricted_course.all().select_related(
-                'run',
-            ).values_list(
-                'run__content_key', flat=True,
+            list(record.restricted_run_allowed_for_restricted_course.all().values_list(
+                'content_key', flat=True,
             )),
             ['course-v1:edX+course+run2'],
         )
@@ -1345,17 +1343,20 @@ class TestRestrictedRunsModels(TestCase):
         )
         content_metadata_dict = {
             'key': 'edX+course',
+            'aggregation_key': 'course:edX+course',
             'uuid': '11111111-1111-1111-1111-111111111111',
             'content_type': COURSE,
             'course_runs': [
                 {
                     'key': 'course-v1:edX+course+run1',
+                    'aggregation_key': 'courserun:edX+course',
                     'is_restricted': False,
                     'status': 'published',
                     'uuid': str(uuid4()),
                 },
                 {
                     'key': 'course-v1:edX+course+run2',
+                    'aggregation_key': 'courserun:edX+course',
                     'is_restricted': True,
                     COURSE_RUN_RESTRICTION_TYPE_KEY: RESTRICTION_FOR_B2B,
                     'status': 'unpublished',
@@ -1363,6 +1364,7 @@ class TestRestrictedRunsModels(TestCase):
                 },
                 {
                     'key': 'course-v1:edX+course+run3',
+                    'aggregation_key': 'courserun:edX+course',
                     'is_restricted': True,
                     COURSE_RUN_RESTRICTION_TYPE_KEY: RESTRICTION_FOR_B2B,
                     'status': 'other',
@@ -1373,6 +1375,7 @@ class TestRestrictedRunsModels(TestCase):
         course_run_results = [
             {
                 'key': 'course-v1:edX+course+run2',
+                'aggregation_key': 'courserun:edX+course',
                 'is_restricted': True,
                 COURSE_RUN_RESTRICTION_TYPE_KEY: RESTRICTION_FOR_B2B,
                 'status': 'unpublished',
@@ -1381,6 +1384,7 @@ class TestRestrictedRunsModels(TestCase):
             },
             {
                 'key': 'course-v1:edX+course+run3',
+                'aggregation_key': 'courserun:edX+course',
                 'is_restricted': True,
                 COURSE_RUN_RESTRICTION_TYPE_KEY: RESTRICTION_FOR_B2B,
                 'status': 'other',
@@ -1428,15 +1432,14 @@ class TestRestrictedRunsModels(TestCase):
             unrestricted_parent=parent_record,
             catalog_query=catalog_query,
         )
-        restricted_run_relationships = list(
-            restricted_course.restricted_run_allowed_for_restricted_course.all().select_related(
-                'run',
-            ).order_by(
-                'run__content_key',
-            ))
+        restricted_runs = list(
+            restricted_course.restricted_run_allowed_for_restricted_course.all().order_by(
+                'content_key',
+            )
+        )
         self.assertEqual(
-            [relationship.run.content_key for relationship in restricted_run_relationships],
+            [run.content_key for run in restricted_runs],
             ['course-v1:edX+course+run2', 'course-v1:edX+course+run3'],
         )
-        self.assertEqual(restricted_run_relationships[0].run.json_metadata['other'], 'stuff')
-        self.assertEqual(restricted_run_relationships[1].run.json_metadata['other'], 'things')
+        self.assertEqual(restricted_runs[0].json_metadata['other'], 'stuff')
+        self.assertEqual(restricted_runs[1].json_metadata['other'], 'things')
