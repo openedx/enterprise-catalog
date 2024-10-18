@@ -883,16 +883,23 @@ class RestrictedCourseMetadata(BaseContentMetadata):
     def store_record_with_query(cls, course_metadata_dict, catalog_query):
         filtered_metadata = cls.filter_restricted_runs(course_metadata_dict, catalog_query)
         course_record = cls._store_record(filtered_metadata, catalog_query)
+        relationships = []
+
         for course_run_dict in cls.restricted_runs_for_course(filtered_metadata, catalog_query):
             course_run_record, _ = ContentMetadata.objects.get_or_create(
                 content_key=course_run_dict['key'],
                 content_type=COURSE_RUN,
                 defaults=_restricted_content_defaults(course_run_dict),
             )
-            RestrictedRunAllowedForRestrictedCourse.objects.get_or_create(
+            relationship, _ = RestrictedRunAllowedForRestrictedCourse.objects.get_or_create(
                 course=course_record, run=course_run_record,
             )
+            relationships.append(relationship)
 
+        # We use a set() here, with clear=True, to clear and then reset the related allowed runs
+        # for this restricted course. This is necessary in the case that a previously-allowed
+        # run becomes unassociated from the restricted course.
+        course_record.restricted_run_allowed_for_restricted_course.set(relationships, clear=True)
         return course_record
 
     @classmethod
