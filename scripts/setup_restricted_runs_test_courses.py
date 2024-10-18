@@ -153,3 +153,19 @@ restricted_runs_allowed.append(RestrictedRunAllowedForRestrictedCourse.objects.g
     course=restricted_course_unicorn,
     run=course_unicorn_run1,
 )[0])
+
+# Finally update the catalog query content filters to reflect the relationships
+# =============================================================================
+catalog_query.content_filter |= {
+    'restricted_runs_allowed': {
+        f'course:{course_mixed.content_key}': [course_mixed_run2.content_key],
+        f'course:{course_unicorn.content_key}': [course_mixed_run1.content_key],
+    },
+}
+catalog_query.save()
+catalog_query_2.content_filter |= {
+    'restricted_runs_allowed': {
+        f'course:{course_mixed.content_key}': [course_mixed_run3.content_key],
+    },
+}
+catalog_query_2.save()
