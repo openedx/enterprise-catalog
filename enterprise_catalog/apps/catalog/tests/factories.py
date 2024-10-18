@@ -88,6 +88,9 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
             'aggregation_key': f'{self.content_type}:{self.content_key}',
             'uuid': str(self.content_uuid),
             'title': self.title,
+            'normalized_metadata': {
+                'enroll_by_date': '2026-01-26T23:59:59Z',
+            },
         }
         if self.content_type == COURSE:
             owners = [{
