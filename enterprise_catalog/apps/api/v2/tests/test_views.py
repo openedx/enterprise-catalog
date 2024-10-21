@@ -2,6 +2,7 @@ import json
 import json
 import uuid
 from datetime import datetime
+from typing import final
 from unittest import mock
 
 import ddt
@@ -462,7 +463,6 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         # Create a course with both an unrestricted (run1) and restricted run (run2), and the restricted run is allowed
         # by the CatalogQuery.
         {
-            'learner_portal_enabled': True,
             'create_catalog_query': {
                 '11111111-1111-1111-1111-111111111111': {
                     'content_filter': {
@@ -485,7 +485,9 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
                         'course_runs': [
                             {
                                 'key': 'course-v1:edX+course+run1',
-                                'status': 'active'
+                                'status': 'published',
+                                'is_enrollable': True,
+                                'is_marketable': True,
                             },
                         ],
                     },
@@ -501,48 +503,18 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
                         'course_runs': [
                             {
                                 'key': 'course-v1:edX+course+run1',
-                                'status': 'active'
+                                'status': 'published',
+                                'is_enrollable': True,
+                                'is_marketable': True,
                             },
                             {
                                 'key': 'course-v1:edX+course+run2',
-                                'status': 'active'
+                                'status': 'published',
+                                'is_enrollable': True,
+                                'is_marketable': True,
                             },
                         ],
                     },
-                },
-            },
-            'create_restricted_run_allowed_for_restricted_course': [
-                {'course': 1, 'run': 'course-v1:edX+course+run2'},
-            ],
-        },
-        {
-            'learner_portal_enabled': False,
-            'create_catalog_query': {
-                '11111111-1111-1111-1111-111111111111': {
-                    'content_filter': {
-                        'restricted_runs_allowed': {
-                            'course:edX+course': [
-                                'course-v1:edX+course+run2',
-                            ],
-                        },
-                    },
-                },
-            },
-            'create_content_metadata': {
-                'edX+course': {
-                    'create_runs': {
-                        'course-v1:edX+course+run1': {'is_restricted': False},
-                        'course-v1:edX+course+run2': {'is_restricted': True},
-                    },
-                    'json_metadata': {'foobar': 'base metadata'},
-                    'associate_with_catalog_query': '11111111-1111-1111-1111-111111111111',
-                },
-            },
-            'create_restricted_courses': {
-                1: {
-                    'content_key': 'edX+course',
-                    'catalog_query': '11111111-1111-1111-1111-111111111111',
-                    'json_metadata': {'foobar': 'override metadata'},
                 },
             },
             'create_restricted_run_allowed_for_restricted_course': [
@@ -551,11 +523,10 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         },
     )
     @ddt.unpack
-    def test_my_get_content_metadata_content_filters_round_2(
+    def test_get_content_metadata_content_filters_round_2(
 
         self,
         mock_api_client,
-        learner_portal_enabled,
         create_catalog_query,
         create_content_metadata=None,
         create_restricted_courses=None,
@@ -566,7 +537,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         """
         mock_api_client.return_value.get_enterprise_customer.return_value = {
             'slug': self.enterprise_slug,
-            'enable_learner_portal': learner_portal_enabled,
+            'enable_learner_portal': True,
             'modified': str(datetime.now().replace(tzinfo=pytz.UTC)),
         }
 
@@ -579,11 +550,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         main_catalog.enterprise_uuid = self.enterprise_uuid
         main_catalog.save()
 
-        filtered_content_keys = [
-            'edX+course',
-            'course-v1:edX+course+run1',
-            'course-v1:edX+course+run2',
-        ]
+        filtered_content_keys = ['course-v1:edX+course+run1', 'course-v1:edX+course+run2', ]
         url = self._get_content_metadata_url(main_catalog)
         for filter_content_key in filtered_content_keys:
             url += f"&content_keys={filter_content_key}"
@@ -592,7 +559,118 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
             url,
             {'content_keys': filtered_content_keys}
         )
-        print(f'response: {response.data}')
-        assert response.data.get('count') == int(api_settings.PAGE_SIZE / 2)
-        for result in response.data.get('results'):
-            assert get_content_key(result) in filtered_content_keys
+
+        self.assertEqual(response.data.get('count'), 1)
+        results = response.data.get('results')[0]
+        self.assertEqual(results.get('key'), 'edX+course')
+        course_runs = results.get('course_runs')
+
+        for course_run in course_runs:
+            self.assertIn(course_run.get('key'), filtered_content_keys)
+
+
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
+    @ddt.data(
+        # Create a course with both an unrestricted (run1) and restricted run (run2), and the restricted run is NOT
+        # allowed by the CatalogQuery.
+        {
+            'create_catalog_query': {
+                '11111111-1111-1111-1111-111111111111': {
+                    'content_filter': {
+                        'restricted_runs_allowed': {},
+                    },
+                },
+            },
+            'create_content_metadata': {
+                'edX+course': {
+                    'create_runs': {
+                        'course-v1:edX+course+run1': {'is_restricted': False},
+                        'course-v1:edX+course+run2': {'is_restricted': True},
+                    },
+                    'json_metadata': {
+                        'key': 'edX+course',
+                        'course_runs': [
+                            {
+                                'key': 'course-v1:edX+course+run1',
+                                'status': 'published',
+                                'is_enrollable': True,
+                                'is_marketable': True,
+                            },
+                        ],
+                    },
+                    'associate_with_catalog_query': '11111111-1111-1111-1111-111111111111',
+                },
+            },
+            'create_restricted_courses': {
+                1: {
+                    'content_key': 'edX+course',
+                    'catalog_query': '11111111-1111-1111-1111-111111111111',
+                    'json_metadata': {
+                        'key': 'edX+course',
+                        'course_runs': [
+                            {
+                                'key': 'course-v1:edX+course+run1',
+                                'status': 'published',
+                                'is_enrollable': True,
+                                'is_marketable': True,
+                            },
+                            {
+                                'key': 'course-v1:edX+course+run2',
+                                'status': 'published',
+                                'is_enrollable': True,
+                                'is_marketable': True,
+                            },
+                        ],
+                    },
+                },
+            },
+            'create_restricted_run_allowed_for_restricted_course': [
+                {'course': 1, 'run': 'course-v1:edX+course+run2'},
+            ],
+        },
+    )
+    @ddt.unpack
+    def test_get_content_metadata_round_2(
+
+        self,
+        mock_api_client,
+        create_catalog_query,
+        create_content_metadata=None,
+        create_restricted_courses=None,
+        create_restricted_run_allowed_for_restricted_course=None,
+    ):
+        """
+        Test that the get_content_metadata view GET view will filter provided content_keys (up to a limit)
+        """
+        mock_api_client.return_value.get_enterprise_customer.return_value = {
+            'slug': self.enterprise_slug,
+            'enable_learner_portal': True,
+            'modified': str(datetime.now().replace(tzinfo=pytz.UTC)),
+        }
+
+        main_catalog, catalog_queries, content_metadata, restricted_courses = test_utils.setup_scaffolding(
+            create_catalog_query,
+            create_content_metadata,
+            create_restricted_courses,
+            create_restricted_run_allowed_for_restricted_course,
+        )
+        main_catalog.enterprise_uuid = self.enterprise_uuid
+        main_catalog.save()
+
+        filtered_content_keys = ['course-v1:edX+course+run1', 'course-v1:edX+course+run2', ]
+        url = self._get_content_metadata_url(main_catalog)
+        for filter_content_key in filtered_content_keys:
+            url += f"&content_keys={filter_content_key}"
+
+        response = self.client.get(
+            url,
+            {'content_keys': filtered_content_keys}
+        )
+
+        self.assertEqual(response.data.get('count'), 1)
+        results = response.data.get('results')[0]
+        print(f'results: {results}')
+        self.assertEqual(results.get('key'), 'edX+course')
+        course_runs = results.get('course_runs')
+        self.assertEqual(len(course_runs), 1)
+        self.assertEqual(course_runs[0].get('key'), 'course-v1:edX+course+run1')
