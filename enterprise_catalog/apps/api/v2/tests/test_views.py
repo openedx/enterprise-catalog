@@ -284,5 +284,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         results = response.data.get('results')[0]
         self.assertEqual(results.get('key'), 'edX+course')
         course_runs = results.get('course_runs')
+        # only one (unrestricted) run is returned
         self.assertEqual(len(course_runs), 1)
+        # contains only the unrestricted run
         self.assertEqual(course_runs[0].get('key'), 'course-v1:edX+course+run1')
