@@ -8,6 +8,7 @@ from enterprise_catalog.apps.api.v2.views.enterprise_catalog_get_content_metadat
     EnterpriseCatalogGetContentMetadataV2,
 )
 
+
 app_name = 'v2'
 
 router = DefaultRouter()

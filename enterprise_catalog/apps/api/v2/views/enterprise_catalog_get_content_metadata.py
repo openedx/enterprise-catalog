@@ -1,4 +1,6 @@
-from enterprise_catalog.apps.api.v1.views.enterprise_catalog_get_content_metadata import EnterpriseCatalogGetContentMetadata
+from enterprise_catalog.apps.api.v1.views.enterprise_catalog_get_content_metadata import (
+    EnterpriseCatalogGetContentMetadata,
+)
 
 
 class EnterpriseCatalogGetContentMetadataV2(EnterpriseCatalogGetContentMetadata):

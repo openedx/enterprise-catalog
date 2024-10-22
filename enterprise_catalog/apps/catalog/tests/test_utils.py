@@ -1,9 +1,6 @@
 """ Test Util for catalog models. """
 
-from enterprise_catalog.apps.catalog.constants import (
-    COURSE,
-    COURSE_RUN,
-)
+from enterprise_catalog.apps.catalog.constants import COURSE, COURSE_RUN
 from enterprise_catalog.apps.catalog.tests import factories
 
 

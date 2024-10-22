@@ -1,40 +1,16 @@
-import json
-import json
-import uuid
 from datetime import datetime
-from typing import final
 from unittest import mock
 
 import ddt
 import pytz
-from django.conf import settings
-from django.utils.text import slugify
 from rest_framework import status
 from rest_framework.reverse import reverse
-from rest_framework.settings import api_settings
-from six.moves.urllib.parse import quote_plus
 
 from enterprise_catalog.apps.api.v1.tests.mixins import APITestMixin
-from enterprise_catalog.apps.api.v1.utils import is_any_course_run_active
-from enterprise_catalog.apps.catalog.constants import (
-    COURSE,
-    COURSE_RUN,
-    EXEC_ED_2U_COURSE_TYPE,
-    LEARNER_PATHWAY,
-    PROGRAM,
-)
-from enterprise_catalog.apps.catalog.models import (
-    ContentMetadata,
-)
+from enterprise_catalog.apps.catalog.models import ContentMetadata
 from enterprise_catalog.apps.catalog.tests import test_utils
 from enterprise_catalog.apps.catalog.tests.factories import (
-    ContentMetadataFactory,
     EnterpriseCatalogFactory,
-)
-from enterprise_catalog.apps.catalog.utils import (
-    enterprise_proxy_login_url,
-    get_content_key,
-    get_parent_content_key,
 )
 
 
