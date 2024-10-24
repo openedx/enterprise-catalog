@@ -18,7 +18,6 @@ from enterprise_catalog.apps.catalog.constants import (
 )
 
 
-
 @ddt.ddt
 class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
     """
