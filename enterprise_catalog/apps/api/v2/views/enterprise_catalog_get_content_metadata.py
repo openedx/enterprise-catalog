@@ -1,4 +1,5 @@
 from asyncio.log import logger
+
 from enterprise_catalog.apps.api.v1.views.enterprise_catalog_get_content_metadata import (
     EnterpriseCatalogGetContentMetadata,
 )
