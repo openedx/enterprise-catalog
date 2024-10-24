@@ -229,7 +229,7 @@ def _should_index_course(course_metadata):
         return not is_course_run_active(advertised_course_run)
 
     def deadline_passed_checker():
-        return _has_enroll_by_deadline_passed(course_json_metadata, advertised_course_run)
+        return _has_enroll_by_deadline_passed(course_json_metadata)
 
     for should_not_index_function, log_message in (
         (no_advertised_course_run_checker, 'no advertised course run'),
@@ -246,23 +246,18 @@ def _should_index_course(course_metadata):
     return True
 
 
-def _has_enroll_by_deadline_passed(course_json_metadata, advertised_course_run):
+def _has_enroll_by_deadline_passed(course_json_metadata):
     """
     Helper to determine if the enrollment deadline has passed for the given course
-    and advertised course run.  For course metadata records with a `course_type` of "course" (e.g. OCM courses),
-    this is based on the verified upgrade deadline.
-    For 2u exec ed courses, this is based on the registration deadline.
+    based on normalized_metadata's enroll_by_date
     """
-    enroll_by_deadline_timestamp = 0
-    if course_json_metadata.get('course_type') == EXEC_ED_2U_COURSE_TYPE:
-        additional_metadata = course_json_metadata.get('additional_metadata') or {}
-        registration_deadline = additional_metadata.get('registration_deadline')
-        if registration_deadline:
-            enroll_by_deadline_timestamp = parse_datetime(registration_deadline).timestamp()
+    enroll_by_deadline = course_json_metadata.get('normalized_metadata')['enroll_by_date']
+    if isinstance(enroll_by_deadline, str):
+        enroll_by_deadline_timestamp = parse_datetime(enroll_by_deadline).timestamp()
+        return enroll_by_deadline_timestamp < localized_utcnow().timestamp()
     else:
-        enroll_by_deadline_timestamp = _get_verified_upgrade_deadline(advertised_course_run)
-
-    return enroll_by_deadline_timestamp < localized_utcnow().timestamp()
+        # Courses without enrollment deadline shouldn't be disqualified
+        return False
 
 
 def partition_course_keys_for_indexing(courses_content_metadata):
@@ -281,11 +276,16 @@ def partition_course_keys_for_indexing(courses_content_metadata):
     nonindexable_course_keys = set()
 
     for course_metadata in courses_content_metadata:
-        if _should_index_course(course_metadata):
-            indexable_course_keys.add(course_metadata.content_key)
-        else:
-            nonindexable_course_keys.add(course_metadata.content_key)
-
+        try:
+            if _should_index_course(course_metadata):
+                indexable_course_keys.add(course_metadata.content_key)
+            else:
+                nonindexable_course_keys.add(course_metadata.content_key)
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            logger.warning(
+                f"Failed determining indexable status for course_metadata "
+                f"'{course_metadata.content_key}' due to: {e}"
+            )
     return list(indexable_course_keys), list(nonindexable_course_keys)
 
 
