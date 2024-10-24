@@ -842,6 +842,11 @@ class RestrictedCourseMetadata(BaseContentMetadata):
         related_name='restricted_content_metadata',
         on_delete=models.deletion.SET_NULL,
     )
+    restricted_run_allowed_for_restricted_course = models.ManyToManyField(
+        ContentMetadata,
+        through='RestrictedRunAllowedForRestrictedCourse',
+        through_fields=('course', 'run'),
+    )
     history = HistoricalRecords()
 
     def __str__(self):
@@ -850,86 +855,6 @@ class RestrictedCourseMetadata(BaseContentMetadata):
         """
         catalog_query_id = self.catalog_query.id if self.catalog_query else None
         return f"<{self.__class__.__name__} for '{self.content_key}' and CatalogQuery ({catalog_query_id})>"
-
-    @classmethod
-    def _store_record(cls, course_metadata_dict, catalog_query=None):
-        """
-        Given a course metadata dictionary, stores a corresponding
-        ``RestrictedContentMetadata`` record. Raises if the content key
-        is not of type 'course', or if a corresponding unrestricted parent
-        record cannot be found.
-        """
-        content_type = course_metadata_dict.get('content_type')
-        if content_type != COURSE:
-            raise Exception('Can only store RestrictedContentMetadata with content type of course')
-
-        course_key = course_metadata_dict['key']
-        parent_record = ContentMetadata.objects.get(content_key=course_key, content_type=COURSE)
-
-        record, _ = cls.objects.update_or_create(
-            content_key=course_key,
-            content_type=COURSE,
-            unrestricted_parent=parent_record,
-            catalog_query=catalog_query,
-            defaults=_restricted_content_defaults(course_metadata_dict),
-        )
-        return record
-
-    @classmethod
-    def store_canonical_record(cls, course_metadata_dict):
-        return cls._store_record(course_metadata_dict)
-
-    @classmethod
-    def store_record_with_query(cls, course_metadata_dict, catalog_query):
-        filtered_metadata = cls.filter_restricted_runs(course_metadata_dict, catalog_query)
-        course_record = cls._store_record(filtered_metadata, catalog_query)
-        relationships = []
-
-        for course_run_dict in cls.restricted_runs_for_course(filtered_metadata, catalog_query):
-            course_run_record, _ = ContentMetadata.objects.get_or_create(
-                content_key=course_run_dict['key'],
-                content_type=COURSE_RUN,
-                defaults=_restricted_content_defaults(course_run_dict),
-            )
-            relationship, _ = RestrictedRunAllowedForRestrictedCourse.objects.get_or_create(
-                course=course_record, run=course_run_record,
-            )
-            relationships.append(relationship)
-
-        # We use a set() here, with clear=True, to clear and then reset the related allowed runs
-        # for this restricted course. This is necessary in the case that a previously-allowed
-        # run becomes unassociated from the restricted course.
-        course_record.restricted_run_allowed_for_restricted_course.set(relationships, clear=True)
-        return course_record
-
-    @classmethod
-    def filter_restricted_runs(cls, course_metadata_dict, catalog_query):
-        """
-        Returns a copy of ``course_metadata_dict`` whose course_runs list
-        contains only unrestricted runs and restricted runs that are allowed
-        by the provided ``catalog_query``, and whose ``course_runs_keys``,
-        ``course_run_statuses``, and ``first_enrollable_paid_seat_price`` items
-        are updated to take only these allowed runs into account.
-        """
-        filtered_metadata = copy.deepcopy(course_metadata_dict)
-
-        allowed_runs = []
-        allowed_statuses = set()
-        allowed_keys = []
-
-        for run in cls.allowed_runs_for_course(filtered_metadata, catalog_query):
-            allowed_runs.append(run)
-            allowed_statuses.add(run['status'])
-            allowed_keys.append(run['key'])
-
-        filtered_metadata['course_runs'] = allowed_runs
-        filtered_metadata['course_run_keys'] = allowed_keys
-        filtered_metadata['course_run_statuses'] = sorted(list(allowed_statuses))
-        filtered_metadata['first_enrollable_paid_seat_price'] = get_course_first_paid_enrollable_seat_price(
-            filtered_metadata,
-        )
-
-        return filtered_metadata
 
     @staticmethod
     def allowed_runs_for_course(course_metadata_dict, catalog_query):
@@ -958,6 +883,171 @@ class RestrictedCourseMetadata(BaseContentMetadata):
             if run['key'] in allowed_restricted_runs
         ]
 
+    @property
+    def restricted_run_dicts(self):
+        return self.restricted_runs_for_course(self.json_metadata, self.catalog_query)
+
+    def update_metadata(self, course_metadata_dict, is_full_update=False):
+        """
+        Updates and saves the json_metadata for this restricted course.
+        Params:
+          course_metadata_dict: A dictionary of course metadata
+            fetched from either /api/v1/search/all *or* /api/v1/courses (course-discovery).
+          is_full_update: Whether the course metadata provided is fetched from /api/v1/courses.
+            If so, we fully update the json_metadata of this record with those contents, otherwise
+            the update is trimmed down by `_get_defaults_from_metadata()`. Defaults to False.
+        """
+        if self.catalog_query:
+            filtered_metadata = self.filter_restricted_runs(course_metadata_dict, self.catalog_query)
+        else:
+            filtered_metadata = course_metadata_dict
+
+        if is_full_update:
+            self._json_metadata.update(filtered_metadata)
+        else:
+            # We care about preserving the values of the "plucked"
+            # fields iterated through in `_get_defaults_from_metadata()`
+            # when we're doing a non-full update
+            # (i.e. an update from a course-discovery api/v1/search/all payload)
+            self._json_metadata.update(
+                _get_defaults_from_metadata(filtered_metadata)['_json_metadata'],
+            )
+        self.save()
+
+    def update_course_run_relationships(self):
+        """
+        Updates the relationships between restricted course runs, this
+        restricted course, and this restricted course's catalog_query.
+        """
+        existing_relationships = list(self.catalog_query.contentmetadata_set.filter(
+            parent_content_key=self.content_key,
+        ).values_list('content_key', flat=True))
+        LOGGER.info(
+            '%s has existing course run relationships %s prior to updating',
+            self, existing_relationships,
+        )
+
+        restricted_runs = []
+
+        for course_run_dict in self.restricted_run_dicts:
+            course_run_record = self.update_or_create_run(
+                course_run_key=get_content_key(course_run_dict),
+                parent_content_key=self.content_key,
+                course_run_dict=course_run_dict,
+            )
+            restricted_runs.append(course_run_record)
+
+        # We use a set() here, with clear=True, to clear and then reset the related allowed runs
+        # for this restricted course. This is necessary in the case that a previously-allowed
+        # run becomes unassociated from the restricted course.
+        self.catalog_query.contentmetadata_set.set(restricted_runs, clear=True)
+        LOGGER.info('Updated restricted runs on catalog query of %s to %s', self, restricted_runs)
+        self.restricted_run_allowed_for_restricted_course.set(restricted_runs, clear=True)
+        LOGGER.info('Updated restricted runs of %s to %s', self, restricted_runs)
+        self.refresh_from_db()
+
+    @classmethod
+    def update_or_create_run(cls, course_run_key, parent_content_key, course_run_dict):
+        """
+        Helper to create a course run ContentMetadata record, provided a content key,
+        a parent course key, and a dictionary of course run metadata.
+        """
+        defaults = _get_defaults_from_metadata(course_run_dict)
+        # We have to pop these fields from defaults to keep them from
+        # being used in the UPDATE statement, because the nested course run
+        # data from the /api/v1/search/all payload *does not* include the
+        # course run uuid or aggregation key, which are used by
+        # _get_defaults_from_metadata() to compute the content type and parent key.
+        # We additionally pop the content_key field because it's another primary
+        # identifier used to uniquely identify the record in the non-defaults arguments
+        # in update_or_create() below.
+        for key in ['content_key', 'parent_content_key', 'content_type']:
+            defaults.pop(key, None)
+        course_run_record, _ = ContentMetadata.objects.update_or_create(
+            content_key=course_run_key,
+            content_type=COURSE_RUN,
+            parent_content_key=parent_content_key,
+            defaults=defaults,
+        )
+        return course_run_record
+
+    @classmethod
+    def _store_record(cls, course_metadata_dict, catalog_query=None, is_full_update=False):
+        """
+        Given a course metadata dictionary, stores a corresponding
+        ``RestrictedContentMetadata`` record. Raises if the content key
+        is not of type 'course', or if a corresponding unrestricted parent
+        record cannot be found.
+        """
+        content_type = course_metadata_dict.get('content_type')
+        if content_type != COURSE:
+            raise Exception('Can only store RestrictedContentMetadata with content type of course')
+
+        course_key = course_metadata_dict['key']
+        parent_record = ContentMetadata.objects.get(content_key=course_key, content_type=COURSE)
+
+        defaults = {}
+        if content_uuid := get_content_uuid(course_metadata_dict):
+            defaults['content_uuid'] = content_uuid
+
+        record, _ = cls.objects.get_or_create(
+            content_key=course_key,
+            content_type=COURSE,
+            unrestricted_parent=parent_record,
+            catalog_query=catalog_query,
+            defaults=defaults,
+        )
+        record.update_metadata(course_metadata_dict, is_full_update=is_full_update)
+        return record
+
+    @classmethod
+    def store_canonical_record(cls, course_metadata_dict, is_full_update=False):
+        """
+        Stores the canonical copy of this record, which will include all existing
+        course runs for a course, regardless of their restriction status. The canonical
+        record will *not* have a related catalog query.
+        """
+        return cls._store_record(course_metadata_dict, is_full_update=is_full_update)
+
+    @classmethod
+    def store_record_with_query(cls, course_metadata_dict, catalog_query, is_full_update=False):
+        """
+        Stores a restricted course record containing only unrestricted course runs
+        and the restricted course runs explicitly allowed by the provided catalog query.
+        """
+        course_record = cls._store_record(course_metadata_dict, catalog_query, is_full_update=is_full_update)
+        course_record.update_course_run_relationships()
+        return course_record
+
+    @classmethod
+    def filter_restricted_runs(cls, course_metadata_dict, catalog_query):
+        """
+        Returns a copy of ``course_metadata_dict`` whose course_runs list
+        contains only unrestricted runs and restricted runs that are allowed
+        by the provided ``catalog_query``, and whose ``course_runs_keys``,
+        ``course_run_statuses``, and ``first_enrollable_paid_seat_price`` items
+        are updated to take only these allowed runs into account.
+        """
+        filtered_metadata = copy.deepcopy(course_metadata_dict)
+
+        allowed_runs = []
+        allowed_statuses = set()
+        allowed_keys = []
+
+        for run in cls.allowed_runs_for_course(filtered_metadata, catalog_query):
+            allowed_runs.append(run)
+            allowed_statuses.add(run.get('status'))
+            allowed_keys.append(run['key'])
+
+        filtered_metadata['course_runs'] = allowed_runs
+        filtered_metadata['course_run_keys'] = allowed_keys
+        filtered_metadata['course_run_statuses'] = sorted(list(allowed_statuses))
+        filtered_metadata['first_enrollable_paid_seat_price'] = get_course_first_paid_enrollable_seat_price(
+            filtered_metadata,
+        )
+
+        return filtered_metadata
+
 
 class RestrictedRunAllowedForRestrictedCourse(TimeStampedModel):
     """
@@ -973,7 +1063,6 @@ class RestrictedRunAllowedForRestrictedCourse(TimeStampedModel):
         RestrictedCourseMetadata,
         blank=False,
         null=True,
-        related_name='restricted_run_allowed_for_restricted_course',
         on_delete=models.deletion.SET_NULL,
     )
     run = models.ForeignKey(
@@ -1523,10 +1612,20 @@ def synchronize_restricted_content(catalog_query, dry_run=False):
         run_content_filter, QUERY_FOR_RESTRICTED_RUNS,
     )
     for course_run_dict in course_run_payload:
-        course_run_record, _ = ContentMetadata.objects.update_or_create(
-            content_key=course_run_dict['key'],
-            content_type=COURSE_RUN,
-            defaults=_restricted_content_defaults(course_run_dict),
+        course_run_key = get_content_key(course_run_dict)
+        LOGGER.info(
+            'Storing restricted course run %s for catalog_query %s',
+            course_run_dict.get('key'), catalog_query.id,
+        )
+        if dry_run:
+            continue
+
+        # These are "top-level" course run dictionaries, which have aggregation_keys
+        # from which we can determine the parent course key.
+        course_run_record = RestrictedCourseMetadata.update_or_create_run(
+            course_run_key=course_run_key,
+            parent_content_key=get_parent_content_key(course_run_dict),
+            course_run_dict=course_run_dict,
         )
         results.append(course_run_record.content_key)
     return results

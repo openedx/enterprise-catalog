@@ -1131,6 +1131,7 @@ def _get_course_run(course, course_run):
         'content_price': normalized_content_metadata.get('content_price'),
         'is_active': _get_is_active_course_run(course_run),
         'is_late_enrollment_eligible': _get_is_late_enrollment_eligible(course_run),
+        'restriction_type': course_run.get('restriction_type'),
     }
     return course_run
 
