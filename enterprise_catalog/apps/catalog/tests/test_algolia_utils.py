@@ -25,15 +25,28 @@ CURRENT_COURSE_RUN_UUID = uuid4()
 FUTURE_COURSE_RUN_UUID_1 = uuid4()
 FUTURE_COURSE_RUN_UUID_2 = uuid4()
 PAST_COURSE_RUN_UUID_1 = uuid4()
+_days_cache = {}
 
 
-def _days_from_now(days_from_now=0):
-    deadline = localized_utcnow() + timedelta(days=days_from_now)
+def _days_from_now(days=0):
+    deadline = localized_utcnow() + timedelta(days=days)
     return deadline.strftime('%Y-%m-%dT%H:%M:%SZ')
 
 
-def _days_from_now_timestamp(days_from_now):
-    return to_timestamp(_days_from_now(days_from_now))
+def _get_from_cache(days):
+    if days not in _days_cache:
+        deadline = _days_from_now(days)
+
+        _days_cache[days] = {'str': deadline, 'timestamp': to_timestamp(deadline)}
+    return _days_cache[days]
+
+
+def days_from_now(days):
+    return _get_from_cache(days)['str']
+
+
+def days_from_now_timestamp(days):
+    return _get_from_cache(days)['timestamp']
 
 
 @ddt.ddt
@@ -49,40 +62,48 @@ class AlgoliaUtilsTests(TestCase):
         {'expected_result': False, 'advertised_course_run_status': 'unpublished'},
         {'expected_result': False, 'is_enrollable': False},
         {'expected_result': False, 'is_marketable': False},
-        {'expected_result': True, },
-        {'expected_result': True, 'course_run_availability': None},
+        {'expected_result': True, 'enrollment_end': days_from_now(30)},
+        {'expected_result': True, 'course_run_availability': None, 'enrollment_end': days_from_now(30)},
         {
             'expected_result': True,
             'seats': [
-                {'type': 'verified', 'upgrade_deadline': _days_from_now(100)}
+                {'type': 'verified', 'upgrade_deadline': days_from_now(100)}
             ],
+            'enrollment_end': days_from_now(100)
         },
         {
             'expected_result': True,
             'seats': [
-                {'type': 'something-else', 'upgrade_deadline': _days_from_now(-100)}
+                {'type': 'something-else', 'upgrade_deadline': days_from_now(-100)}
             ],
+            'enrollment_end': days_from_now(100)
         },
         {
             'expected_result': False,
             'seats': [
-                {'type': 'verified', 'upgrade_deadline': _days_from_now(-1)}
+                {'type': 'verified', 'upgrade_deadline': days_from_now(-1)}
             ],
         },
         {
             'course_type': EXEC_ED_2U_COURSE_TYPE,
             'expected_result': True,
-            'additional_metadata': {'registration_deadline': '2073-03-21T23:59:59Z'},
+            'start': days_from_now(1),
+            'end': days_from_now(30),
+            'enrollment_end': days_from_now(1)
         },
         {
             'course_type': EXEC_ED_2U_COURSE_TYPE,
             'expected_result': False,
-            'additional_metadata': {'registration_deadline': '2021-03-21T23:59:59Z'},
+            'start': days_from_now(-30),
+            'end': days_from_now(-1),
+            'enrollment_end': days_from_now(-30)
         },
         {
             'course_type': EXEC_ED_2U_COURSE_TYPE,
-            'expected_result': False,
-            'additional_metadata': {'rando-key': 'blah'},
+            'expected_result': True,
+            'start': days_from_now(-30),
+            'end': days_from_now(-1),
+            'enrollment_end': None
         },
     )
     @ddt.unpack
@@ -98,7 +119,9 @@ class AlgoliaUtilsTests(TestCase):
         course_run_availability='current',
         seats=None,
         course_type=COURSE,
-        additional_metadata=None
+        start='2023-01-29T23:59:59Z',
+        end='2023-02-28T23:59:59Z',
+        enrollment_end='2023-01-29T23:59:59Z'
     ):
         """
         Verify that only a course that has a non-hidden advertised course run, at least one owner, and a marketing slug
@@ -119,10 +142,15 @@ class AlgoliaUtilsTests(TestCase):
                     'is_marketable': is_marketable,
                     'availability': course_run_availability,
                     'seats': seats or [],
+                    'start': start,
+                    'end': end,
+                    'enrollment_end': enrollment_end
                 },
             ],
             'owners': owners,
-            'additional_metadata': additional_metadata or {},
+            'normalized_metadata': {
+                'enroll_by_date': enrollment_end
+            }
         }
         course_metadata = ContentMetadataFactory.create(
             content_type=COURSE,
@@ -310,6 +338,7 @@ class AlgoliaUtilsTests(TestCase):
                     'pacing_type': 'instructor_paced',
                     'start': '2013-10-16T14:00:00Z',
                     'end': '2014-10-16T14:00:00Z',
+                    'enrollment_end': '2013-10-17T14:00:00Z',
                     'availability': 'Current',
                     'min_effort': 10,
                     'max_effort': 14,
@@ -331,10 +360,10 @@ class AlgoliaUtilsTests(TestCase):
                 'max_effort': 14,
                 'weeks_to_complete': 13,
                 'upgrade_deadline': 32503680000.0,
-                'enroll_by': None,
                 'enroll_start': 1380636000,
-                'has_enroll_by': False,
                 'has_enroll_start': True,
+                'has_enroll_by': True,
+                'enroll_by': 1382018400.0,
                 'is_active': True,
                 'is_late_enrollment_eligible': False,
                 'content_price': 0.0,
@@ -357,6 +386,8 @@ class AlgoliaUtilsTests(TestCase):
                     'pacing_type': 'instructor_paced',
                     'start': '2013-10-16T14:00:00Z',
                     'end': '2014-10-16T14:00:00Z',
+                    'enrollment_end': '2013-10-17T14:00:00Z',
+                    'enrollment_start_date': '2013-10-01T14:00:00Z',
                     'availability': 'Current',
                     'min_effort': 10,
                     'max_effort': 14,
@@ -390,11 +421,11 @@ class AlgoliaUtilsTests(TestCase):
                 'max_effort': 14,
                 'weeks_to_complete': 13,
                 'upgrade_deadline': 1420386720.0,
-                'enroll_by': 1420386720.0,
-                'enroll_start': 1380636000,
+                'enroll_by': 1382018400.0,
+                'enroll_start': 1380636000.0,
                 'has_enroll_by': True,
                 'has_enroll_start': True,
-                'content_price': 50.0,
+                'content_price': 50,
                 'is_active': True,
                 'is_late_enrollment_eligible': False,
             }
@@ -407,6 +438,7 @@ class AlgoliaUtilsTests(TestCase):
                     'pacing_type': 'instructor_paced',
                     'start': '2013-10-16T14:00:00Z',
                     'end': '2014-10-16T14:00:00Z',
+                    'enrollment_end': '2013-10-17T14:00:00Z',
                     'availability': 'Current',
                     'min_effort': 10,
                     'max_effort': 14,
@@ -433,9 +465,9 @@ class AlgoliaUtilsTests(TestCase):
                 'max_effort': 14,
                 'weeks_to_complete': 13,
                 'upgrade_deadline': 32503680000.0,
-                'enroll_by': None,
+                'enroll_by': 1382018400.0,
                 'enroll_start': None,
-                'has_enroll_by': False,
+                'has_enroll_by': True,
                 'has_enroll_start': False,
                 'content_price': 50,
                 'is_active': True,
@@ -510,6 +542,7 @@ class AlgoliaUtilsTests(TestCase):
                         'availability': 'Archived',
                         'start': "2000-01-04T00:00:00Z",
                         'end': "2001-12-31T23:59:00Z",
+                        'enrollment_end': '2000-01-04T00:00:00Z',
                         'min_effort': 2,
                         'max_effort': 6,
                         'weeks_to_complete': 6,
@@ -523,7 +556,7 @@ class AlgoliaUtilsTests(TestCase):
                         'is_enrollable': False,
                         'is_marketable': False,
                         'availability': 'Current',
-                        'start': _days_from_now(-20),
+                        'start': days_from_now(-20),
                         'end': "3022-12-31T23:59:00Z",
                         'min_effort': 2,
                         'max_effort': 6,
@@ -533,7 +566,7 @@ class AlgoliaUtilsTests(TestCase):
                             'upgrade_deadline': None,
                             'price': "0.00",
                         }],
-                        'enrollment_end': _days_from_now(-10),  # enroll_by is within the late enrollment cutoff
+                        'enrollment_end': days_from_now(-10),  # enroll_by is within the late enrollment cutoff
                         'first_enrollable_paid_seat_price': None,
                         'marketing_url': 'https://openedx.org',
                     },
@@ -546,7 +579,7 @@ class AlgoliaUtilsTests(TestCase):
                         'is_enrollable': False,
                         'is_marketable': False,
                         'availability': 'Current',
-                        'start': _days_from_now(-50),
+                        'start': days_from_now(-50),
                         'end': "3022-12-31T23:59:00Z",
                         'min_effort': 2,
                         'max_effort': 6,
@@ -557,7 +590,7 @@ class AlgoliaUtilsTests(TestCase):
                             'price': '0.00',
                         }],
                         'first_enrollable_paid_seat_price': None,
-                        'enrollment_end': _days_from_now(-40),  # enroll_by is beyond the late enrollment cutoff
+                        'enrollment_end': days_from_now(-40),  # enroll_by is beyond the late enrollment cutoff
                         'marketing_url': 'https://openedx.org',
                     },
                     # Late enrollment case (NOT eligible due to Archived; otherwise within the late enrollment cutoff)
@@ -569,7 +602,7 @@ class AlgoliaUtilsTests(TestCase):
                         'is_enrollable': False,
                         'is_marketable': False,
                         'availability': 'Archived',
-                        'start': _days_from_now(-20),
+                        'start': days_from_now(-20),
                         'end': "3022-12-31T23:59:00Z",
                         'min_effort': 2,
                         'max_effort': 6,
@@ -579,7 +612,7 @@ class AlgoliaUtilsTests(TestCase):
                             'upgrade_deadline': None,
                             'price': '0.00',
                         }],
-                        'enrollment_end': _days_from_now(-10),  # enroll_by is within the late enrollment cutoff
+                        'enrollment_end': days_from_now(-10),  # enroll_by is within the late enrollment cutoff
                         'first_enrollable_paid_seat_price': None,
                         'marketing_url': 'https://openedx.org',
                     },
@@ -593,7 +626,7 @@ class AlgoliaUtilsTests(TestCase):
                         'is_enrollable': False,
                         'is_marketable': False,
                         'availability': 'Current',
-                        'start': _days_from_now(-20),
+                        'start': days_from_now(-20),
                         'end': "3022-12-31T23:59:00Z",
                         'min_effort': 2,
                         'max_effort': 6,
@@ -604,7 +637,7 @@ class AlgoliaUtilsTests(TestCase):
                             'price': '0.00',
                         }],
                         'first_enrollable_paid_seat_price': None,
-                        'enrollment_end': _days_from_now(-10),  # enroll_by is within the late enrollment cutoff
+                        'enrollment_end': days_from_now(-10),  # enroll_by is within the late enrollment cutoff
                         'marketing_url': None,
                     },
                     {
@@ -615,18 +648,18 @@ class AlgoliaUtilsTests(TestCase):
                         'is_enrollable': True,
                         'is_marketable': True,
                         'availability': 'Current',
-                        'start': _days_from_now(-20),
-                        'end': _days_from_now(20),
+                        'start': days_from_now(-20),
+                        'end': days_from_now(20),
                         'min_effort': 2,
                         'max_effort': 6,
                         'weeks_to_complete': 6,
                         'seats': [{
                             'type': 'verified',
-                            'upgrade_deadline': _days_from_now(10),
+                            'upgrade_deadline': days_from_now(10),
                             'price': '50.00',
                         }],
                         'first_enrollable_paid_seat_price': 50,
-                        'enrollment_start': _days_from_now(-25),
+                        'enrollment_start': days_from_now(-25),
                     },
                     {
                         'key': 'course-v1:org+course+1T3000',
@@ -636,12 +669,12 @@ class AlgoliaUtilsTests(TestCase):
                         'is_enrollable': True,
                         'is_marketable': True,
                         'availability': 'Upcoming',
-                        'start': _days_from_now(10),
-                        'end': _days_from_now(20),
+                        'start': days_from_now(10),
+                        'end': days_from_now(20),
                         'min_effort': 2,
                         'max_effort': 6,
                         'weeks_to_complete': 6,
-                        'enrollment_start': _days_from_now(5),
+                        'enrollment_start': days_from_now(5),
                     },
                     {
                         'key': 'course-v1:org+course+1T3022',
@@ -651,8 +684,9 @@ class AlgoliaUtilsTests(TestCase):
                         'is_enrollable': True,
                         'is_marketable': True,
                         'availability': 'Starting Soon',
-                        'start': "3000-01-04T00:00:00Z",
-                        'end': "3022-12-31T23:59:00Z",
+                        'start': days_from_now(1000),
+                        'end': days_from_now(1100),
+                        'enrollment_end': days_from_now(1000),
                         'min_effort': 2,
                         'max_effort': 6,
                         'weeks_to_complete': 6,
@@ -665,13 +699,13 @@ class AlgoliaUtilsTests(TestCase):
                     'key': 'course-v1:org+course+1T2025',
                     'pacing_type': 'instructor_paced',
                     'availability': 'Current',
-                    'start': _days_from_now(-20),
+                    'start': days_from_now(-20),
                     'end': "3022-12-31T23:59:00Z",
                     'min_effort': 2,
                     'max_effort': 6,
                     'weeks_to_complete': 6,
                     'upgrade_deadline': ALGOLIA_DEFAULT_TIMESTAMP,
-                    'enroll_by': _days_from_now_timestamp(-10),
+                    'enroll_by': days_from_now_timestamp(-10),
                     'enroll_start': None,
                     'has_enroll_by': True,
                     'has_enroll_start': False,
@@ -683,13 +717,13 @@ class AlgoliaUtilsTests(TestCase):
                     'key': 'course-v1:org+course+1T2027',
                     'pacing_type': 'instructor_paced',
                     'availability': 'Archived',
-                    'start': _days_from_now(-20),
+                    'start': days_from_now(-20),
                     'end': "3022-12-31T23:59:00Z",
                     'min_effort': 2,
                     'max_effort': 6,
                     'weeks_to_complete': 6,
                     'upgrade_deadline': ALGOLIA_DEFAULT_TIMESTAMP,
-                    'enroll_by': _days_from_now_timestamp(-10),
+                    'enroll_by': days_from_now_timestamp(-10),
                     'enroll_start': None,
                     'has_enroll_by': True,
                     'has_enroll_start': False,
@@ -701,13 +735,13 @@ class AlgoliaUtilsTests(TestCase):
                     'key': 'course-v1:org+course+1T2028',
                     'pacing_type': 'instructor_paced',
                     'availability': 'Current',
-                    'start': _days_from_now(-20),
+                    'start': days_from_now(-20),
                     'end': "3022-12-31T23:59:00Z",
                     'min_effort': 2,
                     'max_effort': 6,
                     'weeks_to_complete': 6,
                     'upgrade_deadline': ALGOLIA_DEFAULT_TIMESTAMP,
-                    'enroll_by': _days_from_now_timestamp(-10),
+                    'enroll_by': days_from_now_timestamp(-10),
                     'enroll_start': None,
                     'has_enroll_by': True,
                     'has_enroll_start': False,
@@ -719,14 +753,14 @@ class AlgoliaUtilsTests(TestCase):
                     'key': 'course-v1:org+course+1T2021',
                     'pacing_type': 'instructor_paced',
                     'availability': 'Current',
-                    'start': _days_from_now(-20),
-                    'end': _days_from_now(20),
+                    'start': days_from_now(-20),
+                    'end': days_from_now(20),
                     'min_effort': 2,
                     'max_effort': 6,
                     'weeks_to_complete': 6,
-                    'upgrade_deadline': _days_from_now_timestamp(10),
-                    'enroll_by': _days_from_now_timestamp(10),
-                    'enroll_start': _days_from_now_timestamp(-25),
+                    'upgrade_deadline': days_from_now_timestamp(10),
+                    'enroll_by': days_from_now_timestamp(10),
+                    'enroll_start': days_from_now_timestamp(-25),
                     'has_enroll_by': True,
                     'has_enroll_start': True,
                     'content_price': 50,
@@ -737,14 +771,14 @@ class AlgoliaUtilsTests(TestCase):
                     'key': 'course-v1:org+course+1T3000',
                     'pacing_type': 'instructor_paced',
                     'availability': 'Upcoming',
-                    'start': _days_from_now(10),
-                    'end': _days_from_now(20),
+                    'start': days_from_now(10),
+                    'end': days_from_now(20),
                     'min_effort': 2,
                     'max_effort': 6,
                     'weeks_to_complete': 6,
                     'upgrade_deadline': 32503680000.0,
                     'enroll_by': None,
-                    'enroll_start': _days_from_now_timestamp(5),
+                    'enroll_start': days_from_now_timestamp(5),
                     'has_enroll_by': False,
                     'has_enroll_start': True,
                     'content_price': 0.0,
@@ -755,16 +789,16 @@ class AlgoliaUtilsTests(TestCase):
                     'key': 'course-v1:org+course+1T3022',
                     'pacing_type': 'instructor_paced',
                     'availability': 'Starting Soon',
-                    'start': "3000-01-04T00:00:00Z",
-                    'end': "3022-12-31T23:59:00Z",
+                    'start': days_from_now(1000),
+                    'end': days_from_now(1100),
                     'min_effort': 2,
                     'max_effort': 6,
                     'weeks_to_complete': 6,
                     'upgrade_deadline': 32503680000.0,
-                    'enroll_by': None,
                     'enroll_start': None,
-                    'has_enroll_by': False,
                     'has_enroll_start': False,
+                    'enroll_by': days_from_now_timestamp(1000),
+                    'has_enroll_by': True,
                     'content_price': 0.0,
                     'is_active': False,
                     'is_late_enrollment_eligible': False,
