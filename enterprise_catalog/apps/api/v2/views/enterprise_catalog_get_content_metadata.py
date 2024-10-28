@@ -1,9 +1,12 @@
-from asyncio.log import logger
+import logging
 
 from enterprise_catalog.apps.api.v1.views.enterprise_catalog_get_content_metadata import (
     EnterpriseCatalogGetContentMetadata,
 )
 from enterprise_catalog.apps.api.v2.utils import is_any_course_run_active
+
+
+logger = logging.getLogger(__name__)
 
 
 class EnterpriseCatalogGetContentMetadataV2(EnterpriseCatalogGetContentMetadata):

@@ -64,6 +64,18 @@ class EnterpriseCustomerViewSet(BaseViewSet):
         """
         return self.kwargs.get('enterprise_uuid')
 
+    def filter_content_keys(self, catalog, content_keys):
+        return catalog.filter_content_keys(content_keys)
+
+    def contains_content_keys(self, catalog, content_keys):
+        return catalog.contains_content_keys(content_keys)
+
+    def get_metadata_by_uuid(self, catalog, content_uuid):
+        return catalog.content_metadata.filter(content_uuid=content_uuid).first()
+
+    def get_metadata_by_content_key(self, catalog, content_key):
+        return catalog.get_matching_content(content_keys=[content_key]).first()
+
     @method_decorator(require_at_least_one_query_parameter('course_run_ids', 'program_uuids'))
     @action(detail=True)
     def contains_content_items(self, request, enterprise_uuid, course_run_ids, program_uuids, **kwargs):
@@ -105,9 +117,9 @@ class EnterpriseCustomerViewSet(BaseViewSet):
 
         any_catalog_contains_content_items = False
         catalogs_that_contain_course = []
+        content_keys = requested_course_or_run_keys + program_uuids
         for catalog in customer_catalogs:
-            contains_content_items = catalog.contains_content_keys(requested_course_or_run_keys + program_uuids)
-            if contains_content_items:
+            if self.contains_content_keys(catalog, content_keys):
                 any_catalog_contains_content_items = True
                 if not (get_catalogs_containing_specified_content_ids or get_catalog_list):
                     # Break as soon as we find a catalog that contains the specified content
@@ -136,8 +148,7 @@ class EnterpriseCustomerViewSet(BaseViewSet):
 
         filtered_content_keys = set()
         for catalog in customer_catalogs:
-            items_included = catalog.filter_content_keys(content_keys)
-            if items_included:
+            if items_included := self.filter_content_keys(catalog, content_keys):
                 filtered_content_keys = filtered_content_keys.union(items_included)
 
         response_data = {
@@ -164,19 +175,17 @@ class EnterpriseCustomerViewSet(BaseViewSet):
             # identifier is a valid UUID.
             content_uuid = uuid.UUID(content_identifier)
             for catalog in enterprise_catalogs:
-                content_with_uuid = catalog.content_metadata.filter(content_uuid=content_uuid)
-                if content_with_uuid:
+                if content_with_uuid := self.get_metadata_by_uuid(catalog, content_uuid):
                     return ContentMetadataSerializer(
-                        content_with_uuid.first(),
+                        content_with_uuid,
                         context={'enterprise_catalog': catalog, **serializer_context},
                     )
         except ValueError:
             # Otherwise, search for matching metadata as a content key
             for catalog in enterprise_catalogs:
-                content_with_key = catalog.get_matching_content(content_keys=[content_identifier])
-                if content_with_key:
+                if content_with_key := self.get_metadata_by_content_key(catalog, content_identifier):
                     return ContentMetadataSerializer(
-                        content_with_key.first(),
+                        content_with_key,
                         context={'enterprise_catalog': catalog, **serializer_context},
                     )
         # If we've made it here without finding a matching ContentMetadata record,
