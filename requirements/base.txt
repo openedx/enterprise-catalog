@@ -6,7 +6,7 @@
 #
 algoliasearch==3.0.0
     # via
-    #   -c requirements/constraints.txt
+    #   -c /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/constraints.txt
     #   -r requirements/base.in
 amqp==5.2.0
     # via kombu
@@ -32,7 +32,7 @@ billiard==4.2.1
     # via celery
 celery==5.4.0
     # via
-    #   -c requirements/constraints.txt
+    #   -c /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/constraints.txt
     #   -r requirements/base.in
     #   django-celery-results
     #   edx-celeryutils
@@ -72,14 +72,14 @@ defusedxml==0.7.1
     #   djangorestframework-xml
     #   python3-openid
     #   social-auth-core
-diff-match-patch==20230430
+diff-match-patch==20241021
     # via django-import-export
 distro==1.9.0
     # via openai
 django==4.2.16
     # via
-    #   -c requirements/common_constraints.txt
-    #   -c requirements/constraints.txt
+    #   -c /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/common_constraints.txt
+    #   -c /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/constraints.txt
     #   -r requirements/base.in
     #   django-celery-results
     #   django-clearcache
@@ -121,7 +121,7 @@ django-crum==0.7.9
     #   edx-toggles
 django-extensions==3.2.3
     # via -r requirements/base.in
-django-import-export==4.1.1
+django-import-export==4.2.0
     # via -r requirements/base.in
 django-log-request-id==2.1.0
     # via -r requirements/base.in
@@ -132,7 +132,7 @@ django-model-utils==5.0.0
     #   edx-rbac
 django-simple-history==3.7.0
     # via
-    #   -c requirements/constraints.txt
+    #   -c /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/constraints.txt
     #   -r requirements/base.in
 django-waffle==4.1.0
     # via
@@ -169,7 +169,7 @@ edx-django-utils==7.0.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==10.4.0
+edx-drf-extensions==10.5.0
     # via
     #   -r requirements/base.in
     #   edx-rbac
@@ -226,7 +226,7 @@ oauthlib==3.2.2
     #   social-auth-core
 openai==1.13.3
     # via
-    #   -c requirements/constraints.txt
+    #   -c /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/constraints.txt
     #   -r requirements/base.in
 pbr==6.1.0
     # via stevedore
@@ -272,7 +272,7 @@ pyyaml==6.0.2
     #   edx-django-release-util
 redis==3.5.3
     # via
-    #   -c requirements/constraints.txt
+    #   -c /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/constraints.txt
     #   -r requirements/base.in
 referencing==0.35.1
     # via
@@ -329,7 +329,7 @@ stevedore==5.3.0
     #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
-tablib==3.5.0
+tablib==3.7.0
     # via django-import-export
 text-unidecode==1.3
     # via python-slugify
