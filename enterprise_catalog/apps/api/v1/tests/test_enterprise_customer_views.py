@@ -2,19 +2,11 @@ import uuid
 from datetime import datetime, timedelta
 from unittest import mock
 
-import pytest
 import pytz
 from rest_framework import status
-from rest_framework.reverse import reverse
 
-from enterprise_catalog.apps.api.v1.tests.mixins import APITestMixin
-from enterprise_catalog.apps.catalog.constants import (
-    RESTRICTED_RUNS_ALLOWED_KEY,
-)
-from enterprise_catalog.apps.catalog.models import (
-    CatalogQuery,
-    ContentMetadata,
-    EnterpriseCatalog,
+from enterprise_catalog.apps.api.base.tests.enterprise_customer_views import (
+    BaseEnterpriseCustomerViewSetTests,
 )
 from enterprise_catalog.apps.catalog.tests.factories import (
     ContentMetadataFactory,
@@ -22,57 +14,10 @@ from enterprise_catalog.apps.catalog.tests.factories import (
 )
 
 
-class EnterpriseCustomerViewSetTests(APITestMixin):
+class EnterpriseCustomerViewSetTests(BaseEnterpriseCustomerViewSetTests):
     """
     Tests for the EnterpriseCustomerViewSet
     """
-
-    def setUp(self):
-        super().setUp()
-        # clean up any stale test objects
-        CatalogQuery.objects.all().delete()
-        ContentMetadata.objects.all().delete()
-        EnterpriseCatalog.objects.all().delete()
-
-        self.enterprise_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
-
-        # Set up catalog.has_learner_access permissions
-        self.set_up_catalog_learner()
-
-    def tearDown(self):
-        super().tearDown()
-        # clean up any stale test objects
-        CatalogQuery.objects.all().delete()
-        ContentMetadata.objects.all().delete()
-        EnterpriseCatalog.objects.all().delete()
-
-    def _get_contains_content_base_url(self, enterprise_uuid=None):
-        """
-        Helper to construct the base url for the contains_content_items endpoint
-        """
-        return reverse(
-            'api:v1:enterprise-customer-contains-content-items',
-            kwargs={'enterprise_uuid': enterprise_uuid or self.enterprise_uuid},
-        )
-
-    def _get_filter_content_base_url(self, enterprise_uuid=None):
-        """
-        Helper to construct the base url for the filter_content_items endpoint
-        """
-        return reverse(
-            'api:v1:enterprise-customer-filter-content-items',
-            kwargs={'enterprise_uuid': enterprise_uuid or self.enterprise_uuid},
-        )
-
-    def _get_generate_diff_base_url(self, enterprise_catalog_uuid=None):
-        """
-        Helper to construct the base url for the catalog `generate_diff` endpoint
-        """
-        return reverse(
-            'api:v1:generate-catalog-diff',
-            kwargs={'uuid': enterprise_catalog_uuid or self.enterprise_catalog.uuid},
-        )
-
     def test_generate_diff_unauthorized_non_catalog_learner(self):
         """
         Verify the generate_diff endpoint rejects users that are not catalog learners
@@ -356,152 +301,6 @@ class EnterpriseCustomerViewSetTests(APITestMixin):
         response = self.client.get(url)
         catalog_list = response.json()['catalog_list']
         assert set(catalog_list) == {str(second_catalog.uuid)}
-
-    @pytest.mark.skip(reason="We need a version of this test for the v2 API.")
-    def test_contains_catalog_list_with_content_ids_param(self):
-        """
-        Verify the contains_content_items endpoint returns a list of catalogs the course is in if the correct
-        parameter is passed
-        """
-        content_metadata = ContentMetadataFactory()
-        self.add_metadata_to_catalog(self.enterprise_catalog, [content_metadata])
-
-        # Create a two catalogs that have the content we're looking for
-        content_key = 'fake-key+101x'
-        second_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
-
-        relevant_content = ContentMetadataFactory(content_key=content_key)
-        self.add_metadata_to_catalog(second_catalog, [relevant_content])
-        url = self._get_contains_content_base_url() + '?course_run_ids=' + content_key + \
-            '&get_catalogs_containing_specified_content_ids=True'
-        self.assert_correct_contains_response(url, True)
-
-        response = self.client.get(url)
-        response_payload = response.json()
-        catalog_list = response_payload['catalog_list']
-        assert set(catalog_list) == {str(second_catalog.uuid)}
-        self.assertIsNone(response_payload['restricted_runs_allowed'])
-
-    @pytest.mark.skip(reason="We need a version of this test for the v2 API.")
-    def test_contains_catalog_key_restricted_runs_allowed(self):
-        """
-        Tests that, when a course key is requested, we also get a response
-        describing any child restricted runs that are allowed under that course key
-        for the customer.
-        """
-        catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
-        catalog.catalog_query.content_filter[RESTRICTED_RUNS_ALLOWED_KEY] = {
-            'org+key1': ['course-v1:org+key1+restrictedrun']
-        }
-        catalog.catalog_query.save()
-        content_one = ContentMetadataFactory(content_key='org+key1')
-        content_two = ContentMetadataFactory(content_key='org+key2')
-        self.add_metadata_to_catalog(catalog, [content_one, content_two])
-
-        other_catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
-        other_catalog.catalog_query.content_filter[RESTRICTED_RUNS_ALLOWED_KEY] = {
-            'course:org+key3': ['course-v1:org+key3+restrictedrun'],
-            'course:org+key4': ['course-v1:org+key4+restrictedrun']
-        }
-        other_catalog.catalog_query.save()
-        content_three = ContentMetadataFactory(content_key='org+key3')
-        # created a content record that has a restricted run,
-        # but which we won't make a request for.
-        content_four = ContentMetadataFactory(content_key='org+key4')
-        content_five = ContentMetadataFactory(content_key='org+key5')
-        self.add_metadata_to_catalog(other_catalog, [content_three, content_four, content_five])
-
-        # make sure to also request a course key that has no restricted runs,
-        # and then assert that it is *not* included in the response payload.
-        url = self._get_contains_content_base_url() + \
-            '?course_run_ids=org+key1&course_run_ids=org+key2&course_run_ids=org+key3&get_catalog_list=true'
-
-        response = self.client.get(url)
-        response_payload = response.json()
-
-        self.assertTrue(response_payload.get('contains_content_items'))
-        self.assertEqual(
-            set(response_payload['catalog_list']),
-            set([str(catalog.uuid), str(other_catalog.uuid)])
-        )
-        self.assertEqual(
-            response_payload['restricted_runs_allowed'],
-            {
-                'org+key1': {
-                    'course-v1:org+key1+restrictedrun': {
-                        'catalog_uuids': [str(catalog.uuid)]
-                    },
-                },
-                'org+key3': {
-                    'course-v1:org+key3+restrictedrun': {
-                        'catalog_uuids': [str(other_catalog.uuid)]
-                    },
-                },
-            }
-        )
-
-    @pytest.mark.skip(reason="We need a version of this test for the v2 API.")
-    def test_restricted_course_disallowed_if_course_not_in_catalog(self):
-        """
-        Tests that a requested course with restricted runs is "disallowed"
-        if the course is not part of a customer's catalog.
-        """
-        catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
-        catalog.catalog_query.content_filter[RESTRICTED_RUNS_ALLOWED_KEY] = {
-            'org+key1': ['course-v1:org+key1+restrictedrun']
-        }
-        catalog.catalog_query.save()
-        ContentMetadataFactory(content_key='org+key1')
-        # don't add this content to the catalog
-
-        url = self._get_contains_content_base_url() + '?course_run_ids=org+key1'
-
-        response = self.client.get(url)
-        response_payload = response.json()
-
-        self.assertFalse(response_payload.get('contains_content_items'))
-        self.assertIsNone(response_payload['restricted_runs_allowed'])
-
-    @pytest.mark.skip(reason="We need a version of this test for the v2 API.")
-    def test_restricted_course_run_allowed_even_if_course_not_in_catalog(self):
-        """
-        Tests that a requested restricted course run is "allowed"
-        even if the course is not part of a customer's catalog. This is necessary
-        because typically restricted runs will not have corresponding
-        `ContentMetadata` records present in the DB, so a lookup via only
-        `EnterpriseCatalog.contains_content_keys` will fail. We rely
-        on the restricted run mapping to ascertain the *implicit* inclusion
-        of a restricted course run in a catalog.
-        """
-        catalog = EnterpriseCatalogFactory(enterprise_uuid=self.enterprise_uuid)
-        catalog.catalog_query.content_filter[RESTRICTED_RUNS_ALLOWED_KEY] = {
-            'org+key1': ['course-v1:org+key1+restrictedrun']
-        }
-        catalog.catalog_query.save()
-        ContentMetadataFactory(content_key='org+key1')
-        # don't add this content to the catalog
-
-        url = self._get_contains_content_base_url() + \
-            '?course_run_ids=course-v1:org+key1+restrictedrun&get_catalog_list=true'
-
-        response = self.client.get(url)
-        response_payload = response.json()
-
-        self.assertTrue(response_payload.get('contains_content_items'))
-        self.assertEqual(
-            response_payload['catalog_list'],
-            [str(catalog.uuid)],
-        )
-        self.assertEqual(
-            response_payload['restricted_runs_allowed'],
-            {
-                'org+key1': {
-                    'course-v1:org+key1+restrictedrun': {
-                        'catalog_uuids': [str(catalog.uuid)]
-                    },
-                },
-            }
-        )
 
     def test_contains_catalog_list_parent_key(self):
         """
