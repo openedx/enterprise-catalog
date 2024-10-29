@@ -29,6 +29,7 @@ from enterprise_catalog.apps.catalog.constants import (
 from enterprise_catalog.apps.catalog.models import CatalogQuery, ContentMetadata
 from enterprise_catalog.apps.catalog.serializers import (
     DEFAULT_NORMALIZED_PRICE,
+    NormalizedContentMetadataSerializer,
     _find_best_mode_seat,
 )
 from enterprise_catalog.apps.catalog.tests.factories import (
@@ -57,6 +58,37 @@ def mock_task(self, *args, **kwargs):  # pylint: disable=unused-argument
 # An actual celery task would have a name attribute, and we use
 # it in a few places, so we patch it in here.
 mock_task.name = 'mock_task'
+
+
+def _hydrate_normalized_metadata(metadata_record):
+    """
+    Populate normalized_metadata fields for ContentMetadata
+    """
+    normalized_metadata_input = {
+        'course_metadata': metadata_record.json_metadata,
+    }
+    metadata_record.json_metadata['normalized_metadata'] =\
+        NormalizedContentMetadataSerializer(normalized_metadata_input).data
+    metadata_record.json_metadata['normalized_metadata_by_run'] = {}
+    for run in metadata_record.json_metadata.get('course_runs', []):
+        metadata_record.json_metadata['normalized_metadata_by_run'].update({
+            run['key']: NormalizedContentMetadataSerializer({
+                'course_run_metadata': run,
+                'course_metadata': metadata_record.json_metadata,
+            }).data
+        })
+
+
+def _hydrate_course_normalized_metadata():
+    """
+    Populate normalized_metadata fields for all course ContentMetadata
+    Needed for tests that generate test ContentMetadata, which does not have
+    normalized_metadata populated by default.
+    """
+    all_course_metadata = ContentMetadata.objects.filter(content_type=COURSE)
+    for course_metadata in all_course_metadata:
+        _hydrate_normalized_metadata(course_metadata)
+        course_metadata.save()
 
 
 @ddt.ddt
@@ -832,6 +864,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         self.course_run_metadata_unpublished.catalog_queries.set([course_run_catalog_query])
         self.course_run_metadata_unpublished.save()
 
+        _hydrate_course_normalized_metadata()
+
     def _set_up_factory_data_for_algolia(self):
         expected_catalog_uuids = sorted([
             str(self.enterprise_catalog_courses.uuid),
@@ -1032,6 +1066,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         test_course_1.save()
         test_course_2.save()
         test_course_3.save()
+        _hydrate_course_normalized_metadata()
 
         actual_algolia_products_sent = []
 
@@ -1131,6 +1166,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         test_course_1.save()
         test_course_2.save()
         test_course_3.save()
+        _hydrate_course_normalized_metadata()
 
         actual_algolia_products_sent = []
 
@@ -2330,6 +2366,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         )
         course_run_for_duplicate = ContentMetadataFactory(content_type=COURSE_RUN, parent_content_key='duplicateX')
         course_run_for_duplicate.catalog_queries.set([self.enterprise_catalog_course_runs.catalog_query])
+        _hydrate_course_normalized_metadata()
 
         actual_algolia_products_sent_sequence = []
 
