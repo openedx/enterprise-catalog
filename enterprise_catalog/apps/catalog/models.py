@@ -953,7 +953,8 @@ class RestrictedCourseMetadata(BaseContentMetadata):
         a parent course key, and a dictionary of course run metadata.
         """
         defaults = _get_defaults_from_metadata(course_run_dict)
-        # We have to pop these fields from defaults to keep them from
+        defaults['parent_content_key'] = parent_content_key
+        # We have to conditionally pop these fields from defaults to keep them from
         # being used in the UPDATE statement, because the nested course run
         # data from the /api/v1/search/all payload *does not* include the
         # course run uuid or aggregation key, which are used by
@@ -961,12 +962,12 @@ class RestrictedCourseMetadata(BaseContentMetadata):
         # We additionally pop the content_key field because it's another primary
         # identifier used to uniquely identify the record in the non-defaults arguments
         # in update_or_create() below.
-        for key in ['content_key', 'parent_content_key', 'content_type']:
-            defaults.pop(key, None)
+        for key in ['content_key', 'content_uuid', 'parent_content_key', 'content_type']:
+            if not defaults.get(key):
+                defaults.pop(key)
         course_run_record, _ = ContentMetadata.objects.update_or_create(
             content_key=course_run_key,
             content_type=COURSE_RUN,
-            parent_content_key=parent_content_key,
             defaults=defaults,
         )
         return course_run_record
