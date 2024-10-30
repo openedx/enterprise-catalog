@@ -141,9 +141,6 @@ start-devstack: ## run a local development copy of the server
 open-devstack: ## open a shell on the server started by start-devstack
 	docker exec -it enterprise_catalog /edx/app/catalog/devstack.sh open
 
-pkg-devstack: ## build the catalog image from the latest configuration and code
-	docker build -t enterprise_catalog:latest -f docker/build/enterprise_catalog/Dockerfile git://github.com/openedx/configuration
-
 detect_changed_source_translations: ## check if translation files are up-to-date
 	cd enterprise_catalog && i18n_tool changed
 
@@ -163,15 +160,6 @@ dev.migrate: # Migrates databases. Application and DB server must be up for this
 
 dev.up: dev.up.redis # Starts all containers
 	docker-compose up -d
-
-dev.up.build: dev.up.redis # Runs docker-compose -up -d --build
-	docker-compose up -d --build
-
-dev.up.build-no-cache: dev.up.redis
-	docker-compose build --no-cache
-	docker-compose up -d
-	docker exec -u 0 -it enterprise.catalog.app pip install -r requirements/pip-tools.txt
-	docker exec -u 0 -it enterprise.catalog.app pip-sync -q requirements/dev.txt requirements/private.* requirements/test.txt
 
 dev.up.redis:
 	docker-compose -f $(DEVSTACK_WORKSPACE)/devstack/docker-compose.yml up -d redis
@@ -215,22 +203,8 @@ mysql-client:  # Opens mysql client in the mysql container shell
 dev.static:
 	docker-compose exec -u 0 app python3 manage.py collectstatic --noinput
 
-docker_build: ## Builds with the latest enterprise catalog
-	docker build . --target app -t openedx/enterprise-catalog:latest
-	docker build . --target newrelic -t openedx/enterprise-catalog:latest-newrelic
-
-docker_tag: docker_build
-	docker tag openedx/enterprise-catalog openedx/enterprise-catalog:$$GITHUB_SHA
-	docker tag openedx/enterprise-catalog:latest-newrelic openedx/enterprise-catalog:$$GITHUB_SHA-newrelic
-
 docker_auth:
 	echo "$$DOCKERHUB_PASSWORD" | docker login -u "$$DOCKERHUB_USERNAME" --password-stdin
-
-docker_push: docker_tag docker_auth ## push to docker hub
-	docker push 'openedx/enterprise-catalog:latest'
-	docker push "openedx/enterprise-catalog:$$GITHUB_SHA"
-	docker push 'openedx/enterprise-catalog:latest-newrelic'
-	docker push "openedx/enterprise-catalog:$$GITHUB_SHA-newrelic"
 
 check_keywords: ## Scan the Django models in all installed apps in this project for restricted field names
 	python manage.py check_reserved_keywords --override_file db_keyword_overrides.yml
