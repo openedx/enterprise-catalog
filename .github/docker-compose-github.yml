@@ -10,10 +10,7 @@ services:
       - enterprise_catalog_mysql8:/var/lib/mysql
 
   app:
-    image: openedx/enterprise-catalog
-    build:
-      context: ..
-      dockerfile: Dockerfile
+    image: edxops/enterprise-catalog-dev
     container_name: enterprise.catalog.app
     volumes:
       - ..:/edx/app/enterprise_catalog/enterprise_catalog
