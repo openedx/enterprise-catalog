@@ -6,26 +6,26 @@
 #
 algoliasearch==3.0.0
     # via
-    #   -c /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/constraints.txt
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -c requirements/constraints.txt
+    #   -r requirements/base.txt
 amqp==5.2.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   kombu
 analytics-python==1.4.post1
-    # via -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    # via -r requirements/base.txt
 annotated-types==0.7.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   pydantic
 anyio==4.6.2.post1
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   httpx
     #   openai
 asgiref==3.8.1
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   django
     #   django-cors-headers
 astroid==3.3.5
@@ -34,45 +34,45 @@ astroid==3.3.5
     #   pylint-celery
 attrs==24.2.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   jsonschema
     #   referencing
 backoff==1.10.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   analytics-python
 billiard==4.2.1
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   celery
 cachetools==5.5.0
     # via tox
 celery==5.4.0
     # via
-    #   -c /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/constraints.txt
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -c requirements/constraints.txt
+    #   -r requirements/base.txt
     #   django-celery-results
     #   edx-celeryutils
 certifi==2024.8.30
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   httpcore
     #   httpx
     #   requests
 cffi==1.17.1
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   cryptography
     #   pynacl
 chardet==5.2.0
     # via tox
 charset-normalizer==3.4.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   requests
 click==8.1.7
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   celery
     #   click-didyoumean
     #   click-log
@@ -83,21 +83,21 @@ click==8.1.7
     #   edx-lint
 click-didyoumean==0.3.1
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   celery
 click-log==0.4.0
     # via edx-lint
 click-plugins==1.1.1
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   celery
 click-repl==0.3.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   celery
 code-annotations==1.8.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   -r requirements/test.in
     #   edx-lint
     #   edx-toggles
@@ -109,20 +109,20 @@ coverage[toml]==7.6.4
     #   pytest-cov
 cryptography==43.0.3
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   pyjwt
     #   social-auth-core
 ddt==1.7.2
     # via -r requirements/test.in
 defusedxml==0.7.1
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   djangorestframework-xml
     #   python3-openid
     #   social-auth-core
 diff-match-patch==20241021
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   django-import-export
 dill==0.3.9
     # via pylint
@@ -130,12 +130,12 @@ distlib==0.3.9
     # via virtualenv
 distro==1.9.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   openai
     # via
-    #   -c /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/common_constraints.txt
-    #   -c /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/constraints.txt
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -c requirements/common_constraints.txt
+    #   -c requirements/constraints.txt
+    #   -r requirements/base.txt
     #   django-celery-results
     #   django-clearcache
     #   django-config-models
@@ -161,95 +161,95 @@ distro==1.9.0
     #   jsonfield2
     #   social-auth-app-django
 django-celery-results==2.5.1
-    # via -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    # via -r requirements/base.txt
 django-clearcache==1.2.1
-    # via -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    # via -r requirements/base.txt
 django-config-models==2.7.0
-    # via -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
-django-cors-headers==4.5.0
-    # via -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    # via -r requirements/base.txt
+django-cors-headers==4.6.0
+    # via -r requirements/base.txt
 django-crum==0.7.9
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   edx-django-utils
     #   edx-rbac
     #   edx-toggles
 django-dynamic-fixture==4.0.1
     # via -r requirements/test.in
 django-extensions==3.2.3
-    # via -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    # via -r requirements/base.txt
 django-import-export==4.2.0
-    # via -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    # via -r requirements/base.txt
 django-log-request-id==2.1.0
-    # via -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    # via -r requirements/base.txt
 django-model-utils==5.0.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   edx-celeryutils
     #   edx-rbac
 django-simple-history==3.7.0
     # via
-    #   -c /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/constraints.txt
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -c requirements/constraints.txt
+    #   -r requirements/base.txt
 django-waffle==4.1.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   edx-django-utils
     #   edx-drf-extensions
     #   edx-toggles
 djangoql==0.18.1
-    # via -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    # via -r requirements/base.txt
 djangorestframework==3.15.2
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   django-config-models
     #   drf-jwt
     #   drf-spectacular
     #   edx-drf-extensions
 djangorestframework-xml==2.0.0
-    # via -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    # via -r requirements/base.txt
 dnspython==2.7.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   pymongo
 drf-jwt==1.19.2
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   edx-drf-extensions
 drf-spectacular==0.27.2
-    # via -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    # via -r requirements/base.txt
 edx-auth-backends==4.4.0
-    # via -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    # via -r requirements/base.txt
 edx-celeryutils==1.3.0
-    # via -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    # via -r requirements/base.txt
 edx-django-release-util==1.4.0
-    # via -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    # via -r requirements/base.txt
 edx-django-utils==7.0.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   django-config-models
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
 edx-drf-extensions==10.5.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   edx-rbac
-edx-lint==5.4.0
+edx-lint==5.4.1
     # via -r requirements/test.in
 edx-opaque-keys==2.11.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   edx-drf-extensions
 edx-rbac==1.10.0
-    # via -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    # via -r requirements/base.txt
 edx-rest-api-client==6.0.0
-    # via -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    # via -r requirements/base.txt
 edx-toggles==5.2.0
-    # via -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    # via -r requirements/base.txt
 factory-boy==3.3.1
     # via -r requirements/test.in
-faker==30.8.1
+faker==30.8.2
     # via factory-boy
 filelock==3.16.1
     # via
@@ -257,25 +257,25 @@ filelock==3.16.1
     #   virtualenv
 h11==0.14.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   httpcore
 httpcore==1.0.6
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   httpx
 httpx==0.27.2
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   openai
 idna==3.10
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   anyio
     #   httpx
     #   requests
 inflection==0.5.1
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   drf-spectacular
 iniconfig==2.0.0
     # via pytest
@@ -283,60 +283,60 @@ isort==5.13.2
     # via pylint
 jinja2==3.1.4
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   code-annotations
 joblib==1.4.2
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   scikit-learn
 jsonfield==3.1.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   edx-celeryutils
 jsonfield2==4.0.0.post0
-    # via -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    # via -r requirements/base.txt
 jsonschema==4.23.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   drf-spectacular
 jsonschema-specifications==2024.10.1
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   jsonschema
 kombu==5.4.2
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   celery
 markupsafe==3.0.2
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   jinja2
 mccabe==0.7.0
     # via pylint
 monotonic==1.6
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   analytics-python
 mysqlclient==2.2.5
-    # via -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    # via -r requirements/base.txt
 newrelic==10.2.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   edx-django-utils
-numpy==2.1.2
+numpy==2.1.3
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   scikit-learn
     #   scipy
 oauthlib==3.2.2
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   requests-oauthlib
     #   social-auth-core
 openai==1.13.3
     # via
-    #   -c /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/constraints.txt
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -c requirements/constraints.txt
+    #   -r requirements/base.txt
 packaging==24.1
     # via
     #   pyproject-api
@@ -344,7 +344,7 @@ packaging==24.1
     #   tox
 pbr==6.1.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   stevedore
 platformdirs==4.3.6
     # via
@@ -357,31 +357,31 @@ pluggy==1.5.0
     #   tox
 ply==3.11
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   djangoql
 prompt-toolkit==3.0.48
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   click-repl
 psutil==6.1.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   edx-django-utils
 pycparser==2.22
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   cffi
 pydantic==2.9.2
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   openai
 pydantic-core==2.23.4
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   pydantic
 pyjwt[crypto]==2.9.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   drf-jwt
     #   edx-auth-backends
     #   edx-drf-extensions
@@ -402,14 +402,14 @@ pylint-plugin-utils==0.8.2
     #   pylint-celery
     #   pylint-django
 pymemcache==4.0.0
-    # via -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    # via -r requirements/base.txt
 pymongo==4.10.1
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   edx-opaque-keys
 pynacl==1.5.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   edx-django-utils
 pyproject-api==1.8.0
     # via tox
@@ -417,45 +417,45 @@ pytest==8.3.3
     # via
     #   pytest-cov
     #   pytest-django
-pytest-cov==5.0.0
+pytest-cov==6.0.0
     # via -r requirements/test.in
 pytest-django==4.9.0
     # via -r requirements/test.in
 python-dateutil==2.9.0.post0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   analytics-python
     #   celery
     #   faker
 python-slugify==8.0.4
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   code-annotations
 python3-openid==3.2.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   social-auth-core
 pytz==2024.2
-    # via -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    # via -r requirements/base.txt
 pyyaml==6.0.2
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   code-annotations
     #   drf-spectacular
     #   edx-django-release-util
     #   responses
 redis==3.5.3
     # via
-    #   -c /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/constraints.txt
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -c requirements/constraints.txt
+    #   -r requirements/base.txt
 referencing==0.35.1
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   jsonschema
     #   jsonschema-specifications
 requests==2.32.3
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   algoliasearch
     #   analytics-python
     #   edx-drf-extensions
@@ -465,32 +465,32 @@ requests==2.32.3
     #   social-auth-core
 requests-oauthlib==2.0.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   social-auth-core
 responses==0.25.3
     # via -r requirements/test.in
-rpds-py==0.20.0
+rpds-py==0.20.1
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   jsonschema
     #   referencing
 rules==3.5
-    # via -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    # via -r requirements/base.txt
 scikit-learn==1.5.2
-    # via -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    # via -r requirements/base.txt
 scipy==1.14.1
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   scikit-learn
 semantic-version==2.10.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   edx-drf-extensions
 simplejson==3.19.3
-    # via -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    # via -r requirements/base.txt
 six==1.16.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   analytics-python
     #   edx-auth-backends
     #   edx-django-release-util
@@ -499,52 +499,52 @@ six==1.16.0
     #   python-dateutil
 sniffio==1.3.1
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   anyio
     #   httpx
     #   openai
 social-auth-app-django==5.4.2
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   edx-auth-backends
 social-auth-core==4.5.4
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   edx-auth-backends
     #   social-auth-app-django
 sqlparse==0.5.1
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   django
 stevedore==5.3.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
 tablib==3.7.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   django-import-export
 text-unidecode==1.3
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   python-slugify
 threadpoolctl==3.5.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   scikit-learn
 tomlkit==0.13.2
     # via pylint
 tox==4.23.2
     # via -r requirements/test.in
-tqdm==4.66.5
+tqdm==4.66.6
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   openai
 typing-extensions==4.12.2
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   edx-opaque-keys
     #   faker
     #   openai
@@ -552,34 +552,34 @@ typing-extensions==4.12.2
     #   pydantic-core
 tzdata==2024.2
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   celery
     #   kombu
 uritemplate==4.1.1
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   drf-spectacular
 urllib3==2.2.3
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   requests
     #   responses
 vine==5.1.0
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.27.0
+virtualenv==20.27.1
     # via tox
 wcwidth==0.2.13
     # via
-    #   -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    #   -r requirements/base.txt
     #   prompt-toolkit
 xlsxwriter==3.2.0
-    # via -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    # via -r requirements/base.txt
 zipp==3.20.2
-    # via -r /home/runner/work/enterprise-catalog/enterprise-catalog/requirements/base.txt
+    # via -r requirements/base.txt
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
