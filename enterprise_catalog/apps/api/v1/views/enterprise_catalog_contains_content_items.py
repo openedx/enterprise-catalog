@@ -41,6 +41,14 @@ class EnterpriseCatalogContainsContentItems(BaseViewSet, viewsets.ReadOnlyModelV
             return str(enterprise_catalog.enterprise_uuid)
         return None
 
+    def catalog_contains_content_items(self, content_keys):
+        """
+        Returns a boolean indicating whether all of the provided content_keys
+        are contained by the catalog record associated with the current request.
+        """
+        enterprise_catalog = self.get_object()
+        return enterprise_catalog.contains_content_keys(content_keys)
+
     # Becuase the edx-rbac perms are built around a part of the URL
     # path, here (the uuid of the catalog), we can utilize per-view caching,
     # rather than per-user caching.
@@ -56,6 +64,6 @@ class EnterpriseCatalogContainsContentItems(BaseViewSet, viewsets.ReadOnlyModelV
         """
         course_run_ids = unquote_course_keys(course_run_ids)
 
-        enterprise_catalog = self.get_object()
-        contains_content_items = enterprise_catalog.contains_content_keys(course_run_ids + program_uuids)
-        return Response({'contains_content_items': contains_content_items})
+        return Response({
+            'contains_content_items': self.catalog_contains_content_items(course_run_ids + program_uuids),
+        })

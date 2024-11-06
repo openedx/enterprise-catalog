@@ -3,6 +3,7 @@ import logging
 from enterprise_catalog.apps.api.v1.views.enterprise_customer import (
     EnterpriseCustomerViewSet,
 )
+from enterprise_catalog.apps.catalog.models import ContentMetadata
 
 
 logger = logging.getLogger(__name__)
@@ -13,10 +14,24 @@ class EnterpriseCustomerViewSetV2(EnterpriseCustomerViewSet):
     V2 views for content metadata and catalog-content inclusion for retrieving.
     """
     def get_metadata_by_uuid(self, catalog, content_uuid):
-        return catalog.content_metadata_with_restricted.filter(content_uuid=content_uuid).first()
+        """
+        Slightly more complicated - we have to find the content metadata
+        record, regardless of catalog, with this uuid, then use `get_matching_content`
+        on that record's content key.
+        """
+        record = ContentMetadata.objects.filter(content_uuid=content_uuid).first()
+        if not record:
+            return
+        return catalog.get_matching_content(
+            content_keys=[record.content_key],
+            include_restricted=True,
+        ).first()
 
     def get_metadata_by_content_key(self, catalog, content_key):
-        return catalog.get_matching_content(content_keys=[content_key], include_restricted=True).first()
+        return catalog.get_matching_content(
+            content_keys=[content_key],
+            include_restricted=True,
+        ).first()
 
     def filter_content_keys(self, catalog, content_keys):
         return catalog.filter_content_keys(content_keys, include_restricted=True)
