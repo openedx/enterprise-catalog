@@ -4,6 +4,9 @@ URL definitions for enterprise catalog API version 2.
 from django.urls import path, re_path
 from rest_framework.routers import DefaultRouter
 
+from enterprise_catalog.apps.api.v2.views.enterprise_catalog_contains_content_items import (
+    EnterpriseCatalogContainsContentItemsV2,
+)
 from enterprise_catalog.apps.api.v2.views.enterprise_catalog_get_content_metadata import (
     EnterpriseCatalogGetContentMetadataV2,
 )
@@ -17,6 +20,7 @@ app_name = 'v2'
 router = DefaultRouter()
 
 router.register(r'enterprise-customer', EnterpriseCustomerViewSetV2, basename='enterprise-customer')
+router.register(r'enterprise-catalogs', EnterpriseCatalogContainsContentItemsV2, basename='enterprise-catalog-content')
 
 urlpatterns = [
     re_path(
