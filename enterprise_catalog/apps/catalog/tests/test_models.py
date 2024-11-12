@@ -1437,6 +1437,18 @@ class TestRestrictedRunsModels(TestCase):
                 'content_key',
             )
         )
+
+        # The catalog_query should not have any content metadata related directly
+        # to it via the "normal" content_metadata M2M relationship.
+        self.assertEqual(catalog_query.contentmetadata_set.all().count(), 0)
+
+        # But the catalog_query should have a direct restricted relationship with
+        # the restricted course.
+        self.assertEqual(
+            list(catalog_query.restricted_content_metadata.all()),
+            [restricted_course],
+        )
+
         self.assertEqual(
             [run.content_key for run in restricted_runs],
             ['course-v1:edX+course+run2', 'course-v1:edX+course+run3'],
