@@ -453,7 +453,7 @@ openai==1.13.3
     #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-packaging==24.1
+packaging==24.2
     # via
     #   -r requirements/test.txt
     #   pyproject-api
@@ -628,7 +628,7 @@ requests-oauthlib==2.0.0
     #   social-auth-core
 responses==0.25.3
     # via -r requirements/test.txt
-rpds-py==0.20.1
+rpds-py==0.21.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -722,7 +722,7 @@ tomlkit==0.13.2
     #   pylint
 tox==4.23.2
     # via -r requirements/test.txt
-tqdm==4.66.6
+tqdm==4.67.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -773,7 +773,7 @@ xlsxwriter==3.2.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-zipp==3.20.2
+zipp==3.21.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt

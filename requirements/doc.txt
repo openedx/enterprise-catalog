@@ -383,7 +383,7 @@ openai==1.13.3
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/test.txt
-packaging==24.1
+packaging==24.2
     # via
     #   -r requirements/test.txt
     #   pyproject-api
@@ -542,7 +542,7 @@ responses==0.25.3
     # via -r requirements/test.txt
 restructuredtext-lint==1.4.0
     # via doc8
-rpds-py==0.20.1
+rpds-py==0.21.0
     # via
     #   -r requirements/test.txt
     #   jsonschema
@@ -637,7 +637,7 @@ tomlkit==0.13.2
     #   pylint
 tox==4.23.2
     # via -r requirements/test.txt
-tqdm==4.66.6
+tqdm==4.67.0
     # via
     #   -r requirements/test.txt
     #   openai
@@ -680,7 +680,7 @@ wcwidth==0.2.13
     #   prompt-toolkit
 xlsxwriter==3.2.0
     # via -r requirements/test.txt
-zipp==3.20.2
+zipp==3.21.0
     # via -r requirements/test.txt
 
 # The following packages are considered to be unsafe in a requirements file:
