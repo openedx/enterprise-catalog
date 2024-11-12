@@ -940,8 +940,6 @@ class RestrictedCourseMetadata(BaseContentMetadata):
         # We use a set() here, with clear=True, to clear and then reset the related allowed runs
         # for this restricted course. This is necessary in the case that a previously-allowed
         # run becomes unassociated from the restricted course.
-        self.catalog_query.contentmetadata_set.set(restricted_runs, clear=True)
-        LOGGER.info('Updated restricted runs on catalog query of %s to %s', self, restricted_runs)
         self.restricted_run_allowed_for_restricted_course.set(restricted_runs, clear=True)
         LOGGER.info('Updated restricted runs of %s to %s', self, restricted_runs)
         self.refresh_from_db()
