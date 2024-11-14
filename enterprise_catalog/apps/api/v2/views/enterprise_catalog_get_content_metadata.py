@@ -3,7 +3,6 @@ import logging
 from enterprise_catalog.apps.api.v1.views.enterprise_catalog_get_content_metadata import (
     EnterpriseCatalogGetContentMetadata,
 )
-from enterprise_catalog.apps.api.v2.utils import is_any_course_run_active
 
 
 logger = logging.getLogger(__name__)
@@ -27,21 +26,3 @@ class EnterpriseCatalogGetContentMetadataV2(EnterpriseCatalogGetContentMetadata)
             )
 
         return queryset.order_by('catalog_queries')
-
-    def is_active(self, item):
-        """
-        Determines if a content item is active.
-        Args:
-            item (ContentMetadata): The content metadata item to check.
-        Returns:
-            bool: True if the item is active, False otherwise.
-                For courses, checks if any course run is active.
-                For other content types, always returns True.
-        """
-        if item.content_type == 'course':
-            active = is_any_course_run_active(
-                item.json_metadata.get('course_runs', []))
-            if not active:
-                logger.debug(f'[get_content_metadata]: Content item {item.content_key} is not active.')
-            return active
-        return True
