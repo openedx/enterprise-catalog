@@ -25,6 +25,7 @@ services:
     image: edxops/enterprise-catalog-dev
     container_name: enterprise.catalog.app
     hostname: app.catalog.enterprise
+    working_dir: /edx/app/enterprise_catalog/enterprise_catalog
     volumes:
       - .:/edx/app/enterprise_catalog/enterprise_catalog
       - ../src:/edx/src:cached
@@ -66,6 +67,7 @@ services:
       DJANGO_SETTINGS_MODULE: enterprise_catalog.settings.devstack
       COLUMNS: 80
     hostname: worker.catalog.enterprise
+    working_dir: /edx/app/enterprise_catalog/enterprise_catalog
     networks:
       - devstack_default
     ports:
@@ -92,6 +94,7 @@ services:
       DJANGO_SETTINGS_MODULE: enterprise_catalog.settings.devstack
       COLUMNS: 80
     hostname: curations.catalog.enterprise
+    working_dir: /edx/app/enterprise_catalog/enterprise_catalog
     networks:
       - devstack_default
     ports:
