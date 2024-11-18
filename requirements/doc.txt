@@ -12,7 +12,7 @@ algoliasearch==3.0.0
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/test.txt
-amqp==5.2.0
+amqp==5.3.1
     # via
     #   -r requirements/test.txt
     #   kombu
@@ -112,7 +112,7 @@ click-repl==0.3.0
     # via
     #   -r requirements/test.txt
     #   celery
-code-annotations==1.8.0
+code-annotations==1.8.1
     # via
     #   -r requirements/test.txt
     #   edx-lint
@@ -121,7 +121,7 @@ colorama==0.4.6
     # via
     #   -r requirements/test.txt
     #   tox
-coverage[toml]==7.6.4
+coverage[toml]==7.6.7
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -201,7 +201,7 @@ django-dynamic-fixture==4.0.1
     # via -r requirements/test.txt
 django-extensions==3.2.3
     # via -r requirements/test.txt
-django-import-export==4.2.0
+django-import-export==4.2.1
     # via -r requirements/test.txt
 django-log-request-id==2.1.0
     # via -r requirements/test.txt
@@ -214,7 +214,7 @@ django-simple-history==3.7.0
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/test.txt
-django-waffle==4.1.0
+django-waffle==4.2.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
@@ -281,7 +281,7 @@ edx-toggles==5.2.0
     # via -r requirements/test.txt
 factory-boy==3.3.1
     # via -r requirements/test.txt
-faker==30.8.2
+faker==33.0.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -294,7 +294,7 @@ h11==0.14.0
     # via
     #   -r requirements/test.txt
     #   httpcore
-httpcore==1.0.6
+httpcore==1.0.7
     # via
     #   -r requirements/test.txt
     #   httpx
@@ -361,7 +361,7 @@ monotonic==1.6
     # via
     #   -r requirements/test.txt
     #   analytics-python
-mysqlclient==2.2.5
+mysqlclient==2.2.6
     # via -r requirements/test.txt
 newrelic==10.2.0
     # via
@@ -438,7 +438,7 @@ pygments==2.18.0
     #   pydata-sphinx-theme
     #   readme-renderer
     #   sphinx
-pyjwt[crypto]==2.9.0
+pyjwt[crypto]==2.10.0
     # via
     #   -r requirements/test.txt
     #   drf-jwt
@@ -608,7 +608,7 @@ sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
-sqlparse==0.5.1
+sqlparse==0.5.2
     # via
     #   -r requirements/test.txt
     #   django

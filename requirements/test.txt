@@ -8,7 +8,7 @@ algoliasearch==3.0.0
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.txt
-amqp==5.2.0
+amqp==5.3.1
     # via
     #   -r requirements/base.txt
     #   kombu
@@ -95,7 +95,7 @@ click-repl==0.3.0
     # via
     #   -r requirements/base.txt
     #   celery
-code-annotations==1.8.0
+code-annotations==1.8.1
     # via
     #   -r requirements/base.txt
     #   -r requirements/test.in
@@ -103,7 +103,7 @@ code-annotations==1.8.0
     #   edx-toggles
 colorama==0.4.6
     # via tox
-coverage[toml]==7.6.4
+coverage[toml]==7.6.7
     # via
     #   -r requirements/test.in
     #   pytest-cov
@@ -178,7 +178,7 @@ django-dynamic-fixture==4.0.1
     # via -r requirements/test.in
 django-extensions==3.2.3
     # via -r requirements/base.txt
-django-import-export==4.2.0
+django-import-export==4.2.1
     # via -r requirements/base.txt
 django-log-request-id==2.1.0
     # via -r requirements/base.txt
@@ -191,7 +191,7 @@ django-simple-history==3.7.0
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.txt
-django-waffle==4.1.0
+django-waffle==4.2.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -249,7 +249,7 @@ edx-toggles==5.2.0
     # via -r requirements/base.txt
 factory-boy==3.3.1
     # via -r requirements/test.in
-faker==30.8.2
+faker==33.0.0
     # via factory-boy
 filelock==3.16.1
     # via
@@ -259,7 +259,7 @@ h11==0.14.0
     # via
     #   -r requirements/base.txt
     #   httpcore
-httpcore==1.0.6
+httpcore==1.0.7
     # via
     #   -r requirements/base.txt
     #   httpx
@@ -317,7 +317,7 @@ monotonic==1.6
     # via
     #   -r requirements/base.txt
     #   analytics-python
-mysqlclient==2.2.5
+mysqlclient==2.2.6
     # via -r requirements/base.txt
 newrelic==10.2.0
     # via
@@ -379,7 +379,7 @@ pydantic-core==2.23.4
     # via
     #   -r requirements/base.txt
     #   pydantic
-pyjwt[crypto]==2.9.0
+pyjwt[crypto]==2.10.0
     # via
     #   -r requirements/base.txt
     #   drf-jwt
@@ -512,7 +512,7 @@ social-auth-core==4.5.4
     #   -r requirements/base.txt
     #   edx-auth-backends
     #   social-auth-app-django
-sqlparse==0.5.1
+sqlparse==0.5.2
     # via
     #   -r requirements/base.txt
     #   django
