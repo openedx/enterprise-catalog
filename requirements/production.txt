@@ -6,7 +6,7 @@
 #
 algoliasearch==3.0.0
     # via -r requirements/base.txt
-amqp==5.2.0
+amqp==5.3.1
     # via
     #   -r requirements/base.txt
     #   kombu
@@ -80,7 +80,7 @@ click-repl==0.3.0
     # via
     #   -r requirements/base.txt
     #   celery
-code-annotations==1.8.0
+code-annotations==1.8.1
     # via
     #   -r requirements/base.txt
     #   edx-toggles
@@ -146,7 +146,7 @@ django-crum==0.7.9
     #   edx-toggles
 django-extensions==3.2.3
     # via -r requirements/base.txt
-django-import-export==4.2.0
+django-import-export==4.2.1
     # via -r requirements/base.txt
 django-log-request-id==2.1.0
     # via -r requirements/base.txt
@@ -157,7 +157,7 @@ django-model-utils==5.0.0
     #   edx-rbac
 django-simple-history==3.7.0
     # via -r requirements/base.txt
-django-waffle==4.1.0
+django-waffle==4.2.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -211,7 +211,7 @@ edx-rest-api-client==6.0.0
     # via -r requirements/base.txt
 edx-toggles==5.2.0
     # via -r requirements/base.txt
-gevent==24.10.3
+gevent==24.11.1
     # via -r requirements/production.in
 greenlet==3.1.1
     # via gevent
@@ -221,7 +221,7 @@ h11==0.14.0
     # via
     #   -r requirements/base.txt
     #   httpcore
-httpcore==1.0.6
+httpcore==1.0.7
     # via
     #   -r requirements/base.txt
     #   httpx
@@ -273,7 +273,7 @@ monotonic==1.6
     # via
     #   -r requirements/base.txt
     #   analytics-python
-mysqlclient==2.2.5
+mysqlclient==2.2.6
     # via -r requirements/base.txt
 newrelic==10.2.0
     # via
@@ -321,7 +321,7 @@ pydantic-core==2.23.4
     # via
     #   -r requirements/base.txt
     #   pydantic
-pyjwt[crypto]==2.9.0
+pyjwt[crypto]==2.10.0
     # via
     #   -r requirements/base.txt
     #   drf-jwt
@@ -425,7 +425,7 @@ social-auth-core==4.5.4
     #   -r requirements/base.txt
     #   edx-auth-backends
     #   social-auth-app-django
-sqlparse==0.5.1
+sqlparse==0.5.2
     # via
     #   -r requirements/base.txt
     #   django
