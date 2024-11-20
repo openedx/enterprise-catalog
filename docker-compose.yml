@@ -25,13 +25,13 @@ services:
     image: edxops/enterprise-catalog-dev
     container_name: enterprise.catalog.app
     hostname: app.catalog.enterprise
-    working_dir: /edx/app/enterprise_catalog/enterprise_catalog
+    working_dir: /edx/app/enterprise-catalog
     volumes:
-      - .:/edx/app/enterprise_catalog/enterprise_catalog
+      - .:/edx/app/enterprise-catalog
       - ../src:/edx/src:cached
 
     # Use the Django devserver, so that we can hot-reload code changes
-    command: bash -c 'while true; do python /edx/app/enterprise_catalog/enterprise_catalog/manage.py runserver 0.0.0.0:18160; sleep 2; done'
+    command: bash -c 'while true; do python /edx/app/enterprise-catalog/manage.py runserver 0.0.0.0:18160; sleep 2; done'
     ports:
       - "18160:18160"
     depends_on:
@@ -54,7 +54,7 @@ services:
 
   worker:
     image: edxops/enterprise-catalog-dev
-    command: bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && celery -A enterprise_catalog worker -Q enterprise_catalog.default -l DEBUG'
+    command: bash -c 'cd /edx/app/enterprise-catalog && celery -A enterprise_catalog worker -Q enterprise_catalog.default -l DEBUG'
     container_name: enterprise.catalog.worker
     depends_on:
       - mysql
@@ -67,7 +67,7 @@ services:
       DJANGO_SETTINGS_MODULE: enterprise_catalog.settings.devstack
       COLUMNS: 80
     hostname: worker.catalog.enterprise
-    working_dir: /edx/app/enterprise_catalog/enterprise_catalog
+    working_dir: /edx/app/enterprise-catalog
     networks:
       - devstack_default
     ports:
@@ -77,11 +77,11 @@ services:
     stdin_open: true
     tty: true
     volumes:
-      - .:/edx/app/enterprise_catalog/enterprise_catalog
+      - .:/edx/app/enterprise-catalog
 
   curations_worker:
     image: edxops/enterprise-catalog-dev
-    command: bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && celery -A enterprise_catalog worker -Q enterprise_catalog.curations -l DEBUG'
+    command: bash -c 'cd /edx/app/enterprise-catalog && celery -A enterprise_catalog worker -Q enterprise_catalog.curations -l DEBUG'
     container_name: enterprise.catalog.curations
     depends_on:
       - mysql
@@ -94,7 +94,7 @@ services:
       DJANGO_SETTINGS_MODULE: enterprise_catalog.settings.devstack
       COLUMNS: 80
     hostname: curations.catalog.enterprise
-    working_dir: /edx/app/enterprise_catalog/enterprise_catalog
+    working_dir: /edx/app/enterprise-catalog
     networks:
       - devstack_default
     ports:
@@ -104,7 +104,7 @@ services:
     stdin_open: true
     tty: true
     volumes:
-      - .:/edx/app/enterprise_catalog/enterprise_catalog
+      - .:/edx/app/enterprise-catalog
 
 networks:
   devstack_default:
