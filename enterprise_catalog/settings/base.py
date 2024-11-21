@@ -409,6 +409,7 @@ STUDIO_BASE_URL = os.environ.get('STUDIO_BASE_URL', '')
 # Algolia
 ALGOLIA = {
     'INDEX_NAME': '',
+    'REPLICA_INDEX_NAME': '',
     'APPLICATION_ID': '',
     'API_KEY': '',
 }

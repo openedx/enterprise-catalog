@@ -20,16 +20,18 @@ class AlgoliaSearchClient:
     ALGOLIA_APPLICATION_ID = settings.ALGOLIA.get('APPLICATION_ID')
     ALGOLIA_API_KEY = settings.ALGOLIA.get('API_KEY')
     ALGOLIA_INDEX_NAME = settings.ALGOLIA.get('INDEX_NAME')
+    ALGOLIA_REPLICA_INDEX_NAME = settings.ALGOLIA.get('REPLICA_INDEX_NAME')
 
     def __init__(self):
         self._client = None
         self.algolia_index = None
+        self.replica_index = None
 
     def init_index(self):
         """
         Initializes an index within Algolia. Initializing an index will create it if it doesn't exist.
         """
-        if not self.ALGOLIA_INDEX_NAME:
+        if not self.ALGOLIA_INDEX_NAME or not self.ALGOLIA_REPLICA_INDEX_NAME:
             logger.error('Could not initialize Algolia index due to missing index name.')
             return
 
@@ -44,6 +46,7 @@ class AlgoliaSearchClient:
         self._client = SearchClient.create(self.ALGOLIA_APPLICATION_ID, self.ALGOLIA_API_KEY)
         try:
             self.algolia_index = self._client.init_index(self.ALGOLIA_INDEX_NAME)
+            self.replica_index = self._client.init_index(self.ALGOLIA_REPLICA_INDEX_NAME)
         except AlgoliaException as exc:
             logger.exception(
                 'Could not initialize %s index in Algolia due to an exception.',
@@ -51,7 +54,7 @@ class AlgoliaSearchClient:
             )
             raise exc
 
-    def set_index_settings(self, index_settings):
+    def set_index_settings(self, index_settings, primary_index=True):
         """
         Set default settings to use for the Algolia index.
 
@@ -66,7 +69,10 @@ class AlgoliaSearchClient:
             return
 
         try:
-            self.algolia_index.set_settings(index_settings)
+            if primary_index:
+                self.algolia_index.set_settings(index_settings)
+            else:
+                self.replica_index.set_settings(index_settings)
         except AlgoliaException as exc:
             logger.exception(
                 'Unable to set settings for Algolia\'s %s index due to an exception.',
@@ -78,18 +84,24 @@ class AlgoliaSearchClient:
         """
         Returns whether the index exists in Algolia.
         """
-        if not self.algolia_index:
+        if not self.algolia_index or not self.replica_index:
             logger.error('Algolia index does not exist. Did you initialize it?')
             return False
 
-        exists = self.algolia_index.exists()
-        if not exists:
+        primary_exists = self.algolia_index.exists()
+        replica_exists = self.replica_index.exists()
+        if not primary_exists:
             logger.warning(
                 'Index with name %s does not exist in Algolia.',
                 self.ALGOLIA_INDEX_NAME,
             )
+        if not replica_exists:
+            logger.warning(
+                'Index with name %s does not exist in Algolia.',
+                self.ALGOLIA_REPLICA_INDEX_NAME,
+            )
 
-        return exists
+        return primary_exists and replica_exists
 
     def replace_all_objects(self, algolia_objects):  # pragma: no cover
         """
