@@ -15,6 +15,7 @@ from enterprise_catalog.apps.catalog.constants import (
     LEARNER_PATHWAY,
     PROGRAM,
     RESTRICTION_FOR_B2B,
+    TIMESTAMP_FORMAT,
 )
 from enterprise_catalog.apps.catalog.tests.factories import (
     ContentMetadataFactory,
@@ -32,7 +33,7 @@ _days_cache = {}
 
 def _days_from_now(days=0):
     deadline = localized_utcnow() + timedelta(days=days)
-    return deadline.strftime('%Y-%m-%dT%H:%M:%SZ')
+    return deadline.strftime(TIMESTAMP_FORMAT)
 
 
 def _get_from_cache(days):
