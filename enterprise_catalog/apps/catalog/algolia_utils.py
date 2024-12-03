@@ -4,6 +4,7 @@ import logging
 import time
 
 from dateutil import parser
+from django.conf import settings
 from django.core.cache import cache
 from django.db.models import Q
 from django.utils.dateparse import parse_datetime
@@ -53,7 +54,9 @@ logger = logging.getLogger(__name__)
 ALGOLIA_UUID_BATCH_SIZE = 100
 
 ALGOLIA_JSON_METADATA_MAX_SIZE = 100000
+ALGOLIA_REPLICA_INDEX_NAME = settings.ALGOLIA.get('REPLICA_INDEX_NAME')
 
+algolia_replica_index = f'virtual({ALGOLIA_REPLICA_INDEX_NAME})'
 
 # keep attributes from content objects that we explicitly want in Algolia
 ALGOLIA_FIELDS = [
@@ -178,6 +181,19 @@ ALGOLIA_INDEX_SETTINGS = {
         'academy_uuids',
     ],
     'customRanking': [
+        'asc(visible_via_association)',
+        'asc(created)',
+        'desc(course_bayesian_average)',
+        'desc(recent_enrollment_count)',
+    ],
+    'replicas': [
+        algolia_replica_index
+    ],
+}
+
+ALGOLIA_REPLICA_INDEX_SETTINGS = {
+    'customRanking': [
+        'desc(duration)',
         'asc(visible_via_association)',
         'asc(created)',
         'desc(course_bayesian_average)',
@@ -354,6 +370,7 @@ def configure_algolia_index(algolia_client):
     Configures the settings for an Algolia index.
     """
     algolia_client.set_index_settings(ALGOLIA_INDEX_SETTINGS)
+    algolia_client.set_index_settings(ALGOLIA_REPLICA_INDEX_SETTINGS, primary_index=False)
 
 
 def get_algolia_object_id(content_type, uuid):

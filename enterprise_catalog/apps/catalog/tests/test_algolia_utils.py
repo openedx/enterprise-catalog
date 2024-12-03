@@ -1058,7 +1058,11 @@ class AlgoliaUtilsTests(TestCase):
         """
         algolia_client = utils.get_initialized_algolia_client()
         utils.configure_algolia_index(algolia_client)
-        mock_search_client.return_value.set_index_settings.assert_called_once_with(utils.ALGOLIA_INDEX_SETTINGS)
+        mock_search_client.return_value.set_index_settings.assert_any_call(utils.ALGOLIA_INDEX_SETTINGS)
+        mock_search_client.return_value.set_index_settings.assert_called_with(
+            utils.ALGOLIA_REPLICA_INDEX_SETTINGS,
+            primary_index=False
+        )
 
     @ddt.data(
         (
