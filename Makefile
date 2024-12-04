@@ -153,10 +153,10 @@ dev.provision:
 dev.init: dev.up dev.migrate # start the docker container and run migrations
 
 dev.makemigrations:
-	docker exec -it enterprise.catalog.app bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && python3 manage.py makemigrations'
+	docker exec -it enterprise.catalog.app bash -c 'cd /edx/app/enterprise-catalog && python3 manage.py makemigrations'
 
 dev.migrate: # Migrates databases. Application and DB server must be up for this to work.
-	docker exec -it enterprise.catalog.app bash -c 'cd /edx/app/enterprise_catalog/enterprise_catalog && make migrate'
+	docker exec -it enterprise.catalog.app bash -c 'cd /edx/app/enterprise-catalog && make migrate'
 
 dev.up: dev.up.redis # Starts all containers
 	docker-compose up -d
