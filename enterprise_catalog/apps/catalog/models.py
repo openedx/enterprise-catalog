@@ -1572,7 +1572,7 @@ def update_contentmetadata_from_discovery(catalog_query, dry_run=False):
 
 def synchronize_restricted_content(catalog_query, dry_run=False):
     """
-    Fetch and assoicate any permitted restricted couress for the given catalog_query.
+    Fetch and assoicate any permitted restricted courses for the given catalog_query.
     """
     if not getattr(settings, 'SHOULD_FETCH_RESTRICTED_COURSE_RUNS', False):
         return []
