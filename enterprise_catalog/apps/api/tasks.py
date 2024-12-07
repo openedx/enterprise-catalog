@@ -341,10 +341,6 @@ def _update_full_restricted_course_metadata(modified_metadata_record, course_rev
         # First, update the restricted course record's json metadata to use the full metadata
         # from above.
         restricted_course.update_metadata(full_restricted_metadata, is_full_update=True)
-        # Second, if it's not the canonical copy of the restricted course,
-        # we have to reset the restricted course *run* relationships.
-        if restricted_course.catalog_query:
-            restricted_course.update_course_run_relationships()
 
         # Last, run the "standard" transformations below to update with the full
         # course metadata, do normalization, etc.

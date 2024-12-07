@@ -2416,8 +2416,57 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
     @mock.patch('enterprise_catalog.apps.api.tasks.ContentMetadata.objects.filter')
     @mock.patch('enterprise_catalog.apps.api.tasks.create_course_associated_programs')
     @mock.patch('enterprise_catalog.apps.api.tasks._update_full_content_metadata_program')
-    @override_settings(SHOULD_FETCH_RESTRICTED_COURSE_RUNS=True)
     def test_update_full_content_metadata_course(
+        self,
+        mock_update_content_metadata_program,
+        mock_create_course_associated_programs,
+        mock_filter,
+        mock_get_course_reviews,
+        mock_fetch_courses_by_keys
+    ):
+        # Mock data
+        content_keys = ['course1', 'course2']
+        full_course_dicts = [
+            {'key': 'course1', 'title': 'Course 1', FORCE_INCLUSION_METADATA_TAG_KEY: True},
+            {'key': 'course2', 'title': 'Course 2'}
+        ]
+        reviews_for_courses_dict = {
+            'course1': {'reviews_count': 10, 'avg_course_rating': 4.5},
+            'course2': {'reviews_count': 5, 'avg_course_rating': 3.8}
+        }
+        content_metadata_1 = ContentMetadataFactory(content_type=COURSE, content_key='course1')
+        content_metadata_2 = ContentMetadataFactory(content_type=COURSE, content_key='course2')
+        metadata_records_for_fetched_keys = [content_metadata_1, content_metadata_2]
+
+        # Configure mock objects
+        mock_fetch_courses_by_keys.return_value = full_course_dicts
+        mock_get_course_reviews.return_value = reviews_for_courses_dict
+        mock_filter.return_value = metadata_records_for_fetched_keys
+
+        # Call the function
+        tasks._update_full_content_metadata_course(content_keys)  # pylint: disable=protected-access
+
+        mock_fetch_courses_by_keys.assert_called_once_with(content_keys)
+        mock_get_course_reviews.assert_called_once_with(['course1', 'course2'])
+        mock_filter.assert_called_once_with(content_key__in=['course1', 'course2'])
+
+        content_metadata_1.refresh_from_db()
+        content_metadata_2.refresh_from_db()
+        assert content_metadata_1.json_metadata.get('reviews_count') == 10
+        assert content_metadata_1.json_metadata.get('avg_course_rating') == 4.5
+        assert content_metadata_2.json_metadata.get('reviews_count') == 5
+        assert content_metadata_2.json_metadata.get('avg_course_rating') == 3.8
+
+        self.assertEqual(mock_update_content_metadata_program.call_count, 2)
+        self.assertEqual(mock_create_course_associated_programs.call_count, 2)
+
+    @mock.patch('enterprise_catalog.apps.api.tasks._fetch_courses_by_keys')
+    @mock.patch('enterprise_catalog.apps.api.tasks.DiscoveryApiClient.get_course_reviews')
+    @mock.patch('enterprise_catalog.apps.api.tasks.ContentMetadata.objects.filter')
+    @mock.patch('enterprise_catalog.apps.api.tasks.create_course_associated_programs')
+    @mock.patch('enterprise_catalog.apps.api.tasks._update_full_content_metadata_program')
+    @override_settings(SHOULD_FETCH_RESTRICTED_COURSE_RUNS=True)
+    def test_update_full_content_metadata_course_with_restricted_runs(
         self,
         mock_update_content_metadata_program,
         mock_create_course_associated_programs,
@@ -2431,53 +2480,26 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         restricted_run_1_uuid = uuid.uuid4()
         restricted_run_2_uuid = uuid.uuid4()
         content_keys = ['course1', 'course2']
-        full_course_dicts = [
-            {
-                'key': 'course1',
-                'uuid': course_1_uuid,
-                'aggregation_key': 'course:course1',
-                'title': 'Course 1',
-                FORCE_INCLUSION_METADATA_TAG_KEY: True,
-                'course_runs': [
-                    {
-                        'key': 'course-run-1', 'uuid': course_1_uuid,
-                        'aggregation_key': 'courserun:course1',
-                    },
-                ]
-            },
-            {
-                'key': 'course2',
-                'title': 'Course 2',
-            },
-        ]
         reviews_for_courses_dict = {
             'course1': {'reviews_count': 10, 'avg_course_rating': 4.5},
             'course2': {'reviews_count': 5, 'avg_course_rating': 3.8}
         }
         content_metadata_1 = ContentMetadataFactory(content_type=COURSE, content_key='course1')
         content_metadata_2 = ContentMetadataFactory(content_type=COURSE, content_key='course2')
+        content_metadata_run_1 = ContentMetadataFactory(  # pylint: disable=unused-variable
+            content_type=COURSE_RUN,
+            content_key='course-run-1',
+        )
+        content_metadata_restricted_run_1 = ContentMetadataFactory(
+            content_type=COURSE_RUN,
+            content_key='course-run-1-restricted'
+        )
+        content_metadata_restricted_run_2 = ContentMetadataFactory(  # pylint: disable=unused-variable
+            content_type=COURSE_RUN,
+            content_key='course-run-2-restricted'
+        )
         metadata_records_for_fetched_keys = [content_metadata_1, content_metadata_2]
 
-        restricted_course_dicts = [
-            {
-                'key': 'course1',
-                'uuid': course_1_uuid,
-                'title': 'Course 1',
-                'other': 'stuff',
-                FORCE_INCLUSION_METADATA_TAG_KEY: True,
-                'course_runs': [
-                    {'key': 'course-run-1', 'uuid': course_run_1_uuid, 'aggregation_key': 'courserun:course-run-1'},
-                    {
-                        'key': 'course-run-1-restricted', COURSE_RUN_RESTRICTION_TYPE_KEY: 'anything',
-                        'aggregation_key': 'courserun:course1', 'uuid': restricted_run_1_uuid,
-                    },
-                    {
-                        'key': 'another-restricted-run', COURSE_RUN_RESTRICTION_TYPE_KEY: 'anything',
-                        'aggregation_key': 'courserun:course1', 'uuid': restricted_run_2_uuid,
-                    },
-                ],
-            },
-        ]
         catalog_query = CatalogQueryFactory(
             content_filter={
                 'restricted_runs_allowed': {
@@ -2495,15 +2517,22 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             _json_metadata={
                 'course_runs': [
                     {
-                        'key': 'course-run-1', 'uuid': course_run_1_uuid,
+                        'key': 'course-run-1',
+                        'uuid': course_run_1_uuid,
                         'aggregation_key': 'courserun:course1',
                     },
                     {
-                        'key': 'course-run-1-restricted', COURSE_RUN_RESTRICTION_TYPE_KEY: 'anything',
-                        'aggregation_key': 'courserun:course1', 'uuid': restricted_run_1_uuid,
+                        'key': 'course-run-1-restricted',
+                        'uuid': restricted_run_1_uuid,
+                        'aggregation_key': 'courserun:course1',
+                        COURSE_RUN_RESTRICTION_TYPE_KEY: 'anything',
                     },
                 ]
             }
+        )
+        RestrictedRunAllowedForRestrictedCourseFactory(
+            course=restricted_course,
+            run=content_metadata_restricted_run_1,
         )
         canonical_restricted_course = RestrictedCourseMetadataFactory(
             unrestricted_parent=content_metadata_1,
@@ -2513,16 +2542,21 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             _json_metadata={
                 'course_runs': [
                     {
-                        'key': 'course-run-1', 'uuid': course_run_1_uuid,
+                        'key': 'course-run-1',
+                        'uuid': course_run_1_uuid,
                         'aggregation_key': 'courserun:course1',
                     },
                     {
-                        'key': 'course-run-1-restricted', COURSE_RUN_RESTRICTION_TYPE_KEY: 'anything',
-                        'aggregation_key': 'courserun:course1', 'uuid': restricted_run_1_uuid,
+                        'key': 'course-run-1-restricted',
+                        'aggregation_key': 'courserun:course1',
+                        'uuid': restricted_run_1_uuid,
+                        COURSE_RUN_RESTRICTION_TYPE_KEY: 'anything',
                     },
                     {
-                        'key': 'another-restricted-run', COURSE_RUN_RESTRICTION_TYPE_KEY: 'anything',
-                        'aggregation_key': 'courserun:course1', 'uuid': restricted_run_2_uuid,
+                        'key': 'course-run-2-restricted',
+                        'uuid': restricted_run_2_uuid,
+                        'aggregation_key': 'courserun:course1',
+                        COURSE_RUN_RESTRICTION_TYPE_KEY: 'anything',
                     },
                 ],
             }
@@ -2530,8 +2564,65 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         # Configure mock objects
         mock_fetch_courses_by_keys.side_effect = [
-            full_course_dicts,
-            restricted_course_dicts,
+            # First call to /api/v1/courses originates from the top of
+            # _update_full_content_metadata_course(), so it does NOT pass the
+            # `?include_restricted=` query parameter.  Therefore, no restricted
+            # runs should be included in the mock response.
+            [
+                {
+                    'key': 'course1',
+                    'uuid': course_1_uuid,
+                    'aggregation_key': 'course:course1',
+                    'title': 'Course 1',
+                    FORCE_INCLUSION_METADATA_TAG_KEY: True,
+                    'course_runs': [
+                        {
+                            'key': 'course-run-1',
+                            'uuid': course_1_uuid,
+                            'aggregation_key': 'courserun:course1',
+                        },
+                    ]
+                },
+                {
+                    'key': 'course2',
+                    'title': 'Course 2',
+                },
+            ],
+            # Second call to /api/v1/courses originates from
+            # _update_full_restricted_course_metadata(), so it passess the
+            # `?include_restricted=` query parameter to include all the
+            # restricted runs for the course.
+            [
+                {
+                    'key': 'course1',
+                    'uuid': course_1_uuid,
+                    'title': 'Course 1',
+                    FORCE_INCLUSION_METADATA_TAG_KEY: True,
+                    'course_runs': [
+                        {
+                            'key': 'course-run-1',
+                            'uuid': course_run_1_uuid,
+                            'aggregation_key': 'courserun:course1'
+                        },
+                        {
+                            'key': 'course-run-1-restricted',
+                            'uuid': restricted_run_1_uuid,
+                            'aggregation_key': 'courserun:course1',
+                            COURSE_RUN_RESTRICTION_TYPE_KEY: 'anything',
+                        },
+                        {
+                            'key': 'course-run-2-restricted',
+                            'uuid': restricted_run_2_uuid,
+                            'aggregation_key': 'courserun:course1',
+                            COURSE_RUN_RESTRICTION_TYPE_KEY: 'anything',
+                        },
+                    ],
+                    # Throw in this extra key to the mock response, so that
+                    # later we can validate that it gets merged into the final
+                    # metadata for the restricted course.
+                    'other': 'stuff',
+                },
+            ]
         ]
         mock_get_course_reviews.return_value = reviews_for_courses_dict
         mock_filter.return_value = metadata_records_for_fetched_keys
@@ -2556,32 +2647,23 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         self.assertEqual(mock_update_content_metadata_program.call_count, 2)
         self.assertEqual(mock_create_course_associated_programs.call_count, 2)
 
-        # Test that the restricted course for our catalog query contains
-        # only the one restricted run, because that's all the query definition allows.
+        # Test that the extra keys from the /api/v1/courses response were
+        # appropriately merged into the restricted course metadata, and the
+        # restricted runs were preserved.
         restricted_course.refresh_from_db()
-        restricted_run = ContentMetadata.objects.get(
-            content_type=COURSE_RUN,
-            parent_content_key='course1',
-            content_key='course-run-1-restricted',
-        )
-        related_run = restricted_course.restricted_run_allowed_for_restricted_course.filter(
-            content_key=restricted_run.content_key,
-        ).first()
-        self.assertEqual(1, restricted_course.restricted_run_allowed_for_restricted_course.all().count())
-        self.assertEqual(related_run, restricted_run)
         self.assertEqual('stuff', restricted_course.json_metadata['other'])
         self.assertEqual(
             {run['key'] for run in restricted_course.json_metadata['course_runs']},
             {'course-run-1', 'course-run-1-restricted'},
         )
-        # The canonical restricted course record should contain two restricted runs and a non-restricted run
+        # The canonical restricted course record should STILL contain two
+        # restricted runs and a non-restricted run, as well as the extra key.
         canonical_restricted_course.refresh_from_db()
+        self.assertEqual('stuff', canonical_restricted_course.json_metadata['other'])
         self.assertEqual(
             {run['key'] for run in canonical_restricted_course.json_metadata['course_runs']},
-            {'course-run-1', 'course-run-1-restricted', 'another-restricted-run'},
+            {'course-run-1', 'course-run-1-restricted', 'course-run-2-restricted'},
         )
-        # But the canonical course will *not* have any direct relationship to restricted run ContentMetadtata records.
-        self.assertEqual(0, canonical_restricted_course.restricted_run_allowed_for_restricted_course.all().count())
 
     @mock.patch('enterprise_catalog.apps.api.tasks._fetch_courses_by_keys')
     @mock.patch('enterprise_catalog.apps.api.tasks.DiscoveryApiClient.get_course_reviews')
