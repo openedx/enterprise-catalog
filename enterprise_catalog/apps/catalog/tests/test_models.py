@@ -407,6 +407,168 @@ class TestModels(TestCase):
             json.dumps(course_metadata, sort_keys=True),
         )
 
+    @override_settings(DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT=0)
+    @override_settings(SHOULD_FETCH_RESTRICTED_COURSE_RUNS=True)
+    @mock.patch('enterprise_catalog.apps.api_client.discovery.DiscoveryApiClient')
+    @mock.patch('enterprise_catalog.apps.catalog.models.DiscoveryApiClient')
+    def test_contentmetadata_update_from_discovery_with_restricted_runs(
+        self,
+        mock_client2,
+        mock_client,
+    ):
+        """
+        update_contentmetadata_from_discovery should update or create ContentMetadata
+        objects from the discovery service /search/all api call and create all
+        the necessary records and relationships for restricted runs.
+        """
+        course_run_unrestricted_1_metadata = {
+            'aggregation_key': 'courserun:edX+testX',
+            'key': 'course-v1:edX+testX+unrestricted.1',
+            'title': 'test course run',
+            'status': 'published',
+            'first_enrollable_paid_seat_price': 99,
+        }
+        course_run_restricted_1_metadata = {
+            'aggregation_key': 'courserun:edX+testX',
+            'key': 'course-v1:edX+testX+restricted.1',
+            'title': 'test course run (restricted 1)',
+            'status': 'published',
+            'first_enrollable_paid_seat_price': 99,
+            COURSE_RUN_RESTRICTION_TYPE_KEY: RESTRICTION_FOR_B2B,
+        }
+        course_run_restricted_2_metadata = {
+            'aggregation_key': 'courserun:edX+testX',
+            'key': 'course-v1:edX+testX+restricted.2',
+            'title': 'test course run (restricted 2)',
+            'status': 'published',
+            'first_enrollable_paid_seat_price': 99,
+            COURSE_RUN_RESTRICTION_TYPE_KEY: RESTRICTION_FOR_B2B,
+        }
+        course_metadata = {
+            'aggregation_key': 'course:edX+testX',
+            'key': 'edX+testX',
+            'title': 'test course',
+            'content_type': 'course',
+            'course_runs': [
+                course_run_unrestricted_1_metadata,
+            ],
+        }
+        course_metadata_restricted_canonical = {
+            'aggregation_key': 'course:edX+testX',
+            'key': 'edX+testX',
+            'title': 'test course',
+            'content_type': 'course',
+            'course_runs': [
+                course_run_unrestricted_1_metadata,
+                course_run_restricted_1_metadata,
+                course_run_restricted_2_metadata,
+            ],
+        }
+        # This is only used for output validation, not as a mock API response.
+        course_metadata_restricted_for_catalog = {
+            'aggregation_key': 'course:edX+testX',
+            'key': 'edX+testX',
+            'title': 'test course',
+            'content_type': 'course',
+            'course_runs': [
+                course_run_unrestricted_1_metadata,
+                course_run_restricted_1_metadata,
+            ],
+            'course_run_keys': [
+                course_run_unrestricted_1_metadata['key'],
+                course_run_restricted_1_metadata['key'],
+            ],
+            'course_run_statuses': [
+                'published',
+            ],
+            'first_enrollable_paid_seat_price': 99,
+        }
+        catalog_query = factories.CatalogQueryFactory(
+            content_filter={
+                'restricted_runs_allowed': {
+                    course_metadata['key']: [
+                        # Only the first restricted run will be associated with our catalog.
+                        course_run_restricted_1_metadata['key'],
+                    ],
+                },
+            },
+        )
+        catalog = factories.EnterpriseCatalogFactory(catalog_query=catalog_query)
+
+        # First Discovery API call originates from
+        # update_contentmetadata_from_discovery() and hits /api/v1/search/all to
+        # get only the plain unrestricted version of the course.
+        mock_client.return_value.get_metadata_by_query.return_value = [
+            course_metadata,
+            # Catalogs almost never actually include runs directly, so excluding
+            # the runs here is more prodlike.
+        ]
+        # Second and third Discovery API calls originate from
+        # synchronize_restricted_content() and hit /api/v1/search/all to get the
+        # restricted stuff.
+        mock_client2.return_value.retrieve_metadata_for_content_filter.side_effect = [
+            # First call fetches the canonical restricted course metadata:
+            [course_metadata_restricted_canonical],
+            # Second call fetches the restricted run requested by the content filter:
+            [course_run_restricted_1_metadata],
+        ]
+
+        self.assertEqual(ContentMetadata.objects.count(), 0)
+        update_contentmetadata_from_discovery(catalog.catalog_query)
+        mock_client.assert_called_once()
+        self.assertEqual(ContentMetadata.objects.count(), 2)
+
+        associated_metadata = catalog.content_metadata
+
+        # Check that the unrestricted course variant is stored without any
+        # restricted runs, and that it is associated with the catalog.
+        contentmetadata_course = ContentMetadata.objects.get(content_key=course_metadata['key'])
+        self.assertEqual(contentmetadata_course.content_type, COURSE)
+        self.assertEqual(contentmetadata_course.parent_content_key, None)
+        self.assertEqual(contentmetadata_course.json_metadata, course_metadata)
+        assert contentmetadata_course in associated_metadata
+
+        # Check that the unrestricted run is NOT stored.
+        contentmetadata_unrestricted_course_run = ContentMetadata.objects.filter(
+            content_key=course_run_unrestricted_1_metadata['key']
+        )
+        self.assertEqual(contentmetadata_unrestricted_course_run.count(), 0)
+
+        # Check that the requested restricted run is stored, but NOT associated
+        # with any catalog.
+        contentmetadata_restricted_course_run = ContentMetadata.objects.get(
+            content_key=course_run_restricted_1_metadata['key']
+        )
+        self.assertEqual(contentmetadata_restricted_course_run.content_type, COURSE_RUN)
+        self.assertEqual(contentmetadata_restricted_course_run.parent_content_key, course_metadata['key'])
+        self.assertEqual(contentmetadata_restricted_course_run.json_metadata, course_run_restricted_1_metadata)
+        assert contentmetadata_restricted_course_run not in associated_metadata
+
+        # Check that the OTHER restricted run is NOT stored.
+        contentmetadata_other_restricted_course_run = ContentMetadata.objects.filter(
+            content_key=course_run_restricted_2_metadata['key']
+        )
+        self.assertEqual(contentmetadata_other_restricted_course_run.count(), 0)
+
+        # Check that two variants of RestrictedCourseMetadata were created: one
+        # canonical variant and another one for the catalog.
+        restrictedcoursemetadata_canonical = RestrictedCourseMetadata.objects.get(
+            content_key=course_metadata['key'],
+            catalog_query=None,
+        )
+        assert restrictedcoursemetadata_canonical.json_metadata == course_metadata_restricted_canonical
+        assert restrictedcoursemetadata_canonical.restricted_run_allowed_for_restricted_course.count() == 0
+
+        restrictedcoursemetadata_for_catalog = RestrictedCourseMetadata.objects.get(
+            content_key=course_metadata['key'],
+            catalog_query=catalog_query,
+        )
+        assert restrictedcoursemetadata_for_catalog.json_metadata == course_metadata_restricted_for_catalog
+        self.assertEqual(
+            restrictedcoursemetadata_for_catalog.restricted_run_allowed_for_restricted_course.first(),
+            contentmetadata_restricted_course_run,
+        )
+
     @contextmanager
     def _mock_enterprise_customer_cache(
         self,
