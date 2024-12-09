@@ -18,7 +18,7 @@ annotated-types==0.7.0
     # via
     #   -r requirements/base.txt
     #   pydantic
-anyio==4.6.2.post1
+anyio==4.7.0
     # via
     #   -r requirements/base.txt
     #   httpx
@@ -28,7 +28,7 @@ asgiref==3.8.1
     #   -r requirements/base.txt
     #   django
     #   django-cors-headers
-astroid==3.3.5
+astroid==3.3.6
     # via
     #   pylint
     #   pylint-celery
@@ -117,7 +117,7 @@ distro==1.9.0
     # via
     #   -r requirements/base.txt
     #   openai
-django==4.2.16
+django==4.2.17
     # via
     #   -c requirements/common_constraints.txt
     #   -c requirements/constraints.txt
@@ -162,7 +162,7 @@ django-crum==0.7.9
     #   edx-toggles
 django-extensions==3.2.3
     # via -r requirements/base.txt
-django-import-export==4.3.2
+django-import-export==4.3.3
     # via -r requirements/base.txt
 django-log-request-id==2.1.0
     # via -r requirements/base.txt
@@ -208,7 +208,7 @@ edx-celeryutils==1.3.0
     # via -r requirements/base.txt
 edx-django-release-util==1.4.0
     # via -r requirements/base.txt
-edx-django-utils==7.0.1
+edx-django-utils==7.1.0
     # via
     #   -r requirements/base.txt
     #   django-config-models
@@ -239,7 +239,7 @@ httpcore==1.0.7
     # via
     #   -r requirements/base.txt
     #   httpx
-httpx==0.28.0
+httpx==0.28.1
     # via
     #   -r requirements/base.txt
     #   openai
@@ -299,7 +299,7 @@ newrelic==10.3.1
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
-numpy==2.1.3
+numpy==2.2.0
     # via
     #   -r requirements/base.txt
     #   scikit-learn
@@ -337,7 +337,7 @@ pycparser==2.22
     # via
     #   -r requirements/base.txt
     #   cffi
-pydantic==2.10.2
+pydantic==2.10.3
     # via
     #   -r requirements/base.txt
     #   openai
@@ -422,7 +422,7 @@ requests-oauthlib==2.0.0
     # via
     #   -r requirements/base.txt
     #   social-auth-core
-rpds-py==0.21.0
+rpds-py==0.22.3
     # via
     #   -r requirements/base.txt
     #   jsonschema
@@ -441,7 +441,7 @@ semantic-version==2.10.0
     #   edx-drf-extensions
 simplejson==3.19.3
     # via -r requirements/base.txt
-six==1.16.0
+six==1.17.0
     # via
     #   -r requirements/base.txt
     #   analytics-python
@@ -497,6 +497,7 @@ tqdm==4.67.1
 typing-extensions==4.12.2
     # via
     #   -r requirements/base.txt
+    #   anyio
     #   edx-opaque-keys
     #   openai
     #   pydantic
