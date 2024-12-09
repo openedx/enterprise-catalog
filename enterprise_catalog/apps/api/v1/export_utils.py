@@ -282,7 +282,7 @@ def exec_ed_course_to_row(hit):
     row_data = _base_csv_row_data(hit)
     csv_row = []
     csv_row.append(row_data.get('title'))
-    csv_row.append(row_data.get('partners'))
+    csv_row.append(row_data.get('partner_name'))
 
     csv_row.append(row_data.get('start_date'))
     csv_row.append(row_data.get('end_date'))
