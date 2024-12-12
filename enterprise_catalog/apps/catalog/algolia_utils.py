@@ -20,12 +20,14 @@ from enterprise_catalog.apps.api_client.constants import (
 from enterprise_catalog.apps.catalog.constants import (
     ALGOLIA_DEFAULT_TIMESTAMP,
     COURSE,
+    COURSE_RUN_RESTRICTION_TYPE_KEY,
     EXEC_ED_2U_COURSE_TYPE,
     EXEC_ED_2U_READABLE_COURSE_TYPE,
     LATE_ENROLLMENT_THRESHOLD_DAYS,
     LEARNER_PATHWAY,
     PROGRAM,
     PROGRAM_TYPES_MAP,
+    RESTRICTION_FOR_B2B,
     VIDEO,
 )
 from enterprise_catalog.apps.catalog.content_metadata_utils import (
@@ -259,9 +261,19 @@ def _should_index_course(course_metadata):
     ):
         should_not_index = should_not_index_function()
         if should_not_index:
-            logger.info(f'Not indexing {course_metadata.content_key}, reason: {log_message}')
+            logger.info(f'Not indexing course {course_metadata.content_key}, reason: {log_message}')
             return False
 
+    all_runs = course_json_metadata.get('course_runs', [])
+    num_runs_total = len(all_runs)
+    num_runs_restricted = len([
+        run for run in all_runs
+        if run.get(COURSE_RUN_RESTRICTION_TYPE_KEY) == RESTRICTION_FOR_B2B
+    ])
+    logger.info(
+        f'Indexing course {course_metadata.content_key} with {num_runs_total} '
+        f'total runs, of which {num_runs_restricted} are restricted for enterprise.'
+    )
     return True
 
 
