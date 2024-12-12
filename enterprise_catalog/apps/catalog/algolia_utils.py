@@ -136,11 +136,14 @@ ALGOLIA_INDEX_SETTINGS = {
     'attributeForDistinct': 'aggregation_key',
     'distinct': True,
     'typoTolerance': False,
+    # unordered(): Ignores the position of the match within the attribute.
+    # From docs: https://www.algolia.com/doc/api-reference/api-parameters/searchableAttributes/#modifiers
     'searchableAttributes': [
         'unordered(title)',
         'unordered(full_description)',
         'unordered(short_description)',
         'unordered(additional_information)',
+        'aggregation_key',
         'partners',
         'skill_names',
         'skills',
