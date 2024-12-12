@@ -87,25 +87,33 @@ class AlgoliaUtilsTests(TestCase):
             ],
         },
         {
-            'course_type': EXEC_ED_2U_COURSE_TYPE,
             'expected_result': True,
+            'course_type': EXEC_ED_2U_COURSE_TYPE,
             'start': days_from_now(1),
             'end': days_from_now(30),
             'enrollment_end': days_from_now(1)
         },
         {
-            'course_type': EXEC_ED_2U_COURSE_TYPE,
             'expected_result': False,
+            'course_type': EXEC_ED_2U_COURSE_TYPE,
             'start': days_from_now(-30),
             'end': days_from_now(-1),
             'enrollment_end': days_from_now(-30)
         },
         {
-            'course_type': EXEC_ED_2U_COURSE_TYPE,
             'expected_result': True,
+            'course_type': EXEC_ED_2U_COURSE_TYPE,
             'start': days_from_now(-30),
             'end': days_from_now(-1),
             'enrollment_end': None
+        },
+        # A standard indexable Exec Ed course, but with a restricted run.
+        {
+            'expected_result': True,
+            'course_type': EXEC_ED_2U_COURSE_TYPE,
+            'start': days_from_now(1),
+            'enrollment_end': days_from_now(30),
+            'restriction_type': RESTRICTION_FOR_B2B,
         },
     )
     @ddt.unpack
@@ -123,7 +131,8 @@ class AlgoliaUtilsTests(TestCase):
         course_type=COURSE,
         start='2023-01-29T23:59:59Z',
         end='2023-02-28T23:59:59Z',
-        enrollment_end='2023-01-29T23:59:59Z'
+        enrollment_end='2023-01-29T23:59:59Z',
+        restriction_type=None,
     ):
         """
         Verify that only a course that has a non-hidden advertised course run, at least one owner, and a marketing slug
@@ -146,7 +155,8 @@ class AlgoliaUtilsTests(TestCase):
                     'seats': seats or [],
                     'start': start,
                     'end': end,
-                    'enrollment_end': enrollment_end
+                    'enrollment_end': enrollment_end,
+                    'restriction_type': restriction_type,
                 },
             ],
             'owners': owners,
@@ -159,7 +169,19 @@ class AlgoliaUtilsTests(TestCase):
             _json_metadata=json_metadata,
         )
         # pylint: disable=protected-access
-        assert utils._should_index_course(course_metadata) is expected_result
+        with self.assertLogs(level='INFO') as info_logs:
+            assert utils._should_index_course(course_metadata) is expected_result
+
+        if expected_result:
+            indexing_course_log_records = [
+                record for record
+                in info_logs.output
+                if (
+                    f'Indexing course {course_metadata.content_key} with 1 total runs, '
+                    f'of which {"1" if restriction_type else "0"} are restricted'
+                ) in record
+            ]
+            assert len(indexing_course_log_records) == 1
 
     def test_is_course_archived(self):
         """
