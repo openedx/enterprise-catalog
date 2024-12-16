@@ -57,6 +57,7 @@ from enterprise_catalog.apps.catalog.utils import (
     get_parent_content_key,
     localized_utcnow,
 )
+from enterprise_catalog.apps.catalog.algolia_utils import get_advertised_course_run
 
 
 LOGGER = getLogger(__name__)
@@ -555,10 +556,19 @@ class EnterpriseCatalog(TimeStampedModel):
         else:
             # Catalog param only needed for legacy (non-learner-portal) enrollment URLs
             params['catalog'] = self.uuid
+
+            course_key = content_key if parent_content_key else None
+            course_run_key = content_key if not parent_content_key else None
+
+            if parent_content_key:
+                advertised_course_run = get_advertised_course_run(content_metadata.json_metadata)
+                if advertised_course_run:
+                    course_run_key = advertised_course_run['key']
+
             url = '{}/enterprise/{}/course/{}/enroll/'.format(
                 settings.LMS_BASE_URL,
                 self.enterprise_uuid,
-                content_key,
+                course_run_key or course_key,
             )
 
         return update_query_parameters(url, params)
