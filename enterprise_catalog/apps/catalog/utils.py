@@ -176,3 +176,20 @@ def get_course_run_by_uuid(course, course_run_uuid):
     except IndexError:
         return None
     return course_run
+
+
+def get_advertised_course_run(course):
+    """
+    Get part of the advertised course_run as per advertised_course_run_uuid
+
+    Argument:
+        course (dict)
+
+    Returns:
+        dict: containing key, pacing_type, start, end, and upgrade deadline
+        for the course_run, or None
+    """
+    full_course_run = get_course_run_by_uuid(course, course.get('advertised_course_run_uuid'))
+    if full_course_run is None:
+        return None
+    return full_course_run
