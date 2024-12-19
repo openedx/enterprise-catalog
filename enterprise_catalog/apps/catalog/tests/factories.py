@@ -99,7 +99,7 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
                 'logo_image_url': fake.image_url() + '.jpg',
             }]
             course_runs = [{
-                'key': 'course-v1:edX+DemoX',
+                'key': 'course-v1:edX+DemoX+2T2024',
                 'uuid': str(FAKE_ADVERTISED_COURSE_RUN_UUID),
                 'content_language': 'en-us',
                 'status': 'published',

@@ -11,7 +11,7 @@ from rest_framework import serializers
 from enterprise_catalog.apps.api.constants import CourseMode
 from enterprise_catalog.apps.catalog.constants import EXEC_ED_2U_COURSE_TYPE
 from enterprise_catalog.apps.catalog.content_metadata_utils import (
-    get_course_run_by_uuid,
+    get_advertised_course_run,
 )
 
 
@@ -113,8 +113,7 @@ class NormalizedContentMetadataSerializer(ReadOnlySerializer):
     def course_run_metadata(self):
         if run_metadata := self.instance.get('course_run_metadata'):
             return run_metadata
-        advertised_course_run_uuid = self.course_metadata.get('advertised_course_run_uuid')
-        return get_course_run_by_uuid(self.course_metadata, advertised_course_run_uuid)
+        return get_advertised_course_run(self.course_metadata)
 
     @extend_schema_field(serializers.DateTimeField)
     def get_start_date(self, obj) -> str:  # pylint: disable=unused-argument

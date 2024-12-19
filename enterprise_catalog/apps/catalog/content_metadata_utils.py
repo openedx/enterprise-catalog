@@ -89,7 +89,7 @@ def get_course_first_paid_enrollable_seat_price(course):
     # Use advertised course run.
     # If that fails use one of the other active course runs.
     # (The latter is what Discovery does)
-    advertised_course_run = get_course_run_by_uuid(course, course.get('advertised_course_run_uuid'))
+    advertised_course_run = get_advertised_course_run(course)
     if advertised_course_run and advertised_course_run.get('first_enrollable_paid_seat_price'):
         return advertised_course_run.get('first_enrollable_paid_seat_price')
 
@@ -102,3 +102,20 @@ def get_course_first_paid_enrollable_seat_price(course):
         if 'first_enrollable_paid_seat_price' in course_run:
             return course_run['first_enrollable_paid_seat_price']
     return None
+
+
+def get_advertised_course_run(course):
+    """
+    Get part of the advertised course_run as per advertised_course_run_uuid
+
+    Argument:
+        course (dict)
+
+    Returns:
+        dict: containing key, pacing_type, start, end, and upgrade deadline
+        for the course_run, or None
+    """
+    full_course_run = get_course_run_by_uuid(course, course.get('advertised_course_run_uuid'))
+    if full_course_run is None:
+        return None
+    return full_course_run

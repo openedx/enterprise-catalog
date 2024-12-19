@@ -31,8 +31,8 @@ from enterprise_catalog.apps.catalog.constants import (
     VIDEO,
 )
 from enterprise_catalog.apps.catalog.content_metadata_utils import (
+    get_advertised_course_run,
     get_course_first_paid_enrollable_seat_price,
-    get_course_run_by_uuid,
     is_course_run_active,
 )
 from enterprise_catalog.apps.catalog.models import ContentMetadata
@@ -229,11 +229,7 @@ def _should_index_course(course_metadata):
         bool: Whether or not the course should be indexed by algolia.
     """
     course_json_metadata = course_metadata.json_metadata
-    advertised_course_run_uuid = course_json_metadata.get('advertised_course_run_uuid')
-    advertised_course_run = get_course_run_by_uuid(
-        course_json_metadata,
-        advertised_course_run_uuid,
-    )
+    advertised_course_run = get_advertised_course_run(course_json_metadata)
 
     # We define a series of no-arg functions, each of which has the property that,
     # if it returns true, means we should *not* index this record.
@@ -477,8 +473,7 @@ def get_course_language(course):
     Returns:
         string: human-readable language name parsed from a language code, or None if language name is not present.
     """
-    advertised_course_run = get_course_run_by_uuid(course, course.get('advertised_course_run_uuid'))
-    if not advertised_course_run:
+    if not (advertised_course_run := get_advertised_course_run(course)):
         return None
 
     content_language_name = advertised_course_run.get('content_language_search_facet_name')
@@ -496,8 +491,7 @@ def get_course_transcript_languages(course):
     Returns:
         list: a list of available human-readable video transcript languages parsed from a language code.
     """
-    advertised_course_run = get_course_run_by_uuid(course, course.get('advertised_course_run_uuid'))
-    if not advertised_course_run:
+    if not (advertised_course_run := get_advertised_course_run(course)):
         return None
 
     transcript_languages = advertised_course_run.get('transcript_languages_search_facet_names')
@@ -1168,23 +1162,6 @@ def _get_course_run(course, course_run):
     return course_run
 
 
-def get_advertised_course_run(course):
-    """
-    Get part of the advertised course_run as per advertised_course_run_uuid
-
-    Argument:
-        course (dict)
-
-    Returns:
-        dict: containing key, pacing_type, start, end, and upgrade deadline
-        for the course_run, or None
-    """
-    full_course_run = get_course_run_by_uuid(course, course.get('advertised_course_run_uuid'))
-    if full_course_run is None:
-        return None
-    return _get_course_run(course, full_course_run)
-
-
 def get_course_runs(course):
     """
     Extract and transform a list of course runs into what we'll index.
@@ -1514,6 +1491,8 @@ def _algolia_object_from_product(product, algolia_fields):
     """
     searchable_product = copy.deepcopy(product)
     if searchable_product.get('content_type') == COURSE:
+        advertised_course_run = get_advertised_course_run(searchable_product)
+        transformed_advertised_course_run = _get_course_run(searchable_product, advertised_course_run)
         searchable_product.update({
             'language': get_course_language(searchable_product),
             'availability': get_course_availability(searchable_product),
@@ -1522,7 +1501,7 @@ def _algolia_object_from_product(product, algolia_fields):
             'program_titles': get_course_program_titles(searchable_product),
             'subjects': get_course_subjects(searchable_product),
             'card_image_url': get_course_card_image_url(searchable_product),
-            'advertised_course_run': get_advertised_course_run(searchable_product),
+            'advertised_course_run': transformed_advertised_course_run,
             'course_runs': get_course_runs(searchable_product),
             'upcoming_course_runs': get_upcoming_course_runs(searchable_product),
             'skill_names': get_course_skill_names(searchable_product),
