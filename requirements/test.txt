@@ -28,11 +28,11 @@ asgiref==3.8.1
     #   -r requirements/base.txt
     #   django
     #   django-cors-headers
-astroid==3.3.6
+astroid==3.3.8
     # via
     #   pylint
     #   pylint-celery
-attrs==24.2.0
+attrs==24.3.0
     # via
     #   -r requirements/base.txt
     #   jsonschema
@@ -66,11 +66,11 @@ cffi==1.17.1
     #   pynacl
 chardet==5.2.0
     # via tox
-charset-normalizer==3.4.0
+charset-normalizer==3.4.1
     # via
     #   -r requirements/base.txt
     #   requests
-click==8.1.7
+click==8.1.8
     # via
     #   -r requirements/base.txt
     #   celery
@@ -103,7 +103,7 @@ code-annotations==2.1.0
     #   edx-toggles
 colorama==0.4.6
     # via tox
-coverage[toml]==7.6.9
+coverage[toml]==7.6.10
     # via
     #   -r requirements/test.in
     #   pytest-cov
@@ -281,7 +281,7 @@ iniconfig==2.0.0
     # via pytest
 isort==5.13.2
     # via pylint
-jinja2==3.1.4
+jinja2==3.1.5
     # via
     #   -r requirements/base.txt
     #   code-annotations
@@ -323,7 +323,7 @@ newrelic==10.4.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
-numpy==2.2.0
+numpy==2.2.1
     # via
     #   -r requirements/base.txt
     #   scikit-learn
@@ -363,7 +363,7 @@ prompt-toolkit==3.0.48
     # via
     #   -r requirements/base.txt
     #   click-repl
-psutil==6.1.0
+psutil==6.1.1
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -371,11 +371,11 @@ pycparser==2.22
     # via
     #   -r requirements/base.txt
     #   cffi
-pydantic==2.10.3
+pydantic==2.10.4
     # via
     #   -r requirements/base.txt
     #   openai
-pydantic-core==2.27.1
+pydantic-core==2.27.2
     # via
     #   -r requirements/base.txt
     #   pydantic
@@ -387,7 +387,7 @@ pyjwt[crypto]==2.10.1
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
-pylint==3.3.2
+pylint==3.3.3
     # via
     #   edx-lint
     #   pylint-celery
@@ -559,7 +559,7 @@ uritemplate==4.1.1
     # via
     #   -r requirements/base.txt
     #   drf-spectacular
-urllib3==2.2.3
+urllib3==2.3.0
     # via
     #   -r requirements/base.txt
     #   requests

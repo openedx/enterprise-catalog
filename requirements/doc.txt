@@ -32,12 +32,12 @@ asgiref==3.8.1
     #   -r requirements/test.txt
     #   django
     #   django-cors-headers
-astroid==3.3.6
+astroid==3.3.8
     # via
     #   -r requirements/test.txt
     #   pylint
     #   pylint-celery
-attrs==24.2.0
+attrs==24.3.0
     # via
     #   -r requirements/test.txt
     #   jsonschema
@@ -81,11 +81,11 @@ chardet==5.2.0
     # via
     #   -r requirements/test.txt
     #   tox
-charset-normalizer==3.4.0
+charset-normalizer==3.4.1
     # via
     #   -r requirements/test.txt
     #   requests
-click==8.1.7
+click==8.1.8
     # via
     #   -r requirements/test.txt
     #   celery
@@ -121,7 +121,7 @@ colorama==0.4.6
     # via
     #   -r requirements/test.txt
     #   tox
-coverage[toml]==7.6.9
+coverage[toml]==7.6.10
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -322,7 +322,7 @@ isort==5.13.2
     # via
     #   -r requirements/test.txt
     #   pylint
-jinja2==3.1.4
+jinja2==3.1.5
     # via
     #   -r requirements/test.txt
     #   code-annotations
@@ -367,9 +367,9 @@ newrelic==10.4.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
-nh3==0.2.19
+nh3==0.2.20
     # via readme-renderer
-numpy==2.2.0
+numpy==2.2.1
     # via
     #   -r requirements/test.txt
     #   scikit-learn
@@ -413,7 +413,7 @@ prompt-toolkit==3.0.48
     # via
     #   -r requirements/test.txt
     #   click-repl
-psutil==6.1.0
+psutil==6.1.1
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
@@ -421,15 +421,15 @@ pycparser==2.22
     # via
     #   -r requirements/test.txt
     #   cffi
-pydantic==2.10.3
+pydantic==2.10.4
     # via
     #   -r requirements/test.txt
     #   openai
-pydantic-core==2.27.1
+pydantic-core==2.27.2
     # via
     #   -r requirements/test.txt
     #   pydantic
-pydata-sphinx-theme==0.16.0
+pydata-sphinx-theme==0.16.1
     # via sphinx-book-theme
 pygments==2.18.0
     # via
@@ -446,7 +446,7 @@ pyjwt[crypto]==2.10.1
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
-pylint==3.3.2
+pylint==3.3.3
     # via
     #   -r requirements/test.txt
     #   edx-lint
@@ -659,7 +659,7 @@ uritemplate==4.1.1
     # via
     #   -r requirements/test.txt
     #   drf-spectacular
-urllib3==2.2.3
+urllib3==2.3.0
     # via
     #   -r requirements/test.txt
     #   requests
