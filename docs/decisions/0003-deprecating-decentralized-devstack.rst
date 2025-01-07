@@ -11,7 +11,7 @@ Accepted
 Context
 -------
 
-In `decision 0001`_ we considered replacing `Devstack`_ with Decentralized Devstack, a framework for devstack where each IDA would have and own its own devstack. To test out the new framework, a prototype was created for enterprise-catalog. After some user testing and some ideation, it was decided that edX would not try to move towads Decentralized Devstack and instead would opt to do improvements on `Devstack`_.
+In `decision 0001`_ we considered replacing `Devstack`_ with Decentralized Devstack, a framework for devstack where each IDA would have and own its own devstack. To test out the new framework, a prototype was created for enterprise-catalog. After some user testing and some ideation, it was decided that edX would not try to move towards Decentralized Devstack and instead would opt to do improvements on `Devstack`_.
 
 Decision
 --------
