@@ -623,6 +623,49 @@ class TestModels(TestCase):
         else:
             assert settings.LMS_BASE_URL in content_enrollment_url
 
+    @ddt.data(
+        {
+            'content_key': 'course-v1:edX+DemoX+2T2024',
+            'parent_content_key': 'edX+DemoX',
+            'content_type': COURSE_RUN,
+        },
+        {
+            'content_key': 'edX+DemoX',
+            'parent_content_key': None,
+            'content_type': COURSE,
+        },
+    )
+    @ddt.unpack
+    def test_get_content_enrollment_url_disabled_learner_portal(
+        self,
+        content_key,
+        parent_content_key,
+        content_type
+    ):
+        enterprise_uuid = uuid4()
+        enterprise_slug = 'sluggy'
+
+        enterprise_catalog = factories.EnterpriseCatalogFactory(enterprise_uuid=enterprise_uuid)
+        content_metadata = factories.ContentMetadataFactory(
+            content_key=content_key,
+            parent_content_key=parent_content_key,
+            content_type=content_type,
+        )
+
+        enterprise_catalog.catalog_query.contentmetadata_set.add(*[content_metadata])
+
+        mock_enterprise_customer_return_value = {
+            'slug': enterprise_slug,
+            'enable_learner_portal': False,
+        }
+
+        with self._mock_enterprise_customer_cache(
+            mock_enterprise_customer_return_value,
+        ):
+            content_enrollment_url = enterprise_catalog.get_content_enrollment_url(content_metadata)
+
+        assert "/course/course-v1:edX+DemoX+2T2024/enroll/" in content_enrollment_url
+
     @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
     @ddt.data(
         {

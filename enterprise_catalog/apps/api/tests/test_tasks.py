@@ -959,6 +959,27 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         test_course.catalog_queries.set(catalog_queries[0:3])
 
         algolia_objects = tasks.get_algolia_objects_from_course_content_metadata(test_course)
+
+        expected_transformed_advertised_course_run = {
+            'key': 'course-v1:edX+DemoX+2T2024',
+            'pacing_type': None,
+            'availability': 'current',
+            'start': '2024-02-12T11:00:00Z',
+            'end': '2026-02-05T11:00:00Z',
+            'min_effort': None,
+            'max_effort': None,
+            'weeks_to_complete': None,
+            'upgrade_deadline': 1769471999.0,
+            'enroll_by': 1769471999.0,
+            'has_enroll_by': True,
+            'enroll_start': None,
+            'has_enroll_start': False,
+            'content_price': 50.0,
+            'is_active': True,
+            'is_late_enrollment_eligible': False,
+            'restriction_type': None
+        }
+
         # Should look something like-
         #  [{'advertised_course_run': {'availability': 'current',
         #                             'end': None,
@@ -1004,6 +1025,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         for algo_object in algolia_objects:
             assert algo_object.get('key') == test_course.content_key
             assert algo_object.get('uuid') == test_course.json_metadata.get('uuid')
+            assert algo_object.get('advertised_course_run') == expected_transformed_advertised_course_run
 
             if object_catalogs := algo_object.get('enterprise_catalog_uuids'):
                 assert set(object_catalogs) == {str(catalog.uuid) for catalog in catalogs}
