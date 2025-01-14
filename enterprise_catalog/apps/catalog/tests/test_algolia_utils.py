@@ -6,6 +6,7 @@ import ddt
 from django.test import TestCase
 
 from enterprise_catalog.apps.catalog import algolia_utils as utils
+from enterprise_catalog.apps.catalog.algolia_utils import _get_course_run
 from enterprise_catalog.apps.catalog.constants import (
     ALGOLIA_DEFAULT_TIMESTAMP,
     COURSE,
@@ -15,6 +16,9 @@ from enterprise_catalog.apps.catalog.constants import (
     LEARNER_PATHWAY,
     PROGRAM,
     RESTRICTION_FOR_B2B,
+)
+from enterprise_catalog.apps.catalog.content_metadata_utils import (
+    get_advertised_course_run,
 )
 from enterprise_catalog.apps.catalog.tests.factories import (
     ContentMetadataFactory,
@@ -352,163 +356,6 @@ class AlgoliaUtilsTests(TestCase):
         """
         course_subjects = utils.get_course_subjects(course_metadata)
         assert sorted(course_subjects) == sorted(expected_subjects)
-
-    @ddt.data(
-        (
-            {
-                'course_runs': [{
-                    'key': 'course-v1:org+course+1T2021',
-                    'uuid': ADVERTISED_COURSE_RUN_UUID,
-                    'pacing_type': 'instructor_paced',
-                    'start': '2013-10-16T14:00:00Z',
-                    'end': '2014-10-16T14:00:00Z',
-                    'enrollment_end': '2013-10-17T14:00:00Z',
-                    'availability': 'Current',
-                    'min_effort': 10,
-                    'max_effort': 14,
-                    'weeks_to_complete': 13,
-                    'status': 'published',
-                    'is_enrollable': True,
-                    'is_marketable': True,
-                    'enrollment_start': '2013-10-01T14:00:00Z',
-                }],
-                'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID
-            },
-            {
-                'key': 'course-v1:org+course+1T2021',
-                'pacing_type': 'instructor_paced',
-                'start': '2013-10-16T14:00:00Z',
-                'end': '2014-10-16T14:00:00Z',
-                'availability': 'Current',
-                'min_effort': 10,
-                'max_effort': 14,
-                'weeks_to_complete': 13,
-                'upgrade_deadline': 32503680000.0,
-                'enroll_start': 1380636000,
-                'has_enroll_start': True,
-                'has_enroll_by': True,
-                'enroll_by': 1382018400.0,
-                'is_active': True,
-                'is_late_enrollment_eligible': False,
-                'content_price': 0.0,
-                'restriction_type': None,
-            },
-        ),
-        (
-            {
-                'course_runs': [{
-                    'uuid': uuid4(),
-                }],
-                'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID
-            },
-            None,
-        ),
-        (
-            {
-                'course_runs': [{
-                    'key': 'course-v1:org+course+1T2021',
-                    'uuid': ADVERTISED_COURSE_RUN_UUID,
-                    'pacing_type': 'instructor_paced',
-                    'start': '2013-10-16T14:00:00Z',
-                    'end': '2014-10-16T14:00:00Z',
-                    'enrollment_end': '2013-10-17T14:00:00Z',
-                    'enrollment_start_date': '2013-10-01T14:00:00Z',
-                    'availability': 'Current',
-                    'min_effort': 10,
-                    'max_effort': 14,
-                    'weeks_to_complete': 13,
-                    'status': 'published',
-                    'is_enrollable': True,
-                    'is_marketable': True,
-                    'seats': [
-                        {
-                            'type': 'audit',
-                            'upgrade_deadline': None,
-                        },
-                        {
-                            'type': 'verified',
-                            'upgrade_deadline': '2015-01-04T15:52:00Z',
-                            'price': '50.00',
-                        }
-                    ],
-                    'first_enrollable_paid_seat_price': 50,
-                    'enrollment_start': '2013-10-01T14:00:00Z',
-                }],
-                'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID
-            },
-            {
-                'key': 'course-v1:org+course+1T2021',
-                'pacing_type': 'instructor_paced',
-                'start': '2013-10-16T14:00:00Z',
-                'end': '2014-10-16T14:00:00Z',
-                'availability': 'Current',
-                'min_effort': 10,
-                'max_effort': 14,
-                'weeks_to_complete': 13,
-                'upgrade_deadline': 1420386720.0,
-                'enroll_by': 1382018400.0,
-                'enroll_start': 1380636000.0,
-                'has_enroll_by': True,
-                'has_enroll_start': True,
-                'content_price': 50,
-                'is_active': True,
-                'is_late_enrollment_eligible': False,
-                'restriction_type': None,
-            }
-        ),
-        (
-            {
-                'course_runs': [{
-                    'key': 'course-v1:org+course+1T2021',
-                    'uuid': ADVERTISED_COURSE_RUN_UUID,
-                    'pacing_type': 'instructor_paced',
-                    'start': '2013-10-16T14:00:00Z',
-                    'end': '2014-10-16T14:00:00Z',
-                    'enrollment_end': '2013-10-17T14:00:00Z',
-                    'availability': 'Current',
-                    'min_effort': 10,
-                    'max_effort': 14,
-                    'weeks_to_complete': 13,
-                    'status': 'published',
-                    'is_enrollable': True,
-                    'is_marketable': True,
-                    'seats': [{
-                        'type': 'verified',
-                        'upgrade_deadline': None,
-                        'price': '50.00',
-                    }],
-                    'first_enrollable_paid_seat_price': 50,
-                }],
-                'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID
-            },
-            {
-                'key': 'course-v1:org+course+1T2021',
-                'pacing_type': 'instructor_paced',
-                'start': '2013-10-16T14:00:00Z',
-                'end': '2014-10-16T14:00:00Z',
-                'availability': 'Current',
-                'min_effort': 10,
-                'max_effort': 14,
-                'weeks_to_complete': 13,
-                'upgrade_deadline': 32503680000.0,
-                'enroll_by': 1382018400.0,
-                'enroll_start': None,
-                'has_enroll_by': True,
-                'has_enroll_start': False,
-                'content_price': 50,
-                'is_active': True,
-                'is_late_enrollment_eligible': False,
-                'restriction_type': None,
-            }
-        )
-    )
-    @ddt.unpack
-    def test_get_advertised_course_run(self, searchable_course, expected_course_run):
-        """
-        Assert get_advertised_course_runs fetches just enough info about advertised course run
-        """
-        advertised_course_run = utils.get_advertised_course_run(searchable_course)
-        assert advertised_course_run == expected_course_run
 
     @ddt.data(
         (
@@ -1788,3 +1635,161 @@ class AlgoliaUtilsTests(TestCase):
         """
         transcript_languages = utils.get_course_transcript_languages(course_metadata)
         assert transcript_languages == expected_transcript_languages
+
+    @ddt.data(
+        (
+            {
+                'course_runs': [{
+                    'key': 'course-v1:org+course+1T2021',
+                    'uuid': ADVERTISED_COURSE_RUN_UUID,
+                    'pacing_type': 'instructor_paced',
+                    'start': '2013-10-16T14:00:00Z',
+                    'end': '2014-10-16T14:00:00Z',
+                    'enrollment_end': '2013-10-17T14:00:00Z',
+                    'availability': 'Current',
+                    'min_effort': 10,
+                    'max_effort': 14,
+                    'weeks_to_complete': 13,
+                    'status': 'published',
+                    'is_enrollable': True,
+                    'is_marketable': True,
+                    'enrollment_start': '2013-10-01T14:00:00Z',
+                }],
+                'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID
+            },
+            {
+                'key': 'course-v1:org+course+1T2021',
+                'pacing_type': 'instructor_paced',
+                'start': '2013-10-16T14:00:00Z',
+                'end': '2014-10-16T14:00:00Z',
+                'availability': 'Current',
+                'min_effort': 10,
+                'max_effort': 14,
+                'weeks_to_complete': 13,
+                'upgrade_deadline': 32503680000.0,
+                'enroll_start': 1380636000,
+                'has_enroll_start': True,
+                'has_enroll_by': True,
+                'enroll_by': 1382018400.0,
+                'is_active': True,
+                'is_late_enrollment_eligible': False,
+                'content_price': 0.0,
+                'restriction_type': None,
+            },
+        ),
+        (
+            {
+                'course_runs': [{
+                    'uuid': uuid4(),
+                }],
+                'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID
+            },
+            None,
+        ),
+        (
+            {
+                'course_runs': [{
+                    'key': 'course-v1:org+course+1T2021',
+                    'uuid': ADVERTISED_COURSE_RUN_UUID,
+                    'pacing_type': 'instructor_paced',
+                    'start': '2013-10-16T14:00:00Z',
+                    'end': '2014-10-16T14:00:00Z',
+                    'enrollment_end': '2013-10-17T14:00:00Z',
+                    'enrollment_start_date': '2013-10-01T14:00:00Z',
+                    'availability': 'Current',
+                    'min_effort': 10,
+                    'max_effort': 14,
+                    'weeks_to_complete': 13,
+                    'status': 'published',
+                    'is_enrollable': True,
+                    'is_marketable': True,
+                    'seats': [
+                        {
+                            'type': 'audit',
+                            'upgrade_deadline': None,
+                        },
+                        {
+                            'type': 'verified',
+                            'upgrade_deadline': '2015-01-04T15:52:00Z',
+                            'price': '50.00',
+                        }
+                    ],
+                    'first_enrollable_paid_seat_price': 50,
+                    'enrollment_start': '2013-10-01T14:00:00Z',
+                }],
+                'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID
+            },
+            {
+                'key': 'course-v1:org+course+1T2021',
+                'pacing_type': 'instructor_paced',
+                'start': '2013-10-16T14:00:00Z',
+                'end': '2014-10-16T14:00:00Z',
+                'availability': 'Current',
+                'min_effort': 10,
+                'max_effort': 14,
+                'weeks_to_complete': 13,
+                'upgrade_deadline': 1420386720.0,
+                'enroll_by': 1382018400.0,
+                'enroll_start': 1380636000.0,
+                'has_enroll_by': True,
+                'has_enroll_start': True,
+                'content_price': 50,
+                'is_active': True,
+                'is_late_enrollment_eligible': False,
+                'restriction_type': None,
+            }
+        ),
+        (
+            {
+                'course_runs': [{
+                    'key': 'course-v1:org+course+1T2021',
+                    'uuid': ADVERTISED_COURSE_RUN_UUID,
+                    'pacing_type': 'instructor_paced',
+                    'start': '2013-10-16T14:00:00Z',
+                    'end': '2014-10-16T14:00:00Z',
+                    'enrollment_end': '2013-10-17T14:00:00Z',
+                    'availability': 'Current',
+                    'min_effort': 10,
+                    'max_effort': 14,
+                    'weeks_to_complete': 13,
+                    'status': 'published',
+                    'is_enrollable': True,
+                    'is_marketable': True,
+                    'seats': [{
+                        'type': 'verified',
+                        'upgrade_deadline': None,
+                        'price': '50.00',
+                    }],
+                    'first_enrollable_paid_seat_price': 50,
+                }],
+                'advertised_course_run_uuid': ADVERTISED_COURSE_RUN_UUID
+            },
+            {
+                'key': 'course-v1:org+course+1T2021',
+                'pacing_type': 'instructor_paced',
+                'start': '2013-10-16T14:00:00Z',
+                'end': '2014-10-16T14:00:00Z',
+                'availability': 'Current',
+                'min_effort': 10,
+                'max_effort': 14,
+                'weeks_to_complete': 13,
+                'upgrade_deadline': 32503680000.0,
+                'enroll_by': 1382018400.0,
+                'enroll_start': None,
+                'has_enroll_by': True,
+                'has_enroll_start': False,
+                'content_price': 50,
+                'is_active': True,
+                'is_late_enrollment_eligible': False,
+                'restriction_type': None,
+            }
+        )
+    )
+    @ddt.unpack
+    def test_get_course_run(self, searchable_course, expected_course_run):
+        """
+        Assert get_advertised_course_run fetches just enough info about advertised course run
+        """
+        advertised_course_run = get_advertised_course_run(searchable_course)
+        transformed_advertised_course_run = _get_course_run(searchable_course, advertised_course_run)
+        assert transformed_advertised_course_run == expected_course_run

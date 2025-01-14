@@ -45,6 +45,7 @@ from enterprise_catalog.apps.catalog.constants import (
     json_serialized_course_modes,
 )
 from enterprise_catalog.apps.catalog.content_metadata_utils import (
+    get_advertised_course_run,
     get_course_first_paid_enrollable_seat_price,
 )
 from enterprise_catalog.apps.catalog.utils import (
@@ -555,10 +556,15 @@ class EnterpriseCatalog(TimeStampedModel):
         else:
             # Catalog param only needed for legacy (non-learner-portal) enrollment URLs
             params['catalog'] = self.uuid
+
+            course_run_key = content_key
+            if not parent_content_key:
+                if advertised_course_run := get_advertised_course_run(content_metadata.json_metadata):
+                    course_run_key = advertised_course_run['key']
             url = '{}/enterprise/{}/course/{}/enroll/'.format(
                 settings.LMS_BASE_URL,
                 self.enterprise_uuid,
-                content_key,
+                course_run_key,
             )
 
         return update_query_parameters(url, params)

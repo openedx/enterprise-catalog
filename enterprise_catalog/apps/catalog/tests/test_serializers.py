@@ -8,11 +8,13 @@ from enterprise_catalog.apps.catalog.constants import (
     COURSE,
     EXEC_ED_2U_COURSE_TYPE,
 )
+from enterprise_catalog.apps.catalog.content_metadata_utils import (
+    get_advertised_course_run,
+)
 from enterprise_catalog.apps.catalog.serializers import (
     NormalizedContentMetadataSerializer,
 )
 from enterprise_catalog.apps.catalog.tests import factories
-from enterprise_catalog.apps.catalog.utils import get_course_run_by_uuid
 
 
 @ddt.ddt
@@ -224,8 +226,7 @@ class NormalizedContentMetadataSerializerTests(TestCase):
         course_content.json_metadata['entitlements'] = entitlements
         course_content.json_metadata['course_type'] = course_type
 
-        advertised_course_run_uuid = course_content.json_metadata['advertised_course_run_uuid']
-        advertised_course_run = get_course_run_by_uuid(course_content.json_metadata, advertised_course_run_uuid)
+        advertised_course_run = get_advertised_course_run(course_content.json_metadata)
         advertised_course_run['fixed_price_usd'] = fixed_price_usd
         advertised_course_run['first_enrollable_paid_seat_price'] = first_enrollable_paid_seat_price
 
