@@ -249,7 +249,7 @@ edx-toggles==5.2.0
     # via -r requirements/base.txt
 factory-boy==3.3.1
     # via -r requirements/test.in
-faker==33.3.0
+faker==33.3.1
     # via factory-boy
 filelock==3.16.1
     # via
@@ -317,7 +317,7 @@ monotonic==1.6
     # via
     #   -r requirements/base.txt
     #   analytics-python
-mysqlclient==2.2.6
+mysqlclient==2.2.7
     # via -r requirements/base.txt
 newrelic==10.4.0
     # via
@@ -371,7 +371,7 @@ pycparser==2.22
     # via
     #   -r requirements/base.txt
     #   cffi
-pydantic==2.10.4
+pydantic==2.10.5
     # via
     #   -r requirements/base.txt
     #   openai
@@ -467,7 +467,7 @@ requests-oauthlib==2.0.0
     # via
     #   -r requirements/base.txt
     #   social-auth-core
-responses==0.25.3
+responses==0.25.5
     # via -r requirements/test.in
 rpds-py==0.22.3
     # via
@@ -476,9 +476,9 @@ rpds-py==0.22.3
     #   referencing
 rules==3.5
     # via -r requirements/base.txt
-scikit-learn==1.6.0
+scikit-learn==1.6.1
     # via -r requirements/base.txt
-scipy==1.15.0
+scipy==1.15.1
     # via
     #   -r requirements/base.txt
     #   scikit-learn
@@ -559,8 +559,9 @@ uritemplate==4.1.1
     # via
     #   -r requirements/base.txt
     #   drf-spectacular
-urllib3==2.3.0
+urllib3==2.2.3
     # via
+    #   -c requirements/common_constraints.txt
     #   -r requirements/base.txt
     #   requests
     #   responses

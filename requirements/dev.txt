@@ -351,7 +351,7 @@ edx-toggles==5.2.0
     #   -r requirements/test.txt
 factory-boy==3.3.1
     # via -r requirements/test.txt
-faker==33.3.0
+faker==33.3.1
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -464,7 +464,7 @@ monotonic==1.6
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   analytics-python
-mysqlclient==2.2.6
+mysqlclient==2.2.7
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -545,7 +545,7 @@ pycparser==2.22
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   cffi
-pydantic==2.10.4
+pydantic==2.10.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -557,7 +557,7 @@ pydantic-core==2.27.2
     #   pydantic
 pydocstyle==6.3.0
     # via -r requirements/quality.txt
-pygments==2.19.0
+pygments==2.19.1
     # via diff-cover
 pyjwt[crypto]==2.10.1
     # via
@@ -683,7 +683,7 @@ requests-oauthlib==2.0.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   social-auth-core
-responses==0.25.3
+responses==0.25.5
     # via
     #   -r requirements/dev.in
     #   -r requirements/test.txt
@@ -697,11 +697,11 @@ rules==3.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-scikit-learn==1.6.0
+scikit-learn==1.6.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-scipy==1.15.0
+scipy==1.15.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -807,8 +807,9 @@ uritemplate==4.1.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   drf-spectacular
-urllib3==2.3.0
+urllib3==2.2.3
     # via
+    #   -c requirements/common_constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   requests
