@@ -95,7 +95,7 @@ click-repl==0.3.0
     # via
     #   -r requirements/base.txt
     #   celery
-code-annotations==2.1.0
+code-annotations==2.2.0
     # via
     #   -r requirements/base.txt
     #   -r requirements/test.in
@@ -178,7 +178,7 @@ django-dynamic-fixture==4.0.1
     # via -r requirements/test.in
 django-extensions==3.2.3
     # via -r requirements/base.txt
-django-import-export==4.3.3
+django-import-export==4.3.4
     # via -r requirements/base.txt
 django-log-request-id==2.1.0
     # via -r requirements/base.txt
@@ -323,7 +323,7 @@ newrelic==10.4.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
-numpy==2.2.1
+numpy==2.2.2
     # via
     #   -r requirements/base.txt
     #   scikit-learn
@@ -448,7 +448,7 @@ redis==3.5.3
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.txt
-referencing==0.35.1
+referencing==0.36.1
     # via
     #   -r requirements/base.txt
     #   jsonschema
@@ -467,7 +467,7 @@ requests-oauthlib==2.0.0
     # via
     #   -r requirements/base.txt
     #   social-auth-core
-responses==0.25.5
+responses==0.25.6
     # via -r requirements/test.in
 rpds-py==0.22.3
     # via
@@ -550,6 +550,7 @@ typing-extensions==4.12.2
     #   openai
     #   pydantic
     #   pydantic-core
+    #   referencing
 tzdata==2024.2
     # via
     #   -r requirements/base.txt
@@ -571,7 +572,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.28.1
+virtualenv==20.29.1
     # via tox
 wcwidth==0.2.13
     # via
