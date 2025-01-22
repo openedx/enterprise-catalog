@@ -2123,6 +2123,59 @@ class AcademiesViewSetTests(APITestMixin):
         self.assertEqual(response.data['count'], 0)
 
 
+def ddt_cross_product(data_x, data_y):
+    """
+    Given two lists of test data dicts, produce a flat list of test data dicts
+    comprising every test scenario in x crossed with with every test scenario
+    of in y.
+
+    Demo:
+        Invoking this:
+
+        ddt_cross_product(
+            [
+                {'date': 'past'},
+                {'date': 'future'},
+            ],
+            [
+                {'size': 'big'},
+                {'size': 'small'},
+            ],
+        )
+
+        Returns this:
+
+        [
+            {'date': 'past', 'size': 'big'},
+            {'date': 'past', 'size': 'small'},
+            {'date': 'future', 'size': 'big'},
+            {'date': 'future', 'size': 'small'}
+        ]
+
+    Usage:
+        @ddt.data(*ddt_cross_product(
+            [
+                {'date': 'past'},
+                {'date': 'future'},
+            ],
+            [
+                {'size': 'big'},
+                {'size': 'small'},
+            ],
+        ))
+        def test_things(self, date, size):
+            pass
+
+    Args:
+        data_x (list of dict): First ddt data args.
+        data_y (list of dict): Second ddt data args.
+
+    Returns:
+        list of dict: The result of x cross y. Elements usable as arguments for ``@ddt.data()``.
+    """
+    return [x | y for x in data_x for y in data_y]
+
+
 @ddt.ddt
 class ContentMetadataViewTests(APITestMixin):
     """
@@ -2131,9 +2184,23 @@ class ContentMetadataViewTests(APITestMixin):
     def setUp(self):
         super().setUp()
         self.set_up_staff()
-        self.content_metadata_object = ContentMetadataFactory(
-            content_type='course',
-            content_uuid=uuid.uuid4(),
+        self.content_metadata_course1 = ContentMetadataFactory(
+            content_type=COURSE,
+        )
+        self.content_metadata_course1_run1 = ContentMetadataFactory(
+            content_type=COURSE_RUN,
+            parent_content_key=self.content_metadata_course1.content_key,
+        )
+        self.content_metadata_course1_run2 = ContentMetadataFactory(
+            content_type=COURSE_RUN,
+            parent_content_key=self.content_metadata_course1.content_key,
+        )
+        self.content_metadata_course2 = ContentMetadataFactory(
+            content_type=COURSE,
+        )
+        self.content_metadata_course2_run1 = ContentMetadataFactory(
+            content_type=COURSE_RUN,
+            parent_content_key=self.content_metadata_course2.content_key,
         )
 
     def test_list_success(self):
@@ -2143,48 +2210,105 @@ class ContentMetadataViewTests(APITestMixin):
         url = reverse('api:v1:content-metadata-list')
         response = self.client.get(url)
         response_json = response.json()
-        assert len(response_json.get('results')) == 1
-        assert response_json.get('results')[0].get("key") == self.content_metadata_object.content_key
+        assert len(response_json.get('results')) == 5
+        assert set(r['key'] for r in response_json.get('results')) == set([
+            self.content_metadata_course1.content_key,
+            self.content_metadata_course1_run1.content_key,
+            self.content_metadata_course1_run2.content_key,
+            self.content_metadata_course2.content_key,
+            self.content_metadata_course2_run1.content_key,
+        ])
 
-    def test_list_with_content_keys(self):
+    @ddt.data(
+        {'request_by_field': 'content_key'},
+        {'request_by_field': 'content_uuid'},
+    )
+    @ddt.unpack
+    def test_list_with_content_identifiers(self, request_by_field):
         """
-        Test a successful, expected api response for the metadata list endpoint with a supplied content keys query
-        param
+        Test list endpoint while passing the ``?content_identifiers=`` param to filter response.
         """
         ContentMetadataFactory(content_type='course')
-        junk_identifier = urlencode({'content_identifiers': 'edx+101'})
-        encoded_key = urlencode({'content_identifiers': self.content_metadata_object.content_key})
-        query_param_string = f"?{encoded_key}&{junk_identifier}"
-        url = reverse('api:v1:content-metadata-list') + query_param_string
+        query_string = '?' + urlencode({
+            'content_identifiers': [
+                getattr(self.content_metadata_course1, request_by_field),
+                getattr(self.content_metadata_course2_run1, request_by_field),
+                'edx+101',  # junk
+            ],
+        }, doseq=True)
+        url = reverse('api:v1:content-metadata-list') + query_string
         response = self.client.get(url)
         response_json = response.json()
-        assert len(response_json.get('results')) == 1
-        assert response_json.get('results')[0].get("key") == self.content_metadata_object.content_key
-        assert response_json.get('results')[0].get("course_runs")[0].get('start') == '2024-02-12T11:00:00Z'
+        assert len(response_json.get('results')) == 2
+        assert set(r['key'] for r in response_json.get('results')) == set([
+            self.content_metadata_course1.content_key,
+            self.content_metadata_course2_run1.content_key,
+        ])
 
-    def test_get_success(self):
+    def test_list_with_coerce_to_parent_course(self):
         """
-        Test a successful, expected api response for the metadata fetch endpoint
+        Test list endpoint while passing the ``?coerce_to_parent_course=true`` param to return courses.
         """
+        ContentMetadataFactory(content_type='course')
+        query_string = '?' + urlencode({
+            'coerce_to_parent_course': True,
+            'content_identifiers': [
+                self.content_metadata_course1.content_key,  # course should remain a course.
+                self.content_metadata_course2_run1.content_key,  # run should be coerced to course.
+                'edx+101',  # junk should be ignored.
+            ],
+        }, doseq=True)
+        url = reverse('api:v1:content-metadata-list') + query_string
+        response = self.client.get(url)
+        response_json = response.json()
+        assert len(response_json.get('results')) == 2
+        assert set(r['key'] for r in response_json.get('results')) == set([
+            self.content_metadata_course1.content_key,  # course successfully remains a course.
+            self.content_metadata_course2.content_key,  # run successfully coerced to course.
+            # junk successfully ignored.
+        ])
+
+    @ddt.data(*ddt_cross_product(
+        [
+            {'request_content_type': COURSE, 'coerce_to_parent_course': False, 'expect_content_type': COURSE},
+            {'request_content_type': COURSE, 'coerce_to_parent_course': True, 'expect_content_type': COURSE},
+            {'request_content_type': COURSE_RUN, 'coerce_to_parent_course': False, 'expect_content_type': COURSE_RUN},
+            {'request_content_type': COURSE_RUN, 'coerce_to_parent_course': True, 'expect_content_type': COURSE},
+        ],
+        # Repeat ever test above given different types of identifier input types.
+        [
+            {'request_by_field': 'id'},
+            {'request_by_field': 'content_key'},
+            {'request_by_field': 'content_uuid'},
+        ],
+    ))
+    @ddt.unpack
+    def test_retrieve_success(
+        self,
+        request_by_field='id',
+        coerce_to_parent_course=False,
+        request_content_type=COURSE,
+        expect_content_type=COURSE,
+    ):
+        """
+        Test a successful, expected api response for the metadata fetch endpoint given every
+        possible combination of inputs.
+        """
+        object_to_request = (
+            self.content_metadata_course1 if request_content_type == COURSE else self.content_metadata_course1_run1
+        )
+        query_string = '?' + urlencode({'coerce_to_parent_course': True}) if coerce_to_parent_course else ''
         url = reverse(
             'api:v1:content-metadata-detail',
-            kwargs={'pk': self.content_metadata_object.id}
+            kwargs={'pk': getattr(object_to_request, request_by_field)}
         )
-        response = self.client.get(url)
+        response = self.client.get(url + query_string)
         response_json = response.json()
-        assert response_json.get('title') == self.content_metadata_object.json_metadata.get('title')
 
-    def test_filter_list_by_uuid(self):
-        """
-        Test that the list content_identifiers query param accepts uuids
-        """
-        query_param_string = f"?content_identifiers={self.content_metadata_object.content_uuid}"
-        url = reverse('api:v1:content-metadata-list') + query_param_string
-        response = self.client.get(url)
-        response_json = response.json()
-        assert len(response_json.get('results')) == 1
-        assert response_json.get('results')[0].get("key") == self.content_metadata_object.content_key
-        assert response_json.get('results')[0].get("course_runs")[0].get('start') == '2024-02-12T11:00:00Z'
+        expected_object_to_receive = (
+            self.content_metadata_course1 if expect_content_type == COURSE else self.content_metadata_course1_run1
+        )
+        assert response_json.get('key') == expected_object_to_receive.content_key
 
 
 @ddt.ddt
