@@ -80,7 +80,7 @@ click-repl==0.3.0
     # via
     #   -r requirements/base.txt
     #   celery
-code-annotations==2.1.0
+code-annotations==2.2.0
     # via
     #   -r requirements/base.txt
     #   edx-toggles
@@ -103,7 +103,7 @@ distro==1.9.0
     # via
     #   -r requirements/base.txt
     #   openai
-django==4.2.17
+django==4.2.18
     # via
     #   -r requirements/base.txt
     #   django-celery-results
@@ -146,7 +146,7 @@ django-crum==0.7.9
     #   edx-toggles
 django-extensions==3.2.3
     # via -r requirements/base.txt
-django-import-export==4.3.3
+django-import-export==4.3.4
     # via -r requirements/base.txt
 django-log-request-id==2.1.0
     # via -r requirements/base.txt
@@ -279,7 +279,7 @@ newrelic==10.4.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
-numpy==2.2.1
+numpy==2.2.2
     # via
     #   -r requirements/base.txt
     #   scikit-learn
@@ -365,7 +365,7 @@ pyyaml==6.0.2
     #   edx-django-release-util
 redis==3.5.3
     # via -r requirements/base.txt
-referencing==0.35.1
+referencing==0.36.1
     # via
     #   -r requirements/base.txt
     #   jsonschema
@@ -458,6 +458,7 @@ typing-extensions==4.12.2
     #   openai
     #   pydantic
     #   pydantic-core
+    #   referencing
 tzdata==2024.2
     # via
     #   -r requirements/base.txt
