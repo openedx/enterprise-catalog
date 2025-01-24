@@ -1081,6 +1081,17 @@ class EnterpriseCatalogWorkbookViewTests(APITestMixin):
         response = self.client.get(f'{url}?{facets}')
         assert response.status_code == 200
 
+    @mock.patch('enterprise_catalog.apps.api.v1.views.catalog_workbook.get_initialized_algolia_client')
+    def test_use_learner_portal_url(self, mock_algolia_client):
+        """
+        Tests basic, successful output
+        """
+        mock_algolia_client.return_value.algolia_index.search.side_effect = [self.mock_algolia_hits, {'hits': []}]
+        url = self._get_contains_content_base_url()
+        facets = 'language=English&use_learner_portal_url=true'
+        response = self.client.get(f'{url}?{facets}')
+        assert response.status_code == 200
+
 
 class EnterpriseCatalogContainsContentItemsTests(APITestMixin):
     """

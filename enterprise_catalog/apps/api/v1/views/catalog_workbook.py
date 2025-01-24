@@ -42,6 +42,7 @@ class CatalogWorkbookView(GenericAPIView):
         GET entry point for the `CatalogWorkbookView`
         """
         facets = export_utils.querydict_to_dict(request.query_params)
+        use_learner_portal_url = facets.pop('use_learner_portal_url', False)
         algoliaQuery = export_utils.facets_to_query(facets)
 
         invalid_facets = export_utils.validate_query_facets(facets)
@@ -100,7 +101,7 @@ class CatalogWorkbookView(GenericAPIView):
                             export_utils.write_headers_to_sheet(
                                 exec_ed_worksheet, export_utils.CSV_EXEC_ED_COURSE_HEADERS, header_format
                             )
-                        course_row = export_utils.exec_ed_course_to_row(hit)
+                        course_row = export_utils.exec_ed_course_to_row(hit, use_learner_portal_url)
                         exec_ed_row_num = write_row_data(course_row, exec_ed_worksheet, exec_ed_row_num)
                     else:
                         if not edx_course_results_found:
@@ -109,7 +110,7 @@ class CatalogWorkbookView(GenericAPIView):
                             export_utils.write_headers_to_sheet(
                                 course_worksheet, export_utils.CSV_COURSE_HEADERS, header_format
                             )
-                        course_row = export_utils.course_hit_to_row(hit)
+                        course_row = export_utils.course_hit_to_row(hit, use_learner_portal_url)
                         course_row_num = write_row_data(course_row, course_worksheet, course_row_num)
                     for course_run in export_utils.course_hit_runs(hit):
                         if not course_run_results_found:
@@ -127,7 +128,7 @@ class CatalogWorkbookView(GenericAPIView):
                         export_utils.write_headers_to_sheet(
                             program_worksheet, export_utils.CSV_PROGRAM_HEADERS, header_format
                         )
-                    program_row = export_utils.program_hit_to_row(hit)
+                    program_row = export_utils.program_hit_to_row(hit, use_learner_portal_url)
                     program_row_num = write_row_data(program_row, program_worksheet, program_row_num)
             search_options['page'] = search_options['page'] + 1
             page = algolia_client.algolia_index.search(algoliaQuery, search_options)
