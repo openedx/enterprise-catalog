@@ -70,9 +70,11 @@ def is_course_run_active(course_run):
     Returns:
         bool: True if course run is "active"
     """
+    is_enrollable = course_run.get('is_enrollable', False)
+    if course_run.get("is_marketable_external") and is_enrollable:
+        return True
     course_run_status = course_run.get('status') or ''
     is_published = course_run_status.lower() == 'published'
-    is_enrollable = course_run.get('is_enrollable', False)
     is_marketable = course_run.get('is_marketable', False)
 
     return is_published and is_enrollable and is_marketable

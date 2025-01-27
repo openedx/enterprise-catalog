@@ -5,6 +5,7 @@ from django.test import TestCase
 from enterprise_catalog.apps.api.v1.utils import (
     get_archived_content_count,
     get_most_recent_modified_time,
+    is_course_run_active,
 )
 from enterprise_catalog.apps.catalog.tests.factories import (
     ContentMetadataFactory,
@@ -82,3 +83,52 @@ class ApiUtilsTests(TestCase):
             [highlighted_content_1, highlighted_content_2, highlighted_content_3]
         )
         assert archived_content_count == 2
+
+    def test_is_course_run_active(self):
+        """
+        Test that the is_course_run_active function correctly identifies active course runs.
+        """
+        # Test case where course run is active
+        active_course_run = {
+            'is_enrollable': True,
+            'is_marketable_external': True,
+            'status': 'published',
+            'is_marketable': True
+        }
+        assert is_course_run_active(active_course_run) is True
+
+        # Test case where course run is not active due to not being enrollable
+        not_enrollable_course_run = {
+            'is_enrollable': False,
+            'is_marketable_external': True,
+            'status': 'published',
+            'is_marketable': True
+        }
+        assert is_course_run_active(not_enrollable_course_run) is False
+
+        # Test case where course is not is_marketable but is_marketable_external
+        not_marketable_course_run = {
+            'is_enrollable': True,
+            'is_marketable_external': True,
+            'status': 'published',
+            'is_marketable': False
+        }
+        assert is_course_run_active(not_marketable_course_run) is True
+
+        # Test case where course run is not active due to not being published
+        not_published_course_run = {
+            'is_enrollable': False,
+            'is_marketable_external': False,
+            'status': 'archived',
+            'is_marketable': True
+        }
+        assert is_course_run_active(not_published_course_run) is False
+
+        # Test case where course run is active due to being marketable externally
+        marketable_external_course_run = {
+            'is_enrollable': True,
+            'is_marketable_external': True,
+            'status': 'reviewed',
+            'is_marketable': False
+        }
+        assert is_course_run_active(marketable_external_course_run) is True
