@@ -22,7 +22,7 @@ asgiref==3.8.1
     # via
     #   django
     #   django-cors-headers
-attrs==24.3.0
+attrs==25.1.0
     # via
     #   jsonschema
     #   referencing
@@ -130,7 +130,7 @@ django-model-utils==5.0.0
     #   -r requirements/base.in
     #   edx-celeryutils
     #   edx-rbac
-django-simple-history==3.7.0
+django-simple-history==3.8.0
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.in
@@ -232,13 +232,13 @@ pbr==6.1.0
     # via stevedore
 ply==3.11
     # via djangoql
-prompt-toolkit==3.0.48
+prompt-toolkit==3.0.50
     # via click-repl
 psutil==6.1.1
     # via edx-django-utils
 pycparser==2.22
     # via cffi
-pydantic==2.10.5
+pydantic==2.10.6
     # via openai
 pydantic-core==2.27.2
     # via pydantic
@@ -274,7 +274,7 @@ redis==3.5.3
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.in
-referencing==0.36.1
+referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -328,7 +328,7 @@ stevedore==5.4.0
     #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
-tablib==3.7.0
+tablib==3.8.0
     # via django-import-export
 text-unidecode==1.3
     # via python-slugify
@@ -344,7 +344,7 @@ typing-extensions==4.12.2
     #   pydantic
     #   pydantic-core
     #   referencing
-tzdata==2024.2
+tzdata==2025.1
     # via
     #   celery
     #   kombu
@@ -361,7 +361,7 @@ vine==5.1.0
     #   kombu
 wcwidth==0.2.13
     # via prompt-toolkit
-xlsxwriter==3.2.0
+xlsxwriter==3.2.1
     # via -r requirements/base.in
 zipp==3.21.0
     # via -r requirements/base.in
