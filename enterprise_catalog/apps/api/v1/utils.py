@@ -10,6 +10,10 @@ from six.moves.urllib.parse import (
     urlunsplit,
 )
 
+from enterprise_catalog.apps.catalog.content_metadata_utils import (
+    is_course_run_active,
+)
+
 
 logger = logging.getLogger(__name__)
 
@@ -57,27 +61,6 @@ def get_enterprise_utm_context(enterprise_name):
         utm_context['utm_source'] = slugify(enterprise_name)
 
     return utm_context
-
-
-def is_course_run_active(course_run):
-    """
-    Checks whether a course run is active. That is, whether the course run is published,
-    enrollable, and marketable.
-
-    Arguments:
-        course_run (dict): The metadata about a course run.
-
-    Returns:
-        bool: True if course run is "active"
-    """
-    is_enrollable = course_run.get('is_enrollable', False)
-    if course_run.get("is_marketable_external") and is_enrollable:
-        return True
-    course_run_status = course_run.get('status') or ''
-    is_published = course_run_status.lower() == 'published'
-    is_marketable = course_run.get('is_marketable', False)
-
-    return is_published and is_enrollable and is_marketable
 
 
 def is_any_course_run_active(course_runs):

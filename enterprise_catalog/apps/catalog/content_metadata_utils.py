@@ -66,19 +66,23 @@ def is_course_run_active(course_run):
     """
     Checks whether a course run is active. That is, whether the course run is published,
     enrollable, and marketable.
+    Checking is_published in case of is_marketable_external is redundant because
+    the Discovery service already handles the status behind is_marketable_external
+    property.
     Arguments:
         course_run (dict): The metadata about a course run.
     Returns:
         bool: True if course run is "active"
     """
-    is_enrollable = course_run.get('is_enrollable', False)
-    if course_run.get("is_marketable_external") and is_enrollable:
-        return True
     course_run_status = course_run.get('status') or ''
     is_published = course_run_status.lower() == 'published'
     is_marketable = course_run.get('is_marketable', False)
+    is_enrollable = course_run.get('is_enrollable', False)
 
-    return is_published and is_enrollable and is_marketable
+    is_marketable_internal = is_published and is_marketable
+    is_marketable_external = course_run.get("is_marketable_external", False)
+
+    return is_enrollable and (is_marketable_internal or is_marketable_external)
 
 
 def get_course_first_paid_enrollable_seat_price(course):
