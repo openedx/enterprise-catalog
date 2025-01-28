@@ -46,6 +46,8 @@ CSV_PROGRAM_HEADERS = [
     'Short Description',
     'Number of courses',
     'Associated Catalogs',
+    'Program UUID',
+    'URL',
 ]
 
 CSV_COURSE_RUN_HEADERS = [
@@ -121,6 +123,7 @@ ALGOLIA_ATTRIBUTES_TO_RETRIEVE = [
     'subjects',
     'subtitle',
     'title',
+    'uuid',
 ]
 
 DATE_FORMAT = "%Y-%m-%d"
@@ -149,7 +152,7 @@ def fetch_catalog_types(hit):
     return [catalog for catalog in CATALOG_TYPES if catalog in hit.get('enterprise_catalog_query_titles')]
 
 
-def program_hit_to_row(hit):
+def program_hit_to_row(hit, use_learner_portal_url=False):
     """
     Helper function to construct a CSV row according to a single Algolia result program hit.
     """
@@ -167,6 +170,13 @@ def program_hit_to_row(hit):
     catalogs = fetch_catalog_types(hit)
     csv_row.append(', '.join(catalogs))
 
+    uuid = hit.get('uuid')
+    csv_row.append(uuid)
+    if use_learner_portal_url and uuid:
+        csv_row.append(f'https://enterprise.edx.org/r/program/{uuid}')
+    else:
+        csv_row.append(hit.get('marketing_url'))
+
     return csv_row
 
 
@@ -174,6 +184,7 @@ def _base_csv_row_data(hit):
     """ Returns the formatted, shared attributes common across all course types. """
     title = hit.get('title')
     aggregation_key = hit.get('aggregation_key')
+    key = hit.get('key')
     language = hit.get('language')
     transcript_languages = ', '.join(hit.get('transcript_languages', []))
     marketing_url = hit.get('marketing_url')
@@ -211,6 +222,7 @@ def _base_csv_row_data(hit):
         'end_date': end_date,
         'enroll_by': enroll_by,
         'aggregation_key': aggregation_key,
+        'key': key,
         'advertised_course_run_key': advertised_course_run_key,
         'language': language,
         'transcript_languages': transcript_languages,
@@ -227,7 +239,7 @@ def _base_csv_row_data(hit):
     }
 
 
-def course_hit_to_row(hit):
+def course_hit_to_row(hit, use_learner_portal_url=False):
     """
     Helper function to construct a CSV row according to a single Algolia result course hit.
     """
@@ -256,7 +268,13 @@ def course_hit_to_row(hit):
     csv_row.append(row_data.get('content_price'))
     csv_row.append(row_data.get('language'))
     csv_row.append(row_data.get('transcript_languages'))
-    csv_row.append(row_data.get('marketing_url'))
+
+    key = row_data.get('key')
+    if use_learner_portal_url and key:
+        csv_row.append(f'https://enterprise.edx.org/r/course/{key}')
+    else:
+        csv_row.append(row_data.get('marketing_url'))
+
     csv_row.append(row_data.get('short_description'))
     csv_row.append(row_data.get('subjects'))
     csv_row.append(row_data.get('advertised_course_run_key'))
@@ -275,7 +293,7 @@ def course_hit_to_row(hit):
     return csv_row
 
 
-def exec_ed_course_to_row(hit):
+def exec_ed_course_to_row(hit, use_learner_portal_url=False):
     """
     Helper function to construct a CSV row according to a single executive education course hit.
     """
@@ -291,7 +309,13 @@ def exec_ed_course_to_row(hit):
     csv_row.append(row_data.get('content_price'))
     csv_row.append(row_data.get('language'))
     csv_row.append(row_data.get('transcript_languages'))
-    csv_row.append(row_data.get('marketing_url'))
+
+    key = row_data.get('key')
+    if use_learner_portal_url and key:
+        csv_row.append(f'https://enterprise.edx.org/r/course/{key}')
+    else:
+        csv_row.append(row_data.get('marketing_url'))
+
     csv_row.append(row_data.get('short_description'))
     csv_row.append(row_data.get('subjects'))
     csv_row.append(row_data.get('advertised_course_run_key'))
