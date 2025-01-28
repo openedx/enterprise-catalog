@@ -1253,6 +1253,7 @@ def _get_is_active_course_run(full_course_run):
             f'[_get_is_active_course_run] course run is not active '
             f'key: {full_course_run.get("key")}, '
             f'is_marketable: {full_course_run.get("is_marketable")}, '
+            f'is_marketable_external: {full_course_run.get("is_marketable_external")}, '
             f'is_enrollable: {full_course_run.get("is_enrollable")}, '
             f'availability: {availability}, '
             f'status: {full_course_run.get("status")}'
