@@ -119,6 +119,18 @@ class AlgoliaUtilsTests(TestCase):
             'enrollment_end': days_from_now(30),
             'restriction_type': RESTRICTION_FOR_B2B,
         },
+        # A Exec-Ed course, not is_marketable but is_marketable_external.
+        {
+            'expected_result': True,
+            'course_type': EXEC_ED_2U_COURSE_TYPE,
+            'start': days_from_now(1),
+            'end': days_from_now(30),
+            'enrollment_end': days_from_now(1),
+            'is_marketable': False,
+            'is_marketable_external': True,
+            'advertised_course_run_status': 'reviewed',
+            'course_run_availability': 'Upcoming'
+        },
     )
     @ddt.unpack
     def test_should_index_course(
@@ -130,6 +142,7 @@ class AlgoliaUtilsTests(TestCase):
         advertised_course_run_status='published',
         is_enrollable=True,
         is_marketable=True,
+        is_marketable_external=True,
         course_run_availability='current',
         seats=None,
         course_type=COURSE,
@@ -155,6 +168,7 @@ class AlgoliaUtilsTests(TestCase):
                     'status': advertised_course_run_status,
                     'is_enrollable': is_enrollable,
                     'is_marketable': is_marketable,
+                    'is_marketable_external': is_marketable_external,
                     'availability': course_run_availability,
                     'seats': seats or [],
                     'start': start,
@@ -782,6 +796,18 @@ class AlgoliaUtilsTests(TestCase):
                 }]
             },
             ['Archived'],
+        ),
+        (
+            {
+                'course_runs': [{
+                    'status': 'reviewed',
+                    'is_enrollable': True,
+                    'is_marketable': False,
+                    'is_marketable_external': True,
+                    'availability': 'Upcoming'
+                }]
+            },
+            ['Upcoming'],
         ),
     )
     @ddt.unpack
