@@ -37,7 +37,7 @@ astroid==3.3.8
     #   -r requirements/test.txt
     #   pylint
     #   pylint-celery
-attrs==24.3.0
+attrs==25.1.0
     # via
     #   -r requirements/test.txt
     #   jsonschema
@@ -56,7 +56,7 @@ billiard==4.2.1
     # via
     #   -r requirements/test.txt
     #   celery
-cachetools==5.5.0
+cachetools==5.5.1
     # via
     #   -r requirements/test.txt
     #   tox
@@ -210,7 +210,7 @@ django-model-utils==5.0.0
     #   -r requirements/test.txt
     #   edx-celeryutils
     #   edx-rbac
-django-simple-history==3.7.0
+django-simple-history==3.8.0
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/test.txt
@@ -267,7 +267,7 @@ edx-drf-extensions==10.5.0
     # via
     #   -r requirements/test.txt
     #   edx-rbac
-edx-lint==5.4.1
+edx-lint==5.6.0
     # via -r requirements/test.txt
 edx-opaque-keys==2.11.0
     # via
@@ -281,11 +281,11 @@ edx-toggles==5.2.0
     # via -r requirements/test.txt
 factory-boy==3.3.1
     # via -r requirements/test.txt
-faker==33.3.1
+faker==35.0.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
-filelock==3.16.1
+filelock==3.17.0
     # via
     #   -r requirements/test.txt
     #   tox
@@ -409,7 +409,7 @@ ply==3.11
     # via
     #   -r requirements/test.txt
     #   djangoql
-prompt-toolkit==3.0.48
+prompt-toolkit==3.0.50
     # via
     #   -r requirements/test.txt
     #   click-repl
@@ -421,7 +421,7 @@ pycparser==2.22
     # via
     #   -r requirements/test.txt
     #   cffi
-pydantic==2.10.5
+pydantic==2.10.6
     # via
     #   -r requirements/test.txt
     #   openai
@@ -476,7 +476,7 @@ pynacl==1.5.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
-pyproject-api==1.8.0
+pyproject-api==1.9.0
     # via
     #   -r requirements/test.txt
     #   tox
@@ -518,7 +518,7 @@ redis==3.5.3
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/test.txt
-referencing==0.36.1
+referencing==0.36.2
     # via
     #   -r requirements/test.txt
     #   jsonschema
@@ -618,7 +618,7 @@ stevedore==5.4.0
     #   doc8
     #   edx-django-utils
     #   edx-opaque-keys
-tablib==3.7.0
+tablib==3.8.0
     # via
     #   -r requirements/test.txt
     #   django-import-export
@@ -634,7 +634,7 @@ tomlkit==0.13.2
     # via
     #   -r requirements/test.txt
     #   pylint
-tox==4.23.2
+tox==4.24.1
     # via -r requirements/test.txt
 tqdm==4.67.1
     # via
@@ -651,7 +651,7 @@ typing-extensions==4.12.2
     #   pydantic-core
     #   pydata-sphinx-theme
     #   referencing
-tzdata==2024.2
+tzdata==2025.1
     # via
     #   -r requirements/test.txt
     #   celery
@@ -680,7 +680,7 @@ wcwidth==0.2.13
     # via
     #   -r requirements/test.txt
     #   prompt-toolkit
-xlsxwriter==3.2.0
+xlsxwriter==3.2.1
     # via -r requirements/test.txt
 zipp==3.21.0
     # via -r requirements/test.txt

@@ -32,7 +32,7 @@ astroid==3.3.8
     # via
     #   pylint
     #   pylint-celery
-attrs==24.3.0
+attrs==25.1.0
     # via
     #   -r requirements/base.txt
     #   jsonschema
@@ -171,7 +171,7 @@ django-model-utils==5.0.0
     #   -r requirements/base.txt
     #   edx-celeryutils
     #   edx-rbac
-django-simple-history==3.7.0
+django-simple-history==3.8.0
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.txt
@@ -219,7 +219,7 @@ edx-drf-extensions==10.5.0
     # via
     #   -r requirements/base.txt
     #   edx-rbac
-edx-lint==5.4.1
+edx-lint==5.6.0
     # via -r requirements/quality.in
 edx-opaque-keys==2.11.0
     # via
@@ -323,7 +323,7 @@ ply==3.11
     # via
     #   -r requirements/base.txt
     #   djangoql
-prompt-toolkit==3.0.48
+prompt-toolkit==3.0.50
     # via
     #   -r requirements/base.txt
     #   click-repl
@@ -337,7 +337,7 @@ pycparser==2.22
     # via
     #   -r requirements/base.txt
     #   cffi
-pydantic==2.10.5
+pydantic==2.10.6
     # via
     #   -r requirements/base.txt
     #   openai
@@ -404,7 +404,7 @@ redis==3.5.3
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.txt
-referencing==0.36.1
+referencing==0.36.2
     # via
     #   -r requirements/base.txt
     #   jsonschema
@@ -476,7 +476,7 @@ stevedore==5.4.0
     #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
-tablib==3.7.0
+tablib==3.8.0
     # via
     #   -r requirements/base.txt
     #   django-import-export
@@ -503,7 +503,7 @@ typing-extensions==4.12.2
     #   pydantic
     #   pydantic-core
     #   referencing
-tzdata==2024.2
+tzdata==2025.1
     # via
     #   -r requirements/base.txt
     #   celery
@@ -527,7 +527,7 @@ wcwidth==0.2.13
     # via
     #   -r requirements/base.txt
     #   prompt-toolkit
-xlsxwriter==3.2.0
+xlsxwriter==3.2.1
     # via -r requirements/base.txt
 zipp==3.21.0
     # via -r requirements/base.txt
