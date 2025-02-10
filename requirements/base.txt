@@ -36,7 +36,7 @@ celery==5.4.0
     #   -r requirements/base.in
     #   django-celery-results
     #   edx-celeryutils
-certifi==2024.12.14
+certifi==2025.1.31
     # via
     #   httpcore
     #   httpx
@@ -76,7 +76,7 @@ diff-match-patch==20241021
     # via django-import-export
 distro==1.9.0
     # via openai
-django==4.2.18
+django==4.2.19
     # via
     #   -c requirements/common_constraints.txt
     #   -c requirements/constraints.txt
@@ -111,7 +111,7 @@ django-clearcache==1.2.1
     # via -r requirements/base.in
 django-config-models==2.7.0
     # via -r requirements/base.in
-django-cors-headers==4.6.0
+django-cors-headers==4.7.0
     # via -r requirements/base.in
 django-crum==0.7.9
     # via
@@ -121,7 +121,7 @@ django-crum==0.7.9
     #   edx-toggles
 django-extensions==3.2.3
     # via -r requirements/base.in
-django-import-export==4.3.4
+django-import-export==4.3.5
     # via -r requirements/base.in
 django-log-request-id==2.1.0
     # via -r requirements/base.in
@@ -214,7 +214,7 @@ monotonic==1.6
     # via analytics-python
 mysqlclient==2.2.7
     # via -r requirements/base.in
-newrelic==10.4.0
+newrelic==10.6.0
     # via edx-django-utils
 numpy==2.2.2
     # via
@@ -228,7 +228,7 @@ openai==1.13.3
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.in
-pbr==6.1.0
+pbr==6.1.1
     # via stevedore
 ply==3.11
     # via djangoql
@@ -251,7 +251,7 @@ pyjwt[crypto]==2.10.1
     #   social-auth-core
 pymemcache==4.0.0
     # via -r requirements/base.in
-pymongo==4.10.1
+pymongo==4.11
     # via edx-opaque-keys
 pynacl==1.5.0
     # via edx-django-utils
@@ -263,7 +263,7 @@ python-slugify==8.0.4
     # via code-annotations
 python3-openid==3.2.0
     # via social-auth-core
-pytz==2024.2
+pytz==2025.1
     # via -r requirements/base.in
 pyyaml==6.0.2
     # via
@@ -361,7 +361,7 @@ vine==5.1.0
     #   kombu
 wcwidth==0.2.13
     # via prompt-toolkit
-xlsxwriter==3.2.1
+xlsxwriter==3.2.2
     # via -r requirements/base.in
 zipp==3.21.0
     # via -r requirements/base.in

@@ -44,7 +44,7 @@ celery==5.4.0
     #   -r requirements/base.txt
     #   django-celery-results
     #   edx-celeryutils
-certifi==2024.12.14
+certifi==2025.1.31
     # via
     #   -r requirements/base.txt
     #   httpcore
@@ -103,7 +103,7 @@ distro==1.9.0
     # via
     #   -r requirements/base.txt
     #   openai
-django==4.2.18
+django==4.2.19
     # via
     #   -r requirements/base.txt
     #   django-celery-results
@@ -136,7 +136,7 @@ django-clearcache==1.2.1
     # via -r requirements/base.txt
 django-config-models==2.7.0
     # via -r requirements/base.txt
-django-cors-headers==4.6.0
+django-cors-headers==4.7.0
     # via -r requirements/base.txt
 django-crum==0.7.9
     # via
@@ -146,7 +146,7 @@ django-crum==0.7.9
     #   edx-toggles
 django-extensions==3.2.3
     # via -r requirements/base.txt
-django-import-export==4.3.4
+django-import-export==4.3.5
     # via -r requirements/base.txt
 django-log-request-id==2.1.0
     # via -r requirements/base.txt
@@ -275,7 +275,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.7
     # via -r requirements/base.txt
-newrelic==10.4.0
+newrelic==10.6.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -293,7 +293,7 @@ openai==1.13.3
     # via -r requirements/base.txt
 packaging==24.2
     # via gunicorn
-pbr==6.1.0
+pbr==6.1.1
     # via
     #   -r requirements/base.txt
     #   stevedore
@@ -331,7 +331,7 @@ pyjwt[crypto]==2.10.1
     #   social-auth-core
 pymemcache==4.0.0
     # via -r requirements/base.txt
-pymongo==4.10.1
+pymongo==4.11
     # via
     #   -r requirements/base.txt
     #   edx-opaque-keys
@@ -354,7 +354,7 @@ python3-openid==3.2.0
     # via
     #   -r requirements/base.txt
     #   social-auth-core
-pytz==2024.2
+pytz==2025.1
     # via -r requirements/base.txt
 pyyaml==6.0.2
     # via
@@ -482,7 +482,7 @@ wcwidth==0.2.13
     # via
     #   -r requirements/base.txt
     #   prompt-toolkit
-xlsxwriter==3.2.1
+xlsxwriter==3.2.2
     # via -r requirements/base.txt
 zipp==3.21.0
     # via -r requirements/base.txt
