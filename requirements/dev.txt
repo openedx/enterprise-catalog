@@ -61,7 +61,7 @@ build==1.2.2.post1
     # via
     #   -r requirements/pip-tools.txt
     #   pip-tools
-cachetools==5.5.1
+cachetools==5.5.2
     # via
     #   -r requirements/test.txt
     #   tox
@@ -138,11 +138,11 @@ colorama==0.4.6
     # via
     #   -r requirements/test.txt
     #   tox
-coverage[toml]==7.6.11
+coverage[toml]==7.6.12
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==44.0.0
+cryptography==44.0.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -222,7 +222,7 @@ django-clearcache==1.2.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-django-config-models==2.7.0
+django-config-models==2.8.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -245,7 +245,7 @@ django-extensions==3.2.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-django-import-export==4.3.5
+django-import-export==4.3.6
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -341,17 +341,17 @@ edx-rbac==1.10.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-edx-rest-api-client==6.0.0
+edx-rest-api-client==6.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-edx-toggles==5.2.0
+edx-toggles==5.3.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
 factory-boy==3.3.3
     # via -r requirements/test.txt
-faker==35.2.0
+faker==36.1.1
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -443,7 +443,7 @@ kombu==5.4.2
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   celery
-lxml[html-clean,html_clean]==5.3.0
+lxml[html-clean,html_clean]==5.3.1
     # via
     #   edx-i18n-tools
     #   lxml-html-clean
@@ -473,7 +473,7 @@ newrelic==10.6.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-django-utils
-numpy==2.2.2
+numpy==2.2.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -533,7 +533,7 @@ prompt-toolkit==3.0.50
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   click-repl
-psutil==6.1.1
+psutil==7.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -596,7 +596,7 @@ pymemcache==4.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-pymongo==4.11
+pymongo==4.11.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -622,7 +622,7 @@ pytest==8.3.4
     #   pytest-django
 pytest-cov==6.0.0
     # via -r requirements/test.txt
-pytest-django==4.9.0
+pytest-django==4.10.0
     # via -r requirements/test.txt
 python-dateutil==2.9.0.post0
     # via
@@ -630,7 +630,6 @@ python-dateutil==2.9.0.post0
     #   -r requirements/test.txt
     #   analytics-python
     #   celery
-    #   faker
 python-memcached==1.62
     # via -r requirements/dev.in
 python-slugify==8.0.4
@@ -687,7 +686,7 @@ responses==0.25.6
     # via
     #   -r requirements/dev.in
     #   -r requirements/test.txt
-rpds-py==0.22.3
+rpds-py==0.23.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -701,7 +700,7 @@ scikit-learn==1.6.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-scipy==1.15.1
+scipy==1.15.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -711,7 +710,7 @@ semantic-version==2.10.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-drf-extensions
-simplejson==3.19.3
+simplejson==3.20.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -735,12 +734,12 @@ snowballstemmer==2.2.0
     # via
     #   -r requirements/quality.txt
     #   pydocstyle
-social-auth-app-django==5.4.2
+social-auth-app-django==5.4.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-auth-backends
-social-auth-core==4.5.4
+social-auth-core==4.5.6
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -752,7 +751,7 @@ sqlparse==0.5.3
     #   -r requirements/test.txt
     #   django
     #   django-debug-toolbar
-stevedore==5.4.0
+stevedore==5.4.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -792,7 +791,6 @@ typing-extensions==4.12.2
     #   -r requirements/test.txt
     #   anyio
     #   edx-opaque-keys
-    #   faker
     #   openai
     #   pydantic
     #   pydantic-core
@@ -802,6 +800,7 @@ tzdata==2025.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   celery
+    #   faker
     #   kombu
 uritemplate==4.1.1
     # via
@@ -822,7 +821,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.29.1
+virtualenv==20.29.2
     # via
     #   -r requirements/test.txt
     #   tox
