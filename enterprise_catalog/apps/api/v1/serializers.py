@@ -87,6 +87,25 @@ def find_and_modify_catalog_query(
         return content_filter_from_hash
 
 
+class BaseSerializer(serializers.Serializer):
+    """
+    Base serializer.
+    """
+    def create(self, *args, **kwargs):
+        return None
+
+    def update(self, *args, **kwargs):
+        return None
+
+
+class BaseErrorSerializer(BaseSerializer):
+    """
+    Base error serializer.
+    """
+    user_message = serializers.CharField()
+    developer_message = serializers.CharField()
+
+
 class CatalogQuerySerializer(serializers.ModelSerializer):
     """
     Serializer for the `CatalogQuery` model
@@ -525,3 +544,28 @@ class JobSerializer(serializers.ModelSerializer):
             "external_id",
             "title"
         ]
+
+
+class SecuredAlgoliaAPIKeySerializer(BaseSerializer):
+    """
+    Serializer for the secured Algolia API key and expiration.
+    """
+    secured_api_key = serializers.CharField()
+    valid_until = serializers.DateTimeField()
+
+
+class SecuredAlgoliaAPIKeyResponseSerializer(BaseSerializer):
+    """
+    Serializer for the response of the secured Algolia API key endpoint.
+    """
+    algolia = SecuredAlgoliaAPIKeySerializer(help_text='Secured Algolia API key and expiration.')
+    catalog_uuids_to_catalog_query_uuids = serializers.DictField(
+        child=serializers.UUIDField(),
+        help_text='Mapping of catalog UUIDs to catalog query UUIDs.',
+    )
+
+
+class SecuredAlgoliaAPIKeyErrorResponseSerializer(BaseErrorSerializer):
+    """
+    Serializer for the error response of the secured Algolia API key endpoint.
+    """
