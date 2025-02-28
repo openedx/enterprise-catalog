@@ -1,5 +1,7 @@
 import logging
 
+from rest_framework.decorators import action
+
 from enterprise_catalog.apps.api.v1.views.enterprise_customer import (
     EnterpriseCustomerViewSet,
 )
@@ -38,3 +40,10 @@ class EnterpriseCustomerViewSetV2(EnterpriseCustomerViewSet):
 
     def contains_content_keys(self, catalog, content_keys):
         return catalog.contains_content_keys(content_keys, include_restricted=True)
+
+    @action(detail=False, methods=['get'], url_path='secured-algolia-api-key')
+    def secured_algolia_api_key(self, request, enterprise_uuid, **kwargs):
+        """
+        There is no V2 version of this endpoint.
+        """
+        raise NotImplementedError('This endpoint is not available in V2.')  # pragma: no cover

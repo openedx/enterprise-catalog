@@ -64,10 +64,24 @@ class BaseEnterpriseCustomerViewSetTests(APITestMixin):
         )
 
     def _get_content_metadata_base_url(self, enterprise_uuid, content_identifier):
+        """
+        Helper to construct the base url for the customer content metadata endpoint
+        """
         return reverse(
             f'api:{self.VERSION}:customer-content-metadata-retrieve',
             kwargs={
                 'enterprise_uuid': enterprise_uuid,
                 'content_identifier': content_identifier,
+            },
+        )
+
+    def _get_secured_algolia_api_key_base_url(self, enterprise_uuid):
+        """
+        Helper to construct the base url for the secured Algolia API key endpoint
+        """
+        return reverse(
+            f'api:{self.VERSION}:enterprise-customer-secured-algolia-api-key',
+            kwargs={
+                'enterprise_uuid': enterprise_uuid,
             },
         )

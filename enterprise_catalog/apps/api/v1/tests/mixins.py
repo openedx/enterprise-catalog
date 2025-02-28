@@ -96,7 +96,7 @@ class APITestMixin(JwtMixin, APITestCase):
         self.assign_catalog_admin_feature_role()
         self.assign_catalog_admin_jwt_role()
 
-    def set_up_catalog_learner(self):
+    def set_up_catalog_learner(self, enterprise_uuid=None):
         """
         Helper for setting up tests as a catalog learner
         """
@@ -106,7 +106,7 @@ class APITestMixin(JwtMixin, APITestCase):
         self.role_assignment = EnterpriseCatalogRoleAssignmentFactory(
             role=self.role,
             user=self.user,
-            enterprise_id=self.enterprise_uuid
+            enterprise_id=(enterprise_uuid or self.enterprise_uuid)
         )
         self.set_jwt_cookie([(ENTERPRISE_CATALOG_LEARNER_ROLE, self.enterprise_uuid)])
 
