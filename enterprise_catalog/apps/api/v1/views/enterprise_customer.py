@@ -6,10 +6,10 @@ from django.core.exceptions import ImproperlyConfigured
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import OpenApiExample, extend_schema
 from edx_rbac.utils import get_decoded_jwt
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.response import Response
-from rest_framework.status import HTTP_400_BAD_REQUEST
 
 from enterprise_catalog.apps.api.v1.decorators import (
     require_at_least_one_query_parameter,
@@ -119,7 +119,7 @@ class EnterpriseCustomerViewSet(BaseViewSet):
             )
             return Response(
                 f'Error: invalid enterprice customer uuid: "{enterprise_uuid}" provided.',
-                status=HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST
             )
         customer_catalogs = EnterpriseCatalog.objects.filter(enterprise_uuid=enterprise_uuid)
 
@@ -268,7 +268,7 @@ class EnterpriseCustomerViewSet(BaseViewSet):
             }
             return Response(
                 SecuredAlgoliaAPIKeyErrorResponseSerializer(error_response).data,
-                status=HTTP_400_BAD_REQUEST,
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         catalog_query_uuids = [
@@ -286,7 +286,7 @@ class EnterpriseCustomerViewSet(BaseViewSet):
             }
             return Response(
                 SecuredAlgoliaAPIKeyErrorResponseSerializer(error_response).data,
-                status=HTTP_400_BAD_REQUEST,
+                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
 
         # Create a mapping of catalog UUIDs to their corresponding catalog query UUIDs
@@ -304,7 +304,8 @@ class EnterpriseCustomerViewSet(BaseViewSet):
             )
         except ImproperlyConfigured as exc:
             logger.exception(
-                f'Secured Algolia API key generation failed for enterprise UUID {enterprise_uuid}'
+                f'Could not attempt generation of secured Algolia API key for '
+                f'enterprise UUID {enterprise_uuid} due to improper configuration.'
             )
             error_response = {
                 'user_message': algolia_api_key_error_message,
@@ -312,7 +313,7 @@ class EnterpriseCustomerViewSet(BaseViewSet):
             }
             return Response(
                 SecuredAlgoliaAPIKeyErrorResponseSerializer(error_response).data,
-                status=HTTP_400_BAD_REQUEST,
+                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
         except AlgoliaException as exc:
             logger.exception(
@@ -324,7 +325,7 @@ class EnterpriseCustomerViewSet(BaseViewSet):
             }
             return Response(
                 SecuredAlgoliaAPIKeyErrorResponseSerializer(error_response).data,
-                status=HTTP_400_BAD_REQUEST,
+                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
 
         # Serialize the response data

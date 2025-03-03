@@ -226,7 +226,7 @@ class AlgoliaSearchClient:
                 'Cannot generate secured Algolia API key without the ALGOLIA.SEARCH_API_KEY in settings.'
             )
 
-        expiration_time = getattr(settings, 'SECURED_algolia_api_key_EXPIRATION', 3600)  # Default to 1 hour
+        expiration_time = getattr(settings, 'SECURED_ALGOLIA_API_KEY_EXPIRATION', 3600)  # Default to 1 hour
         valid_until = int(time.time()) + expiration_time
         iso_format = "%Y-%m-%dT%H:%M:%SZ"
         valid_until_iso = datetime.fromtimestamp(valid_until, tz=timezone.utc).strftime(iso_format)

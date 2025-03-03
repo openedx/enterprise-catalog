@@ -515,7 +515,7 @@ class EnterpriseCustomerViewSetTests(BaseEnterpriseCustomerViewSetTests):
         """
         url = self._get_secured_algolia_api_key_base_url(self.enterprise_uuid)
         response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
         expected_error_response = {
             'user_message': 'Error generating secured Algolia API key.',
             'developer_message': (
@@ -535,7 +535,7 @@ class EnterpriseCustomerViewSetTests(BaseEnterpriseCustomerViewSetTests):
         """
         url = self._get_secured_algolia_api_key_base_url(self.enterprise_uuid)
         response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
         expected_error_response = {
             'user_message': 'Error generating secured Algolia API key.',
             'developer_message': 'Mocked exception',
@@ -550,7 +550,7 @@ class EnterpriseCustomerViewSetTests(BaseEnterpriseCustomerViewSetTests):
         self.set_up_catalog_learner(enterprise_uuid=fake_enterprise_uuid)
         url = self._get_secured_algolia_api_key_base_url(enterprise_uuid=fake_enterprise_uuid)
         response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         expected_error_response = {
             'user_message': 'Error generating secured Algolia API key.',
             'developer_message': 'No enterprise catalogs found for the specified enterprise customer.',
@@ -569,7 +569,7 @@ class EnterpriseCustomerViewSetTests(BaseEnterpriseCustomerViewSetTests):
         self.set_up_catalog_learner(enterprise_uuid=fake_enterprise_uuid)
         url = self._get_secured_algolia_api_key_base_url(enterprise_uuid=fake_enterprise_uuid)
         response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
         expected_error_response = {
             'user_message': 'Error generating secured Algolia API key.',
             'developer_message': 'No catalog queries found for the specified enterprise customer.',
