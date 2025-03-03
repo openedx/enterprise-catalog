@@ -3,13 +3,14 @@ Algolia api client code.
 """
 
 import logging
-import time
-from datetime import datetime, timezone
+from datetime import timedelta
 
 from algoliasearch.exceptions import AlgoliaException
 from algoliasearch.search_client import SearchClient
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+
+from enterprise_catalog.apps.catalog.utils import localized_utcnow
 
 
 logger = logging.getLogger(__name__)
@@ -227,9 +228,9 @@ class AlgoliaSearchClient:
             )
 
         expiration_time = getattr(settings, 'SECURED_ALGOLIA_API_KEY_EXPIRATION', 3600)  # Default to 1 hour
-        valid_until = int(time.time()) + expiration_time
+        valid_until = localized_utcnow() + timedelta(seconds=expiration_time)
         iso_format = "%Y-%m-%dT%H:%M:%SZ"
-        valid_until_iso = datetime.fromtimestamp(valid_until, tz=timezone.utc).strftime(iso_format)
+        valid_until_iso = valid_until.strftime(iso_format)
         catalog_query_filter = ' OR '.join(
             [f'enterprise_catalog_query_uuids:{query_uuid}' for query_uuid in enterprise_catalog_query_uuids]
         )

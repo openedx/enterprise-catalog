@@ -3,7 +3,7 @@ Utility functions for catalog app.
 """
 import hashlib
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from logging import getLogger
 from urllib.parse import urljoin
 
@@ -15,7 +15,6 @@ from edx_rest_framework_extensions.auth.jwt.authentication import (
 )
 from edx_rest_framework_extensions.auth.jwt.cookies import \
     get_decoded_jwt as get_decoded_jwt_from_cookie
-from pytz import UTC
 
 from enterprise_catalog.apps.catalog.constants import COURSE_RUN
 
@@ -107,7 +106,7 @@ def batch(iterable, batch_size=1):
 
 def localized_utcnow():
     """Helper function to return localized utcnow()."""
-    return UTC.localize(datetime.utcnow())  # pylint: disable=no-value-for-parameter
+    return datetime.now(timezone.utc)
 
 
 def enterprise_proxy_login_url(slug, next_url=None):
