@@ -3,10 +3,14 @@ Algolia api client code.
 """
 
 import logging
+from datetime import timedelta
 
 from algoliasearch.exceptions import AlgoliaException
 from algoliasearch.search_client import SearchClient
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
+
+from enterprise_catalog.apps.catalog.utils import localized_utcnow
 
 
 logger = logging.getLogger(__name__)
@@ -17,42 +21,69 @@ class AlgoliaSearchClient:
     Object builds an API client to make calls to an Algolia index.
     """
 
-    ALGOLIA_APPLICATION_ID = settings.ALGOLIA.get('APPLICATION_ID')
-    ALGOLIA_API_KEY = settings.ALGOLIA.get('API_KEY')
-    ALGOLIA_INDEX_NAME = settings.ALGOLIA.get('INDEX_NAME')
-    ALGOLIA_REPLICA_INDEX_NAME = settings.ALGOLIA.get('REPLICA_INDEX_NAME')
-
     def __init__(self):
         self._client = None
         self.algolia_index = None
         self.replica_index = None
 
+    @property
+    def algolia_application_id(self):
+        return settings.ALGOLIA.get('APPLICATION_ID')
+
+    @property
+    def algolia_api_key(self):
+        return settings.ALGOLIA.get('API_KEY')
+
+    @property
+    def algolia_search_api_key(self):
+        return settings.ALGOLIA.get('SEARCH_API_KEY')
+
+    @property
+    def algolia_index_name(self):
+        return settings.ALGOLIA.get('INDEX_NAME')
+
+    @property
+    def algolia_replica_index_name(self):
+        return settings.ALGOLIA.get('REPLICA_INDEX_NAME')
+
     def init_index(self):
         """
         Initializes an index within Algolia. Initializing an index will create it if it doesn't exist.
         """
-        if not self.ALGOLIA_INDEX_NAME or not self.ALGOLIA_REPLICA_INDEX_NAME:
+        if not self.algolia_index_name or not self.algolia_replica_index_name:
             logger.error('Could not initialize Algolia index due to missing index name.')
             return
 
-        if not self.ALGOLIA_APPLICATION_ID or not self.ALGOLIA_API_KEY:
+        if not self.algolia_application_id or not self.algolia_api_key:
             logger.error(
                 'Could not initialize Algolia\'s %s index due to missing Algolia settings: %s',
-                self.ALGOLIA_INDEX_NAME,
+                self.algolia_index_name,
                 ['APPLICATION_ID', 'API_KEY'],
             )
             return
 
-        self._client = SearchClient.create(self.ALGOLIA_APPLICATION_ID, self.ALGOLIA_API_KEY)
-        try:
-            self.algolia_index = self._client.init_index(self.ALGOLIA_INDEX_NAME)
-            self.replica_index = self._client.init_index(self.ALGOLIA_REPLICA_INDEX_NAME)
-        except AlgoliaException as exc:
-            logger.exception(
-                'Could not initialize %s index in Algolia due to an exception.',
-                self.ALGOLIA_INDEX_NAME,
-            )
-            raise exc
+        # Create SearchClient
+        self._client = SearchClient.create(self.algolia_application_id, self.algolia_api_key)
+
+        # Initialize Algolia indices
+        if self.algolia_index_name:
+            try:
+                self.algolia_index = self._client.init_index(self.algolia_index_name)
+            except AlgoliaException as exc:
+                logger.exception(
+                    'Could not initialize %s index in Algolia due to an exception.',
+                    self.algolia_index_name,
+                )
+                raise exc
+        if self.algolia_replica_index_name:
+            try:
+                self.replica_index = self._client.init_index(self.algolia_replica_index_name)
+            except AlgoliaException as exc:
+                logger.exception(
+                    'Could not initialize %s index in Algolia due to an exception.',
+                    self.algolia_replica_index_name,
+                )
+                raise exc
 
     def set_index_settings(self, index_settings, primary_index=True):
         """
@@ -76,7 +107,7 @@ class AlgoliaSearchClient:
         except AlgoliaException as exc:
             logger.exception(
                 'Unable to set settings for Algolia\'s %s index due to an exception.',
-                self.ALGOLIA_INDEX_NAME,
+                self.algolia_index_name,
             )
             raise exc
 
@@ -93,12 +124,12 @@ class AlgoliaSearchClient:
         if not primary_exists:
             logger.warning(
                 'Index with name %s does not exist in Algolia.',
-                self.ALGOLIA_INDEX_NAME,
+                self.algolia_index_name,
             )
         if not replica_exists:
             logger.warning(
                 'Index with name %s does not exist in Algolia.',
-                self.ALGOLIA_REPLICA_INDEX_NAME,
+                self.algolia_replica_index_name,
             )
 
         return primary_exists and replica_exists
@@ -121,11 +152,11 @@ class AlgoliaSearchClient:
             self.algolia_index.replace_all_objects(algolia_objects, {
                 'safe': True,  # wait for asynchronous indexing operations to complete
             })
-            logger.info('The %s Algolia index was successfully indexed.', self.ALGOLIA_INDEX_NAME)
+            logger.info('The %s Algolia index was successfully indexed.', self.algolia_index_name)
         except AlgoliaException as exc:
             logger.exception(
                 'Could not index objects in the %s Algolia index due to an exception.',
-                self.ALGOLIA_INDEX_NAME,
+                self.algolia_index_name,
             )
             raise exc
 
@@ -164,12 +195,75 @@ class AlgoliaSearchClient:
             self.algolia_index.delete_objects(object_ids)
             logger.info(
                 'The following objects were successfully removed from the %s Algolia index: %s',
-                self.ALGOLIA_INDEX_NAME,
+                self.algolia_index_name,
                 object_ids,
             )
         except AlgoliaException as exc:
             logger.exception(
                 'Could not remove objects from the %s Algolia index due to an exception.',
-                self.ALGOLIA_INDEX_NAME,
+                self.algolia_index_name,
             )
             raise exc
+
+    def generate_secured_api_key(self, user_id, enterprise_catalog_query_uuids):
+        """
+        Generates a secured api key for the Algolia search API.
+        The secured api key will be used to restrict the search results to only those
+        that are associated with the given enterprise catalog query uuids.
+        The secured api key will also be restricted to the given user id.
+        Arguments:
+            user_id (str): The user id to restrict the api key to.
+            enterprise_catalog_query_uuids (list): The enterprise catalog query uuids to restrict the api key to.
+        Returns:
+            dict: A dictionary containing the secured api key and the expiration time.
+            The expiration time is in ISO format.
+        """
+        if not self.algolia_search_api_key:
+            logger.error(
+                'Could not generate secured Algolia API key due to missing Algolia settings: %s',
+                'SEARCH_API_KEY',
+            )
+            raise ImproperlyConfigured(
+                'Cannot generate secured Algolia API key without the ALGOLIA.SEARCH_API_KEY in settings.'
+            )
+
+        expiration_time = getattr(settings, 'SECURED_ALGOLIA_API_KEY_EXPIRATION', 3600)  # Default to 1 hour
+        valid_until = localized_utcnow() + timedelta(seconds=expiration_time)
+        iso_format = "%Y-%m-%dT%H:%M:%SZ"
+        valid_until_iso = valid_until.strftime(iso_format)
+        catalog_query_filter = ' OR '.join(
+            [f'enterprise_catalog_query_uuids:{query_uuid}' for query_uuid in enterprise_catalog_query_uuids]
+        )
+
+        # Base secured API key restrictions
+        restrictions = {
+            'filters': catalog_query_filter,
+            'validUntil': valid_until,
+            'userToken': user_id,
+        }
+
+        # Determine indices to restrict
+        indices = []
+        if self.algolia_index_name:
+            indices.append(self.algolia_index_name)
+        if self.algolia_replica_index_name:
+            indices.append(self.algolia_replica_index_name)
+        if indices:
+            restrictions |= {'restrictIndices': indices}
+
+        # Generate secured api key
+        logger.info('[AlgoliaSearchClient.generate_secured_api_key] restrictions: %s', restrictions)
+        try:
+            secured_api_key = SearchClient.generate_secured_api_key(
+                self.algolia_search_api_key,
+                restrictions,
+            )
+        except AlgoliaException as exc:
+            logger.exception('Could not generate secured Algolia API key due to an AlgoliaException.')
+            raise exc
+
+        # Return secured api key and expiration time
+        return {
+            'secured_api_key': secured_api_key,
+            'valid_until': valid_until_iso,
+        }

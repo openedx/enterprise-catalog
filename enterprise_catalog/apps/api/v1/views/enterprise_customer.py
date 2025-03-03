@@ -1,19 +1,27 @@
 import logging
 import uuid
 
+from algoliasearch.exceptions import AlgoliaException
+from django.core.exceptions import ImproperlyConfigured
 from django.utils.decorators import method_decorator
+from drf_spectacular.utils import OpenApiExample, extend_schema
 from edx_rbac.utils import get_decoded_jwt
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.response import Response
-from rest_framework.status import HTTP_400_BAD_REQUEST
 
 from enterprise_catalog.apps.api.v1.decorators import (
     require_at_least_one_query_parameter,
 )
-from enterprise_catalog.apps.api.v1.serializers import ContentMetadataSerializer
+from enterprise_catalog.apps.api.v1.serializers import (
+    ContentMetadataSerializer,
+    SecuredAlgoliaAPIKeyErrorResponseSerializer,
+    SecuredAlgoliaAPIKeyResponseSerializer,
+)
 from enterprise_catalog.apps.api.v1.utils import unquote_course_keys
 from enterprise_catalog.apps.api.v1.views.base import BaseViewSet
+from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
 from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
 
 
@@ -111,7 +119,7 @@ class EnterpriseCustomerViewSet(BaseViewSet):
             )
             return Response(
                 f'Error: invalid enterprice customer uuid: "{enterprise_uuid}" provided.',
-                status=HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST
             )
         customer_catalogs = EnterpriseCatalog.objects.filter(enterprise_uuid=enterprise_uuid)
 
@@ -209,3 +217,123 @@ class EnterpriseCustomerViewSet(BaseViewSet):
         """
         serializer = self.get_metadata_item_serializer()
         return Response(serializer.data)
+
+    @extend_schema(
+        summary='Get secured Algolia API key for enterprise customer',
+        description='Returns a secured Algolia API key for the given enterprise UUID. '
+                    'The key can be used within frontends to access Algolia search API, '
+                    'restricted with the enterprise\'s available catalog query UUIDs.',
+        responses={
+            200: SecuredAlgoliaAPIKeyResponseSerializer,
+            400: SecuredAlgoliaAPIKeyErrorResponseSerializer,
+        },
+        tags=['Enterprise Customer'],
+        examples=[
+            OpenApiExample(
+                'Secured Algolia API Key Response',
+                value={
+                    'algolia': {
+                        'secured_api_key': '...',
+                        'valid_until': '2025-02-28T12:00:00Z',
+                    },
+                    'catalog_uuids_to_catalog_query_uuids': {
+                        'catalog_uuid_1': 'catalog_query_uuid_1',
+                        'catalog_uuid_2': 'catalog_query_uuid_2',
+                    },
+                },
+            ),
+        ]
+    )
+    @action(detail=True, methods=['get'], url_path='secured-algolia-api-key')
+    def secured_algolia_api_key(self, request, enterprise_uuid, **kwargs):
+        """
+        Returns a secured Algolia API key for the given enterprise UUID.
+        The key can be used within frontends to access Algolia search API,
+        restricted with the enterprise's available catalog query UUIDs.
+        """
+        # Fetch all EnterpriseCatalogs associated with the given enterprise_uuid
+        enterprise_catalogs = EnterpriseCatalog.objects.filter(
+            enterprise_uuid=enterprise_uuid
+        ).select_related('catalog_query')
+        algolia_api_key_error_message = 'Error generating secured Algolia API key.'
+
+        # Return an error response if no EnterpriseCatalogs are found
+        if not enterprise_catalogs:
+            logger.error(
+                f'No enterprise catalogs found for the given enterprise UUID: {enterprise_uuid}.'
+            )
+            error_response = {
+                'user_message': algolia_api_key_error_message,
+                'developer_message': 'No enterprise catalogs found for the specified enterprise customer.',
+            }
+            return Response(
+                SecuredAlgoliaAPIKeyErrorResponseSerializer(error_response).data,
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        catalog_query_uuids = [
+            enterprise_catalog.catalog_query.uuid for enterprise_catalog in enterprise_catalogs
+            if enterprise_catalog.catalog_query
+        ]
+        # Return an error response if no CatalogQueries are found
+        if not catalog_query_uuids:
+            logger.error(
+                f'No catalog queries found for the given enterprise UUID: {enterprise_uuid}.'
+            )
+            error_response = {
+                'user_message': algolia_api_key_error_message,
+                'developer_message': 'No catalog queries found for the specified enterprise customer.'
+            }
+            return Response(
+                SecuredAlgoliaAPIKeyErrorResponseSerializer(error_response).data,
+                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+
+        # Create a mapping of catalog UUIDs to their corresponding catalog query UUIDs
+        catalog_uuids_to_catalog_query_uuids = {
+            str(catalog.uuid): str(catalog.catalog_query.uuid) if catalog.catalog_query else None
+            for catalog in enterprise_catalogs
+        }
+
+        # Generate a secured Algolia API key using the AlgoliaSearchClient
+        algolia_client = AlgoliaSearchClient()
+        try:
+            result = algolia_client.generate_secured_api_key(
+                user_id=request.user.id,
+                enterprise_catalog_query_uuids=catalog_query_uuids,
+            )
+        except ImproperlyConfigured as exc:
+            logger.exception(
+                f'Could not attempt generation of secured Algolia API key for '
+                f'enterprise UUID {enterprise_uuid} due to improper configuration.'
+            )
+            error_response = {
+                'user_message': algolia_api_key_error_message,
+                'developer_message': exc,
+            }
+            return Response(
+                SecuredAlgoliaAPIKeyErrorResponseSerializer(error_response).data,
+                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+        except AlgoliaException as exc:
+            logger.exception(
+                f'Secured Algolia API key generation failed for enterprise UUID {enterprise_uuid}'
+            )
+            error_response = {
+                'user_message': algolia_api_key_error_message,
+                'developer_message': exc
+            }
+            return Response(
+                SecuredAlgoliaAPIKeyErrorResponseSerializer(error_response).data,
+                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+
+        # Serialize the response data
+        response_data = {
+            'algolia': {
+                'secured_api_key': result.get('secured_api_key'),
+                'valid_until': result.get('valid_until'),
+            },
+            'catalog_uuids_to_catalog_query_uuids': catalog_uuids_to_catalog_query_uuids,
+        }
+        return Response(SecuredAlgoliaAPIKeyResponseSerializer(response_data).data)

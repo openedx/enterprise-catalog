@@ -3,6 +3,8 @@ from datetime import datetime, timedelta
 from unittest import mock
 
 import pytz
+from algoliasearch.exceptions import AlgoliaException
+from django.test import override_settings
 from rest_framework import status
 
 from enterprise_catalog.apps.api.base.tests.enterprise_customer_views import (
@@ -470,3 +472,106 @@ class EnterpriseCustomerViewSetTests(BaseEnterpriseCustomerViewSetTests):
 
         # response should only contain content keys found in the "second_catalog"
         self.assertEqual(response.get('filtered_content_keys'), [relevant_content_key])
+
+    @override_settings(
+        ALGOLIA={
+            'APPLICATION_ID': 'fake-app-id',
+            'API_KEY': 'fake-api-key',
+            'SEARCH_API_KEY': 'fake-search-api-key',
+            'INDEX_NAME': 'fake-index',
+            'REPLICA_INDEX_NAME': 'fake-replica-index',
+        },
+    )
+    def test_secured_algolia_api_key_generation(self):
+        """
+        Test that the secured Algolia API key is generated correctly.
+        """
+        url = self._get_secured_algolia_api_key_base_url(self.enterprise_uuid)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        expected_catalog_to_catalog_query_mappings = {
+            str(self.enterprise_catalog.uuid): str(self.enterprise_catalog.catalog_query.uuid),
+        }
+        self.assertIsInstance(response.data['algolia']['secured_api_key'], str)
+        self.assertTrue(bool(response.data['algolia']['secured_api_key']))  # Ensures the string isn't empty
+
+        # Validate ISO format for valid_until
+        valid_until = response.data['algolia']['valid_until']
+        try:
+            datetime.fromisoformat(valid_until)
+        except ValueError:  # pragma: no cover
+            self.fail(f"Invalid ISO format for valid_until: {valid_until}")
+
+        # Validate catalog uuids to catalog query uuids mapping
+        self.assertEqual(
+            response.data['catalog_uuids_to_catalog_query_uuids'],
+            expected_catalog_to_catalog_query_mappings,
+        )
+
+    @override_settings(ALGOLIA={})
+    def test_secured_algolia_api_key_missing_search_api_key(self):
+        """
+        Test that the secured Algolia API key is not generated if the search API key is missing.
+        """
+        url = self._get_secured_algolia_api_key_base_url(self.enterprise_uuid)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        expected_error_response = {
+            'user_message': 'Error generating secured Algolia API key.',
+            'developer_message': (
+                'Cannot generate secured Algolia API key without the ALGOLIA.SEARCH_API_KEY in settings.'
+            ),
+        }
+        self.assertEqual(response.data, expected_error_response)
+
+    @mock.patch(
+        "algoliasearch.search_client.SearchClient.generate_secured_api_key",
+        side_effect=AlgoliaException("Mocked exception"),
+    )
+    @override_settings(ALGOLIA={'SEARCH_API_KEY': 'fake-search-api-search'})
+    def test_secured_algolia_api_key_algolia_exception(self, mock_generate_key):  # pylint: disable=unused-argument
+        """
+        Test that the secured Algolia API key is not generated if an AlgoliaException occurs.
+        """
+        url = self._get_secured_algolia_api_key_base_url(self.enterprise_uuid)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        expected_error_response = {
+            'user_message': 'Error generating secured Algolia API key.',
+            'developer_message': 'Mocked exception',
+        }
+        self.assertEqual(response.data, expected_error_response)
+
+    def test_secured_algolia_api_key_no_catalogs(self):
+        """
+        Test that the secured Algolia API key is not generated if there are no catalogs.
+        """
+        fake_enterprise_uuid = uuid.uuid4()
+        self.set_up_catalog_learner(enterprise_uuid=fake_enterprise_uuid)
+        url = self._get_secured_algolia_api_key_base_url(enterprise_uuid=fake_enterprise_uuid)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        expected_error_response = {
+            'user_message': 'Error generating secured Algolia API key.',
+            'developer_message': 'No enterprise catalogs found for the specified enterprise customer.',
+        }
+        self.assertEqual(response.data, expected_error_response)
+
+    def test_secured_algolia_api_key_no_catalog_queries(self):
+        """
+        Test that the secured Algolia API key is not generated if there are no catalog queries.
+        """
+        fake_enterprise_uuid = uuid.uuid4()
+        EnterpriseCatalogFactory(
+            enterprise_uuid=fake_enterprise_uuid,
+            catalog_query=None,  # Ensure no catalog query is associated with the catalog
+        )
+        self.set_up_catalog_learner(enterprise_uuid=fake_enterprise_uuid)
+        url = self._get_secured_algolia_api_key_base_url(enterprise_uuid=fake_enterprise_uuid)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        expected_error_response = {
+            'user_message': 'Error generating secured Algolia API key.',
+            'developer_message': 'No catalog queries found for the specified enterprise customer.',
+        }
+        self.assertEqual(response.data, expected_error_response)
