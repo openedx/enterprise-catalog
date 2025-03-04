@@ -2321,6 +2321,25 @@ class ContentMetadataViewTests(APITestMixin):
         )
         assert response_json.get('key') == expected_object_to_receive.content_key
 
+    def test_retrieve_success_with_content_key_containing_period(self):
+        """
+        Test a successful, expected api response for the metadata fetch endpoint given a content key containing
+        a period.
+        """
+        content_key_with_period = 'foo.bar'
+        ContentMetadataFactory(
+            content_type=COURSE,
+            content_key=content_key_with_period,
+            json_metadata={'key': content_key_with_period},
+        )
+        url = reverse(
+            'api:v1:content-metadata-detail',
+            kwargs={'pk': content_key_with_period}
+        )
+        response = self.client.get(url)
+        response_json = response.json()
+        assert response_json.get('key') == content_key_with_period
+
 
 @ddt.ddt
 class CatalogQueryViewTests(APITestMixin):

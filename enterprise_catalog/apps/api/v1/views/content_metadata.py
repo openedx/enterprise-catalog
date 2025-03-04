@@ -43,6 +43,7 @@ class ContentMetadataView(viewsets.ReadOnlyModelViewSet):
     """
     View for retrieving and listing base content metadata.
     """
+    lookup_value_regex = r'[^/]+'  # Allow any non-slash character in the pk (including periods).
     serializer_class = ContentMetadataSerializer
     authentication_classes = [JwtAuthentication, SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
