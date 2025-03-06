@@ -76,7 +76,7 @@ diff-match-patch==20230430
     # via django-import-export
 distro==1.9.0
     # via openai
-django==4.2.19
+django==4.2.20
     # via
     #   -c requirements/common_constraints.txt
     #   -c requirements/constraints.txt

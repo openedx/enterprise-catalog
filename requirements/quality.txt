@@ -117,7 +117,7 @@ distro==1.9.0
     # via
     #   -r requirements/base.txt
     #   openai
-django==4.2.19
+django==4.2.20
     # via
     #   -c requirements/common_constraints.txt
     #   -c requirements/constraints.txt
