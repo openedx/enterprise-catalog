@@ -228,9 +228,8 @@ class AlgoliaSearchClient:
             )
 
         expiration_time = getattr(settings, 'SECURED_ALGOLIA_API_KEY_EXPIRATION', 3600)  # Default to 1 hour
-        valid_until = localized_utcnow() + timedelta(seconds=expiration_time)
-        iso_format = "%Y-%m-%dT%H:%M:%SZ"
-        valid_until_iso = valid_until.strftime(iso_format)
+        valid_until_dt = localized_utcnow() + timedelta(seconds=expiration_time)
+        valid_until_unix = int(valid_until_dt.timestamp())
         catalog_query_filter = ' OR '.join(
             [f'enterprise_catalog_query_uuids:{query_uuid}' for query_uuid in enterprise_catalog_query_uuids]
         )
@@ -238,7 +237,7 @@ class AlgoliaSearchClient:
         # Base secured API key restrictions
         restrictions = {
             'filters': catalog_query_filter,
-            'validUntil': valid_until,
+            'validUntil': valid_until_unix,
             'userToken': user_id,
         }
 
@@ -263,6 +262,8 @@ class AlgoliaSearchClient:
             raise exc
 
         # Return secured api key and expiration time
+        iso_format = "%Y-%m-%dT%H:%M:%SZ"
+        valid_until_iso = valid_until_dt.strftime(iso_format)
         return {
             'secured_api_key': secured_api_key,
             'valid_until': valid_until_iso,
