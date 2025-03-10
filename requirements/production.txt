@@ -103,7 +103,7 @@ distro==1.9.0
     # via
     #   -r requirements/base.txt
     #   openai
-django==4.2.19
+django==4.2.20
     # via
     #   -r requirements/base.txt
     #   django-celery-results
@@ -239,7 +239,7 @@ inflection==0.5.1
     # via
     #   -r requirements/base.txt
     #   drf-spectacular
-jinja2==3.1.5
+jinja2==3.1.6
     # via
     #   -r requirements/base.txt
     #   code-annotations
@@ -275,7 +275,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.7
     # via -r requirements/base.txt
-newrelic==10.6.0
+newrelic==10.7.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -331,7 +331,7 @@ pyjwt[crypto]==2.10.1
     #   social-auth-core
 pymemcache==4.0.0
     # via -r requirements/base.txt
-pymongo==4.11.1
+pymongo==4.11.2
     # via
     #   -r requirements/base.txt
     #   edx-opaque-keys
