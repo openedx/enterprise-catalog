@@ -112,8 +112,8 @@ class TestTaskResultFunctions(TestCase):
 
         self.mock_task_result = TaskResult.objects.create(
             task_name=mock_task.name,
-            task_args=json.dumps(self.test_args),
-            task_kwargs=json.dumps(self.test_kwargs),
+            task_args=json.dumps(repr(self.test_args)),
+            task_kwargs=json.dumps(repr(self.test_kwargs)),
             status=states.SUCCESS,
             # Default to a state where the only recorded task result is for some "other" task
             task_id=self.other_task_id,
@@ -133,14 +133,14 @@ class TestTaskResultFunctions(TestCase):
         return mock_task(bound_task_object, *args, **kwargs)
 
     def test_semaphore_raises_recent_run_error_for_same_args(self):
-        self.mock_task_result.task_kwargs = '{}'
+        self.mock_task_result.task_kwargs = json.dumps(repr({}))
         self.mock_task_result.save()
 
         with self.assertRaises(tasks.TaskRecentlyRunError):
             self.mock_task_instance(*self.test_args)
 
     def test_semaphore_raises_recent_run_error_for_same_kwargs(self):
-        self.mock_task_result.task_args = '[]'
+        self.mock_task_result.task_args = json.dumps(repr(()))
         self.mock_task_result.save()
 
         with self.assertRaises(tasks.TaskRecentlyRunError):

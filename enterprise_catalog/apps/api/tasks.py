@@ -131,10 +131,19 @@ def task_recently_run(task_object, time_delta):
       Boolean: Whether an equivalent task with the same (name, args, kwargs) recently existed
       in a non-failure or non-revoked state.
     """
+    # 2025-03-10: we recently switched to celery protocol 2, and django-celery-results
+    # gives preference to `kwargsrepr` over `kwargs` when persisting results. So we have
+    # to json-serialize the repr() of the task args/kwargs in order for our lookup of
+    # recent tasks with the same name and input. This is ok to do because none of the task
+    # invocations in this code repo specify a custom args/kwargsrepr when submitting tasks, and
+    # celery uses the repr() function as the default. See references:
+    # https://github.com/celery/django-celery-results/issues/113
+    # https://docs.celeryq.dev/en/stable/internals/protocol.html
+    # https://github.com/celery/django-celery-results/blob/main/django_celery_results/backends/database.py
     return TaskResult.objects.filter(
         task_name=task_object.name,
-        task_args=json.dumps(task_object.request.args),
-        task_kwargs=json.dumps(task_object.request.kwargs),
+        task_args=json.dumps(repr(task_object.request.args)),
+        task_kwargs=json.dumps(repr(task_object.request.kwargs)),
         date_created__gte=localized_utcnow() - time_delta,
     ).exclude(
         status__in=(states.FAILURE, states.REVOKED),
