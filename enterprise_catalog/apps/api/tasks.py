@@ -140,11 +140,23 @@ def task_recently_run(task_object, time_delta):
     # https://github.com/celery/django-celery-results/issues/113
     # https://docs.celeryq.dev/en/stable/internals/protocol.html
     # https://github.com/celery/django-celery-results/blob/main/django_celery_results/backends/database.py
+
+    # Furthermore, django-celery-results creates the TaskResult
+    # record before it's submitted to the worker. At that point, args is a tuple, but when serialized
+    # into the worker, kwargs is a list. So here, in the worker, we have to coerce args to a tuple.
+    args_lookup = json.dumps(repr(tuple(task_object.request.args)))
+    kwargs_lookup = json.dumps(repr(task_object.request.kwargs))
+    threshold = localized_utcnow() - time_delta
+    logger.info(
+        'Task name %s, args %s, args_lookup %s, kwargs %s, kwargs_lookup %s, threshold %s',
+        task_object.name, task_object.request.args, args_lookup,
+        task_object.request.kwargs, kwargs_lookup, threshold,
+    )
     return TaskResult.objects.filter(
         task_name=task_object.name,
-        task_args=json.dumps(repr(task_object.request.args)),
-        task_kwargs=json.dumps(repr(task_object.request.kwargs)),
-        date_created__gte=localized_utcnow() - time_delta,
+        task_args=args_lookup,
+        task_kwargs=kwargs_lookup,
+        date_created__gte=threshold,
     ).exclude(
         status__in=(states.FAILURE, states.REVOKED),
     ).exclude(

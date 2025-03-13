@@ -106,8 +106,27 @@ class Command(BaseCommand):
             fetch_missing_pathway_metadata_task.apply(kwargs=flags)
             fetch_missing_course_metadata_task.apply(kwargs=flags)
         else:
-            self._fetch_missing_pathway_metadata_task_async(**flags)
-            self._fetch_missing_course_metadata_task_async(**flags)
+            try:
+                self._fetch_missing_pathway_metadata_task_async(**flags)
+            except Exception as exc:
+                if type(exc).__name__ != 'TaskRecentlyRunError':
+                    raise
+                else:
+                    logger.info(
+                        'fetch_missing_pathway_metadata_task was recently run prior to this command, '
+                        'and was thus skipped during the execution of this command.'
+                    )
+
+            try:
+                self._fetch_missing_course_metadata_task_async(**flags)
+            except Exception as exc:
+                if type(exc).__name__ != 'TaskRecentlyRunError':
+                    raise
+                else:
+                    logger.info(
+                        'fetch_missing_course_metadata_task was recently run prior to this command, '
+                        'and was thus skipped during the execution of this command.'
+                    )
 
         # find all CatalogQuery records used by at least one EnterpriseCatalog to avoid
         # calling /search/all/ for a CatalogQuery that is not currently used by any catalogs.
