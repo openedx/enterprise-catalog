@@ -379,6 +379,9 @@ CELERY_TASK_ROUTES = {
     'enterprise_catalog.apps.ai_curation.tasks.trigger_ai_curations': {
         'queue': 'enterprise_catalog.curations',
     },
+    'enterprise_catalog.apps.api.tasks.index_enterprise_catalog_in_algolia_task': {
+        'queue': 'enterprise_catalog.algolia',
+    },
 }
 
 """############################# END CELERY ##################################"""

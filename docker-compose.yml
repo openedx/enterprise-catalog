@@ -106,6 +106,33 @@ services:
     volumes:
       - .:/edx/app/enterprise-catalog
 
+  algolia_worker:
+    image: edxops/enterprise-catalog-dev
+    command: bash -c 'cd /edx/app/enterprise-catalog && celery -A enterprise_catalog worker -Q enterprise_catalog.algolia -l DEBUG'
+    container_name: enterprise.catalog.algolia
+    depends_on:
+      - mysql
+    environment:
+      CELERY_ALWAYS_EAGER: 'false'
+      CELERY_BROKER_TRANSPORT: redis
+      CELERY_BROKER_HOSTNAME: edx.devstack.redis:6379
+      CELERY_BROKER_VHOST: 0
+      CELERY_BROKER_PASSWORD: password
+      DJANGO_SETTINGS_MODULE: enterprise_catalog.settings.devstack
+      COLUMNS: 80
+    hostname: algolia.catalog.enterprise
+    working_dir: /edx/app/enterprise-catalog
+    networks:
+      - devstack_default
+    ports:
+      - "18163:18163"
+    restart: always
+    # Allows attachment to this container using 'docker attach <containerID>'.
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/edx/app/enterprise-catalog
+
 networks:
   devstack_default:
     external: true
