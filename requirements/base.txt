@@ -141,7 +141,7 @@ django-waffle==4.2.0
     #   edx-toggles
 djangoql==0.18.1
     # via -r requirements/base.in
-djangorestframework==3.15.2
+djangorestframework==3.16.0
     # via
     #   -r requirements/base.in
     #   django-config-models
@@ -206,7 +206,7 @@ jsonschema==4.23.0
     # via drf-spectacular
 jsonschema-specifications==2024.10.1
     # via jsonschema
-kombu==5.5.0
+kombu==5.5.2
     # via celery
 markupsafe==3.0.2
     # via jinja2
@@ -214,7 +214,7 @@ monotonic==1.6
     # via analytics-python
 mysqlclient==2.2.7
     # via -r requirements/base.in
-newrelic==10.7.0
+newrelic==10.8.0
     # via edx-django-utils
 numpy==2.2.4
     # via
@@ -238,9 +238,9 @@ psutil==7.0.0
     # via edx-django-utils
 pycparser==2.22
     # via cffi
-pydantic==2.10.6
+pydantic==2.11.1
     # via openai
-pydantic-core==2.27.2
+pydantic-core==2.33.0
     # via pydantic
 pyjwt[crypto]==2.10.1
     # via
@@ -263,7 +263,7 @@ python-slugify==8.0.4
     # via code-annotations
 python3-openid==3.2.0
     # via social-auth-core
-pytz==2025.1
+pytz==2025.2
     # via -r requirements/base.in
 pyyaml==6.0.2
     # via
@@ -288,7 +288,7 @@ requests==2.32.3
     #   social-auth-core
 requests-oauthlib==2.0.0
     # via social-auth-core
-rpds-py==0.23.1
+rpds-py==0.24.0
     # via
     #   jsonschema
     #   referencing
@@ -336,7 +336,7 @@ threadpoolctl==3.6.0
     # via scikit-learn
 tqdm==4.67.1
     # via openai
-typing-extensions==4.12.2
+typing-extensions==4.13.0
     # via
     #   anyio
     #   edx-opaque-keys
@@ -344,7 +344,10 @@ typing-extensions==4.12.2
     #   pydantic
     #   pydantic-core
     #   referencing
-tzdata==2025.1
+    #   typing-inspection
+typing-inspection==0.4.0
+    # via pydantic
+tzdata==2025.2
     # via
     #   celery
     #   kombu
