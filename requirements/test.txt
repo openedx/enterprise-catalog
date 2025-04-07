@@ -47,7 +47,7 @@ billiard==4.2.1
     #   celery
 cachetools==5.5.2
     # via tox
-celery==5.4.0
+celery==5.5.0
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.txt
@@ -103,7 +103,7 @@ code-annotations==2.2.0
     #   edx-toggles
 colorama==0.4.6
     # via tox
-coverage[toml]==7.7.1
+coverage[toml]==7.8.0
     # via
     #   -r requirements/test.in
     #   pytest-cov
@@ -199,7 +199,7 @@ django-waffle==4.2.0
     #   edx-toggles
 djangoql==0.18.1
     # via -r requirements/base.txt
-djangorestframework==3.15.2
+djangorestframework==3.16.0
     # via
     #   -r requirements/base.txt
     #   django-config-models
@@ -231,7 +231,7 @@ edx-django-utils==7.2.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
-edx-drf-extensions==10.5.0
+edx-drf-extensions==10.6.0
     # via
     #   -r requirements/base.txt
     #   edx-rbac
@@ -249,7 +249,7 @@ edx-toggles==5.3.0
     # via -r requirements/base.txt
 factory-boy==3.3.3
     # via -r requirements/test.in
-faker==37.0.2
+faker==37.1.0
     # via factory-boy
 filelock==3.18.0
     # via
@@ -303,7 +303,7 @@ jsonschema-specifications==2024.10.1
     # via
     #   -r requirements/base.txt
     #   jsonschema
-kombu==5.5.0
+kombu==5.5.2
     # via
     #   -r requirements/base.txt
     #   celery
@@ -319,7 +319,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.7
     # via -r requirements/base.txt
-newrelic==10.7.0
+newrelic==10.8.1
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -371,11 +371,11 @@ pycparser==2.22
     # via
     #   -r requirements/base.txt
     #   cffi
-pydantic==2.10.6
+pydantic==2.11.2
     # via
     #   -r requirements/base.txt
     #   openai
-pydantic-core==2.27.2
+pydantic-core==2.33.1
     # via
     #   -r requirements/base.txt
     #   pydantic
@@ -417,9 +417,9 @@ pytest==8.3.5
     # via
     #   pytest-cov
     #   pytest-django
-pytest-cov==6.0.0
+pytest-cov==6.1.1
     # via -r requirements/test.in
-pytest-django==4.10.0
+pytest-django==4.11.1
     # via -r requirements/test.in
 python-dateutil==2.9.0.post0
     # via
@@ -434,7 +434,7 @@ python3-openid==3.2.0
     # via
     #   -r requirements/base.txt
     #   social-auth-core
-pytz==2025.1
+pytz==2025.2
     # via -r requirements/base.txt
 pyyaml==6.0.2
     # via
@@ -468,7 +468,7 @@ requests-oauthlib==2.0.0
     #   social-auth-core
 responses==0.25.7
     # via -r requirements/test.in
-rpds-py==0.23.1
+rpds-py==0.24.0
     # via
     #   -r requirements/base.txt
     #   jsonschema
@@ -534,13 +534,13 @@ threadpoolctl==3.6.0
     #   scikit-learn
 tomlkit==0.13.2
     # via pylint
-tox==4.24.2
+tox==4.25.0
     # via -r requirements/test.in
 tqdm==4.67.1
     # via
     #   -r requirements/base.txt
     #   openai
-typing-extensions==4.12.2
+typing-extensions==4.13.1
     # via
     #   -r requirements/base.txt
     #   anyio
@@ -549,10 +549,14 @@ typing-extensions==4.12.2
     #   pydantic
     #   pydantic-core
     #   referencing
-tzdata==2025.1
+    #   typing-inspection
+typing-inspection==0.4.0
     # via
     #   -r requirements/base.txt
-    #   celery
+    #   pydantic
+tzdata==2025.2
+    # via
+    #   -r requirements/base.txt
     #   faker
     #   kombu
 uritemplate==4.1.1
@@ -571,7 +575,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.29.3
+virtualenv==20.30.0
     # via tox
 wcwidth==0.2.13
     # via
