@@ -234,7 +234,6 @@ LANGUAGE_COOKIE_NAME = 'openedx-language-preference'
 
 CSRF_COOKIE_SECURE = False
 CSRF_TRUSTED_ORIGINS = []
-CSRF_TRUSTED_ORIGINS_WITH_SCHEME = [] # just for Django 4.2 upgrade
 
 # AUTHENTICATION CONFIGURATION
 LOGIN_URL = '/login/'
