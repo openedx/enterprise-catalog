@@ -2,6 +2,7 @@ import copy
 import functools
 import json
 import logging
+import re
 import sys
 import time
 from collections import defaultdict
@@ -609,6 +610,40 @@ def index_enterprise_catalog_in_algolia_task(self, force=False, dry_run=False): 
     except Exception as exep:
         logger.exception(
             f'{_reindex_algolia_prefix(dry_run)} reindex_algolia failed. Error: {exep}'
+        )
+        raise exep
+
+
+@shared_task(base=LoggedTaskWithRetry, bind=True, default_retry_delay=UNREADY_TASK_RETRY_COUNTDOWN_SECONDS)
+@expiring_task_semaphore()
+def remove_old_temporary_catalog_indices(self, force=False, dry_run=False):  # pylint: disable=unused-argument
+    """
+    Remove old temporary catalog indices from Algolia.
+
+    Because Algolia's `replace_all_objects` method generates but does not delete temporary indices
+    named as `<index_name>_tmp_<timestamp>`, we need to remove them periodically.
+    This task removes all indices that are older than 10 days and newer than 60 days.
+
+    Args:
+        force (bool): If true, forces execution of task and ignores time since last run.
+        dry_run (bool): If true, does everything except call Algolia APIs.
+    """
+    if not dry_run:
+        return
+
+    try:
+        logger.info(
+            f'Invoking `remove_old_temporary_catalog_indices` task with arguments force={force}, dry_run={dry_run}.'
+        )
+        list_of_indices = get_initialized_algolia_client().list_indices()
+        list_of_tmp_indices = [
+            index_name for index_name in list_of_indices['items']
+            if re.match(rf"{re.escape(settings.ALGOLIA['INDEX_NAME'])}_tmp_\d+$", index_name)
+        ]
+        logger.info('Index names to delete: %s', list_of_tmp_indices)
+    except Exception as exep:
+        logger.exception(
+            f'Deleting old tmp indices from Algolia failed. Error: {exep}'
         )
         raise exep
 
