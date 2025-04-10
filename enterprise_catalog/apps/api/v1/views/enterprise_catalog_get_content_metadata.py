@@ -75,8 +75,11 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
         return response
 
     @extend_schema(
-        description="GET calls to the `enterprise-catalogs/{catalog_id}` endpoint return a list of all of the active courses in a specified course catalog."
-        "You can then make a GET call to the `/enterprise-catalogs/{catalog_id}/courses/{course_key}` endpoint to return details about a single course.",
+        description=(
+            "GET calls to the `enterprise-catalogs/{catalog_id}` endpoint return a list of all of the active courses "
+            "in a specified course catalog. You can then make a GET call to the "
+            "`/enterprise-catalogs/{catalog_id}/courses/{course_key}` endpoint to return details about a single course."
+        ),
         parameters=[
             OpenApiParameter(
                 name="page",
