@@ -3,6 +3,7 @@ from collections import OrderedDict
 
 from django.shortcuts import get_object_or_404
 from django.utils.functional import cached_property
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework.decorators import action
 from rest_framework.generics import GenericAPIView
 from rest_framework.renderers import JSONRenderer
@@ -73,6 +74,25 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
         response.data['enterprise_customer'] = self.enterprise_catalog.enterprise_uuid
         return response
 
+    @extend_schema(
+        description="GET calls to the `enterprise-catalogs/{catalog_id}` endpoint return a list of all of the active courses in a specified course catalog."
+        "You can then make a GET call to the `/enterprise-catalogs/{catalog_id}/courses/{course_key}` endpoint to return details about a single course.",
+        parameters=[
+            OpenApiParameter(
+                name="page",
+                type=int,
+                location=OpenApiParameter.QUERY,
+                description="A page number within the paginated result.",
+            ),
+            OpenApiParameter(
+                name="page_size",
+                type=int,
+                location=OpenApiParameter.QUERY,
+                description="Number of results to return per page.",
+            ),
+        ],
+        responses={200: ContentMetadataSerializer(many=True)},
+    )
     @action(detail=True)
     def get(self, request, **kwargs):
         """
