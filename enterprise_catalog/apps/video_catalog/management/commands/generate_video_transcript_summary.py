@@ -37,7 +37,7 @@ class Command(BaseCommand):
         videos = Video.objects.exclude(edx_video_id__in=processed_videos)
         for video in videos:
             try:
-                summary = generate_transcript_summary(video)
+                summary = generate_transcript_summary(video.json_metadata['transcript_urls'])
                 if summary:
                     VideoTranscriptSummary.objects.create(video=video, summary=summary)
             except Exception as ex:  # pylint: disable=broad-exception-caught

@@ -494,6 +494,9 @@ CATALOG_CONTENT_INCLUSION_GUARDRAIL_CONSIDERATION_FLOOR = 50
 
 ############################################## VIDEO CATALOG #############################################
 SUMMARIZE_VIDEO_TRANSCRIPT_PROMPT = 'Summarize in {count} words: {transcript}'
-
+GENERATE_VIDEO_TITLE_SYSTEM_ROLE_MESSAGE = 'You are a video title generator.'
+GENERATE_VIDEO_TITLE_USER_ROLE_MESSAGE = 'Max length: {max_length} characters. Summary: {transcript_summary}'
+XPERT_AI_API_V2 = 'https://xpertai.example.com/api/v2'
+XPERT_AI_CLIENT_ID = 'xpert-ai-client-id'
 TRANSCRIPT_FETCH_TIMEOUT = 10  # 10 seconds
 MAX_TRANSCRIPT_LENGTH = 32000  # characters
