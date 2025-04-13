@@ -39,7 +39,7 @@ def fetch_course_video_metadata(course_run_key, video_usage_key, video_title):
         for location in video_usage_locations:
             if video_usage_key in location:
                 try:
-                    Video.objects.update_or_create(
+                    video = Video.objects.update_or_create(
                         edx_video_id=video_data['edx_video_id'],
                         defaults={
                             'client_video_id': video_data['client_video_id'],
@@ -51,6 +51,11 @@ def fetch_course_video_metadata(course_run_key, video_usage_key, video_title):
                             )
                         }
                     )
+                    if video and video_title == '':
+                        video_title = generate_video_title(video)
+                    if video and video_title:
+                        video.title = video_title
+                        video.save()
                 except (ContentMetadata.DoesNotExist, IntegrityError) as ex:
                     logger.error(
                         '[FETCH_VIDEO_METADATA] Could not save video: Course: [%s], Video: [%s], Ex: [%s]',
@@ -142,3 +147,27 @@ def generate_transcript_summary(video, language='en'):
     transcript_url = video.json_metadata['transcript_urls'].get(language)
     transcript = fetch_transcript(transcript_url, include_time_markings=False)
     return get_transcript_summary(transcript[:settings.MAX_TRANSCRIPT_LENGTH])
+
+
+def generate_video_title(video, language='en', max_length: int = 10) -> str:
+    """
+    Generate a title of the video
+
+    Arguments:
+        video (Video): Video instance.
+        language (str): Title language.
+
+    Returns:
+        (str): The title of the video.
+    """
+    transcript_summary = generate_transcript_summary(video, language)
+    messages = [
+        {
+            'role': 'system',
+            'content': settings.GENERATE_VIDEO_TITLE_PROMPT.format(
+                count=max_length,
+                transcript_summary=transcript_summary
+            )
+        }
+    ]
+    return chat_completions(messages=messages, response_format='text')
