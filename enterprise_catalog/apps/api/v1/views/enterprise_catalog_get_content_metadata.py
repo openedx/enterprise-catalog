@@ -12,9 +12,6 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework_xml.renderers import XMLRenderer
 
-from enterprise_catalog.apps.api.v1.pagination import (
-    PageNumberWithSizePagination,
-)
 from enterprise_catalog.apps.api.v1.serializers import ContentMetadataSerializer
 from enterprise_catalog.apps.api.v1.utils import is_any_course_run_active
 from enterprise_catalog.apps.api.v1.views.base import BaseViewSet
