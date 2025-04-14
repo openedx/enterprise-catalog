@@ -86,7 +86,10 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
                 name="content_keys",
                 type=str,
                 location=OpenApiParameter.QUERY,
-                description="A list of content keys to filter the results. If not provided, all content metadata is returned.",
+                description=(
+                    "A list of content keys to filter the results. "
+                    "If not provided, all content metadata is returned."
+                ),
             ),
             OpenApiParameter(
                 name="page",
