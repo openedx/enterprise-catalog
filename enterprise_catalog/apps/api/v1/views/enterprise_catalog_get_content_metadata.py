@@ -29,7 +29,7 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
     serializer_class = ContentMetadataSerializer
     renderer_classes = [JSONRenderer, XMLRenderer]
     lookup_field = 'uuid'
-    pagination_class = PageNumberWithSizePagination
+    pagination_class = DefaultPagination
     MAX_GET_CONTENT_KEYS = 100
 
     @cached_property
