@@ -4,6 +4,7 @@ from collections import OrderedDict
 from django.shortcuts import get_object_or_404
 from django.utils.functional import cached_property
 from drf_spectacular.utils import OpenApiParameter, extend_schema
+from edx_rest_framework_extensions.paginators import DefaultPagination
 from rest_framework.decorators import action
 from rest_framework.generics import GenericAPIView
 from rest_framework.renderers import JSONRenderer
@@ -82,6 +83,12 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
         ),
         parameters=[
             OpenApiParameter(
+                name="content_keys",
+                type=str,
+                location=OpenApiParameter.QUERY,
+                description="A list of content keys to filter the results. If not provided, all content metadata is returned.",
+            ),
+            OpenApiParameter(
                 name="page",
                 type=int,
                 location=OpenApiParameter.QUERY,
@@ -91,7 +98,8 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
                 name="page_size",
                 type=int,
                 location=OpenApiParameter.QUERY,
-                description="Number of results to return per page.",
+                description=f"Number of results to return per page. Defaults to {DefaultPagination.page_size}. "
+                f"Maximum value is {DefaultPagination.max_page_size}.",
             ),
         ],
         responses={200: ContentMetadataSerializer(many=True)},
