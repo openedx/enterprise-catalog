@@ -39,7 +39,7 @@ billiard==4.2.1
     # via
     #   -r requirements/base.txt
     #   celery
-celery==5.5.0
+celery==5.5.1
     # via
     #   -r requirements/base.txt
     #   django-celery-results
@@ -80,7 +80,7 @@ click-repl==0.3.0
     # via
     #   -r requirements/base.txt
     #   celery
-code-annotations==2.2.0
+code-annotations==2.3.0
     # via
     #   -r requirements/base.txt
     #   edx-toggles
@@ -130,11 +130,11 @@ django==4.2.20
     #   jsonfield
     #   jsonfield2
     #   social-auth-app-django
-django-celery-results==2.5.1
+django-celery-results==2.6.0
     # via -r requirements/base.txt
 django-clearcache==1.2.1
     # via -r requirements/base.txt
-django-config-models==2.8.0
+django-config-models==2.9.0
     # via -r requirements/base.txt
 django-cors-headers==4.7.0
     # via -r requirements/base.txt
@@ -144,7 +144,7 @@ django-crum==0.7.9
     #   edx-django-utils
     #   edx-rbac
     #   edx-toggles
-django-extensions==3.2.3
+django-extensions==4.1
     # via -r requirements/base.txt
 django-import-export==4.3.7
     # via -r requirements/base.txt
@@ -184,13 +184,13 @@ drf-jwt==1.19.2
     #   edx-drf-extensions
 drf-spectacular==0.28.0
     # via -r requirements/base.txt
-edx-auth-backends==4.4.0
+edx-auth-backends==4.5.0
     # via -r requirements/base.txt
 edx-celeryutils==1.3.0
     # via -r requirements/base.txt
 edx-django-release-util==1.4.0
     # via -r requirements/base.txt
-edx-django-utils==7.2.0
+edx-django-utils==7.4.0
     # via
     #   -r requirements/base.txt
     #   django-config-models
@@ -207,7 +207,7 @@ edx-opaque-keys==2.12.0
     #   edx-drf-extensions
 edx-rbac==1.10.0
     # via -r requirements/base.txt
-edx-rest-api-client==6.1.0
+edx-rest-api-client==6.2.0
     # via -r requirements/base.txt
 edx-toggles==5.3.0
     # via -r requirements/base.txt
@@ -221,7 +221,7 @@ h11==0.14.0
     # via
     #   -r requirements/base.txt
     #   httpcore
-httpcore==1.0.7
+httpcore==1.0.8
     # via
     #   -r requirements/base.txt
     #   httpx
@@ -275,7 +275,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.7
     # via -r requirements/base.txt
-newrelic==10.8.1
+newrelic==10.9.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -313,7 +313,7 @@ pycparser==2.22
     # via
     #   -r requirements/base.txt
     #   cffi
-pydantic==2.11.2
+pydantic==2.11.3
     # via
     #   -r requirements/base.txt
     #   openai
@@ -331,7 +331,7 @@ pyjwt[crypto]==2.10.1
     #   social-auth-core
 pymemcache==4.0.0
     # via -r requirements/base.txt
-pymongo==4.11.3
+pymongo==4.12.0
     # via
     #   -r requirements/base.txt
     #   edx-opaque-keys
@@ -450,7 +450,7 @@ tqdm==4.67.1
     # via
     #   -r requirements/base.txt
     #   openai
-typing-extensions==4.13.1
+typing-extensions==4.13.2
     # via
     #   -r requirements/base.txt
     #   anyio
