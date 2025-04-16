@@ -14,18 +14,24 @@ def get_env_setting(setting):
         error_msg = "Set the [%s] env variable!" % setting
         raise ImproperlyConfigured(error_msg)
 
-def get_logger_config(log_dir='/var/tmp',
-                      logging_env="no_env",
-                      edx_filename="edx.log",
-                      dev_env=False,
-                      debug=False,
-                      service_variant='enterprise-catalog'):
+
+def get_logger_config(
+    logging_env: str = "no_env",
+    debug: bool = False,
+    service_variant: str = 'enterprise-catalog',
+    format_string: str = None,
+):
     """
-    Return the appropriate logging config dictionary. You should assign the
-    result of this to the LOGGING var in your settings.
-    If dev_env is set to true logging will not be done via local rsyslogd,
-    instead, application logs will be dropped in log_dir.
-    "edx_filename" is ignored unless dev_env is set to true since otherwise logging is handled by rsyslogd.
+    Return the appropriate logging config dictionary, to be assigned to the LOGGING var in settings.
+
+    Arguments:
+        logging_env (str): Environment name.
+        debug (bool): Debug logging enabled.
+        service_variant (str): Name of the service.
+        format_string (str): Override format string for your logfiles.
+
+    Returns:
+        dict(string): Returns a dictionary of config values
     """
 
     hostname = platform.node().split(".")[0]
@@ -41,13 +47,17 @@ def get_logger_config(log_dir='/var/tmp',
 
     handlers = ['console']
 
+    standard_format = format_string or (
+        '%(asctime)s %(levelname)s %(process)d '
+        '[request_id %(request_id)s] [%(name)s] %(filename)s:%(lineno)d - %(message)s'
+    )
+
     logger_config = {
         'version': 1,
         'disable_existing_loggers': False,
         'formatters': {
             'standard': {
-                'format': '%(asctime)s %(levelname)s %(process)d '
-                          '[request_id %(request_id)s] [%(name)s] %(filename)s:%(lineno)d - %(message)s',
+                'format': standard_format,
             },
             'syslog_format': {'format': syslog_format},
             'raw': {'format': '%(message)s'},
