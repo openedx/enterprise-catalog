@@ -494,6 +494,7 @@ CATALOG_CONTENT_INCLUSION_GUARDRAIL_CONSIDERATION_FLOOR = 50
 
 ############################################## VIDEO CATALOG #############################################
 SUMMARIZE_VIDEO_TRANSCRIPT_PROMPT = 'Summarize in {count} words: {transcript}'
+GENERATE_VIDEO_TITLE_PROMPT = 'Generate a descriptive, relevant, easily understandable and appealing title in less than {count} words for the video with transcript summary: {transcript_summary}'
 
 TRANSCRIPT_FETCH_TIMEOUT = 10  # 10 seconds
 MAX_TRANSCRIPT_LENGTH = 32000  # characters
