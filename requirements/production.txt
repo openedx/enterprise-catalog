@@ -211,9 +211,9 @@ edx-rest-api-client==6.2.0
     # via -r requirements/base.txt
 edx-toggles==5.3.0
     # via -r requirements/base.txt
-gevent==24.11.1
+gevent==25.4.1
     # via -r requirements/production.in
-greenlet==3.1.1
+greenlet==3.2.0
     # via gevent
 gunicorn==23.0.0
     # via -r requirements/production.in
@@ -261,7 +261,7 @@ jsonschema-specifications==2024.10.1
     # via
     #   -r requirements/base.txt
     #   jsonschema
-kombu==5.5.2
+kombu==5.5.3
     # via
     #   -r requirements/base.txt
     #   celery
@@ -279,7 +279,7 @@ newrelic==10.9.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
-numpy==2.2.4
+numpy==2.2.5
     # via
     #   -r requirements/base.txt
     #   scikit-learn
@@ -291,7 +291,7 @@ oauthlib==3.2.2
     #   social-auth-core
 openai==1.13.3
     # via -r requirements/base.txt
-packaging==24.2
+packaging==25.0
     # via gunicorn
 pbr==6.1.1
     # via
@@ -301,7 +301,7 @@ ply==3.11
     # via
     #   -r requirements/base.txt
     #   djangoql
-prompt-toolkit==3.0.50
+prompt-toolkit==3.0.51
     # via
     #   -r requirements/base.txt
     #   click-repl
@@ -486,7 +486,7 @@ wcwidth==0.2.13
     # via
     #   -r requirements/base.txt
     #   prompt-toolkit
-xlsxwriter==3.2.2
+xlsxwriter==3.2.3
     # via -r requirements/base.txt
 zipp==3.21.0
     # via -r requirements/base.txt

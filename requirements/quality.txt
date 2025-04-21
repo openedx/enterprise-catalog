@@ -111,7 +111,7 @@ diff-match-patch==20241021
     # via
     #   -r requirements/base.txt
     #   django-import-export
-dill==0.3.9
+dill==0.4.0
     # via pylint
 distro==1.9.0
     # via
@@ -279,7 +279,7 @@ jsonschema-specifications==2024.10.1
     # via
     #   -r requirements/base.txt
     #   jsonschema
-kombu==5.5.2
+kombu==5.5.3
     # via
     #   -r requirements/base.txt
     #   celery
@@ -299,7 +299,7 @@ newrelic==10.9.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
-numpy==2.2.4
+numpy==2.2.5
     # via
     #   -r requirements/base.txt
     #   scikit-learn
@@ -323,7 +323,7 @@ ply==3.11
     # via
     #   -r requirements/base.txt
     #   djangoql
-prompt-toolkit==3.0.50
+prompt-toolkit==3.0.51
     # via
     #   -r requirements/base.txt
     #   click-repl
@@ -531,7 +531,7 @@ wcwidth==0.2.13
     # via
     #   -r requirements/base.txt
     #   prompt-toolkit
-xlsxwriter==3.2.2
+xlsxwriter==3.2.3
     # via -r requirements/base.txt
 zipp==3.21.0
     # via -r requirements/base.txt
