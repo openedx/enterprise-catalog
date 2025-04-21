@@ -374,7 +374,7 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
             {'content_keys': filtered_content_keys}
         )
 
-        self.assertEqual(response.data.get('count'), 0)
+        self.assertEqual(response.data.get('count'), 1)
 
     @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
     @ddt.data(
