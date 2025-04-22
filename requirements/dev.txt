@@ -168,7 +168,7 @@ diff-match-patch==20241021
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   django-import-export
-dill==0.3.9
+dill==0.4.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -438,7 +438,7 @@ jsonschema-specifications==2024.10.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   jsonschema
-kombu==5.5.2
+kombu==5.5.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -473,7 +473,7 @@ newrelic==10.9.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-django-utils
-numpy==2.2.4
+numpy==2.2.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -490,7 +490,7 @@ openai==1.13.3
     #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-packaging==24.2
+packaging==25.0
     # via
     #   -r requirements/pip-tools.txt
     #   -r requirements/test.txt
@@ -528,7 +528,7 @@ ply==3.11
     #   djangoql
 polib==1.2.0
     # via edx-i18n-tools
-prompt-toolkit==3.0.50
+prompt-toolkit==3.0.51
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -839,7 +839,7 @@ wheel==0.45.1
     # via
     #   -r requirements/pip-tools.txt
     #   pip-tools
-xlsxwriter==3.2.2
+xlsxwriter==3.2.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt

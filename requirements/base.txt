@@ -206,7 +206,7 @@ jsonschema==4.23.0
     # via drf-spectacular
 jsonschema-specifications==2024.10.1
     # via jsonschema
-kombu==5.5.2
+kombu==5.5.3
     # via celery
 markupsafe==3.0.2
     # via jinja2
@@ -216,7 +216,7 @@ mysqlclient==2.2.7
     # via -r requirements/base.in
 newrelic==10.9.0
     # via edx-django-utils
-numpy==2.2.4
+numpy==2.2.5
     # via
     #   scikit-learn
     #   scipy
@@ -232,7 +232,7 @@ pbr==6.1.1
     # via stevedore
 ply==3.11
     # via djangoql
-prompt-toolkit==3.0.50
+prompt-toolkit==3.0.51
     # via click-repl
 psutil==7.0.0
     # via edx-django-utils
@@ -362,7 +362,7 @@ vine==5.1.0
     #   kombu
 wcwidth==0.2.13
     # via prompt-toolkit
-xlsxwriter==3.2.2
+xlsxwriter==3.2.3
     # via -r requirements/base.in
 zipp==3.21.0
     # via -r requirements/base.in
