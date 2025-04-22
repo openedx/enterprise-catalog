@@ -616,7 +616,7 @@ def index_enterprise_catalog_in_algolia_task(self, force=False, dry_run=False): 
 
 @shared_task(base=LoggedTaskWithRetry, bind=True, default_retry_delay=UNREADY_TASK_RETRY_COUNTDOWN_SECONDS)
 @expiring_task_semaphore()
-def remove_old_temporary_catalog_indices(self, force=False, dry_run=False):  # pylint: disable=unused-argument
+def remove_old_temporary_catalog_indices_task(self, force=False, dry_run=False):  # pylint: disable=unused-argument
     """
     Remove old temporary catalog indices from Algolia.
 
