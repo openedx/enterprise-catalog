@@ -6,7 +6,7 @@ import re
 import sys
 import time
 from collections import defaultdict
-from datetime import timedelta
+from datetime import timedelta, datetime
 from operator import itemgetter
 
 from celery import shared_task, states
@@ -63,6 +63,9 @@ from enterprise_catalog.apps.catalog.utils import (
     localized_utcnow,
 )
 from enterprise_catalog.apps.video_catalog.models import Video
+
+from algoliasearch.search_client import SearchClient
+from json import loads
 
 
 logger = logging.getLogger(__name__)
@@ -616,7 +619,8 @@ def index_enterprise_catalog_in_algolia_task(self, force=False, dry_run=False): 
 
 @shared_task(base=LoggedTaskWithRetry, bind=True, default_retry_delay=UNREADY_TASK_RETRY_COUNTDOWN_SECONDS)
 @expiring_task_semaphore()
-def remove_old_temporary_catalog_indices_task(self, force=False, dry_run=False):  # pylint: disable=unused-argument
+# def remove_old_temporary_catalog_indices_task(self, force=False, dry_run=False):  # pylint: disable=unused-argument
+def remove_old_temporary_catalog_indices_task(self):
     """
     Remove old temporary catalog indices from Algolia.
 
@@ -628,18 +632,37 @@ def remove_old_temporary_catalog_indices_task(self, force=False, dry_run=False):
         force (bool): If true, forces execution of task and ignores time since last run.
         dry_run (bool): If true, does everything except call Algolia APIs.
     """
-    if not dry_run:
-        return
+    # if not dry_run:
+    #     return
 
     try:
         logger.info(
-            f'Invoking `remove_old_temporary_catalog_indices` task with arguments force={force}, dry_run={dry_run}.'
+            f'Invoking `remove_old_temporary_catalog_indices` task with arguments' # force={force}, dry_run={dry_run}.'
         )
-        list_of_indices = get_initialized_algolia_client().list_indices()
-        list_of_tmp_indices = [
-            index_name for index_name in list_of_indices['items']
-            if re.match(rf"{re.escape(settings.ALGOLIA['INDEX_NAME'])}_tmp_\d+$", index_name)
-        ]
+        # list_of_indices = get_initialized_algolia_client().list_indices()
+
+
+        # In an asynchronous context, you can use SearchClient instead, which exposes the exact same methods.
+        client = SearchClient.create(settings.ALGOLIA.get("APPLICATION_ID"), settings.ALGOLIA.get("API_KEY"))
+
+        list_of_indices = client.list_indices().get('items', [])
+        list_of_tmp_indices = []
+        for index in list_of_indices:
+            # add index names to list_of_tmp_indices for indices that match the regex and are older than 10 days
+            # and newer than 60 days
+            if re.match(rf"^{re.escape(settings.ALGOLIA['INDEX_NAME'])}_tmp_.*", index.get('name', '')):
+                # get the timestamp from the index name
+                created_at = index.get('createdAt', None)
+                logger.info('Index %s created at %s', index.get('name', ''), created_at)
+                if created_at:
+                    # convert the time string to a unix timestamp
+                    created_at = datetime.strptime(created_at, '%Y-%m-%dT%H:%M:%S.%fZ').timestamp()
+                # difference in days between created_at and time.time()
+                difference_in_days = (time.time() - created_at) / (60 * 60 * 24)
+                logger.info('Index %s created at %s, difference in days: %s', index.get('name', ''), created_at, difference_in_days)
+                if difference_in_days > 10 and difference_in_days < 60:
+                    list_of_tmp_indices.append(index.get('name', ''))
+
         logger.info('Index names to delete: %s', list_of_tmp_indices)
     except Exception as exep:
         logger.exception(
