@@ -3,9 +3,10 @@ Tests for the enterprise_catalog API celery tasks
 """
 import json
 import uuid
-from datetime import timedelta
+from datetime import timedelta, datetime
 from operator import itemgetter
 from unittest import mock
+
 
 import ddt
 from celery import states
@@ -1259,6 +1260,89 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             {'key': 'course-v1:edX+testX+3', 'foo': 'bar'},
             {'key': 'course-v1:edX+testX+4', 'foo': 'bar'},
         ]
+
+    # Test remove_old_temporary_catalog_indices_task
+    @mock.patch('enterprise_catalog.apps.api.tasks.SearchClient')
+    def test_remove_old_temporary_catalog_indices(self, mock_search_client):
+        """
+        Test that temporary indices between 10 and 60 days old are selected for deletion.
+        """
+        # Setup mock data
+        now = datetime.now()
+        index_name = 'enterprise_catalog_new'
+        # Mock django conf settings.ALGOLIA['INDEX_NAME'] to be 'enterprise_catalog_new'
+        with self.settings(ALGOLIA={'INDEX_NAME': index_name}):
+
+            mock_indices = {
+                'items': [
+                    # Should be included (30 days old)
+                    {
+                        'name': f'{index_name}_tmp_1',
+                        'createdAt': (now - timedelta(days=30)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+                    },
+                    # Should be included (15 days old)
+                    {
+                        'name': f'{index_name}_tmp_2',
+                        'createdAt': (now - timedelta(days=15)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+                    },
+                    # Should not be included (5 days old)
+                    {
+                        'name': f'{index_name}_tmp_3',
+                        'createdAt': (now - timedelta(days=5)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+                    },
+                    # Should not be included (65 days old)
+                    {
+                        'name': f'{index_name}_tmp_4',
+                        'createdAt': (now - timedelta(days=65)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+                    },
+                    # Should not be included (not a tmp index)
+                    {
+                        'name': f'{index_name}_production',
+                        'createdAt': (now - timedelta(days=30)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+                    },
+                    # Should not be included (no creation date)
+                    {
+                        'name': f'{index_name}_tmp_5',
+                    },
+                ]
+            }
+
+            # Configure mock
+            mock_client = mock.MagicMock()
+            mock_client.list_indices.return_value = mock_indices
+            mock_search_client.create.return_value = mock_client
+
+            # Create a mock task instance (similar to other tests in the file)
+            mock_task_id = uuid.uuid4()
+            bound_task_object = mock.MagicMock()
+            bound_task_object.request.id = mock_task_id
+            bound_task_object.request.args = ()
+            bound_task_object.request.kwargs = {}
+
+            with self.assertLogs(level='INFO') as log_context:
+                # Call the task with the bound task object
+                tasks.remove_old_temporary_catalog_indices_task(bound_task_object)
+
+                # Verify the correct indices were identified
+                expected_indices_to_delete = [f'{index_name}_tmp_1', f'{index_name}_tmp_2']
+
+                log_message = [msg for msg in log_context.output if 'Index names to delete' in msg][0]
+                self.assertIn(str(expected_indices_to_delete), log_message)
+
+                # Verify SearchClient was created with correct credentials
+                mock_search_client.create.assert_called_once()
+
+                # Test that mock_search_client.init_index was called with the index names to be deleted and none other
+
+                mock_client.init_index.assert_has_calls(
+                    [mock.call(index_name) for index_name in expected_indices_to_delete],
+                    any_order=True
+                )
+
+                # Test that each index `.delete` was called for those
+                for index_name in expected_indices_to_delete:
+                    mock_client.init_index.return_value.delete.assert_any_call()
+
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
     @override_settings(SHOULD_INDEX_COURSES_WITH_RESTRICTED_RUNS=True)

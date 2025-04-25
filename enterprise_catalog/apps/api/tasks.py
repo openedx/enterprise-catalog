@@ -619,8 +619,7 @@ def index_enterprise_catalog_in_algolia_task(self, force=False, dry_run=False): 
 
 @shared_task(base=LoggedTaskWithRetry, bind=True, default_retry_delay=UNREADY_TASK_RETRY_COUNTDOWN_SECONDS)
 @expiring_task_semaphore()
-# def remove_old_temporary_catalog_indices_task(self, force=False, dry_run=False):  # pylint: disable=unused-argument
-def remove_old_temporary_catalog_indices_task(self):
+def remove_old_temporary_catalog_indices_task(self, force=False, dry_run=False):  # pylint: disable=unused-argument
     """
     Remove old temporary catalog indices from Algolia.
 
@@ -632,43 +631,57 @@ def remove_old_temporary_catalog_indices_task(self):
         force (bool): If true, forces execution of task and ignores time since last run.
         dry_run (bool): If true, does everything except call Algolia APIs.
     """
-    # if not dry_run:
-    #     return
+    client = None
 
     try:
         logger.info(
-            f'Invoking `remove_old_temporary_catalog_indices` task with arguments' # force={force}, dry_run={dry_run}.'
+            f'Invoking `remove_old_temporary_catalog_indices` task with arguments force={force}, dry_run={dry_run}.'
         )
-        # list_of_indices = get_initialized_algolia_client().list_indices()
 
-
-        # In an asynchronous context, you can use SearchClient instead, which exposes the exact same methods.
-        client = SearchClient.create(settings.ALGOLIA.get("APPLICATION_ID"), settings.ALGOLIA.get("API_KEY"))
-
+        # `get_initialized_algolia_client` is not what we need here
+        # because that is initialized to a specific index.
+        # So we just create a new search client.
+        client = SearchClient.create(
+            settings.ALGOLIA.get('APPLICATION_ID', None),
+            settings.ALGOLIA.get('API_KEY', None)
+        )
         list_of_indices = client.list_indices().get('items', [])
+
         list_of_tmp_indices = []
         for index in list_of_indices:
-            # add index names to list_of_tmp_indices for indices that match the regex and are older than 10 days
-            # and newer than 60 days
             if re.match(rf"^{re.escape(settings.ALGOLIA['INDEX_NAME'])}_tmp_.*", index.get('name', '')):
-                # get the timestamp from the index name
                 created_at = index.get('createdAt', None)
-                logger.info('Index %s created at %s', index.get('name', ''), created_at)
-                if created_at:
-                    # convert the time string to a unix timestamp
-                    created_at = datetime.strptime(created_at, '%Y-%m-%dT%H:%M:%S.%fZ').timestamp()
-                # difference in days between created_at and time.time()
-                difference_in_days = (time.time() - created_at) / (60 * 60 * 24)
-                logger.info('Index %s created at %s, difference in days: %s', index.get('name', ''), created_at, difference_in_days)
+
+                if not created_at:
+                    continue
+
+                created_timestamp = datetime.strptime(created_at, '%Y-%m-%dT%H:%M:%S.%fZ').timestamp()
+                difference_in_days = (time.time() - created_timestamp) / (60 * 60 * 24)
                 if difference_in_days > 10 and difference_in_days < 60:
                     list_of_tmp_indices.append(index.get('name', ''))
 
         logger.info('Index names to delete: %s', list_of_tmp_indices)
+
+        # TO DO: Remove Indices in question
     except Exception as exep:
         logger.exception(
-            f'Deleting old tmp indices from Algolia failed. Error: {exep}'
+            f'Retrieving old tmp indices from Algolia failed. Error: {exep}'
         )
         raise exep
+
+    if dry_run:
+        return
+
+    for index_name in list_of_tmp_indices:
+        try:
+            logger.info('Deleting index: %s', index_name)
+
+            client.init_index(index_name).delete()
+        except Exception as exep:
+            logger.exception(
+                f'Deleting index: {index_name} failed. Error: {exep}'
+            )
+            raise exep
 
 
 def _precalculate_content_mappings():
