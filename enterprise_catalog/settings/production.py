@@ -28,6 +28,10 @@ DICT_UPDATE_KEYS = ('JWT_AUTH',)
 MEDIA_STORAGE_BACKEND = {}
 FILE_STORAGE_BACKEND = {}
 
+# Allow extra headers for your specicfic production environment.
+# Set this variable in the config yaml, and the values will be appended to CORS_ALLOW_HEADERS.
+CORS_ALLOW_HEADERS_EXTRA = ()
+
 CONFIG_FILE = get_env_setting('ENTERPRISE_CATALOG_CFG')
 with open(CONFIG_FILE, encoding='utf-8') as f:
     config_from_yaml = yaml.load(f, Loader=yaml.SafeLoader)
@@ -71,6 +75,14 @@ CELERY_BROKER_URL = "{}://{}:{}@{}/{}".format(
 )
 CELERY_RESULT_BACKEND = 'django-db'
 # END CELERY
+
+# BEGIN CORS
+# Inject extra allowed headers specific to a production environment.
+CORS_ALLOW_HEADERS = (
+    *CORS_ALLOW_HEADERS,
+    *CORS_ALLOW_HEADERS_EXTRA,
+)
+# END CORS
 
 for override, value in DB_OVERRIDES.items():
     DATABASES['default'][override] = value
