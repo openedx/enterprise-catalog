@@ -47,13 +47,13 @@ billiard==4.2.1
     #   celery
 cachetools==5.5.2
     # via tox
-celery==5.5.1
+celery==5.5.2
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.txt
     #   django-celery-results
     #   edx-celeryutils
-certifi==2025.1.31
+certifi==2025.4.26
     # via
     #   -r requirements/base.txt
     #   httpcore
@@ -222,7 +222,7 @@ edx-auth-backends==4.5.0
     # via -r requirements/base.txt
 edx-celeryutils==1.3.0
     # via -r requirements/base.txt
-edx-django-release-util==1.4.0
+edx-django-release-util==1.5.0
     # via -r requirements/base.txt
 edx-django-utils==7.4.0
     # via
@@ -237,7 +237,7 @@ edx-drf-extensions==10.6.0
     #   edx-rbac
 edx-lint==5.6.0
     # via -r requirements/test.in
-edx-opaque-keys==2.12.0
+edx-opaque-keys==3.0.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
@@ -255,11 +255,11 @@ filelock==3.18.0
     # via
     #   tox
     #   virtualenv
-h11==0.14.0
+h11==0.16.0
     # via
     #   -r requirements/base.txt
     #   httpcore
-httpcore==1.0.8
+httpcore==1.0.9
     # via
     #   -r requirements/base.txt
     #   httpx
@@ -299,7 +299,7 @@ jsonschema==4.23.0
     # via
     #   -r requirements/base.txt
     #   drf-spectacular
-jsonschema-specifications==2024.10.1
+jsonschema-specifications==2025.4.1
     # via
     #   -r requirements/base.txt
     #   jsonschema
@@ -319,7 +319,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.7
     # via -r requirements/base.txt
-newrelic==10.9.0
+newrelic==10.10.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -505,7 +505,7 @@ social-auth-app-django==5.4.3
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends
-social-auth-core==4.5.6
+social-auth-core==4.6.0
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends
