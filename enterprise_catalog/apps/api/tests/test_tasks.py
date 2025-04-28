@@ -1262,7 +1262,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         ]
 
     # Test remove_old_temporary_catalog_indices_task
-    @mock.patch('enterprise_catalog.apps.api.tasks.SearchClient')
+    @mock.patch('enterprise_catalog.apps.catalog.algolia_utils.SearchClient')
     def test_remove_old_temporary_catalog_indices(self, mock_search_client):
         """
         Test that temporary indices between 10 and 60 days old are selected for deletion.

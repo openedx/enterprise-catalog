@@ -9,6 +9,7 @@ from collections import defaultdict
 from datetime import timedelta, datetime
 from operator import itemgetter
 
+from algoliasearch.exceptions import AlgoliaException
 from celery import shared_task, states
 from celery.exceptions import Ignore
 from celery_utils.logged_task import LoggedTask
@@ -33,6 +34,7 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     get_pathway_program_uuids,
     partition_course_keys_for_indexing,
     partition_program_keys_for_indexing,
+    new_search_client_or_error,
 )
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,
@@ -63,9 +65,6 @@ from enterprise_catalog.apps.catalog.utils import (
     localized_utcnow,
 )
 from enterprise_catalog.apps.video_catalog.models import Video
-
-from algoliasearch.search_client import SearchClient
-from json import loads
 
 
 logger = logging.getLogger(__name__)
@@ -617,6 +616,44 @@ def index_enterprise_catalog_in_algolia_task(self, force=False, dry_run=False): 
         raise exep
 
 
+def _created_between(datestring, min_days_ago, max_days_ago):
+    if not datestring:
+        return False
+    created_timestamp = datetime.strptime(datestring, '%Y-%m-%dT%H:%M:%S.%fZ').timestamp()
+    difference_in_days = (time.time() - created_timestamp) / (60 * 60 * 24)
+    if difference_in_days > min_days_ago and difference_in_days < max_days_ago:
+        return True
+    return False
+
+
+def _retrieve_inactive_indices(client):
+        indices = client.list_indices().get('items', [])
+        tmp_indices = filter(lambda x: x.get('name', '').startswith(f'{settings.ALGOLIA["INDEX_NAME"]}_tmp_'), indices)
+        inactive_tmp_indices = filter(lambda x: _created_between(x.get('createdAt', None), 10, 60), tmp_indices)
+        return list(map(lambda x: x.get('name', ''), inactive_tmp_indices))
+
+
+def _delete_indices(client, indices, dry_run=True):
+    logger.info('Index names to delete: %s', indices)
+
+    if dry_run:
+        logger.info('dry_run=true, not deleting old tmp indices from Algolia')
+        return indices
+
+    for index_name in indices:
+        try:
+            logger.info('Deleting index: %s', index_name)
+            client.init_index(index_name).delete()
+            logger.info('Deleted index: %s', index_name)
+        except Exception as exep:
+            logger.exception(
+                f'Deleting index: {index_name} failed. Error: {exep}'
+            )
+            raise exep
+
+        logger.info('Finished deleting indices from Algolia')
+
+
 @shared_task(base=LoggedTaskWithRetry, bind=True, default_retry_delay=UNREADY_TASK_RETRY_COUNTDOWN_SECONDS)
 @expiring_task_semaphore()
 def remove_old_temporary_catalog_indices_task(self, force=False, dry_run=False):  # pylint: disable=unused-argument
@@ -632,56 +669,31 @@ def remove_old_temporary_catalog_indices_task(self, force=False, dry_run=False):
         dry_run (bool): If true, does everything except call Algolia APIs.
     """
     client = None
+    logger.info(
+        f'Invoking `remove_old_temporary_catalog_indices` task with arguments force={force}, dry_run={dry_run}.'
+    )
 
     try:
-        logger.info(
-            f'Invoking `remove_old_temporary_catalog_indices` task with arguments force={force}, dry_run={dry_run}.'
-        )
-
         # `get_initialized_algolia_client` is not what we need here
-        # because that is initialized to a specific index.
-        # So we just create a new search client.
-        client = SearchClient.create(
-            settings.ALGOLIA.get('APPLICATION_ID', None),
-            settings.ALGOLIA.get('API_KEY', None)
+        # because that is initialized to the wrong index.
+        client = new_search_client_or_error()
+    except (AlgoliaException, TypeError) as exep:
+        logger.exception(
+            f'Creating Algolia client failed. Error: {exep}'
         )
-        list_of_indices = client.list_indices().get('items', [])
+        raise exep
 
-        list_of_tmp_indices = []
-        for index in list_of_indices:
-            if re.match(rf"^{re.escape(settings.ALGOLIA['INDEX_NAME'])}_tmp_.*", index.get('name', '')):
-                created_at = index.get('createdAt', None)
-
-                if not created_at:
-                    continue
-
-                created_timestamp = datetime.strptime(created_at, '%Y-%m-%dT%H:%M:%S.%fZ').timestamp()
-                difference_in_days = (time.time() - created_timestamp) / (60 * 60 * 24)
-                if difference_in_days > 10 and difference_in_days < 60:
-                    list_of_tmp_indices.append(index.get('name', ''))
-
-        logger.info('Index names to delete: %s', list_of_tmp_indices)
-
-        # TO DO: Remove Indices in question
+    try:
+        inactive_tmp_indices = _retrieve_inactive_indices(client)
     except Exception as exep:
         logger.exception(
             f'Retrieving old tmp indices from Algolia failed. Error: {exep}'
         )
         raise exep
 
-    if dry_run:
-        return
+    _delete_indices(client, inactive_tmp_indices, dry_run)
 
-    for index_name in list_of_tmp_indices:
-        try:
-            logger.info('Deleting index: %s', index_name)
-
-            client.init_index(index_name).delete()
-        except Exception as exep:
-            logger.exception(
-                f'Deleting index: {index_name} failed. Error: {exep}'
-            )
-            raise exep
+    return inactive_tmp_indices
 
 
 def _precalculate_content_mappings():

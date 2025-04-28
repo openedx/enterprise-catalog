@@ -11,6 +11,7 @@ from django.utils.dateparse import parse_datetime
 from django.utils.translation import gettext as _
 from pytz import UTC
 
+from algoliasearch.search_client import SearchClient
 from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
 from enterprise_catalog.apps.api_client.constants import (
     COURSE_REVIEW_BASE_AVG_REVIEW_SCORE,
@@ -49,7 +50,6 @@ from enterprise_catalog.apps.video_catalog.models import (
     VideoSkill,
     VideoTranscriptSummary,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -374,6 +374,19 @@ def get_initialized_algolia_client():
     algolia_client = AlgoliaSearchClient()
     algolia_client.init_index()
     return algolia_client
+
+
+def new_search_client_or_error():
+    """
+    Returns a new Algolia search client that is not initialized to any specific index.
+    """
+    client = SearchClient.create(
+        settings.ALGOLIA.get('APPLICATION_ID', None),
+        settings.ALGOLIA.get('API_KEY', None)
+    )
+    if not client:
+        raise TypeError(f'client should be an Algolia search client, but was type {type(client)}.')
+    return client
 
 
 def configure_algolia_index(algolia_client):
