@@ -32,7 +32,6 @@ class Command(BaseCommand):
         parser.add_argument(
             '--min-days',
             dest='min_days',
-            action='store_true',
             default=10,
             type=int,
             help='List algolia indices to be removed, but do not actually remove them.',
@@ -40,7 +39,6 @@ class Command(BaseCommand):
         parser.add_argument(
             '--max-days',
             dest='max_days',
-            action='store_true',
             default=60,
             type=int,
             help='List algolia indices to be removed, but do not actually remove them.',

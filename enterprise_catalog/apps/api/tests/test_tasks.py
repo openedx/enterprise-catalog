@@ -1320,7 +1320,9 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
             with self.assertLogs(level='INFO') as log_context:
                 # Call the task with the bound task object
-                tasks.remove_old_temporary_catalog_indices_task(bound_task_object, dry_run=False)
+                tasks.remove_old_temporary_catalog_indices_task(
+                    bound_task_object, min_days_ago=10, max_days_ago=60, dry_run=False
+                )
 
                 # Verify the correct indices were identified
                 expected_indices_to_delete = [f'{index_name}_tmp_1', f'{index_name}_tmp_2']
@@ -1378,7 +1380,9 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
             with self.assertLogs(level='INFO') as log_context:
                 # Call the task with the bound task object
-                tasks.remove_old_temporary_catalog_indices_task(bound_task_object)
+                tasks.remove_old_temporary_catalog_indices_task(
+                    bound_task_object, min_days_ago=10, max_days_ago=60
+                )
 
                 log_message = [msg for msg in log_context.output if 'Index names to delete' in msg][0]
                 self.assertIn(f'{index_name}_tmp_1', log_message)

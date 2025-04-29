@@ -669,7 +669,9 @@ def _delete_indices(client, indices, dry_run=True):
 
 @shared_task(base=LoggedTaskWithRetry, bind=True, default_retry_delay=UNREADY_TASK_RETRY_COUNTDOWN_SECONDS)
 @expiring_task_semaphore()
-def remove_old_temporary_catalog_indices_task(self, min_days_ago, max_days_ago, force=False, dry_run=True):  # pylint: disable=unused-argument
+def remove_old_temporary_catalog_indices_task(
+    self, force=False, dry_run=True, min_days_ago=10, max_days_ago=60   # pylint: disable=unused-argument
+):
     """
     Remove old temporary catalog indices from Algolia.
 
