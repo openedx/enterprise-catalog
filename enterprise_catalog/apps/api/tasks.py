@@ -2,7 +2,6 @@ import copy
 import functools
 import json
 import logging
-import re
 import sys
 import time
 from collections import defaultdict
@@ -621,7 +620,7 @@ def _created_between(datestring, min_days_ago, max_days_ago):
         return False
     created_timestamp = datetime.strptime(datestring, '%Y-%m-%dT%H:%M:%S.%fZ').timestamp()
     difference_in_days = (time.time() - created_timestamp) / (60 * 60 * 24)
-    if difference_in_days > min_days_ago and difference_in_days < max_days_ago:
+    if min_days_ago < difference_in_days < max_days_ago:
         return True
     return False
 
@@ -652,6 +651,7 @@ def _delete_indices(client, indices, dry_run=True):
             raise exep
 
         logger.info('Finished deleting indices from Algolia')
+    return indices
 
 
 @shared_task(base=LoggedTaskWithRetry, bind=True, default_retry_delay=UNREADY_TASK_RETRY_COUNTDOWN_SECONDS)
