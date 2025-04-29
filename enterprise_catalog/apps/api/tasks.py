@@ -6,7 +6,7 @@ import re
 import sys
 import time
 from collections import defaultdict
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 from operator import itemgetter
 
 from algoliasearch.exceptions import AlgoliaException
@@ -32,9 +32,9 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     get_initialized_algolia_client,
     get_pathway_course_keys,
     get_pathway_program_uuids,
+    new_search_client_or_error,
     partition_course_keys_for_indexing,
     partition_program_keys_for_indexing,
-    new_search_client_or_error,
 )
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,

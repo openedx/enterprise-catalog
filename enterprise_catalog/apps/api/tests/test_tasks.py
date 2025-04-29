@@ -3,10 +3,9 @@ Tests for the enterprise_catalog API celery tasks
 """
 import json
 import uuid
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 from operator import itemgetter
 from unittest import mock
-
 
 import ddt
 from celery import states

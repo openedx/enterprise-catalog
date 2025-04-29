@@ -6,6 +6,7 @@ from enterprise_catalog.apps.api.tasks import (
     remove_old_temporary_catalog_indices_task,
 )
 
+
 logger = logging.getLogger(__name__)
 
 

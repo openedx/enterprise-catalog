@@ -3,6 +3,7 @@ import datetime
 import logging
 import time
 
+from algoliasearch.search_client import SearchClient
 from dateutil import parser
 from django.conf import settings
 from django.core.cache import cache
@@ -11,7 +12,6 @@ from django.utils.dateparse import parse_datetime
 from django.utils.translation import gettext as _
 from pytz import UTC
 
-from algoliasearch.search_client import SearchClient
 from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
 from enterprise_catalog.apps.api_client.constants import (
     COURSE_REVIEW_BASE_AVG_REVIEW_SCORE,
@@ -50,6 +50,7 @@ from enterprise_catalog.apps.video_catalog.models import (
     VideoSkill,
     VideoTranscriptSummary,
 )
+
 
 logger = logging.getLogger(__name__)
 
