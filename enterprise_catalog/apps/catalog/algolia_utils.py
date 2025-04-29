@@ -386,7 +386,10 @@ def new_search_client_or_error():
         settings.ALGOLIA.get('API_KEY', None)
     )
     if not client:
-        raise TypeError(f'client should be an Algolia search client, but was type {type(client)}.')
+        raise TypeError(
+            'Failed to create Algolia search client.' \
+            f'The client should be an Algolia search client, but was {client} of type {type(client)}.'
+        )
     return client
 
 

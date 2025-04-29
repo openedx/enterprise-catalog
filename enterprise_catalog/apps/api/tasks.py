@@ -615,9 +615,14 @@ def index_enterprise_catalog_in_algolia_task(self, force=False, dry_run=False): 
         raise exep
 
 
-def _created_between(datestring, min_days_ago, max_days_ago):
+def _created_between(index, min_days_ago, max_days_ago):
+    """
+    Returns whether the index was created between min_days_ago and max_days_ago.
+    """
+    datestring = index.get('createdAt', None)
     if not datestring:
         return False
+
     created_timestamp = datetime.strptime(datestring, '%Y-%m-%dT%H:%M:%S.%fZ').timestamp()
     difference_in_days = (time.time() - created_timestamp) / (60 * 60 * 24)
     if min_days_ago < difference_in_days < max_days_ago:
@@ -625,11 +630,19 @@ def _created_between(datestring, min_days_ago, max_days_ago):
     return False
 
 
-def _retrieve_inactive_tmp_indices(client):
+def _is_tmp_index(index):
+    """
+    Returns whether the index is a temporary index.
+    """
+    index_name = index.get('name', '')
+    return index_name.startswith(f'{settings.ALGOLIA["INDEX_NAME"]}_tmp_')
+
+
+def _retrieve_inactive_tmp_indices(client, min_days_ago, max_days_ago):
     indices = client.list_indices().get('items', [])
-    tmp_indices = filter(lambda x: x.get('name', '').startswith(f'{settings.ALGOLIA["INDEX_NAME"]}_tmp_'), indices)
-    inactive_tmp_indices = filter(lambda x: _created_between(x.get('createdAt', None), 10, 60), tmp_indices)
-    return list(map(lambda x: x.get('name', ''), inactive_tmp_indices))
+    tmp_indices = filter(_is_tmp_index, indices)
+    inactive_tmp_indices = filter(lambda index: _created_between(index, min_days_ago, max_days_ago), tmp_indices)
+    return list(map(lambda index: index.get('name', ''), inactive_tmp_indices))
 
 
 def _delete_indices(client, indices, dry_run=True):
@@ -656,7 +669,7 @@ def _delete_indices(client, indices, dry_run=True):
 
 @shared_task(base=LoggedTaskWithRetry, bind=True, default_retry_delay=UNREADY_TASK_RETRY_COUNTDOWN_SECONDS)
 @expiring_task_semaphore()
-def remove_old_temporary_catalog_indices_task(self, force=False, dry_run=True):  # pylint: disable=unused-argument
+def remove_old_temporary_catalog_indices_task(self, min_days_ago, max_days_ago, force=False, dry_run=True):  # pylint: disable=unused-argument
     """
     Remove old temporary catalog indices from Algolia.
 
@@ -665,7 +678,8 @@ def remove_old_temporary_catalog_indices_task(self, force=False, dry_run=True): 
     This task removes all indices that are older than 10 days and newer than 60 days.
 
     Args:
-        force (bool): Not used.
+        force (bool): Related to task decorator. If True,
+            intended to force execution of task and ignore time since last run.
         dry_run (bool): If true, does everything except call Algolia APIs.
     """
     client = None
@@ -684,7 +698,7 @@ def remove_old_temporary_catalog_indices_task(self, force=False, dry_run=True): 
         raise exep
 
     try:
-        inactive_tmp_indices = _retrieve_inactive_tmp_indices(client)
+        inactive_tmp_indices = _retrieve_inactive_tmp_indices(client, min_days_ago, max_days_ago)
     except Exception as exep:
         logger.exception(
             f'Retrieving old tmp indices from Algolia failed. Error: {exep}'
