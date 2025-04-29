@@ -29,6 +29,22 @@ class Command(BaseCommand):
             default=False,
             help='List algolia indices to be removed, but do not actually remove them.',
         )
+        parser.add_argument(
+            '--min-days',
+            dest='min_days',
+            action='store_true',
+            default=10,
+            type=int,
+            help='List algolia indices to be removed, but do not actually remove them.',
+        )
+        parser.add_argument(
+            '--max-days',
+            dest='max_days',
+            action='store_true',
+            default=60,
+            type=int,
+            help='List algolia indices to be removed, but do not actually remove them.',
+        )
 
     def handle(self, *_args, **options):
         """
@@ -38,8 +54,15 @@ class Command(BaseCommand):
         try:
             force_task_execution = options.get('force', False)
             dry_run = options.get('dry_run', False)
+            min_days = options.get('min_days', 10)
+            max_days = options.get('max_days', 60)
             remove_old_temporary_catalog_indices_task.apply_async(
-                kwargs={'force': force_task_execution, 'dry_run': dry_run}
+                kwargs={
+                    'force': force_task_execution,
+                    'dry_run': dry_run,
+                    'min_days_ago': min_days,
+                    'max_days_ago': max_days
+                }
             )
             logger.info(
                 'index_enterprise_catalog_in_algolia_task from command index_enterprise_catalog_in_algolia'
