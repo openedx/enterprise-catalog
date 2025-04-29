@@ -1345,7 +1345,6 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 for index_name in expected_indices_to_delete:
                     mock_client.init_index.return_value.delete.assert_any_call()
 
-
     # Test remove_old_temporary_catalog_indices_task
     @mock.patch('enterprise_catalog.apps.catalog.algolia_utils.SearchClient')
     def test_remove_old_temporary_catalog_indices_should_not_delete_on_dry_run(self, mock_search_client):
@@ -1390,7 +1389,6 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
                 assert not mock_client.init_index.called
                 assert not mock_client.init_index.return_value.delete.called
-
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
     @override_settings(SHOULD_INDEX_COURSES_WITH_RESTRICTED_RUNS=True)

@@ -6,7 +6,6 @@ from enterprise_catalog.apps.api.tasks import (
     remove_old_temporary_catalog_indices_task,
 )
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -42,7 +41,7 @@ class Command(BaseCommand):
                 kwargs={'force': force_task_execution, 'dry_run': dry_run}
             )
             logger.info(
-                'index_enterprise_catalog_in_algolia_task from command index_enterprise_catalog_in_algolia' \
+                'index_enterprise_catalog_in_algolia_task from command index_enterprise_catalog_in_algolia'
                 'finished successfully.'
             )
         except Exception as exc:  # pylint: disable=broad-except

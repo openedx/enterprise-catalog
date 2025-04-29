@@ -627,10 +627,10 @@ def _created_between(datestring, min_days_ago, max_days_ago):
 
 
 def _retrieve_inactive_tmp_indices(client):
-        indices = client.list_indices().get('items', [])
-        tmp_indices = filter(lambda x: x.get('name', '').startswith(f'{settings.ALGOLIA["INDEX_NAME"]}_tmp_'), indices)
-        inactive_tmp_indices = filter(lambda x: _created_between(x.get('createdAt', None), 10, 60), tmp_indices)
-        return list(map(lambda x: x.get('name', ''), inactive_tmp_indices))
+    indices = client.list_indices().get('items', [])
+    tmp_indices = filter(lambda x: x.get('name', '').startswith(f'{settings.ALGOLIA["INDEX_NAME"]}_tmp_'), indices)
+    inactive_tmp_indices = filter(lambda x: _created_between(x.get('createdAt', None), 10, 60), tmp_indices)
+    return list(map(lambda x: x.get('name', ''), inactive_tmp_indices))
 
 
 def _delete_indices(client, indices, dry_run=True):

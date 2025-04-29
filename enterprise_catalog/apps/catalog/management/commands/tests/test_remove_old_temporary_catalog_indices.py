@@ -4,7 +4,6 @@ from django.core.management import call_command
 from django.test import TestCase
 
 
-
 PATH_PREFIX = 'enterprise_catalog.apps.catalog.management.commands.remove_old_temporary_catalog_indices.'
 
 
