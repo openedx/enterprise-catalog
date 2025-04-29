@@ -387,8 +387,7 @@ def new_search_client_or_error():
     )
     if not client:
         raise TypeError(
-            'Failed to create Algolia search client.' \
-            f'The client should be an Algolia search client, but was {client} of type {type(client)}.'
+            f'Failed to create Algolia search client. The client should be an Algolia search client, but was {client} of type {type(client)}.'  # pylint: disable=line-too-long
         )
     return client
 
