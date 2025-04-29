@@ -480,6 +480,9 @@ AI_CURATION_QUERY_TO_KEYWORDS_PROMPT = 'I am a query to keywords prompt. query: 
 AI_CURATION_KEYWORDS_TO_PROSE_PROMPT = 'I am a keywords to prose prompt. query: {query} keywords: {keywords}'
 
 OPENAI_API_KEY = 'I am key'
+XPERT_AICURATION_SYSTEM_MESSAGE = 'test system prompt'
+CHAT_COMPLETION_API_CONNECT_TIMEOUT = 1
+CHAT_COMPLETION_API_READ_TIMEOUT = 15
 
 ############################################## AI CURATION ##############################################
 

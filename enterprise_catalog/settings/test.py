@@ -31,7 +31,8 @@ CELERY_TASK_ALWAYS_EAGER = True
 results_dir = tempfile.TemporaryDirectory()
 CELERY_RESULT_BACKEND = f'file://{results_dir.name}'
 
-CHAT_COMPLETION_API = 'http://test.chat.ai'
-CHAT_COMPLETION_API_KEY = 'test chat completion api key'
+XPERT_AI_API_V2 = 'http://test.chat.ai'
+XPERT_AI_CLIENT_ID = 'test client id'
+XPERT_AICURATION_SYSTEM_MESSAGE = 'test system prompt'
 CHAT_COMPLETION_API_CONNECT_TIMEOUT = 1
 CHAT_COMPLETION_API_READ_TIMEOUT = 15
