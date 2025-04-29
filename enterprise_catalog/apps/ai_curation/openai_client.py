@@ -48,13 +48,16 @@ def api_error_handler(func):
 def chat_completions(
     messages,
     response_format='json',
+    system_message=settings.XPERT_AICURATION_SYSTEM_MESSAGE,
 ):
     """
-    Pass message list to chat endpoint, as defined by the CHAT_COMPLETION_API setting.
+    Pass message list to chat endpoint, as defined by the XPERT_AI_API_V2 setting.
 
     Args:
         messages (list): List of messages to send to the chat.completions endpoint
         response_format (str): Format of the response. Can be 'json' or 'text'
+        system_message (str): System message to be used in the request
+            Defaults to settings.XPERT_AICURATION_SYSTEM_MESSAGE
 
     Returns:
         <list, text>: The response from the chat.completions endpoint
@@ -67,13 +70,17 @@ def chat_completions(
     """
     LOGGER.info('[AI_CURATION] [CHAT_COMPLETIONS] Prompt: [%s]', messages)
 
-    headers = {'Content-Type': 'application/json', 'x-api-key': settings.CHAT_COMPLETION_API_KEY}
+    headers = {'Content-Type': 'application/json'}
     message_list = []
     for message in messages:
-        message_list.append({'role': 'assistant', 'content': message['content']})
-    body = {'message_list': message_list}
+        message_list.append({'role': 'user', 'content': message['content']})
+    body = {
+        'messages': message_list,
+        'client_id': settings.XPERT_AI_CLIENT_ID,
+        'system_message': system_message
+    }
     response = requests.post(
-        settings.CHAT_COMPLETION_API,
+        settings.XPERT_AI_API_V2,
         headers=headers,
         data=json.dumps(body),
         timeout=(
@@ -83,7 +90,7 @@ def chat_completions(
     )
     LOGGER.info('[AI_CURATION] [CHAT_COMPLETIONS] Response: [%s]', response.json())
     try:
-        response_content = response.json().get('content')
+        response_content = response.json()[0].get('content')
         response_content = re.sub(r'```json\n?|```', '', response_content)
         if response_format == 'json':
             return json.loads(response_content)

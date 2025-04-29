@@ -78,10 +78,10 @@ class TestChatCompletionUtils(TestCase):
         """
         Test that get_filtered_subjects returns the correct filtered subjects
         """
-        mock_requests.return_value.json.return_value = {
+        mock_requests.return_value.json.return_value = [{
             "role": "assistant",
             "content": json.dumps(['subject1', 'subject2'])
-        }
+        }]
         subjects = ['subject1', 'subject2', 'subject3', 'subject4']
         query = 'test query'
         expected_content = settings.AI_CURATION_FILTER_SUBJECTS_PROMPT.format(query=query, subjects=subjects)
@@ -93,7 +93,7 @@ class TestChatCompletionUtils(TestCase):
             [
                 mock.call(
                     '[AI_CURATION] Filtering subjects. Prompt: [%s]',
-                    [{'role': 'system', 'content': expected_content}]
+                    [{'content': expected_content}]
                 ),
                 mock.call('[AI_CURATION] Filtering subjects. Response: [%s]', ['subject1', 'subject2'])
             ]
@@ -106,10 +106,10 @@ class TestChatCompletionUtils(TestCase):
         """
         Test that get_query_keywords returns the correct keywords
         """
-        mock_requests.return_value.json.return_value = {
+        mock_requests.return_value.json.return_value = [{
             "role": "assistant",
             "content": json.dumps(['keyword1', 'keyword2'])
-        }
+        }]
         query = 'test query'
         expected_content = settings.AI_CURATION_QUERY_TO_KEYWORDS_PROMPT.format(query=query)
 
@@ -120,7 +120,7 @@ class TestChatCompletionUtils(TestCase):
             [
                 mock.call(
                     '[AI_CURATION] Generating keywords. Prompt: [%s]',
-                    [{'role': 'system', 'content': expected_content}]
+                    [{'content': expected_content}]
                 ),
                 mock.call('[AI_CURATION] Generating keywords. Response: [%s]', ['keyword1', 'keyword2'])
             ]
@@ -135,10 +135,10 @@ class TestChatCompletionUtils(TestCase):
         Test that get_keywords_to_prose returns the correct prose
         """
         mock_get_query_keywords.return_value = ['keyword1', 'keyword2']
-        mock_requests.return_value.json.return_value = {
+        mock_requests.return_value.json.return_value = [{
             "role": "assistant",
             "content": json.dumps(['I am a prose'])
-        }
+        }]
         query = 'test query'
         keywords = ['keyword1', 'keyword2']
         expected_content = settings.AI_CURATION_KEYWORDS_TO_PROSE_PROMPT.format(query=query, keywords=keywords)
@@ -150,7 +150,7 @@ class TestChatCompletionUtils(TestCase):
             [
                 mock.call(
                     '[AI_CURATION] Generating prose from keywords. Prompt: [%s]',
-                    [{'role': 'system', 'content': expected_content}]
+                    [{'content': expected_content}]
                 ),
                 mock.call('[AI_CURATION] Generating prose from keywords. Response: [%s]', ['I am a prose'])
             ]
@@ -166,7 +166,6 @@ class TestChatCompletionUtils(TestCase):
         mock_requests.side_effect = ConnectionError()
         messages = [
             {
-                'role': 'system',
                 'content': 'I am a prompt'
             }
         ]
@@ -187,13 +186,12 @@ class TestChatCompletionUtils(TestCase):
         """
         Test that json decode error is raised for improper json response
         """
-        mock_requests.return_value.json.return_value = {
+        mock_requests.return_value.json.return_value = [{
             "role": "assistant",
             "content": "subjects: ['subject1', 'subject2']"
-        }
+        }]
         messages = [
             {
-                'role': 'system',
                 'content': 'I am a prompt'
             }
         ]
@@ -207,3 +205,23 @@ class TestChatCompletionUtils(TestCase):
         assert mock_backoff_logger['error'].call_count == 1
         assert mock_logger.exception.called
         mock_logger.exception.assert_has_calls([mock.call('[AI_CURATION] API Error: Prompt: [%s]', messages)])
+
+    @patch('enterprise_catalog.apps.ai_curation.openai_client.requests.post')
+    def test_chat_completions_handles_list_response(self, mock_requests):
+        """
+        Test that the client handles a list response correctly
+        """
+        mock_requests.return_value.json.return_value = [{
+            "role": "assistant",
+            "content": json.dumps("You are indeed a test prompt")
+        }]
+        messages = [
+            {
+                'content': 'test prompt'
+            }
+        ]
+
+        chat = chat_completions(messages=messages)
+
+        assert mock_requests.call_count == 1
+        assert chat == "You are indeed a test prompt"
