@@ -1260,6 +1260,38 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             {'key': 'course-v1:edX+testX+4', 'foo': 'bar'},
         ]
 
+    @mock.patch('enterprise_catalog.apps.catalog.algolia_utils.SearchClient')
+    def test_delete_indices_exception_handling(self, mock_search_client):
+        """
+        Test that exceptions during index deletion are properly caught and re-raised.
+        """
+        # Setup mock data
+        index_name = 'enterprise_catalog_tmp_test'
+        mock_indices = [index_name]
+
+        # Configure mock
+        mock_client = mock.MagicMock()
+        mock_index = mock.MagicMock()
+        mock_index.delete.side_effect = Exception("Test exception")
+        mock_client.init_index.return_value = mock_index
+        mock_search_client.create.return_value = mock_client
+
+        # Create a mock task instance
+        mock_task_id = uuid.uuid4()
+        bound_task_object = mock.MagicMock()
+        bound_task_object.request.id = mock_task_id
+
+        # Test that the exception is re-raised
+        with self.assertRaises(Exception):
+            with self.assertLogs(level='ERROR') as log_context:
+                tasks._delete_indices(mock_client, mock_indices, dry_run=False)  # pylint: disable=protected-access
+
+        # Verify the exception was logged
+        self.assertTrue(any('Test exception' in msg for msg in log_context.output))
+
+        # Verify the client was initialized with the correct index
+        mock_client.init_index.assert_called_once_with(index_name)
+
     # Test remove_old_temporary_catalog_indices_task
     @mock.patch('enterprise_catalog.apps.catalog.algolia_utils.SearchClient')
     def test_remove_old_temporary_catalog_indices(self, mock_search_client):

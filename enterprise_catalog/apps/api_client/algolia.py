@@ -160,23 +160,6 @@ class AlgoliaSearchClient:
             )
             raise exc
 
-    def list_indices(self):
-        """
-        Returns a list of all index names in Algolia.
-        """
-        if not self.algolia_index:
-            logger.error('Algolia index does not exist. Did you initialize it?')
-            return []
-
-        try:
-            indices = self._client.list_indices()
-            return [index['name'] for index in indices['items']]
-        except AlgoliaException as exc:
-            logger.exception(
-                'Could not list indices in Algolia due to an exception.',
-            )
-            raise exc
-
     def get_all_objects_associated_with_aggregation_key(self, aggregation_key):
         """
         Returns an array of Algolia object IDs associated with the given aggregation key.
