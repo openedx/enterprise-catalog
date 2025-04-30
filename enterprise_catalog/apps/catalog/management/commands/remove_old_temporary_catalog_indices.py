@@ -34,14 +34,14 @@ class Command(BaseCommand):
             dest='min_days',
             default=10,
             type=int,
-            help='List algolia indices to be removed, but do not actually remove them.',
+            help='Minimum number of days ago that an index must have been created to be removed.',
         )
         parser.add_argument(
             '--max-days',
             dest='max_days',
             default=60,
             type=int,
-            help='List algolia indices to be removed, but do not actually remove them.',
+            help='Maximum number of days ago that an index must have been created to be removed.',
         )
 
     def handle(self, *_args, **options):

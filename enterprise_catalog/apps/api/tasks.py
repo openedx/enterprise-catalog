@@ -650,7 +650,7 @@ def _delete_indices(client, indices, dry_run=True):
 
     if dry_run:
         logger.info('dry_run=true, not deleting old tmp indices from Algolia')
-        return indices
+        return
 
     for index_name in indices:
         try:
@@ -664,7 +664,6 @@ def _delete_indices(client, indices, dry_run=True):
             raise exep
 
         logger.info('Finished deleting indices from Algolia')
-    return indices
 
 
 @shared_task(base=LoggedTaskWithRetry, bind=True, default_retry_delay=UNREADY_TASK_RETRY_COUNTDOWN_SECONDS)
