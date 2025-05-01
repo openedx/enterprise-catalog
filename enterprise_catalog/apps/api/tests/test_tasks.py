@@ -3,11 +3,12 @@ Tests for the enterprise_catalog API celery tasks
 """
 import json
 import uuid
-from datetime import timedelta
+from datetime import datetime, timedelta
 from operator import itemgetter
 from unittest import mock
 
 import ddt
+from algoliasearch.exceptions import AlgoliaException
 from celery import states
 from django.test import TestCase, override_settings
 from django_celery_results.models import TaskResult
@@ -1259,6 +1260,240 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             {'key': 'course-v1:edX+testX+3', 'foo': 'bar'},
             {'key': 'course-v1:edX+testX+4', 'foo': 'bar'},
         ]
+
+    @mock.patch('enterprise_catalog.apps.catalog.algolia_utils.SearchClient')
+    def test_delete_indices_exception_handling(self, mock_search_client):
+        """
+        Test that exceptions during index deletion are properly caught and re-raised.
+        """
+        # Setup mock data
+        index_name = 'enterprise_catalog_tmp_test'
+        mock_indices = [index_name]
+
+        # Configure mock
+        mock_client = mock.MagicMock()
+        mock_index = mock.MagicMock()
+        mock_index.delete.side_effect = Exception("Test exception")
+        mock_client.init_index.return_value = mock_index
+        mock_search_client.create.return_value = mock_client
+
+        # Create a mock task instance
+        mock_task_id = uuid.uuid4()
+        bound_task_object = mock.MagicMock()
+        bound_task_object.request.id = mock_task_id
+
+        # Test that the exception is re-raised
+        with self.assertRaises(Exception):
+            with self.assertLogs(level='ERROR') as log_context:
+                tasks._delete_indices(mock_client, mock_indices, dry_run=False)  # pylint: disable=protected-access
+
+        # Verify the exception was logged
+        self.assertTrue(any('Test exception' in msg for msg in log_context.output))
+
+        # Verify the client was initialized with the correct index
+        mock_client.init_index.assert_called_once_with(index_name)
+
+    # Test remove_old_temporary_catalog_indices_task
+    @mock.patch('enterprise_catalog.apps.catalog.algolia_utils.SearchClient')
+    def test_remove_old_temporary_catalog_indices(self, mock_search_client):
+        """
+        Test that temporary indices between 10 and 60 days old get deleted.
+        """
+        # Setup mock data
+        now = datetime.now()
+        index_name = 'enterprise_catalog_new'
+        # Mock django conf settings.ALGOLIA['INDEX_NAME'] to be 'enterprise_catalog_new'
+        with self.settings(ALGOLIA={'INDEX_NAME': index_name}):
+
+            mock_indices = {
+                'items': [
+                    # Should be included (30 days old)
+                    {
+                        'name': f'{index_name}_tmp_1',
+                        'createdAt': (now - timedelta(days=30)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+                    },
+                    # Should be included (15 days old)
+                    {
+                        'name': f'{index_name}_tmp_2',
+                        'createdAt': (now - timedelta(days=15)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+                    },
+                    # Should not be included (5 days old)
+                    {
+                        'name': f'{index_name}_tmp_3',
+                        'createdAt': (now - timedelta(days=5)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+                    },
+                    # Should not be included (65 days old)
+                    {
+                        'name': f'{index_name}_tmp_4',
+                        'createdAt': (now - timedelta(days=65)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+                    },
+                    # Should not be included (not a tmp index)
+                    {
+                        'name': index_name,
+                        'createdAt': (now - timedelta(days=30)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+                    },
+                    # Should not be included (no creation date)
+                    {
+                        'name': f'{index_name}_tmp_5',
+                    },
+                ]
+            }
+
+            # Configure mock
+            mock_client = mock.MagicMock()
+            mock_client.list_indices.return_value = mock_indices
+            mock_search_client.create.return_value = mock_client
+
+            # Create a mock task instance (similar to other tests in the file)
+            mock_task_id = uuid.uuid4()
+            bound_task_object = mock.MagicMock()
+            bound_task_object.request.id = mock_task_id
+            bound_task_object.request.args = ()
+            bound_task_object.request.kwargs = {}
+
+            with self.assertLogs(level='INFO') as log_context:
+                # Call the task with the bound task object
+                tasks.remove_old_temporary_catalog_indices_task(
+                    bound_task_object, min_days_ago=10, max_days_ago=60, dry_run=False
+                )
+
+                # Verify the correct indices were identified
+                expected_indices_to_delete = [f'{index_name}_tmp_1', f'{index_name}_tmp_2']
+
+                log_message = [msg for msg in log_context.output if 'Index names to delete' in msg][0]
+                self.assertIn(str(expected_indices_to_delete), log_message)
+
+                # Verify SearchClient was created with correct credentials
+                mock_search_client.create.assert_called_once()
+
+                # Test that mock_search_client.init_index was called with the index names to be deleted and none other
+
+                mock_client.init_index.assert_has_calls(
+                    [mock.call(index_name) for index_name in expected_indices_to_delete],
+                    any_order=True
+                )
+
+                assert mock_client.init_index.called
+
+                assert mock_client.init_index.return_value.delete.call_count == len(expected_indices_to_delete)
+
+    # Test remove_old_temporary_catalog_indices_task
+    @mock.patch('enterprise_catalog.apps.catalog.algolia_utils.SearchClient')
+    def test_remove_old_temporary_catalog_indices_should_not_delete_on_dry_run(self, mock_search_client):
+        """
+        Test that temporary indices between 10 and 60 days old get deleted.
+        """
+        # Setup mock data
+        now = datetime.now()
+        index_name = 'enterprise_catalog_new'
+        # Mock django conf settings.ALGOLIA['INDEX_NAME'] to be 'enterprise_catalog_new'
+        with self.settings(ALGOLIA={'INDEX_NAME': index_name}):
+            mock_indices = {
+                'items': [
+                    {
+                        'name': f'{index_name}_tmp_1',
+                        'createdAt': (now - timedelta(days=30)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+                    }
+                ]
+            }
+
+            # Configure mock
+            mock_client = mock.MagicMock()
+            mock_client.list_indices.return_value = mock_indices
+            mock_search_client.create.return_value = mock_client
+
+            # Create a mock task instance (similar to other tests in the file)
+            mock_task_id = uuid.uuid4()
+            bound_task_object = mock.MagicMock()
+            bound_task_object.request.id = mock_task_id
+            bound_task_object.request.args = ()
+            bound_task_object.request.kwargs = {}
+
+            with self.assertLogs(level='INFO') as log_context:
+                # Call the task with the bound task object
+                tasks.remove_old_temporary_catalog_indices_task(
+                    bound_task_object, min_days_ago=10, max_days_ago=60
+                )
+
+                log_message = [msg for msg in log_context.output if 'Index names to delete' in msg][0]
+                self.assertIn(f'{index_name}_tmp_1', log_message)
+
+                # Verify SearchClient was created with correct credentials
+                mock_search_client.create.assert_called_once()
+
+                assert not mock_client.init_index.called
+                assert not mock_client.init_index.return_value.delete.called
+
+    @mock.patch('enterprise_catalog.apps.api.tasks.new_search_client_or_error')
+    def test_remove_old_temporary_catalog_indices_task_client_exception(self, mock_client_or_error):
+        """
+        Test that client creation exceptions in remove_old_temporary_catalog_indices_task
+        are properly caught and re-raised.
+        """
+        # Test client creation exception
+        algolia_exception = AlgoliaException("Test Algolia exception")
+        mock_client_or_error.side_effect = algolia_exception
+
+        # Create a mock task instance
+        mock_task_id = uuid.uuid4()
+        bound_task_object = mock.MagicMock()
+        bound_task_object.request.id = mock_task_id
+        bound_task_object.request.args = ()
+        bound_task_object.request.kwargs = {}
+
+        with self.assertRaises(AlgoliaException) as context:
+            with self.assertLogs(level='ERROR') as log_context:
+                tasks.remove_old_temporary_catalog_indices_task(bound_task_object, dry_run=True)
+
+        # Verify the exception was logged and re-raised
+        self.assertEqual(context.exception, algolia_exception)
+        self.assertTrue(any('Creating Algolia client failed' in msg for msg in log_context.output))
+        self.assertTrue(any('Test Algolia exception' in msg for msg in log_context.output))
+
+    @mock.patch('enterprise_catalog.apps.api.tasks.new_search_client_or_error')
+    @mock.patch('enterprise_catalog.apps.api.tasks._retrieve_inactive_tmp_indices')
+    def test_remove_old_temporary_catalog_indices_task_retrieve_exception(
+        self, mock_retrieve_indices, mock_client_or_error
+    ):
+        """
+        Test that retrieve indices exceptions in remove_old_temporary_catalog_indices_task
+        are properly caught and re-raised.
+        """
+        # Configure mock for successful client creation
+        mock_client = mock.MagicMock()
+        mock_client_or_error.return_value = mock_client
+
+        # Test retrieve indices exception
+        retrieve_exception = Exception("Test retrieve exception")
+        mock_retrieve_indices.side_effect = retrieve_exception
+
+        # Create a mock task instance
+        mock_task_id = uuid.uuid4()
+        bound_task_object = mock.MagicMock()
+        bound_task_object.request.id = mock_task_id
+        bound_task_object.request.args = ()
+        bound_task_object.request.kwargs = {}
+
+        # This flag will help us detect if the exception was properly re-raised
+        exception_was_raised = False
+
+        try:
+            with self.assertLogs(level='ERROR') as log_context:
+                tasks.remove_old_temporary_catalog_indices_task(bound_task_object, dry_run=True)
+        except Exception as e:  # pylint: disable=broad-except
+            exception_was_raised = True
+            # Verify it's the same exception that was raised
+            self.assertEqual(str(e), "Test retrieve exception")
+
+        # Explicitly verify that the exception was re-raised
+        self.assertTrue(
+            exception_was_raised,
+            "The exception was not re-raised. If you removed the 're-raise' line, this test should fail."
+        )
+
+        # Verify the exception was logged
+        self.assertTrue(any('Retrieving old tmp indices from Algolia failed' in msg for msg in log_context.output))
+        self.assertTrue(any('Test retrieve exception' in msg for msg in log_context.output))
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
     @override_settings(SHOULD_INDEX_COURSES_WITH_RESTRICTED_RUNS=True)

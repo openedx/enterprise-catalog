@@ -5,9 +5,10 @@ import logging
 import sys
 import time
 from collections import defaultdict
-from datetime import timedelta
+from datetime import datetime, timedelta
 from operator import itemgetter
 
+from algoliasearch.exceptions import AlgoliaException
 from celery import shared_task, states
 from celery.exceptions import Ignore
 from celery_utils.logged_task import LoggedTask
@@ -30,6 +31,7 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     get_initialized_algolia_client,
     get_pathway_course_keys,
     get_pathway_program_uuids,
+    new_search_client_or_error,
     partition_course_keys_for_indexing,
     partition_program_keys_for_indexing,
 )
@@ -611,6 +613,102 @@ def index_enterprise_catalog_in_algolia_task(self, force=False, dry_run=False): 
             f'{_reindex_algolia_prefix(dry_run)} reindex_algolia failed. Error: {exep}'
         )
         raise exep
+
+
+def _created_between(index, min_days_ago, max_days_ago):
+    """
+    Returns whether the index was created between min_days_ago and max_days_ago.
+    """
+    datestring = index.get('createdAt', None)
+    if not datestring:
+        return False
+
+    created_timestamp = datetime.strptime(datestring, '%Y-%m-%dT%H:%M:%S.%fZ').timestamp()
+    difference_in_days = (time.time() - created_timestamp) / (60 * 60 * 24)
+    if min_days_ago < difference_in_days < max_days_ago:
+        return True
+    return False
+
+
+def _is_tmp_index(index):
+    """
+    Returns whether the index is a temporary index.
+    """
+    index_name = index.get('name', '')
+    return index_name.startswith(f'{settings.ALGOLIA["INDEX_NAME"]}_tmp_')
+
+
+def _retrieve_inactive_tmp_indices(client, min_days_ago, max_days_ago):
+    indices = client.list_indices().get('items', [])
+    tmp_indices = filter(_is_tmp_index, indices)
+    inactive_tmp_indices = filter(lambda index: _created_between(index, min_days_ago, max_days_ago), tmp_indices)
+    return list(map(lambda index: index.get('name', ''), inactive_tmp_indices))
+
+
+def _delete_indices(client, indices, dry_run=True):
+    logger.info('Index names to delete: %s', indices)
+
+    if dry_run:
+        logger.info('dry_run=true, not deleting old tmp indices from Algolia')
+        return
+
+    for index_name in indices:
+        try:
+            logger.info('Deleting index: %s', index_name)
+            client.init_index(index_name).delete()
+            logger.info('Deleted index: %s', index_name)
+        except Exception as exep:
+            logger.exception(
+                f'Deleting index: {index_name} failed. Error: {exep}'
+            )
+            raise exep
+
+        logger.info('Finished deleting indices from Algolia')
+
+
+@shared_task(base=LoggedTaskWithRetry, bind=True, default_retry_delay=UNREADY_TASK_RETRY_COUNTDOWN_SECONDS)
+@expiring_task_semaphore()
+def remove_old_temporary_catalog_indices_task(
+    self, force=False, dry_run=True, min_days_ago=10, max_days_ago=60   # pylint: disable=unused-argument
+):
+    """
+    Remove old temporary catalog indices from Algolia.
+
+    Because Algolia's `replace_all_objects` method generates but does not delete temporary indices
+    named as `<index_name>_tmp_<timestamp>`, we need to remove them periodically.
+    This task removes all indices that are older than 10 days and newer than 60 days.
+
+    Args:
+        force (bool): Related to task decorator. If True,
+            intended to force execution of task and ignore time since last run.
+        dry_run (bool): If true, does everything except call Algolia APIs.
+    """
+    client = None
+    logger.info(
+        f'Invoking `remove_old_temporary_catalog_indices` task with arguments force={force}, dry_run={dry_run}.'
+    )
+
+    try:
+        # `get_initialized_algolia_client` is not what we need here
+        # because that is initialized to the wrong index.
+        client = new_search_client_or_error()
+    except (AlgoliaException, TypeError) as exep:
+        logger.exception(
+            f'Creating Algolia client failed. Error: {exep}'
+        )
+        raise exep
+
+    try:
+        inactive_tmp_indices = _retrieve_inactive_tmp_indices(client, min_days_ago, max_days_ago)
+    except Exception as exep:
+        logger.exception(
+            f'Retrieving old tmp indices from Algolia failed. Error: {exep}'
+        )
+        raise exep
+
+    _delete_indices(client, inactive_tmp_indices, dry_run)
+
+    return inactive_tmp_indices
 
 
 def _precalculate_content_mappings():

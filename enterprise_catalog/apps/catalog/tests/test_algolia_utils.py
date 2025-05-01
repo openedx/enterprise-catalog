@@ -1819,3 +1819,25 @@ class AlgoliaUtilsTests(TestCase):
         advertised_course_run = get_advertised_course_run(searchable_course)
         transformed_advertised_course_run = _get_course_run(searchable_course, advertised_course_run)
         assert transformed_advertised_course_run == expected_course_run
+
+    @mock.patch('enterprise_catalog.apps.catalog.algolia_utils.SearchClient')
+    def test_new_search_client_or_error(self, mock_search_client):
+        """
+        Test that new_search_client_or_error returns a valid search client or raises an error.
+        """
+        mock_client = mock.MagicMock()
+        # Test successful client creation
+        mock_search_client.create.return_value = mock_client
+        client = utils.new_search_client_or_error()
+
+        assert client is mock_client
+        assert mock_search_client.create.call_count == 1
+
+        # Test error case when client creation fails
+        mock_search_client.create.return_value = None
+        with self.assertRaises(TypeError) as context:
+            utils.new_search_client_or_error()
+
+        # Verify the error message
+        self.assertIn('Failed to create Algolia search client', str(context.exception))
+        self.assertIn('should be an Algolia search client', str(context.exception))

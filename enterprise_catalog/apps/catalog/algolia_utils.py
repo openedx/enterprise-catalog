@@ -3,6 +3,7 @@ import datetime
 import logging
 import time
 
+from algoliasearch.search_client import SearchClient
 from dateutil import parser
 from django.conf import settings
 from django.core.cache import cache
@@ -374,6 +375,22 @@ def get_initialized_algolia_client():
     algolia_client = AlgoliaSearchClient()
     algolia_client.init_index()
     return algolia_client
+
+
+def new_search_client_or_error():
+    """
+    Returns a new Algolia search client that is not initialized to any specific index.
+    """
+    client = SearchClient.create(
+        settings.ALGOLIA.get('APPLICATION_ID', None),
+        settings.ALGOLIA.get('API_KEY', None)
+    )
+    if not client:
+        raise TypeError(
+            'Failed to create Algolia search client.'
+            f'The client should be an Algolia search client, but was {client}.'
+        )
+    return client
 
 
 def configure_algolia_index(algolia_client):
