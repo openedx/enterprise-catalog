@@ -1375,9 +1375,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
                 assert mock_client.init_index.called
 
-                # Test that each index `.delete` was called for those
-                for index_name in expected_indices_to_delete:
-                    mock_client.init_index.return_value.delete.assert_any_call()
+                assert mock_client.init_index.return_value.delete.call_count == len(expected_indices_to_delete)
 
     # Test remove_old_temporary_catalog_indices_task
     @mock.patch('enterprise_catalog.apps.catalog.algolia_utils.SearchClient')
