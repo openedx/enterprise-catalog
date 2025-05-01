@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     help = (
-        'Reindex course data in Algolia, adding on enterprise-specific metadata'
+        'Remove old temporary catalog indices from Algolia'
     )
 
     def add_arguments(self, parser):
