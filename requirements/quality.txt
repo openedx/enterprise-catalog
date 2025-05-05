@@ -62,7 +62,7 @@ cffi==1.17.1
     #   -r requirements/base.txt
     #   cryptography
     #   pynacl
-charset-normalizer==3.4.1
+charset-normalizer==3.4.2
     # via
     #   -r requirements/base.txt
     #   requests
@@ -96,7 +96,7 @@ code-annotations==2.3.0
     #   -r requirements/base.txt
     #   edx-lint
     #   edx-toggles
-cryptography==44.0.2
+cryptography==44.0.3
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -261,7 +261,7 @@ jinja2==3.1.6
     # via
     #   -r requirements/base.txt
     #   code-annotations
-joblib==1.4.2
+joblib==1.5.0
     # via
     #   -r requirements/base.txt
     #   scikit-learn
@@ -295,7 +295,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.7
     # via -r requirements/base.txt
-newrelic==10.10.0
+newrelic==10.11.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -337,11 +337,11 @@ pycparser==2.22
     # via
     #   -r requirements/base.txt
     #   cffi
-pydantic==2.11.3
+pydantic==2.11.4
     # via
     #   -r requirements/base.txt
     #   openai
-pydantic-core==2.33.1
+pydantic-core==2.33.2
     # via
     #   -r requirements/base.txt
     #   pydantic
@@ -355,7 +355,7 @@ pyjwt[crypto]==2.10.1
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
-pylint==3.3.6
+pylint==3.3.7
     # via
     #   edx-lint
     #   pylint-celery
@@ -371,7 +371,7 @@ pylint-plugin-utils==0.8.2
     #   pylint-django
 pymemcache==4.0.0
     # via -r requirements/base.txt
-pymongo==4.12.0
+pymongo==4.12.1
     # via
     #   -r requirements/base.txt
     #   edx-opaque-keys
@@ -461,7 +461,7 @@ social-auth-app-django==5.4.3
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends
-social-auth-core==4.6.0
+social-auth-core==4.6.1
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends
