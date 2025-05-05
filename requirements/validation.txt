@@ -85,7 +85,7 @@ chardet==5.2.0
     # via
     #   -r requirements/test.txt
     #   tox
-charset-normalizer==3.4.1
+charset-normalizer==3.4.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -136,7 +136,7 @@ coverage[toml]==7.8.0
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==44.0.2
+cryptography==44.0.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -383,7 +383,7 @@ jinja2==3.1.6
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   code-annotations
-joblib==1.4.2
+joblib==1.5.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -431,7 +431,7 @@ mysqlclient==2.2.7
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-newrelic==10.10.0
+newrelic==10.11.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -498,12 +498,12 @@ pycparser==2.22
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   cffi
-pydantic==2.11.3
+pydantic==2.11.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   openai
-pydantic-core==2.33.1
+pydantic-core==2.33.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -519,7 +519,7 @@ pyjwt[crypto]==2.10.1
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
-pylint==3.3.6
+pylint==3.3.7
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -547,7 +547,7 @@ pymemcache==4.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-pymongo==4.12.0
+pymongo==4.12.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -680,7 +680,7 @@ social-auth-app-django==5.4.3
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-auth-backends
-social-auth-core==4.6.0
+social-auth-core==4.6.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
