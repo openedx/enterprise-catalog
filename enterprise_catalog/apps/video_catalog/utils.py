@@ -12,8 +12,12 @@ from rest_framework.exceptions import ValidationError
 from enterprise_catalog.apps.ai_curation.openai_client import chat_completions
 from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 from enterprise_catalog.apps.api_client.studio import StudioApiClient
+from enterprise_catalog.apps.api_client.xpert_ai import chat_completion
 from enterprise_catalog.apps.catalog.constants import COURSE_RUN
 from enterprise_catalog.apps.catalog.models import ContentMetadata
+from enterprise_catalog.apps.video_catalog.errors import (
+    TranscriptSummaryMissingError,
+)
 from enterprise_catalog.apps.video_catalog.models import Video, VideoSkill
 
 
@@ -45,13 +49,13 @@ def fetch_course_video_metadata(course_run_key, video_usage_key, video_title):
                             'client_video_id': video_data['client_video_id'],
                             'json_metadata': video_data,
                             'video_usage_key': video_usage_key,
-                            'title': video_title,
+                            'title': video_title or generate_video_title(video_data['transcript_urls']),
                             'parent_content_metadata': ContentMetadata.objects.get(
                                 content_key=course_run_key, content_type=COURSE_RUN
                             )
                         }
                     )
-                except (ContentMetadata.DoesNotExist, IntegrityError) as ex:
+                except (ContentMetadata.DoesNotExist, IntegrityError, TranscriptSummaryMissingError) as ex:
                     logger.error(
                         '[FETCH_VIDEO_METADATA] Could not save video: Course: [%s], Video: [%s], Ex: [%s]',
                         course_run_key, video_usage_key, str(ex)
@@ -131,14 +135,47 @@ def fetch_transcript(transcript_url: str, include_time_markings: bool = True) ->
         return ' '.join(response.json().get('text', []))
 
 
-def generate_transcript_summary(video, language='en'):
+def generate_transcript_summary(transcript_urls, language='en'):
     """
     Generate a summary of the video transcript.
 
     Arguments:
-        video (Video): Video instance whose transcript to create.
+        transcript_urls (dict): Transcript URLs. Keys are language codes, values are URLs.
         language (str): Transcript language to use for creating summary.
     """
-    transcript_url = video.json_metadata['transcript_urls'].get(language)
+    # If no transcript URL is available for the given language, return None
+    if (transcript_url := transcript_urls.get(language)) is None:
+        return None
+
     transcript = fetch_transcript(transcript_url, include_time_markings=False)
     return get_transcript_summary(transcript[:settings.MAX_TRANSCRIPT_LENGTH])
+
+
+def generate_video_title(transcript_urls, language='en', max_length: int = 60) -> str:
+    """
+    Generate a title for the video from its transcript.
+
+    Arguments:
+        transcript_urls (dict): Transcript URLs. Keys are language codes, values are URLs.
+        language (str): Title language.
+
+    Returns:
+        (str): The title of the video.
+    """
+    # If transcript summary is not available for the given language, return an empty string
+    if (transcript_summary := generate_transcript_summary(transcript_urls, language)) is None:
+        raise TranscriptSummaryMissingError
+
+    messages = [
+        {
+            'role': 'user',
+            'content': settings.GENERATE_VIDEO_TITLE_USER_ROLE_MESSAGE.format(
+                max_length=max_length,
+                transcript_summary=transcript_summary
+            )
+        }
+    ]
+    return chat_completion(
+        system_message=settings.GENERATE_VIDEO_TITLE_SYSTEM_ROLE_MESSAGE,
+        user_messages=messages
+    )
