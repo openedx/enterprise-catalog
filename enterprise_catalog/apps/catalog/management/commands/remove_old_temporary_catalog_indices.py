@@ -54,14 +54,24 @@ class Command(BaseCommand):
             dry_run = options.get('dry_run', False)
             min_days = options.get('min_days', 10)
             max_days = options.get('max_days', 60)
-            remove_old_temporary_catalog_indices_task.apply_async(
-                kwargs={
-                    'force': force_task_execution,
-                    'dry_run': dry_run,
-                    'min_days_ago': min_days,
-                    'max_days_ago': max_days
-                }
-            )
+            if not dry_run:
+                remove_old_temporary_catalog_indices_task.apply_async(
+                    kwargs={
+                        'force': force_task_execution,
+                        'dry_run': dry_run,
+                        'min_days_ago': min_days,
+                        'max_days_ago': max_days
+                    }
+                )
+            else:
+                remove_old_temporary_catalog_indices_task.apply(
+                    kwargs={
+                        'force': force_task_execution,
+                        'dry_run': dry_run,
+                        'min_days_ago': min_days,
+                        'max_days_ago': max_days
+                    }
+                )
             logger.info(
                 'index_enterprise_catalog_in_algolia_task from command index_enterprise_catalog_in_algolia'
                 'finished successfully.'
