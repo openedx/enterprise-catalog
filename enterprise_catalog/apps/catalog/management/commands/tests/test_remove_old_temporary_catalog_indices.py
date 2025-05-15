@@ -30,6 +30,6 @@ class RemoveOldTemporaryCatalogIndicesCommandTests(TestCase):
         Verify that the job spins off the correct number of remove_old_temporary_catalog_indices_task
         """
         call_command(self.command_name, dry_run=True)
-        mock_task.apply_async.assert_called_once_with(
+        mock_task.apply.assert_called_once_with(
             kwargs={'force': False, 'dry_run': True, 'min_days_ago': 10, 'max_days_ago': 60}
         )
