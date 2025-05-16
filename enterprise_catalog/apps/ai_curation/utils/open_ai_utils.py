@@ -25,7 +25,6 @@ def get_filtered_subjects(query, subjects):
     content = settings.AI_CURATION_FILTER_SUBJECTS_PROMPT.format(query=query, subjects=subjects)
     messages = [
         {
-            'role': 'system',
             'content': content
         }
     ]
@@ -48,7 +47,6 @@ def get_query_keywords(query):
     content = settings.AI_CURATION_QUERY_TO_KEYWORDS_PROMPT.format(query=query)
     messages = [
         {
-            'role': 'system',
             'content': content
         }
     ]
@@ -72,7 +70,6 @@ def get_keywords_to_prose(query):
     content = settings.AI_CURATION_KEYWORDS_TO_PROSE_PROMPT.format(query=query, keywords=keywords)
     messages = [
         {
-            'role': 'system',
             'content': content
         }
     ]

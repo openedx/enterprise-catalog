@@ -9,7 +9,6 @@ from django.db import IntegrityError
 from opaque_keys.edx.keys import UsageKey
 from rest_framework.exceptions import ValidationError
 
-from enterprise_catalog.apps.ai_curation.openai_client import chat_completions
 from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 from enterprise_catalog.apps.api_client.studio import StudioApiClient
 from enterprise_catalog.apps.api_client.xpert_ai import chat_completion
@@ -110,11 +109,14 @@ def get_transcript_summary(transcript: str, max_length: int = 260) -> str:
     """
     messages = [
         {
-            'role': 'system',
+            'role': 'user',
             'content': settings.SUMMARIZE_VIDEO_TRANSCRIPT_PROMPT.format(count=max_length, transcript=transcript)
         }
     ]
-    return chat_completions(messages=messages, response_format='text')
+    return chat_completion(
+        system_message=settings.GENERATE_TRANSCRIPT_SUMMARY_SYSTEM_ROLE_MESSAGE,
+        user_messages=messages
+    )
 
 
 def fetch_transcript(transcript_url: str, include_time_markings: bool = True) -> str:

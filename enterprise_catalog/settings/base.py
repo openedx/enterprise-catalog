@@ -480,6 +480,12 @@ AI_CURATION_QUERY_TO_KEYWORDS_PROMPT = 'I am a query to keywords prompt. query: 
 AI_CURATION_KEYWORDS_TO_PROSE_PROMPT = 'I am a keywords to prose prompt. query: {query} keywords: {keywords}'
 
 OPENAI_API_KEY = 'I am key'
+XPERT_AICURATION_SYSTEM_MESSAGE = 'test system prompt'
+CHAT_COMPLETION_API_CONNECT_TIMEOUT = 1
+CHAT_COMPLETION_API_READ_TIMEOUT = 15
+
+XPERT_AICURATION_SYSTEM_MESSAGE = 'test system prompt'
+
 
 ############################################## AI CURATION ##############################################
 
@@ -495,6 +501,9 @@ CATALOG_CONTENT_INCLUSION_GUARDRAIL_CONSIDERATION_FLOOR = 50
 ############################################## VIDEO CATALOG #############################################
 SUMMARIZE_VIDEO_TRANSCRIPT_PROMPT = 'Summarize in {count} words: {transcript}'
 GENERATE_VIDEO_TITLE_SYSTEM_ROLE_MESSAGE = 'You are a video title generator.'
+GENERATE_TRANSCRIPT_SUMMARY_SYSTEM_ROLE_MESSAGE = '''
+    You are a video transcript summarizer. Given a video transcript, you will be asked to summarize it in a human friendly way.
+    '''
 GENERATE_VIDEO_TITLE_USER_ROLE_MESSAGE = 'Max length: {max_length} characters. Summary: {transcript_summary}'
 XPERT_AI_API_V2 = 'https://xpertai.example.com/api/v2'
 XPERT_AI_CLIENT_ID = 'xpert-ai-client-id'
