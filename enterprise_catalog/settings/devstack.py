@@ -87,8 +87,3 @@ CACHES = {
         'LOCATION': 'enterprise.catalog.memcached:11211',
     }
 }
-
-CHAT_COMPLETION_API = 'http://test.chat.ai'
-CHAT_COMPLETION_API_KEY = 'test chat completion api key'
-CHAT_COMPLETION_API_CONNECT_TIMEOUT = 1
-CHAT_COMPLETION_API_READ_TIMEOUT = 15
