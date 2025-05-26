@@ -99,6 +99,8 @@ html_coverage: ## generate and view HTML coverage report
 upgrade: export CUSTOM_COMPILE_COMMAND=make upgrade
 upgrade: $(COMMON_CONSTRAINTS_TXT) piptools ## update the requirements/*.txt files with the latest packages satisfying requirements/*.in
 	# Make sure to compile files after any other files they include!
+	sed 's/Django<5.0//g' requirements/common_constraints.txt > requirements/common_constraints.tmp
+	mv requirements/common_constraints.tmp requirements/common_constraints.txt
 	sed 's/django-simple-history==3.0.0//g' requirements/common_constraints.txt > requirements/common_constraints.tmp
 	mv requirements/common_constraints.tmp requirements/common_constraints.txt
 	pip-compile --allow-unsafe --rebuild --upgrade -o requirements/pip.txt requirements/pip.in
