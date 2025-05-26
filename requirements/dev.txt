@@ -61,7 +61,7 @@ build==1.2.2.post1
     # via
     #   -r requirements/pip-tools.txt
     #   pip-tools
-cachetools==5.5.2
+cachetools==6.0.0
     # via
     #   -r requirements/test.txt
     #   tox
@@ -94,7 +94,7 @@ charset-normalizer==3.4.2
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   requests
-click==8.2.0
+click==8.2.1
     # via
     #   -r requirements/pip-tools.txt
     #   -r requirements/quality.txt
@@ -138,11 +138,11 @@ colorama==0.4.6
     # via
     #   -r requirements/test.txt
     #   tox
-coverage[toml]==7.8.0
+coverage[toml]==7.8.2
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==45.0.2
+cryptography==45.0.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -313,7 +313,7 @@ edx-django-release-util==1.5.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-edx-django-utils==7.4.0
+edx-django-utils==8.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -414,7 +414,7 @@ jinja2==3.1.6
     #   jinja2-pluralize
 jinja2-pluralize==0.3.0
     # via diff-cover
-joblib==1.5.0
+joblib==1.5.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -468,11 +468,6 @@ mysqlclient==2.2.7
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-newrelic==10.12.0
-    # via
-    #   -r requirements/quality.txt
-    #   -r requirements/test.txt
-    #   edx-django-utils
 numpy==2.2.6
     # via
     #   -r requirements/quality.txt
@@ -545,7 +540,7 @@ pycparser==2.22
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   cffi
-pydantic==2.11.4
+pydantic==2.11.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -686,7 +681,7 @@ responses==0.25.7
     # via
     #   -r requirements/dev.in
     #   -r requirements/test.txt
-rpds-py==0.25.0
+rpds-py==0.25.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -796,7 +791,7 @@ typing-extensions==4.13.2
     #   pydantic-core
     #   referencing
     #   typing-inspection
-typing-inspection==0.4.0
+typing-inspection==0.4.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
