@@ -12,7 +12,7 @@
 -c common_constraints.txt
 
 # using LTS django version
-Django>=4.2,<4.3
+Django>=5.2,<5.3
 
 # At least version 3.4.0 of django simple history
 django-simple-history>=3.4.0
@@ -20,9 +20,6 @@ django-simple-history>=3.4.0
 # As it is not clarified what exact breaking changes will be introduced as per
 # the next major release, ensure the installed version is within boundaries.
 celery>=5.2.2,<6.0.0
-
-# Inflect 4.0.0 requires python>=3.6
-inflect<4.0.0
 
 # diff-cover latest requires (pluggy>=0.13.1,<0.14.0)
 # which conflicts with pytest(pluggy>=0.12,<2.0.0) and tox(pluggy>0.12) both of these fetch pluggy==1.0.0
@@ -35,9 +32,6 @@ redis<4
 
 # To avoid any breaking changes
 openai<=1.13.3
-
-# For python greater than or equal to 3.9 backports.zoneinfo causing failures
-backports.zoneinfo; python_version<'3.9'
 
 # algoliasearch 4.0 is not backwards compatible with 3.0
 algoliasearch<4
