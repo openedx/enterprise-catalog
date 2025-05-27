@@ -666,12 +666,25 @@ def _get_all_indices(client):
     return indices
 
 
+def _is_empty_index(index):
+    """
+    Returns whether the index has any entries.
+    """
+    res = index.get('entries', None)
+    if res == 0:
+        logger.info('Index %s meets condition: has 0 entries, because entries: %s', index.get('name', ''), res)
+        return True
+
+    logger.info('Index %s does not meet condition: has 0 entries, because entries: %s', index.get('name', ''), res)
+    return False
+
+
 def _is_inactive_tmp_index(index, min_days_ago, max_days_ago):
     """
     Returns whether the index is a temporary index that was last updated between min_days_ago and max_days_ago.
     """
     logger.info(index)
-    return _is_tmp_index(index) and _last_updated_between(index, min_days_ago, max_days_ago)
+    return _is_tmp_index(index) and _last_updated_between(index, min_days_ago, max_days_ago) and _is_empty_index(index)
 
 
 def _retrieve_inactive_tmp_indices(client, min_days_ago, max_days_ago):
