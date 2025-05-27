@@ -1310,27 +1310,27 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                     # Should be included (30 days old)
                     {
                         'name': f'{index_name}_tmp_1',
-                        'createdAt': (now - timedelta(days=30)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+                        'updatedAt': (now - timedelta(days=30)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
                     },
                     # Should be included (15 days old)
                     {
                         'name': f'{index_name}_tmp_2',
-                        'createdAt': (now - timedelta(days=15)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+                        'updatedAt': (now - timedelta(days=15)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
                     },
                     # Should not be included (5 days old)
                     {
                         'name': f'{index_name}_tmp_3',
-                        'createdAt': (now - timedelta(days=5)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+                        'updatedAt': (now - timedelta(days=5)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
                     },
                     # Should not be included (65 days old)
                     {
                         'name': f'{index_name}_tmp_4',
-                        'createdAt': (now - timedelta(days=65)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+                        'updatedAt': (now - timedelta(days=65)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
                     },
                     # Should not be included (not a tmp index)
                     {
                         'name': index_name,
-                        'createdAt': (now - timedelta(days=30)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+                        'updatedAt': (now - timedelta(days=30)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
                     },
                     # Should not be included (no creation date)
                     {
@@ -1392,7 +1392,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 'items': [
                     {
                         'name': f'{index_name}_tmp_1',
-                        'createdAt': (now - timedelta(days=30)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+                        'updatedAt': (now - timedelta(days=30)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
                     }
                 ]
             }
