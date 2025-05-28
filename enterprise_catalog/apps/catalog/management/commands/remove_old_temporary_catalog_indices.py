@@ -73,7 +73,7 @@ class Command(BaseCommand):
                     }
                 )
             logger.info(
-                'index_enterprise_catalog_in_algolia_task from command index_enterprise_catalog_in_algolia'
+                'remove_old_temporary_catalog_indices_task from command remove_old_temporary_catalog_indices'
                 'finished successfully.'
             )
         except Exception as exc:  # pylint: disable=broad-except
