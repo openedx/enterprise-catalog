@@ -639,7 +639,8 @@ def _last_updated_between(index, min_days_ago, max_days_ago):
         'Index %s does not meet condition: min_days %s and max_days %s, because updatedAt: %s',
         index.get('name', ''),
         min_days_ago,
-        max_days_ago, datestring
+        max_days_ago, 
+        datestring
     )
     return False
 
