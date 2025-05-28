@@ -619,9 +619,10 @@ def _last_updated_between(index, min_days_ago, max_days_ago):
     """
     Returns whether the index was created between min_days_ago and max_days_ago.
     """
+    index_name = index.get('name', '')
     datestring = index.get('updatedAt', None)
     if not datestring:
-        logger.error('Index %s does not have an updatedAt field.', index.get('name', ''))
+        logger.error('Index %s does not have an updatedAt field.', index_name)
         return False
 
     min_days_ago_date = (datetime.today() - timedelta(days=min_days_ago)).date()
