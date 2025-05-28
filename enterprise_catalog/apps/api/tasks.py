@@ -672,7 +672,7 @@ def _is_empty_index(index):
     """
     res = index.get('entries', None)
     if res == 0:
-        logger.info('Index %s meets condition: has 0 entries, because entries: %s', index.get('name', ''), res)
+        logger.info('Index %s meets condition: has 0 entries', index.get('name', ''))
         return True
 
     logger.info('Index %s does not meet condition: has 0 entries, because entries: %s', index.get('name', ''), res)
