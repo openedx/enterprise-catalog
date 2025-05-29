@@ -689,9 +689,9 @@ def _retrieve_inactive_tmp_indices(client, min_days_ago, max_days_ago):
         """
         logger.info(index)
         return (
-            _is_tmp_index(index) and
-            _last_updated_between(index, min_days_ago, max_days_ago) and 
-            _is_empty_index(index)
+            _is_tmp_index(index) and (
+                _last_updated_between(index, min_days_ago, max_days_ago) and _is_empty_index(index)
+            )
         )
 
     indices = _get_all_indices(client)
