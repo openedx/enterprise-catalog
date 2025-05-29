@@ -1310,31 +1310,43 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                     # Should be included (30 days old)
                     {
                         'name': f'{index_name}_tmp_1',
-                        'createdAt': (now - timedelta(days=30)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+                        'updatedAt': (now - timedelta(days=30)).strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+                        'entries': 0
                     },
                     # Should be included (15 days old)
                     {
                         'name': f'{index_name}_tmp_2',
-                        'createdAt': (now - timedelta(days=15)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+                        'updatedAt': (now - timedelta(days=15)).strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+                        'entries': 0
+                    },
+                    # # Should not be included (has entries)
+                    {
+                        'name': f'{index_name}_tmp_6',
+                        'updatedAt': (now - timedelta(days=15)).strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+                        'entries': 1
                     },
                     # Should not be included (5 days old)
                     {
                         'name': f'{index_name}_tmp_3',
-                        'createdAt': (now - timedelta(days=5)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+                        'updatedAt': (now - timedelta(days=5)).strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+                        'entries': 0
                     },
                     # Should not be included (65 days old)
                     {
                         'name': f'{index_name}_tmp_4',
-                        'createdAt': (now - timedelta(days=65)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+                        'updatedAt': (now - timedelta(days=65)).strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+                        'entries': 0
                     },
                     # Should not be included (not a tmp index)
                     {
                         'name': index_name,
-                        'createdAt': (now - timedelta(days=30)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+                        'updatedAt': (now - timedelta(days=30)).strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+                        'entries': 0
                     },
                     # Should not be included (no creation date)
                     {
                         'name': f'{index_name}_tmp_5',
+                        'entries': 0
                     },
                 ]
             }
@@ -1351,7 +1363,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             bound_task_object.request.args = ()
             bound_task_object.request.kwargs = {}
 
-            with self.assertLogs(level='INFO') as log_context:
+            with self.assertLogs(level='INFO'):
                 # Call the task with the bound task object
                 tasks.remove_old_temporary_catalog_indices_task(
                     bound_task_object, min_days_ago=10, max_days_ago=60, dry_run=False
@@ -1360,18 +1372,24 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 # Verify the correct indices were identified
                 expected_indices_to_delete = [f'{index_name}_tmp_1', f'{index_name}_tmp_2']
 
-                log_message = [msg for msg in log_context.output if 'Index names to delete' in msg][0]
-                self.assertIn(str(expected_indices_to_delete), log_message)
-
                 # Verify SearchClient was created with correct credentials
                 mock_search_client.create.assert_called_once()
 
                 # Test that mock_search_client.init_index was called with the index names to be deleted and none other
-
                 mock_client.init_index.assert_has_calls(
                     [mock.call(index_name) for index_name in expected_indices_to_delete],
                     any_order=True
                 )
+
+                indexes_not_to_delete = [
+                    index['name'] for index in mock_indices['items']
+                    if index['name'] not in expected_indices_to_delete
+                ]
+
+                # Test that mock_search_client.init_index has no calls for indices that should not be deleted
+                for call in mock_client.init_index.call_args_list:
+                    index_name = call[0][0]
+                    assert index_name not in indexes_not_to_delete, f"Unexpected call to delete index: {index_name}"
 
                 assert mock_client.init_index.called
 
@@ -1392,7 +1410,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 'items': [
                     {
                         'name': f'{index_name}_tmp_1',
-                        'createdAt': (now - timedelta(days=30)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+                        'updatedAt': (now - timedelta(days=30)).strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+                        'entries': 0
                     }
                 ]
             }
