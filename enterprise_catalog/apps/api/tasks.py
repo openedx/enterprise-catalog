@@ -629,7 +629,7 @@ def _last_updated_between(index, min_days_ago, max_days_ago):
     max_days_ago_date = (datetime.today() - timedelta(days=max_days_ago)).date()
     if max_days_ago_date < datetime.fromisoformat(datestring).date() < min_days_ago_date:
         logger.info(
-            'Index %s meets condition: min_days %s and max_days %s, because updatedAt: %s', index.get('name', ''),
+            'Index %s meets condition: min_days %s and max_days %s, because updatedAt: %s', index_name,
             min_days_ago,
             max_days_ago,
             datestring
@@ -638,7 +638,7 @@ def _last_updated_between(index, min_days_ago, max_days_ago):
 
     logger.info(
         'Index %s does not meet condition: min_days %s and max_days %s, because updatedAt: %s',
-        index.get('name', ''),
+        index_name,
         min_days_ago,
         max_days_ago,
         datestring
@@ -673,23 +673,23 @@ def _is_empty_index(index):
     Returns whether the index has any entries.
     """
     res = index.get('entries', None)
+    index_name = index.get('name', '')
     if res == 0:
-        logger.info('Index %s meets condition: has 0 entries', index.get('name', ''))
+        logger.info('Index %s meets condition: has 0 entries', index_name)
         return True
 
-    logger.info('Index %s does not meet condition: has 0 entries, because entries: %s', index.get('name', ''), res)
+    logger.info('Index %s does not meet condition: has 0 entries, because entries: %s', index_name, res)
     return False
 
 
-def _is_inactive_tmp_index(index, min_days_ago, max_days_ago):
-    """
-    Returns whether the index is a temporary index that was last updated between min_days_ago and max_days_ago.
-    """
-    logger.info(index)
-    return _is_tmp_index(index) and _last_updated_between(index, min_days_ago, max_days_ago) and _is_empty_index(index)
-
-
 def _retrieve_inactive_tmp_indices(client, min_days_ago, max_days_ago):
+    def _is_inactive_tmp_index(index, min_days_ago, max_days_ago):
+        """
+        Returns whether the index is a temporary index that was last updated between min_days_ago and max_days_ago.
+        """
+        logger.info(index)
+        return _is_tmp_index(index) and _last_updated_between(index, min_days_ago, max_days_ago) and _is_empty_index(index)
+
     indices = _get_all_indices(client)
     logger.info('Retrieved %d indices from Algolia', len(indices))
     logger.info('Processing indices: \n')

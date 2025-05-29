@@ -1363,7 +1363,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             bound_task_object.request.args = ()
             bound_task_object.request.kwargs = {}
 
-            with self.assertLogs(level='INFO') as log_context:
+            with self.assertLogs(level='INFO'):
                 # Call the task with the bound task object
                 tasks.remove_old_temporary_catalog_indices_task(
                     bound_task_object, min_days_ago=10, max_days_ago=60, dry_run=False
