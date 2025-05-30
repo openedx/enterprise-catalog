@@ -389,13 +389,20 @@ CELERY_TASK_ROUTES = {
 
 """############################# END CELERY ##################################"""
 
-MEDIA_STORAGE_BACKEND = {
-    'DEFAULT_FILE_STORAGE': 'django.core.files.storage.FileSystemStorage',
-    'MEDIA_ROOT': MEDIA_ROOT,
-    'MEDIA_URL': MEDIA_URL
+# STORAGES dict is now a standard in Django>=5.2
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {
+            "location": MEDIA_ROOT,
+            "base_url": MEDIA_URL,
+        },
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    }
 }
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 # How long we keep API Client data in cache. (seconds)
 ONE_HOUR = 60 * 60
