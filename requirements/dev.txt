@@ -61,7 +61,7 @@ build==1.2.2.post1
     # via
     #   -r requirements/pip-tools.txt
     #   pip-tools
-cachetools==5.5.2
+cachetools==6.0.0
     # via
     #   -r requirements/test.txt
     #   tox
@@ -94,7 +94,7 @@ charset-normalizer==3.4.2
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   requests
-click==8.2.0
+click==8.2.1
     # via
     #   -r requirements/pip-tools.txt
     #   -r requirements/quality.txt
@@ -138,11 +138,11 @@ colorama==0.4.6
     # via
     #   -r requirements/test.txt
     #   tox
-coverage[toml]==7.8.0
+coverage[toml]==7.8.2
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==45.0.2
+cryptography==45.0.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -182,9 +182,8 @@ distro==1.9.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   openai
-django==4.2.21
+django==5.2.1
     # via
-    #   -c requirements/common_constraints.txt
     #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -313,7 +312,7 @@ edx-django-release-util==1.5.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-edx-django-utils==7.4.0
+edx-django-utils==8.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -384,11 +383,8 @@ idna==3.10
     #   anyio
     #   httpx
     #   requests
-importlib-metadata==8.7.0
-    # via inflect
-inflect==3.0.2
+inflect==7.5.0
     # via
-    #   -c requirements/constraints.txt
     #   -r requirements/dev.in
     #   jinja2-pluralize
 inflection==0.5.1
@@ -414,7 +410,7 @@ jinja2==3.1.6
     #   jinja2-pluralize
 jinja2-pluralize==0.3.0
     # via diff-cover
-joblib==1.5.0
+joblib==1.5.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -428,7 +424,7 @@ jsonfield2==4.0.0.post0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-jsonschema==4.23.0
+jsonschema==4.24.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -464,15 +460,12 @@ monotonic==1.6
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   analytics-python
+more-itertools==10.7.0
+    # via inflect
 mysqlclient==2.2.7
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-newrelic==10.12.0
-    # via
-    #   -r requirements/quality.txt
-    #   -r requirements/test.txt
-    #   edx-django-utils
 numpy==2.2.6
     # via
     #   -r requirements/quality.txt
@@ -545,7 +538,7 @@ pycparser==2.22
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   cffi
-pydantic==2.11.4
+pydantic==2.11.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -686,7 +679,7 @@ responses==0.25.7
     # via
     #   -r requirements/dev.in
     #   -r requirements/test.txt
-rpds-py==0.25.0
+rpds-py==0.25.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -785,6 +778,8 @@ tqdm==4.67.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   openai
+typeguard==4.4.2
+    # via inflect
 typing-extensions==4.13.2
     # via
     #   -r requirements/quality.txt
@@ -795,8 +790,9 @@ typing-extensions==4.13.2
     #   pydantic
     #   pydantic-core
     #   referencing
+    #   typeguard
     #   typing-inspection
-typing-inspection==0.4.0
+typing-inspection==0.4.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -843,11 +839,10 @@ xlsxwriter==3.2.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-zipp==3.21.0
+zipp==3.22.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-    #   importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip
