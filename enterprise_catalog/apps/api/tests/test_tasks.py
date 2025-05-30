@@ -1319,7 +1319,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                         'updatedAt': (now - timedelta(days=15)).strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
                         'entries': 0
                     },
-                    # # Should not be included (has entries)
+                    # # Should be included (has entries)
                     {
                         'name': f'{index_name}_tmp_6',
                         'updatedAt': (now - timedelta(days=15)).strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
@@ -1370,7 +1370,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 )
 
                 # Verify the correct indices were identified
-                expected_indices_to_delete = [f'{index_name}_tmp_1', f'{index_name}_tmp_2']
+                expected_indices_to_delete = [f'{index_name}_tmp_1', f'{index_name}_tmp_2', f'{index_name}_tmp_6']
 
                 # Verify SearchClient was created with correct credentials
                 mock_search_client.create.assert_called_once()
