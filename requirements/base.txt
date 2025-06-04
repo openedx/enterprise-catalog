@@ -30,7 +30,7 @@ backoff==1.10.0
     # via analytics-python
 billiard==4.2.1
     # via celery
-celery==5.5.2
+celery==5.5.3
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.in
@@ -47,7 +47,7 @@ cffi==1.17.1
     #   pynacl
 charset-normalizer==3.4.2
     # via requests
-click==8.2.0
+click==8.2.1
     # via
     #   celery
     #   click-didyoumean
@@ -63,7 +63,7 @@ click-repl==0.3.0
     # via celery
 code-annotations==2.3.0
     # via edx-toggles
-cryptography==45.0.2
+cryptography==45.0.3
     # via
     #   pyjwt
     #   social-auth-core
@@ -162,7 +162,7 @@ edx-celeryutils==1.4.0
     # via -r requirements/base.in
 edx-django-release-util==1.5.0
     # via -r requirements/base.in
-edx-django-utils==7.4.0
+edx-django-utils==8.0.0
     # via
     #   -r requirements/base.in
     #   django-config-models
@@ -196,17 +196,17 @@ inflection==0.5.1
     # via drf-spectacular
 jinja2==3.1.6
     # via code-annotations
-joblib==1.5.0
+joblib==1.5.1
     # via scikit-learn
 jsonfield==3.1.0
     # via edx-celeryutils
 jsonfield2==4.0.0.post0
     # via -r requirements/base.in
-jsonschema==4.23.0
+jsonschema==4.24.0
     # via drf-spectacular
 jsonschema-specifications==2025.4.1
     # via jsonschema
-kombu==5.5.3
+kombu==5.5.4
     # via celery
 markupsafe==3.0.2
     # via jinja2
@@ -214,8 +214,6 @@ monotonic==1.6
     # via analytics-python
 mysqlclient==2.2.7
     # via -r requirements/base.in
-newrelic==10.12.0
-    # via edx-django-utils
 numpy==2.2.6
     # via
     #   scikit-learn
@@ -228,6 +226,8 @@ openai==1.13.3
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.in
+packaging==25.0
+    # via kombu
 pbr==6.1.1
     # via stevedore
 ply==3.11
@@ -238,7 +238,7 @@ psutil==7.0.0
     # via edx-django-utils
 pycparser==2.22
     # via cffi
-pydantic==2.11.4
+pydantic==2.11.5
     # via openai
 pydantic-core==2.33.2
     # via pydantic
@@ -288,7 +288,7 @@ requests==2.32.3
     #   social-auth-core
 requests-oauthlib==2.0.0
     # via social-auth-core
-rpds-py==0.25.0
+rpds-py==0.25.1
     # via
     #   jsonschema
     #   referencing
@@ -345,7 +345,7 @@ typing-extensions==4.13.2
     #   pydantic-core
     #   referencing
     #   typing-inspection
-typing-inspection==0.4.0
+typing-inspection==0.4.1
     # via pydantic
 tzdata==2025.2
     # via kombu
@@ -364,7 +364,7 @@ wcwidth==0.2.13
     # via prompt-toolkit
 xlsxwriter==3.2.3
     # via -r requirements/base.in
-zipp==3.21.0
+zipp==3.22.0
     # via -r requirements/base.in
 
 # The following packages are considered to be unsafe in a requirements file:
