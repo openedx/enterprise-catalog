@@ -627,7 +627,7 @@ def _last_updated_between(index, min_days_ago, max_days_ago):
 
     min_days_ago_date = (datetime.today() - timedelta(days=min_days_ago)).date()
     max_days_ago_date = (datetime.today() - timedelta(days=max_days_ago)).date()
-    if max_days_ago_date < datetime.fromisoformat(datestring).date() < min_days_ago_date:
+    if max_days_ago_date < datetime.fromisoformat(datestring).date() <= min_days_ago_date:
         logger.info(
             'Index %s meets condition: min_days %s and max_days %s, because updatedAt: %s', index_name,
             min_days_ago,

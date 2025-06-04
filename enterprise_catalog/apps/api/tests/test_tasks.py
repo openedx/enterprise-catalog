@@ -1313,6 +1313,12 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                         'updatedAt': (now - timedelta(days=30)).strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
                         'entries': 0
                     },
+                    # Should be included (10 days old)
+                    {
+                        'name': f'{index_name}_tmp_7',
+                        'updatedAt': (now - timedelta(days=10)).strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+                        'entries': 0
+                    },
                     # Should be included (15 days old)
                     {
                         'name': f'{index_name}_tmp_2',
@@ -1370,7 +1376,12 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 )
 
                 # Verify the correct indices were identified
-                expected_indices_to_delete = [f'{index_name}_tmp_1', f'{index_name}_tmp_2', f'{index_name}_tmp_6']
+                expected_indices_to_delete = [
+                    f'{index_name}_tmp_1',
+                    f'{index_name}_tmp_2',
+                    f'{index_name}_tmp_6',
+                    f'{index_name}_tmp_7'
+                ]
 
                 # Verify SearchClient was created with correct credentials
                 mock_search_client.create.assert_called_once()
