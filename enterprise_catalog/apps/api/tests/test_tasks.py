@@ -1376,7 +1376,12 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 )
 
                 # Verify the correct indices were identified
-                expected_indices_to_delete = [f'{index_name}_tmp_1', f'{index_name}_tmp_2', f'{index_name}_tmp_6', f'{index_name}_tmp_7']
+                expected_indices_to_delete = [
+                    f'{index_name}_tmp_1',
+                    f'{index_name}_tmp_2',
+                    f'{index_name}_tmp_6',
+                    f'{index_name}_tmp_7'
+                ]
 
                 # Verify SearchClient was created with correct credentials
                 mock_search_client.create.assert_called_once()
