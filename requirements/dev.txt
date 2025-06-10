@@ -182,9 +182,8 @@ distro==1.9.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   openai
-django==4.2.21
+django==5.2.1
     # via
-    #   -c requirements/common_constraints.txt
     #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -384,11 +383,8 @@ idna==3.10
     #   anyio
     #   httpx
     #   requests
-importlib-metadata==8.7.0
-    # via inflect
-inflect==3.0.2
+inflect==7.5.0
     # via
-    #   -c requirements/constraints.txt
     #   -r requirements/dev.in
     #   jinja2-pluralize
 inflection==0.5.1
@@ -464,6 +460,8 @@ monotonic==1.6
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   analytics-python
+more-itertools==10.7.0
+    # via inflect
 mysqlclient==2.2.7
     # via
     #   -r requirements/quality.txt
@@ -782,6 +780,8 @@ tqdm==4.67.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   openai
+typeguard==4.4.2
+    # via inflect
 typing-extensions==4.13.2
     # via
     #   -r requirements/quality.txt
@@ -792,6 +792,7 @@ typing-extensions==4.13.2
     #   pydantic
     #   pydantic-core
     #   referencing
+    #   typeguard
     #   typing-inspection
 typing-inspection==0.4.1
     # via
@@ -844,7 +845,6 @@ zipp==3.22.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-    #   importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip

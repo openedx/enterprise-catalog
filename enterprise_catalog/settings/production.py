@@ -49,8 +49,16 @@ with open(CONFIG_FILE, encoding='utf-8') as f:
     # Unpack the media and files storage backend settings for django storages.
     # These dicts are not Django settings themselves, but they contain a mapping
     # of Django settings.
-    vars().update(FILE_STORAGE_BACKEND)
-    vars().update(MEDIA_STORAGE_BACKEND)
+    STORAGES = {
+        # this becomes the new DEFAULT_FILE_STORAGE
+        'default': MEDIA_STORAGE_BACKEND,
+        # pick an alias for your “other files” bucket
+        'files': FILE_STORAGE_BACKEND,
+        # you still need staticfiles here too
+        'staticfiles': {
+            'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+        },
+    }
 
 # Must be generated after loading config YAML because LOGGING_FORMAT_STRING might be overridden.
 LOGGING = get_logger_config(format_string=LOGGING_FORMAT_STRING)
