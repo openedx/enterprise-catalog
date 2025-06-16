@@ -44,7 +44,7 @@ celery==5.5.3
     #   -r requirements/base.txt
     #   django-celery-results
     #   edx-celeryutils
-certifi==2025.4.26
+certifi==2025.6.15
     # via
     #   -r requirements/base.txt
     #   httpcore
@@ -84,7 +84,7 @@ code-annotations==2.3.0
     # via
     #   -r requirements/base.txt
     #   edx-toggles
-cryptography==45.0.3
+cryptography==45.0.4
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -103,7 +103,7 @@ distro==1.9.0
     # via
     #   -r requirements/base.txt
     #   openai
-django==4.2.21
+django==4.2.23
     # via
     #   -r requirements/base.txt
     #   django-celery-results
@@ -157,7 +157,7 @@ django-model-utils==5.0.0
     #   edx-rbac
 django-simple-history==3.8.0
     # via -r requirements/base.txt
-django-waffle==4.2.0
+django-waffle==5.0.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -213,7 +213,7 @@ edx-toggles==5.3.0
     # via -r requirements/base.txt
 gevent==25.5.1
     # via -r requirements/production.in
-greenlet==3.2.2
+greenlet==3.2.3
     # via gevent
 gunicorn==23.0.0
     # via -r requirements/production.in
@@ -275,7 +275,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.7
     # via -r requirements/base.txt
-numpy==2.2.6
+numpy==2.3.0
     # via
     #   -r requirements/base.txt
     #   scikit-learn
@@ -312,7 +312,7 @@ pycparser==2.22
     # via
     #   -r requirements/base.txt
     #   cffi
-pydantic==2.11.5
+pydantic==2.11.7
     # via
     #   -r requirements/base.txt
     #   openai
@@ -330,7 +330,7 @@ pyjwt[crypto]==2.10.1
     #   social-auth-core
 pymemcache==4.0.0
     # via -r requirements/base.txt
-pymongo==4.13.0
+pymongo==4.13.1
     # via
     #   -r requirements/base.txt
     #   edx-opaque-keys
@@ -369,7 +369,7 @@ referencing==0.36.2
     #   -r requirements/base.txt
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.3
+requests==2.32.4
     # via
     #   -r requirements/base.txt
     #   algoliasearch
@@ -389,7 +389,7 @@ rpds-py==0.25.1
     #   referencing
 rules==3.5
     # via -r requirements/base.txt
-scikit-learn==1.6.1
+scikit-learn==1.7.0
     # via -r requirements/base.txt
 scipy==1.15.3
     # via
@@ -449,7 +449,7 @@ tqdm==4.67.1
     # via
     #   -r requirements/base.txt
     #   openai
-typing-extensions==4.13.2
+typing-extensions==4.14.0
     # via
     #   -r requirements/base.txt
     #   anyio
@@ -467,7 +467,7 @@ tzdata==2025.2
     # via
     #   -r requirements/base.txt
     #   kombu
-uritemplate==4.1.1
+uritemplate==4.2.0
     # via
     #   -r requirements/base.txt
     #   drf-spectacular
@@ -487,7 +487,7 @@ wcwidth==0.2.13
     #   prompt-toolkit
 xlsxwriter==3.2.3
     # via -r requirements/base.txt
-zipp==3.22.0
+zipp==3.23.0
     # via -r requirements/base.txt
 zope-event==5.0
     # via gevent

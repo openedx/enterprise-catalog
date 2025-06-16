@@ -68,7 +68,7 @@ celery==5.5.3
     #   -r requirements/test.txt
     #   django-celery-results
     #   edx-celeryutils
-certifi==2025.4.26
+certifi==2025.6.15
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -132,11 +132,11 @@ colorama==0.4.6
     # via
     #   -r requirements/test.txt
     #   tox
-coverage[toml]==7.8.2
+coverage[toml]==7.9.1
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==45.0.3
+cryptography==45.0.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -170,7 +170,7 @@ distro==1.9.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   openai
-django==4.2.21
+django==4.2.23
     # via
     #   -c requirements/common_constraints.txt
     #   -c requirements/constraints.txt
@@ -248,7 +248,7 @@ django-simple-history==3.8.0
     #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-django-waffle==4.2.0
+django-waffle==5.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -333,7 +333,7 @@ edx-toggles==5.3.0
     #   -r requirements/test.txt
 factory-boy==3.3.3
     # via -r requirements/test.txt
-faker==37.3.0
+faker==37.4.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -431,7 +431,7 @@ mysqlclient==2.2.7
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-numpy==2.2.6
+numpy==2.3.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -472,6 +472,7 @@ pluggy==1.6.0
     # via
     #   -r requirements/test.txt
     #   pytest
+    #   pytest-cov
     #   tox
 ply==3.11
     # via
@@ -495,7 +496,7 @@ pycparser==2.22
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   cffi
-pydantic==2.11.5
+pydantic==2.11.7
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -507,6 +508,10 @@ pydantic-core==2.33.2
     #   pydantic
 pydocstyle==6.3.0
     # via -r requirements/quality.txt
+pygments==2.19.1
+    # via
+    #   -r requirements/test.txt
+    #   pytest
 pyjwt[crypto]==2.10.1
     # via
     #   -r requirements/quality.txt
@@ -544,7 +549,7 @@ pymemcache==4.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-pymongo==4.13.0
+pymongo==4.13.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -558,12 +563,12 @@ pyproject-api==1.9.1
     # via
     #   -r requirements/test.txt
     #   tox
-pytest==8.3.5
+pytest==8.4.0
     # via
     #   -r requirements/test.txt
     #   pytest-cov
     #   pytest-django
-pytest-cov==6.1.1
+pytest-cov==6.2.1
     # via -r requirements/test.txt
 pytest-django==4.11.1
     # via -r requirements/test.txt
@@ -606,7 +611,7 @@ referencing==0.36.2
     #   -r requirements/test.txt
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.3
+requests==2.32.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -634,7 +639,7 @@ rules==3.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-scikit-learn==1.6.1
+scikit-learn==1.7.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -710,7 +715,7 @@ threadpoolctl==3.6.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   scikit-learn
-tomlkit==0.13.2
+tomlkit==0.13.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -722,7 +727,7 @@ tqdm==4.67.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   openai
-typing-extensions==4.13.2
+typing-extensions==4.14.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -744,7 +749,7 @@ tzdata==2025.2
     #   -r requirements/test.txt
     #   faker
     #   kombu
-uritemplate==4.1.1
+uritemplate==4.2.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -776,7 +781,7 @@ xlsxwriter==3.2.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-zipp==3.22.0
+zipp==3.23.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
