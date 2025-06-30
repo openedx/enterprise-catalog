@@ -61,7 +61,7 @@ build==1.2.2.post1
     # via
     #   -r requirements/pip-tools.txt
     #   pip-tools
-cachetools==6.0.0
+cachetools==6.1.0
     # via
     #   -r requirements/test.txt
     #   tox
@@ -118,7 +118,7 @@ click-log==0.4.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-lint
-click-plugins==1.1.1
+click-plugins==1.1.1.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -245,7 +245,7 @@ django-extensions==4.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-django-import-export==4.3.7
+django-import-export==4.3.8
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -259,7 +259,7 @@ django-model-utils==5.0.0
     #   -r requirements/test.txt
     #   edx-celeryutils
     #   edx-rbac
-django-simple-history==3.8.0
+django-simple-history==3.10.1
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
@@ -301,7 +301,7 @@ drf-spectacular==0.28.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-edx-auth-backends==4.5.0
+edx-auth-backends==4.6.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -318,6 +318,7 @@ edx-django-utils==8.0.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   django-config-models
+    #   edx-auth-backends
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
@@ -349,6 +350,7 @@ edx-toggles==5.3.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+    #   edx-auth-backends
 factory-boy==3.3.3
     # via -r requirements/test.txt
 faker==37.4.0
@@ -443,7 +445,7 @@ kombu==5.5.4
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   celery
-lxml[html-clean,html_clean]==5.4.0
+lxml[html-clean,html_clean]==6.0.0
     # via
     #   edx-i18n-tools
     #   lxml-html-clean
@@ -468,13 +470,13 @@ mysqlclient==2.2.7
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-numpy==2.3.0
+numpy==2.3.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   scikit-learn
     #   scipy
-oauthlib==3.2.2
+oauthlib==3.3.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -536,7 +538,7 @@ psutil==7.0.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-django-utils
-pycodestyle==2.13.0
+pycodestyle==2.14.0
     # via -r requirements/quality.txt
 pycparser==2.22
     # via
@@ -555,7 +557,7 @@ pydantic-core==2.33.2
     #   pydantic
 pydocstyle==6.3.0
     # via -r requirements/quality.txt
-pygments==2.19.1
+pygments==2.19.2
     # via
     #   -r requirements/test.txt
     #   diff-cover
@@ -587,7 +589,7 @@ pylint-django==2.6.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-lint
-pylint-plugin-utils==0.8.2
+pylint-plugin-utils==0.9.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -597,7 +599,7 @@ pymemcache==4.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-pymongo==4.13.1
+pymongo==4.13.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -616,7 +618,7 @@ pyproject-hooks==1.2.0
     #   -r requirements/pip-tools.txt
     #   build
     #   pip-tools
-pytest==8.4.0
+pytest==8.4.1
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -701,7 +703,7 @@ scikit-learn==1.7.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-scipy==1.15.3
+scipy==1.16.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -740,7 +742,7 @@ social-auth-app-django==5.4.3
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-auth-backends
-social-auth-core==4.6.1
+social-auth-core==4.7.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -779,7 +781,7 @@ tomlkit==0.13.3
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pylint
-tox==4.26.0
+tox==4.27.0
     # via -r requirements/test.txt
 tqdm==4.67.1
     # via
@@ -840,7 +842,7 @@ wheel==0.45.1
     # via
     #   -r requirements/pip-tools.txt
     #   pip-tools
-xlsxwriter==3.2.3
+xlsxwriter==3.2.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
