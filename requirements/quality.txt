@@ -83,7 +83,7 @@ click-didyoumean==0.3.1
     #   celery
 click-log==0.4.0
     # via edx-lint
-click-plugins==1.1.1
+click-plugins==1.1.1.2
     # via
     #   -r requirements/base.txt
     #   celery
@@ -162,7 +162,7 @@ django-crum==0.7.9
     #   edx-toggles
 django-extensions==4.1
     # via -r requirements/base.txt
-django-import-export==4.3.7
+django-import-export==4.3.8
     # via -r requirements/base.txt
 django-log-request-id==2.1.0
     # via -r requirements/base.txt
@@ -171,7 +171,7 @@ django-model-utils==5.0.0
     #   -r requirements/base.txt
     #   edx-celeryutils
     #   edx-rbac
-django-simple-history==3.8.0
+django-simple-history==3.10.1
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.txt
@@ -202,7 +202,7 @@ drf-jwt==1.19.2
     #   edx-drf-extensions
 drf-spectacular==0.28.0
     # via -r requirements/base.txt
-edx-auth-backends==4.5.0
+edx-auth-backends==4.6.0
     # via -r requirements/base.txt
 edx-celeryutils==1.4.0
     # via -r requirements/base.txt
@@ -212,6 +212,7 @@ edx-django-utils==8.0.0
     # via
     #   -r requirements/base.txt
     #   django-config-models
+    #   edx-auth-backends
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
@@ -230,7 +231,9 @@ edx-rbac==2.1.0
 edx-rest-api-client==6.2.0
     # via -r requirements/base.txt
 edx-toggles==5.3.0
-    # via -r requirements/base.txt
+    # via
+    #   -r requirements/base.txt
+    #   edx-auth-backends
 h11==0.16.0
     # via
     #   -r requirements/base.txt
@@ -295,12 +298,12 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.7
     # via -r requirements/base.txt
-numpy==2.3.0
+numpy==2.3.1
     # via
     #   -r requirements/base.txt
     #   scikit-learn
     #   scipy
-oauthlib==3.2.2
+oauthlib==3.3.1
     # via
     #   -r requirements/base.txt
     #   requests-oauthlib
@@ -331,7 +334,7 @@ psutil==7.0.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
-pycodestyle==2.13.0
+pycodestyle==2.14.0
     # via -r requirements/quality.in
 pycparser==2.22
     # via
@@ -365,13 +368,13 @@ pylint-celery==0.3
     # via edx-lint
 pylint-django==2.6.1
     # via edx-lint
-pylint-plugin-utils==0.8.2
+pylint-plugin-utils==0.9.0
     # via
     #   pylint-celery
     #   pylint-django
 pymemcache==4.0.0
     # via -r requirements/base.txt
-pymongo==4.13.1
+pymongo==4.13.2
     # via
     #   -r requirements/base.txt
     #   edx-opaque-keys
@@ -431,7 +434,7 @@ rules==3.5
     # via -r requirements/base.txt
 scikit-learn==1.7.0
     # via -r requirements/base.txt
-scipy==1.15.3
+scipy==1.16.0
     # via
     #   -r requirements/base.txt
     #   scikit-learn
@@ -461,7 +464,7 @@ social-auth-app-django==5.4.3
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends
-social-auth-core==4.6.1
+social-auth-core==4.7.0
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends
@@ -531,7 +534,7 @@ wcwidth==0.2.13
     # via
     #   -r requirements/base.txt
     #   prompt-toolkit
-xlsxwriter==3.2.3
+xlsxwriter==3.2.5
     # via -r requirements/base.txt
 zipp==3.23.0
     # via -r requirements/base.txt
