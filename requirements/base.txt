@@ -57,7 +57,7 @@ click==8.2.1
     #   edx-django-utils
 click-didyoumean==0.3.1
     # via celery
-click-plugins==1.1.1
+click-plugins==1.1.1.2
     # via celery
 click-repl==0.3.0
     # via celery
@@ -121,7 +121,7 @@ django-crum==0.7.9
     #   edx-toggles
 django-extensions==4.1
     # via -r requirements/base.in
-django-import-export==4.3.7
+django-import-export==4.3.8
     # via -r requirements/base.in
 django-log-request-id==2.1.0
     # via -r requirements/base.in
@@ -130,7 +130,7 @@ django-model-utils==5.0.0
     #   -r requirements/base.in
     #   edx-celeryutils
     #   edx-rbac
-django-simple-history==3.8.0
+django-simple-history==3.10.1
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.in
@@ -156,7 +156,7 @@ drf-jwt==1.19.2
     # via edx-drf-extensions
 drf-spectacular==0.28.0
     # via -r requirements/base.in
-edx-auth-backends==4.5.0
+edx-auth-backends==4.6.0
     # via -r requirements/base.in
 edx-celeryutils==1.4.0
     # via -r requirements/base.in
@@ -166,6 +166,7 @@ edx-django-utils==8.0.0
     # via
     #   -r requirements/base.in
     #   django-config-models
+    #   edx-auth-backends
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   edx-toggles
@@ -180,7 +181,9 @@ edx-rbac==2.1.0
 edx-rest-api-client==6.2.0
     # via -r requirements/base.in
 edx-toggles==5.3.0
-    # via -r requirements/base.in
+    # via
+    #   -r requirements/base.in
+    #   edx-auth-backends
 h11==0.16.0
     # via httpcore
 httpcore==1.0.9
@@ -214,11 +217,11 @@ monotonic==1.6
     # via analytics-python
 mysqlclient==2.2.7
     # via -r requirements/base.in
-numpy==2.3.0
+numpy==2.3.1
     # via
     #   scikit-learn
     #   scipy
-oauthlib==3.2.2
+oauthlib==3.3.1
     # via
     #   requests-oauthlib
     #   social-auth-core
@@ -251,7 +254,7 @@ pyjwt[crypto]==2.10.1
     #   social-auth-core
 pymemcache==4.0.0
     # via -r requirements/base.in
-pymongo==4.13.1
+pymongo==4.13.2
     # via edx-opaque-keys
 pynacl==1.5.0
     # via edx-django-utils
@@ -296,7 +299,7 @@ rules==3.5
     # via -r requirements/base.in
 scikit-learn==1.7.0
     # via -r requirements/base.in
-scipy==1.15.3
+scipy==1.16.0
     # via scikit-learn
 semantic-version==2.10.0
     # via edx-drf-extensions
@@ -317,7 +320,7 @@ social-auth-app-django==5.4.3
     # via
     #   -r requirements/base.in
     #   edx-auth-backends
-social-auth-core==4.6.1
+social-auth-core==4.7.0
     # via
     #   edx-auth-backends
     #   social-auth-app-django
@@ -362,7 +365,7 @@ vine==5.1.0
     #   kombu
 wcwidth==0.2.13
     # via prompt-toolkit
-xlsxwriter==3.2.3
+xlsxwriter==3.2.5
     # via -r requirements/base.in
 zipp==3.23.0
     # via -r requirements/base.in
