@@ -21,7 +21,7 @@ anyio==4.9.0
     #   -r requirements/base.txt
     #   httpx
     #   openai
-asgiref==3.8.1
+asgiref==3.9.0
     # via
     #   -r requirements/base.txt
     #   django
@@ -84,7 +84,7 @@ code-annotations==2.3.0
     # via
     #   -r requirements/base.txt
     #   edx-toggles
-cryptography==45.0.4
+cryptography==45.0.5
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -250,7 +250,7 @@ joblib==1.5.1
     # via
     #   -r requirements/base.txt
     #   scikit-learn
-jsonfield==3.1.0
+jsonfield==3.2.0
     # via
     #   -r requirements/base.txt
     #   edx-celeryutils
@@ -385,7 +385,7 @@ requests-oauthlib==2.0.0
     # via
     #   -r requirements/base.txt
     #   social-auth-core
-rpds-py==0.25.1
+rpds-py==0.26.0
     # via
     #   -r requirements/base.txt
     #   jsonschema
@@ -452,7 +452,7 @@ tqdm==4.67.1
     # via
     #   -r requirements/base.txt
     #   openai
-typing-extensions==4.14.0
+typing-extensions==4.14.1
     # via
     #   -r requirements/base.txt
     #   anyio
