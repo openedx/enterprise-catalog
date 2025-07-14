@@ -28,7 +28,7 @@ asgiref==3.9.1
     #   -r requirements/base.txt
     #   django
     #   django-cors-headers
-astroid==3.3.10
+astroid==3.3.11
     # via
     #   pylint
     #   pylint-celery
