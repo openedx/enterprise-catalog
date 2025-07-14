@@ -35,7 +35,7 @@ asgiref==3.9.1
     #   -r requirements/test.txt
     #   django
     #   django-cors-headers
-astroid==3.3.10
+astroid==3.3.11
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
