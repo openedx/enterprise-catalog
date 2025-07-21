@@ -36,7 +36,7 @@ celery==5.5.3
     #   -r requirements/base.in
     #   django-celery-results
     #   edx-celeryutils
-certifi==2025.7.9
+certifi==2025.7.14
     # via
     #   httpcore
     #   httpx
@@ -204,7 +204,7 @@ jsonfield==3.2.0
     # via edx-celeryutils
 jsonfield2==4.0.0.post0
     # via -r requirements/base.in
-jsonschema==4.24.0
+jsonschema==4.25.0
     # via drf-spectacular
 jsonschema-specifications==2025.4.1
     # via jsonschema
@@ -296,7 +296,7 @@ rpds-py==0.26.0
     #   referencing
 rules==3.5
     # via -r requirements/base.in
-scikit-learn==1.7.0
+scikit-learn==1.7.1
     # via -r requirements/base.in
 scipy==1.16.0
     # via scikit-learn
