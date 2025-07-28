@@ -146,7 +146,7 @@ django-crum==0.7.9
     #   edx-toggles
 django-extensions==4.1
     # via -r requirements/base.txt
-django-import-export==4.3.8
+django-import-export==4.3.9
     # via -r requirements/base.txt
 django-log-request-id==2.1.0
     # via -r requirements/base.txt
@@ -278,7 +278,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.7
     # via -r requirements/base.txt
-numpy==2.3.1
+numpy==2.3.2
     # via
     #   -r requirements/base.txt
     #   scikit-learn
@@ -394,7 +394,7 @@ rules==3.5
     # via -r requirements/base.txt
 scikit-learn==1.7.1
     # via -r requirements/base.txt
-scipy==1.16.0
+scipy==1.16.1
     # via
     #   -r requirements/base.txt
     #   scikit-learn
@@ -492,7 +492,7 @@ xlsxwriter==3.2.5
     # via -r requirements/base.txt
 zipp==3.23.0
     # via -r requirements/base.txt
-zope-event==5.1
+zope-event==5.1.1
     # via gevent
 zope-interface==7.2
     # via gevent

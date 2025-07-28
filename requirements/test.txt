@@ -103,7 +103,7 @@ code-annotations==2.3.0
     #   edx-toggles
 colorama==0.4.6
     # via tox
-coverage[toml]==7.9.2
+coverage[toml]==7.10.1
     # via
     #   -r requirements/test.in
     #   pytest-cov
@@ -177,7 +177,7 @@ django-dynamic-fixture==4.0.1
     # via -r requirements/test.in
 django-extensions==4.1
     # via -r requirements/base.txt
-django-import-export==4.3.8
+django-import-export==4.3.9
     # via -r requirements/base.txt
 django-log-request-id==2.1.0
     # via -r requirements/base.txt
@@ -321,7 +321,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.7
     # via -r requirements/base.txt
-numpy==2.3.1
+numpy==2.3.2
     # via
     #   -r requirements/base.txt
     #   scikit-learn
@@ -480,7 +480,7 @@ rules==3.5
     # via -r requirements/base.txt
 scikit-learn==1.7.1
     # via -r requirements/base.txt
-scipy==1.16.0
+scipy==1.16.1
     # via
     #   -r requirements/base.txt
     #   scikit-learn
@@ -537,7 +537,7 @@ threadpoolctl==3.6.0
     #   scikit-learn
 tomlkit==0.13.3
     # via pylint
-tox==4.28.0
+tox==4.28.3
     # via -r requirements/test.in
 tqdm==4.67.1
     # via
@@ -578,7 +578,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.31.2
+virtualenv==20.32.0
     # via tox
 wcwidth==0.2.13
     # via
