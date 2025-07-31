@@ -54,3 +54,5 @@ class HighlightedContentFactory(factory.django.DjangoModelFactory):
     uuid = factory.LazyFunction(uuid4)
     catalog_highlight_set = factory.SubFactory(HighlightSetFactory)
     content_metadata = factory.SubFactory(ContentMetadataFactory)
+    sort_order=0
+    is_favorite=False

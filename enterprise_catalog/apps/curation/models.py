@@ -166,6 +166,16 @@ class HighlightedContent(TimeStampedModel):
         related_name='highlighted_content',
         on_delete=models.deletion.CASCADE,
     )
+    is_favorite = models.BooleanField(
+        null=False,
+        default=False,
+    )
+    sort_order = models.PositiveIntegerField(
+        default=0,
+        help_text=_(
+            "Sort order for favorited items, in ascending order (0=first)"
+        )
+    )
     history = HistoricalRecords()
 
     class Meta:
