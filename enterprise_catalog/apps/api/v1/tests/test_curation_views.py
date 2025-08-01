@@ -457,7 +457,7 @@ class HighlightSetReadOnlyViewSetTests(CurationAPITestBase):
         assert len(highlight_sets_results) == 1
 
         highlighted_content = highlight_sets_results[0]['highlighted_content']
-        assert highlighted_content[0]['is_favorite'] == False
+        assert highlighted_content[0]['is_favorite'] is False
         assert highlighted_content[0]['sort_order'] == 0
 
     def test_detail_invalid_uuid(self):
