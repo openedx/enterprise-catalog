@@ -44,7 +44,7 @@ celery==5.5.3
     #   -r requirements/base.txt
     #   django-celery-results
     #   edx-celeryutils
-certifi==2025.7.14
+certifi==2025.8.3
     # via
     #   -r requirements/base.txt
     #   httpcore
@@ -210,7 +210,7 @@ edx-rbac==2.1.0
     # via -r requirements/base.txt
 edx-rest-api-client==6.2.0
     # via -r requirements/base.txt
-edx-toggles==5.3.0
+edx-toggles==5.4.1
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends
@@ -474,7 +474,7 @@ uritemplate==4.2.0
     # via
     #   -r requirements/base.txt
     #   drf-spectacular
-urllib3==2.2.3
+urllib3==2.5.0
     # via
     #   -r requirements/base.txt
     #   requests

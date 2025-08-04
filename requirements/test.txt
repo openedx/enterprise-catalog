@@ -53,7 +53,7 @@ celery==5.5.3
     #   -r requirements/base.txt
     #   django-celery-results
     #   edx-celeryutils
-certifi==2025.7.14
+certifi==2025.8.3
     # via
     #   -r requirements/base.txt
     #   httpcore
@@ -103,7 +103,7 @@ code-annotations==2.3.0
     #   edx-toggles
 colorama==0.4.6
     # via tox
-coverage[toml]==7.10.1
+coverage[toml]==7.10.2
     # via
     #   -r requirements/test.in
     #   pytest-cov
@@ -245,13 +245,13 @@ edx-rbac==2.1.0
     # via -r requirements/base.txt
 edx-rest-api-client==6.2.0
     # via -r requirements/base.txt
-edx-toggles==5.3.0
+edx-toggles==5.4.1
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends
 factory-boy==3.3.3
     # via -r requirements/test.in
-faker==37.4.2
+faker==37.5.3
     # via factory-boy
 filelock==3.18.0
     # via
@@ -537,7 +537,7 @@ threadpoolctl==3.6.0
     #   scikit-learn
 tomlkit==0.13.3
     # via pylint
-tox==4.28.3
+tox==4.28.4
     # via -r requirements/test.in
 tqdm==4.67.1
     # via
@@ -566,9 +566,8 @@ uritemplate==4.2.0
     # via
     #   -r requirements/base.txt
     #   drf-spectacular
-urllib3==2.2.3
+urllib3==2.5.0
     # via
-    #   -c requirements/common_constraints.txt
     #   -r requirements/base.txt
     #   requests
     #   responses
@@ -578,7 +577,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.32.0
+virtualenv==20.33.0
     # via tox
 wcwidth==0.2.13
     # via
