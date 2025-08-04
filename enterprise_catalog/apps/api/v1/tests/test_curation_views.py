@@ -456,6 +456,10 @@ class HighlightSetReadOnlyViewSetTests(CurationAPITestBase):
         highlight_sets_results = response.json()['results']
         assert len(highlight_sets_results) == 1
 
+        highlighted_content = highlight_sets_results[0]['highlighted_content']
+        assert highlighted_content[0]['is_favorite'] is False
+        assert highlighted_content[0]['sort_order'] == 0
+
     def test_detail_invalid_uuid(self):
         """
         An enterprise learner should get a 403 error trying to access a non-existent highlight set.

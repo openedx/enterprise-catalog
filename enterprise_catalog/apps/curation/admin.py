@@ -90,7 +90,7 @@ class HighlightedContentModelForm(forms.ModelForm):
 
     class Meta:
         model = models.HighlightedContent
-        fields = ['catalog_highlight_set', 'content_metadata']
+        fields = ['catalog_highlight_set', 'content_metadata', 'is_favorite', 'sort_order']
         labels = {
             'content_metadata': 'Content Metadata ID',
         }

@@ -361,6 +361,8 @@ class HighlightedContentSerializer(serializers.ModelSerializer):
             'card_image_url',
             'authoring_organizations',
             'course_run_statuses',
+            'is_favorite',
+            'sort_order',
         ]
 
     def get_aggregation_key(self, obj):
