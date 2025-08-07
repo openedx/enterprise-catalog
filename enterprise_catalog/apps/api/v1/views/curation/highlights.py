@@ -527,17 +527,18 @@ class HighlightSetViewSet(HighlightSetBaseViewSet, viewsets.ModelViewSet):
             rest_framework.response.Response:
                 400: If there are missing or otherwise invalid input parameters.  Response body is JSON with a single
                      `Error` key.
-                403: If the requester has insufficient write permissions.  Response body is JSON with a single `Error` key.
+                403: If the requester has insufficient write permissions or enters title greater than 60 character.
+                    Response body is JSON with a single `Error` key.
                 201: If highlight set name was successfully updated.  Response body is JSON with a single `title` key.
         """
         highlight_set = HighlightSet.objects.get(uuid=uuid)
         title = request.data.get('title')
-        try:
-            highlight_set.title = title
-            highlight_set.save()
-        except LimitExceeded as e:
-            return Response({'Error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-
+        if not title:
+            return Response({'Error': 'Missing title parameter'}, status=status.HTTP_400_BAD_REQUEST)
+        if len(title) > 60:
+            return Response({'Error': 'title cannot exceed 60 characters'}, status=status.HTTP_403_FORBIDDEN)
+        highlight_set.title = title
+        highlight_set.save()
         return Response(
             {
                 'title': title

@@ -913,6 +913,7 @@ class HighlightSetViewSetTests(CurationAPITestBase):
         """
         Test editing HighlightSet's title
         """
+        # Success case
         edit_url = reverse('api:v1:highlight-sets-admin-edit-highlight-title', kwargs={'uuid': str(self.highlight_set_one.uuid)})
         self.set_up_staff()
         new_title = 'new title'
@@ -923,3 +924,15 @@ class HighlightSetViewSetTests(CurationAPITestBase):
         assert response.json()['title'] == new_title
         self.highlight_set_one.refresh_from_db()
         assert self.highlight_set_one.title == new_title
+
+        # No title parameter
+        response = self.client.post(
+            edit_url, {},
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+        # Too long title
+        response = self.client.post(
+            edit_url, {'title': new_title * 10},
+        )
+        assert response.status_code == status.HTTP_403_FORBIDDEN
