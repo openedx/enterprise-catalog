@@ -908,3 +908,18 @@ class HighlightSetViewSetTests(CurationAPITestBase):
         assert response.status_code == status.HTTP_201_CREATED
         assert len(response.json()['highlight_set']['highlighted_content']) == 0
         assert response.json()['highlight_set']['card_image_url'] is None
+
+    def test_edit_title(self):
+        """
+        Test editing HighlightSet's title
+        """
+        edit_url = reverse('api:v1:highlight-sets-admin-edit-highlight-title', kwargs={'uuid': str(self.highlight_set_one.uuid)})
+        self.set_up_staff()
+        new_title = 'new title'
+        response = self.client.post(
+            edit_url, {'title': new_title},
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.json()['title'] == new_title
+        self.highlight_set_one.refresh_from_db()
+        assert self.highlight_set_one.title == new_title

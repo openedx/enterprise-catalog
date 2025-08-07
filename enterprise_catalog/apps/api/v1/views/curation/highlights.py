@@ -510,6 +510,41 @@ class HighlightSetViewSet(HighlightSetBaseViewSet, viewsets.ModelViewSet):
         else:
             return creation_response
 
+    @action(detail=True, methods=['post'], url_path='edit-highlight-title')
+    def edit_highlight_title(self, request, uuid, *args, **kwargs):
+        """
+        Renames existing HighlightSet
+
+        POST /v1/highlight-sets-admin/<uuid>/edit-highlight-title/
+
+        Request URL Arguments:
+            uuid (str): UUID of the HighlightSet to rename
+
+        Request JSON Arguments:
+            title (str): New title for HighlightSet
+
+        Returns:
+            rest_framework.response.Response:
+                400: If there are missing or otherwise invalid input parameters.  Response body is JSON with a single
+                     `Error` key.
+                403: If the requester has insufficient write permissions.  Response body is JSON with a single `Error` key.
+                201: If highlight set name was successfully updated.  Response body is JSON with a single `title` key.
+        """
+        highlight_set = HighlightSet.objects.get(uuid=uuid)
+        title = request.data.get('title')
+        try:
+            highlight_set.title = title
+            highlight_set.save()
+        except LimitExceeded as e:
+            return Response({'Error': str(e)}, status=status.HTTP_403_FORBIDDEN)
+
+        return Response(
+            {
+                'title': title
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
     @action(detail=True, methods=['post'], url_path='add-content')
     def add_content(self, request, uuid, *args, **kwargs):
         """
