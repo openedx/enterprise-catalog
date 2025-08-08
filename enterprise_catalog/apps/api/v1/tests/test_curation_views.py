@@ -915,7 +915,7 @@ class HighlightSetViewSetTests(CurationAPITestBase):
         """
         # Success case
         edit_url = reverse(
-            'api:v1:highlight-sets-admin-edit-highlight-title', 
+            'api:v1:highlight-sets-admin-edit-highlight-title',
             kwargs={'uuid': str(self.highlight_set_one.uuid)}
         )
         self.set_up_staff()
