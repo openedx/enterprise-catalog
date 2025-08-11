@@ -23,7 +23,7 @@ annotated-types==0.7.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pydantic
-anyio==4.9.0
+anyio==4.10.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -89,7 +89,7 @@ chardet==5.2.0
     # via
     #   -r requirements/test.txt
     #   tox
-charset-normalizer==3.4.2
+charset-normalizer==3.4.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -138,11 +138,11 @@ colorama==0.4.6
     # via
     #   -r requirements/test.txt
     #   tox
-coverage[toml]==7.10.2
+coverage[toml]==7.10.3
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==45.0.5
+cryptography==45.0.6
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -182,7 +182,7 @@ distro==1.9.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   openai
-django==5.2.4
+django==5.2.5
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
@@ -274,7 +274,7 @@ djangoql==0.18.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-djangorestframework==3.16.0
+djangorestframework==3.16.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -569,7 +569,7 @@ pyjwt[crypto]==2.10.1
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
-pylint==3.3.7
+pylint==3.3.8
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -597,7 +597,7 @@ pymemcache==4.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-pymongo==4.13.2
+pymongo==4.14.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -683,11 +683,11 @@ requests-oauthlib==2.0.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   social-auth-core
-responses==0.25.7
+responses==0.25.8
     # via
     #   -r requirements/dev.in
     #   -r requirements/test.txt
-rpds-py==0.26.0
+rpds-py==0.27.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -829,7 +829,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.33.0
+virtualenv==20.33.1
     # via
     #   -r requirements/test.txt
     #   tox
