@@ -13,6 +13,7 @@ from rest_framework.exceptions import ParseError
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework_xml.renderers import XMLRenderer
+from enterprise_catalog.apps.api.v1.utils import strtobool
 
 from enterprise_catalog.apps.api.constants import (
     CURATION_CONFIG_READ_ONLY_VIEW_CACHE_TIMEOUT_SECONDS,
@@ -509,6 +510,51 @@ class HighlightSetViewSet(HighlightSetBaseViewSet, viewsets.ModelViewSet):
             return Response(response_data, status=creation_response.status_code, headers=creation_response.headers)
         else:
             return creation_response
+
+    @action(detail=True, methods=['post'], url_path='toggle-favorite-highlight')
+    def toggle_favorite_highlight(self, request, uuid, *args, **kwargs):
+        """
+        Toggles Highlighted Content favorite state
+
+        POST /v1/highlight-sets-admin/<uuid>/toggle-favorite-highlight/
+
+        Request URL Arguments:
+            uuid (str): UUID of the HighlightSet containing the HighlightedContent
+
+        Request JSON Arguments:
+            content_uuid (str): uuid for HighlightedContent to favorite/unfavorite
+            favorite (boolean): True to favorite, False to unfavorite
+
+        Returns:
+            rest_framework.response.Response:
+                400: If there are missing or otherwise invalid input parameters.  Response body is JSON with a single
+                    `Error` key.
+                403: If the requester has insufficient write permissions.  Response body is JSON with a single
+                    `Error` key.
+                201: If highlighted content favorite state was successfully updated.
+        """
+        highlight_set = HighlightSet.objects.get(uuid=uuid)
+        content_uuid = request.data.get('content_uuid')
+        favorite_param = request.data.get('favorite')
+        if not favorite_param:
+            return Response({'Error': 'Missing favorite parameter'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            favorite_toggle = strtobool(favorite_param)
+            if not content_uuid:
+                return Response({'Error': 'Missing content_uuid parameter'}, status=status.HTTP_400_BAD_REQUEST)
+            highlighted_content = HighlightedContent.objects.get(uuid=content_uuid)
+            if highlighted_content.catalog_highlight_set.uuid != highlight_set.uuid:
+                return Response({'Error': 'Highlighted content not part of the given highlight set'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            highlighted_content.is_favorite = favorite_toggle
+            highlighted_content.save()
+            return Response({}, status=status.HTTP_201_CREATED)
+        except TypeError:
+            return Response({'Error': f'favorite parameter "{favorite_param}" is not a valid true/false value'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        except HighlightedContent.DoesNotExist:
+            return Response({'Error': 'content_uuid does not refer to any existing highlighted content'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['post'], url_path='add-content')
     def add_content(self, request, uuid, *args, **kwargs):

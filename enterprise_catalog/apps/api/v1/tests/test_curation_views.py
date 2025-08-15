@@ -908,3 +908,82 @@ class HighlightSetViewSetTests(CurationAPITestBase):
         assert response.status_code == status.HTTP_201_CREATED
         assert len(response.json()['highlight_set']['highlighted_content']) == 0
         assert response.json()['highlight_set']['card_image_url'] is None
+
+    def test_toggle_favorite_highlight(self):
+        """
+        Test setting HighlightSet's title
+        """
+        # Success case - true
+        edit_url = reverse(
+            'api:v1:highlight-sets-admin-toggle-favorite-highlight',
+            kwargs={'uuid': str(self.highlight_set_one.uuid)}
+        )
+        self.set_up_staff()
+        response = self.client.post(
+            edit_url, {
+                'content_uuid': str(self.highlighted_content_list_one[0].uuid),
+                'favorite': 'true'
+            },
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+        self.highlighted_content_list_one[0].refresh_from_db()
+        assert self.highlighted_content_list_one[0].is_favorite is True
+
+        # Success case - false
+        response = self.client.post(
+            edit_url, {
+                'content_uuid': str(self.highlighted_content_list_one[0].uuid),
+                'favorite': 'false'
+            },
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+        self.highlighted_content_list_one[0].refresh_from_db()
+        assert self.highlighted_content_list_one[0].is_favorite is False
+
+        # Failure case - no content uuid
+        response = self.client.post(
+            edit_url, {
+                'favorite': 'true'
+            },
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.json()['Error'] == 'Missing content_uuid parameter'
+
+        # Failure case - no favorite parameter
+        response = self.client.post(
+            edit_url, {
+                'content_uuid': str(self.highlighted_content_list_one[0].uuid),
+            },
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.json()['Error'] == 'Missing favorite parameter'
+
+        # Failure case - invalid favorite parameter
+        response = self.client.post(
+            edit_url, {
+                'content_uuid': str(self.highlighted_content_list_one[0].uuid),
+                'favorite': 'my most favoritest'
+            },
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.json()['Error'] == 'favorite parameter "my most favoritest" is not a valid true/false value'
+
+        # Failure case - invalid content_uuid
+        response = self.client.post(
+            edit_url, {
+                'content_uuid': str(uuid.uuid4()),
+                'favorite': 'true'
+            },
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.json()['Error'] == 'content_uuid does not refer to any existing highlighted content'
+
+        # Failure case - HighlightedContent content_uuid refers to is part of different HighlightSet
+        response = self.client.post(
+            edit_url, {
+                'content_uuid': str(self.highlighted_content_list_two[0].uuid),
+                'favorite': 'true'
+            },
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.json()['Error'] == 'Highlighted content not part of the given highlight set'
