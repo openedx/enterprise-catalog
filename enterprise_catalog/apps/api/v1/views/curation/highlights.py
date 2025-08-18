@@ -27,7 +27,9 @@ from enterprise_catalog.apps.api.v1.serializers import (
     EnterpriseCurationConfigSerializer,
     HighlightSetSerializer,
 )
-from enterprise_catalog.apps.api.v1.utils import strtobool
+from enterprise_catalog.apps.api.v1.utils import (
+    str_to_bool,
+)
 from enterprise_catalog.apps.api.v1.views.base import BaseViewSet
 from enterprise_catalog.apps.api.v1.views.curation import utils
 from enterprise_catalog.apps.catalog.constants import (
@@ -539,7 +541,7 @@ class HighlightSetViewSet(HighlightSetBaseViewSet, viewsets.ModelViewSet):
         if not favorite_param:
             return Response({'Error': 'Missing favorite parameter'}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            favorite_toggle = strtobool(favorite_param)
+            favorite_toggle = str_to_bool(favorite_param)
             if not content_uuid:
                 return Response({'Error': 'Missing content_uuid parameter'}, status=status.HTTP_400_BAD_REQUEST)
             highlighted_content = HighlightedContent.objects.get(uuid=content_uuid)

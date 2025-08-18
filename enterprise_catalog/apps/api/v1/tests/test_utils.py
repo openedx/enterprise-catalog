@@ -6,7 +6,7 @@ from enterprise_catalog.apps.api.v1.utils import (
     get_archived_content_count,
     get_most_recent_modified_time,
     is_course_run_active,
-    strtobool,
+    str_to_bool,
 )
 from enterprise_catalog.apps.catalog.tests.factories import (
     ContentMetadataFactory,
@@ -135,11 +135,13 @@ class ApiUtilsTests(TestCase):
         assert is_course_run_active(marketable_external_course_run) is True
 
     def test_strtobool(self):
-        assert strtobool('true') is True
-        assert strtobool('TRUE') is True
-        assert strtobool('false') is False
+        assert str_to_bool('true') is True
+        assert str_to_bool('TRUE') is True
+        assert str_to_bool('false') is False
+        assert str_to_bool(True) is True
+        assert str_to_bool(False) is False
         with self.assertRaises(TypeError) as context:
-            strtobool('neithertruenorfalse')
+            str_to_bool('neithertruenorfalse')
         with self.assertRaises(TypeError) as context:
-            strtobool(0)
+            str_to_bool(0)
         assert isinstance(context.exception.__context__, AttributeError)

@@ -103,10 +103,19 @@ def get_archived_content_count(highlighted_content):
     return archived_content_count
 
 
-def strtobool(s):
+def str_to_bool(s):
     """
     Convert string value to boolean (case insensitive)
+
+    Returns:
+        (boolean): Boolean value that the passed in boolean/string argument represents
+
+    Raises:
+        (TypeError): If not a string/boolean type, or an invalid boolean string representation
     """
+    if isinstance(s, bool):
+        # If already a boolen then just return it
+        return s
     try:
         strlower = s.lower()
         if strlower == 'true':
@@ -116,4 +125,4 @@ def strtobool(s):
         else:
             raise TypeError(f'Invalid boolean string: {str}')
     except AttributeError as exc:
-        raise TypeError('Argument is not a string') from exc
+        raise TypeError('Argument is not boolean nor string') from exc
