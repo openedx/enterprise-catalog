@@ -13,7 +13,6 @@ from rest_framework.exceptions import ParseError
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework_xml.renderers import XMLRenderer
-from enterprise_catalog.apps.api.v1.utils import strtobool
 
 from enterprise_catalog.apps.api.constants import (
     CURATION_CONFIG_READ_ONLY_VIEW_CACHE_TIMEOUT_SECONDS,
@@ -28,6 +27,7 @@ from enterprise_catalog.apps.api.v1.serializers import (
     EnterpriseCurationConfigSerializer,
     HighlightSetSerializer,
 )
+from enterprise_catalog.apps.api.v1.utils import strtobool
 from enterprise_catalog.apps.api.v1.views.base import BaseViewSet
 from enterprise_catalog.apps.api.v1.views.curation import utils
 from enterprise_catalog.apps.catalog.constants import (
