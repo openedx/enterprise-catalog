@@ -27,9 +27,7 @@ from enterprise_catalog.apps.api.v1.serializers import (
     EnterpriseCurationConfigSerializer,
     HighlightSetSerializer,
 )
-from enterprise_catalog.apps.api.v1.utils import (
-    str_to_bool,
-)
+from enterprise_catalog.apps.api.v1.utils import str_to_bool
 from enterprise_catalog.apps.api.v1.views.base import BaseViewSet
 from enterprise_catalog.apps.api.v1.views.curation import utils
 from enterprise_catalog.apps.catalog.constants import (
