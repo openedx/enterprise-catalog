@@ -22,7 +22,7 @@ annotated-types==0.7.0
     # via
     #   -r requirements/test.txt
     #   pydantic
-anyio==4.9.0
+anyio==4.10.0
     # via
     #   -r requirements/test.txt
     #   httpx
@@ -66,7 +66,7 @@ celery==5.5.3
     #   -r requirements/test.txt
     #   django-celery-results
     #   edx-celeryutils
-certifi==2025.7.14
+certifi==2025.8.3
     # via
     #   -r requirements/test.txt
     #   httpcore
@@ -81,7 +81,7 @@ chardet==5.2.0
     # via
     #   -r requirements/test.txt
     #   tox
-charset-normalizer==3.4.2
+charset-normalizer==3.4.3
     # via
     #   -r requirements/test.txt
     #   requests
@@ -121,11 +121,11 @@ colorama==0.4.6
     # via
     #   -r requirements/test.txt
     #   tox
-coverage[toml]==7.10.1
+coverage[toml]==7.10.4
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==45.0.5
+cryptography==45.0.6
     # via
     #   -r requirements/test.txt
     #   pyjwt
@@ -154,7 +154,7 @@ distro==1.9.0
     # via
     #   -r requirements/test.txt
     #   openai
-django==5.2.4
+django==5.2.5
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/test.txt
@@ -221,7 +221,7 @@ django-waffle==5.0.0
     #   edx-toggles
 djangoql==0.18.1
     # via -r requirements/test.txt
-djangorestframework==3.16.0
+djangorestframework==3.16.1
     # via
     #   -r requirements/test.txt
     #   django-config-models
@@ -277,17 +277,17 @@ edx-rbac==2.1.0
     # via -r requirements/test.txt
 edx-rest-api-client==6.2.0
     # via -r requirements/test.txt
-edx-toggles==5.3.0
+edx-toggles==5.4.1
     # via
     #   -r requirements/test.txt
     #   edx-auth-backends
 factory-boy==3.3.3
     # via -r requirements/test.txt
-faker==37.4.2
+faker==37.5.3
     # via
     #   -r requirements/test.txt
     #   factory-boy
-filelock==3.18.0
+filelock==3.19.1
     # via
     #   -r requirements/test.txt
     #   tox
@@ -390,7 +390,7 @@ packaging==25.0
     #   pytest
     #   sphinx
     #   tox
-pbr==6.1.1
+pbr==7.0.0
     # via
     #   -r requirements/test.txt
     #   stevedore
@@ -449,7 +449,7 @@ pyjwt[crypto]==2.10.1
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
-pylint==3.3.7
+pylint==3.3.8
     # via
     #   -r requirements/test.txt
     #   edx-lint
@@ -471,7 +471,7 @@ pylint-plugin-utils==0.9.0
     #   pylint-django
 pymemcache==4.0.0
     # via -r requirements/test.txt
-pymongo==4.13.2
+pymongo==4.14.0
     # via
     #   -r requirements/test.txt
     #   edx-opaque-keys
@@ -540,13 +540,13 @@ requests-oauthlib==2.0.0
     # via
     #   -r requirements/test.txt
     #   social-auth-core
-responses==0.25.7
+responses==0.25.8
     # via -r requirements/test.txt
 restructuredtext-lint==1.4.0
     # via doc8
 roman-numerals-py==3.1.0
     # via sphinx
-rpds-py==0.26.0
+rpds-py==0.27.0
     # via
     #   -r requirements/test.txt
     #   jsonschema
@@ -638,7 +638,7 @@ tomlkit==0.13.3
     # via
     #   -r requirements/test.txt
     #   pylint
-tox==4.28.3
+tox==4.28.4
     # via -r requirements/test.txt
 tqdm==4.67.1
     # via
@@ -669,9 +669,8 @@ uritemplate==4.2.0
     # via
     #   -r requirements/test.txt
     #   drf-spectacular
-urllib3==2.2.3
+urllib3==2.5.0
     # via
-    #   -c requirements/common_constraints.txt
     #   -r requirements/test.txt
     #   requests
     #   responses
@@ -681,7 +680,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.32.0
+virtualenv==20.34.0
     # via
     #   -r requirements/test.txt
     #   tox

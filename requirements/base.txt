@@ -14,7 +14,7 @@ analytics-python==1.4.post1
     # via -r requirements/base.in
 annotated-types==0.7.0
     # via pydantic
-anyio==4.9.0
+anyio==4.10.0
     # via
     #   httpx
     #   openai
@@ -36,7 +36,7 @@ celery==5.5.3
     #   -r requirements/base.in
     #   django-celery-results
     #   edx-celeryutils
-certifi==2025.7.14
+certifi==2025.8.3
     # via
     #   httpcore
     #   httpx
@@ -45,7 +45,7 @@ cffi==1.17.1
     # via
     #   cryptography
     #   pynacl
-charset-normalizer==3.4.2
+charset-normalizer==3.4.3
     # via requests
 click==8.2.1
     # via
@@ -63,7 +63,7 @@ click-repl==0.3.0
     # via celery
 code-annotations==2.3.0
     # via edx-toggles
-cryptography==45.0.5
+cryptography==45.0.6
     # via
     #   pyjwt
     #   social-auth-core
@@ -76,7 +76,7 @@ diff-match-patch==20241021
     # via django-import-export
 distro==1.9.0
     # via openai
-django==5.2.4
+django==5.2.5
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.in
@@ -140,7 +140,7 @@ django-waffle==5.0.0
     #   edx-toggles
 djangoql==0.18.1
     # via -r requirements/base.in
-djangorestframework==3.16.0
+djangorestframework==3.16.1
     # via
     #   -r requirements/base.in
     #   django-config-models
@@ -179,7 +179,7 @@ edx-rbac==2.1.0
     # via -r requirements/base.in
 edx-rest-api-client==6.2.0
     # via -r requirements/base.in
-edx-toggles==5.3.0
+edx-toggles==5.4.1
     # via
     #   -r requirements/base.in
     #   edx-auth-backends
@@ -230,7 +230,7 @@ openai==1.13.3
     #   -r requirements/base.in
 packaging==25.0
     # via kombu
-pbr==6.1.1
+pbr==7.0.0
     # via stevedore
 ply==3.11
     # via djangoql
@@ -253,7 +253,7 @@ pyjwt[crypto]==2.10.1
     #   social-auth-core
 pymemcache==4.0.0
     # via -r requirements/base.in
-pymongo==4.13.2
+pymongo==4.14.0
     # via edx-opaque-keys
 pynacl==1.5.0
     # via edx-django-utils
@@ -290,7 +290,7 @@ requests==2.32.4
     #   social-auth-core
 requests-oauthlib==2.0.0
     # via social-auth-core
-rpds-py==0.26.0
+rpds-py==0.27.0
     # via
     #   jsonschema
     #   referencing
@@ -353,10 +353,8 @@ tzdata==2025.2
     # via kombu
 uritemplate==4.2.0
     # via drf-spectacular
-urllib3==2.2.3
-    # via
-    #   -c requirements/common_constraints.txt
-    #   requests
+urllib3==2.5.0
+    # via requests
 vine==5.1.0
     # via
     #   amqp
