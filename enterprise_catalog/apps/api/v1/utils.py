@@ -101,3 +101,28 @@ def get_archived_content_count(highlighted_content):
         if course_run_statuses and all(status in ('archived', 'unpublished') for status in course_run_statuses):
             archived_content_count += 1
     return archived_content_count
+
+
+def str_to_bool(s):
+    """
+    Convert string value to boolean (case insensitive)
+
+    Returns:
+        (boolean): Boolean value that the passed in boolean/string argument represents
+
+    Raises:
+        (TypeError): If not a string/boolean type, or an invalid boolean string representation
+    """
+    if isinstance(s, bool):
+        # If already a boolen then just return it
+        return s
+    try:
+        strlower = s.lower()
+        if strlower == 'true':
+            return True
+        elif strlower == 'false':
+            return False
+        else:
+            raise TypeError(f'Invalid boolean string: {str}')
+    except AttributeError as exc:
+        raise TypeError('Argument is not boolean nor string') from exc
