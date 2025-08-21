@@ -295,7 +295,7 @@ packaging==25.0
     #   -r requirements/base.txt
     #   gunicorn
     #   kombu
-pbr==6.1.1
+pbr==7.0.0
     # via
     #   -r requirements/base.txt
     #   stevedore

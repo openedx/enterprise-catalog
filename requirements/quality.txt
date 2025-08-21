@@ -315,7 +315,7 @@ packaging==25.0
     # via
     #   -r requirements/base.txt
     #   kombu
-pbr==6.1.1
+pbr==7.0.0
     # via
     #   -r requirements/base.txt
     #   stevedore
