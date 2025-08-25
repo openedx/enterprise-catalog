@@ -132,7 +132,7 @@ colorama==0.4.6
     # via
     #   -r requirements/test.txt
     #   tox
-coverage[toml]==7.10.4
+coverage[toml]==7.10.5
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -398,7 +398,7 @@ jsonfield2==4.0.0.post0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-jsonschema==4.25.0
+jsonschema==4.25.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -457,7 +457,7 @@ packaging==25.0
     #   pyproject-api
     #   pytest
     #   tox
-pbr==7.0.0
+pbr==7.0.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -550,7 +550,7 @@ pymemcache==4.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-pymongo==4.14.0
+pymongo==4.14.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -612,7 +612,7 @@ referencing==0.36.2
     #   -r requirements/test.txt
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.4
+requests==2.32.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
