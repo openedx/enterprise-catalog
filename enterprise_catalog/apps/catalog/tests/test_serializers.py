@@ -155,7 +155,8 @@ class NormalizedContentMetadataSerializerTests(TestCase):
         self.assertEqual(serialized_data['enroll_by_date'], actual_deadline)
 
     @ddt.data(
-        # First enrollable paid seat price
+        # WHEN first_enrollable_paid_seat_price is available,
+        # THEN use first_enrollable_paid_seat_price.
         {
             'first_enrollable_paid_seat_price': 50,
             'fixed_price_usd': None,
@@ -163,7 +164,8 @@ class NormalizedContentMetadataSerializerTests(TestCase):
             'course_type': 'verified-audit',
             'expected_content_price': 50.0,
         },
-        # First enrollable paid seat default normalized price
+        # WHEN neither first_enrollable_paid_seat_price nor fixed price exist,
+        # THEN fall back to default price.
         {
             'first_enrollable_paid_seat_price': None,
             'fixed_price_usd': None,
@@ -171,7 +173,8 @@ class NormalizedContentMetadataSerializerTests(TestCase):
             'course_type': 'verified-audit',
             'expected_content_price': 0.0,
         },
-        # Fixed price usd
+        # WHEN a fixed price exists, but so does a first_enrollable_paid_seat_price,
+        # THEN prioritize the fixed price.
         {
             'first_enrollable_paid_seat_price': 50,
             'fixed_price_usd': "100.00",
@@ -179,7 +182,8 @@ class NormalizedContentMetadataSerializerTests(TestCase):
             'course_type': 'verified-audit',
             'expected_content_price': 100.0,
         },
-        # entitlements
+        # WHEN no fixed price and course type is Exec Ed,
+        # THEN use entitlements price.
         {
             'first_enrollable_paid_seat_price': None,
             'fixed_price_usd': None,
@@ -195,7 +199,43 @@ class NormalizedContentMetadataSerializerTests(TestCase):
             'course_type': 'executive-education-2u',
             'expected_content_price': 200.0,
         },
-        # entitlements default normalized price
+        # wHEN no fixed price, course type is Exec Ed, and the entitlements price is None,
+        # THEN fall back to default price.
+        {
+            'first_enrollable_paid_seat_price': None,
+            'fixed_price_usd': None,
+            'entitlements': [
+                {
+                    "mode": "paid-executive-education",
+                    "price": None,  # trigger fallback to default price.
+                    "currency": "USD",
+                    "sku": "1234",
+                    "expires": None
+                }
+            ],
+            'course_type': 'executive-education-2u',
+            'expected_content_price': 0,
+        },
+        # wHEN no fixed price, course type is Exec Ed, no advertised course run,
+        # THEN use entitlements price.
+        {
+            'first_enrollable_paid_seat_price': None,
+            'fixed_price_usd': None,
+            'entitlements': [
+                {
+                    "mode": "paid-executive-education",
+                    "price": "200.00",
+                    "currency": "USD",
+                    "sku": "1234",
+                    "expires": None
+                }
+            ],
+            'course_type': 'executive-education-2u',
+            'has_advertised_course_run': False,
+            'expected_content_price': 200.0,
+        },
+        # wHEN no fixed price, course type is Exec Ed, no advertised course run, entitlements price is None,
+        # THEN fall back to default price.
         {
             'first_enrollable_paid_seat_price': None,
             'fixed_price_usd': None,
@@ -209,8 +249,9 @@ class NormalizedContentMetadataSerializerTests(TestCase):
                 }
             ],
             'course_type': 'executive-education-2u',
+            'has_advertised_course_run': False,
             'expected_content_price': 0,
-        }
+        },
     )
     @ddt.unpack
     def test_content_price(self,
@@ -219,6 +260,7 @@ class NormalizedContentMetadataSerializerTests(TestCase):
                            entitlements,
                            course_type,
                            expected_content_price,
+                           has_advertised_course_run=True,
                            ):
         course_content = factories.ContentMetadataFactory(
             content_type=COURSE,
@@ -229,6 +271,9 @@ class NormalizedContentMetadataSerializerTests(TestCase):
         advertised_course_run = get_advertised_course_run(course_content.json_metadata)
         advertised_course_run['fixed_price_usd'] = fixed_price_usd
         advertised_course_run['first_enrollable_paid_seat_price'] = first_enrollable_paid_seat_price
+
+        if not has_advertised_course_run:
+            course_content.json_metadata['advertised_course_run_uuid'] = None
 
         normalized_metadata_input = {
             'course_metadata': course_content.json_metadata,
