@@ -50,7 +50,7 @@ backoff==1.10.0
     # via
     #   -r requirements/test.txt
     #   analytics-python
-beautifulsoup4==4.13.4
+beautifulsoup4==4.13.5
     # via pydata-sphinx-theme
 billiard==4.2.1
     # via
@@ -121,7 +121,7 @@ colorama==0.4.6
     # via
     #   -r requirements/test.txt
     #   tox
-coverage[toml]==7.10.4
+coverage[toml]==7.10.5
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -339,7 +339,7 @@ jsonfield==3.2.0
     #   edx-celeryutils
 jsonfield2==4.0.0.post0
     # via -r requirements/test.txt
-jsonschema==4.25.0
+jsonschema==4.25.1
     # via
     #   -r requirements/test.txt
     #   drf-spectacular
@@ -390,7 +390,7 @@ packaging==25.0
     #   pytest
     #   sphinx
     #   tox
-pbr==7.0.0
+pbr==7.0.1
     # via
     #   -r requirements/test.txt
     #   stevedore
@@ -471,7 +471,7 @@ pylint-plugin-utils==0.9.0
     #   pylint-django
 pymemcache==4.0.0
     # via -r requirements/test.txt
-pymongo==4.14.0
+pymongo==4.14.1
     # via
     #   -r requirements/test.txt
     #   edx-opaque-keys
@@ -525,7 +525,7 @@ referencing==0.36.2
     #   -r requirements/test.txt
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.4
+requests==2.32.5
     # via
     #   -r requirements/test.txt
     #   algoliasearch
