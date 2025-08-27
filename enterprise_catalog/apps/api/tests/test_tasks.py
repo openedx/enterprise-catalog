@@ -595,7 +595,7 @@ class UpdateFullContentMetadataTaskTests(TestCase):
             'end_date': None,
             'enroll_by_date': None,
             'enroll_start_date': None,
-            'content_price': None,
+            'content_price': DEFAULT_NORMALIZED_PRICE,
         }
 
         # make sure course associated program metadata has been created and linked correctly
