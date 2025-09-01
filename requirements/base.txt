@@ -198,7 +198,7 @@ inflection==0.5.1
     # via drf-spectacular
 jinja2==3.1.6
     # via code-annotations
-joblib==1.5.1
+joblib==1.5.2
     # via scikit-learn
 jsonfield==3.2.0
     # via edx-celeryutils
@@ -230,11 +230,9 @@ openai==1.13.3
     #   -r requirements/base.in
 packaging==25.0
     # via kombu
-pbr==7.0.1
-    # via stevedore
 ply==3.11
     # via djangoql
-prompt-toolkit==3.0.51
+prompt-toolkit==3.0.52
     # via click-repl
 psutil==7.0.0
     # via edx-django-utils
@@ -290,7 +288,7 @@ requests==2.32.5
     #   social-auth-core
 requests-oauthlib==2.0.0
     # via social-auth-core
-rpds-py==0.27.0
+rpds-py==0.27.1
     # via
     #   jsonschema
     #   referencing
@@ -325,7 +323,7 @@ social-auth-core==4.7.0
     #   social-auth-app-django
 sqlparse==0.5.3
     # via django
-stevedore==5.4.1
+stevedore==5.5.0
     # via
     #   code-annotations
     #   edx-django-utils
@@ -338,7 +336,7 @@ threadpoolctl==3.6.0
     # via scikit-learn
 tqdm==4.67.1
     # via openai
-typing-extensions==4.14.1
+typing-extensions==4.15.0
     # via
     #   anyio
     #   edx-opaque-keys

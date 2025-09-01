@@ -214,7 +214,7 @@ edx-toggles==5.4.1
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends
-gevent==25.5.1
+gevent==25.8.2
     # via -r requirements/production.in
 greenlet==3.2.4
     # via gevent
@@ -246,7 +246,7 @@ jinja2==3.1.6
     # via
     #   -r requirements/base.txt
     #   code-annotations
-joblib==1.5.1
+joblib==1.5.2
     # via
     #   -r requirements/base.txt
     #   scikit-learn
@@ -295,15 +295,11 @@ packaging==25.0
     #   -r requirements/base.txt
     #   gunicorn
     #   kombu
-pbr==7.0.1
-    # via
-    #   -r requirements/base.txt
-    #   stevedore
 ply==3.11
     # via
     #   -r requirements/base.txt
     #   djangoql
-prompt-toolkit==3.0.51
+prompt-toolkit==3.0.52
     # via
     #   -r requirements/base.txt
     #   click-repl
@@ -385,7 +381,7 @@ requests-oauthlib==2.0.0
     # via
     #   -r requirements/base.txt
     #   social-auth-core
-rpds-py==0.27.0
+rpds-py==0.27.1
     # via
     #   -r requirements/base.txt
     #   jsonschema
@@ -430,7 +426,7 @@ sqlparse==0.5.3
     # via
     #   -r requirements/base.txt
     #   django
-stevedore==5.4.1
+stevedore==5.5.0
     # via
     #   -r requirements/base.txt
     #   code-annotations
@@ -452,7 +448,7 @@ tqdm==4.67.1
     # via
     #   -r requirements/base.txt
     #   openai
-typing-extensions==4.14.1
+typing-extensions==4.15.0
     # via
     #   -r requirements/base.txt
     #   anyio
