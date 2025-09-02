@@ -3,7 +3,12 @@ from collections import OrderedDict
 
 from django.shortcuts import get_object_or_404
 from django.utils.functional import cached_property
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.utils import (
+    OpenApiExample,
+    OpenApiParameter,
+    OpenApiResponse,
+    extend_schema,
+)
 from edx_rest_framework_extensions.paginators import DefaultPagination
 from rest_framework.decorators import action
 from rest_framework.generics import GenericAPIView
@@ -12,7 +17,10 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework_xml.renderers import XMLRenderer
 
-from enterprise_catalog.apps.api.v1.serializers import ContentMetadataSerializer
+from enterprise_catalog.apps.api.v1.serializers import (
+    ContentMetadataListResponseSerializer,
+    ContentMetadataSerializer,
+)
 from enterprise_catalog.apps.api.v1.utils import is_any_course_run_active
 from enterprise_catalog.apps.api.v1.views.base import BaseViewSet
 from enterprise_catalog.apps.catalog.models import EnterpriseCatalog
@@ -102,7 +110,80 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
                 f"Maximum value is {DefaultPagination.max_page_size}.",
             ),
         ],
-        responses={200: ContentMetadataSerializer(many=True)},
+        responses={
+            200: OpenApiResponse(
+                response=ContentMetadataListResponseSerializer,
+                description="Paginated list of dynamic content metadata for the catalog.",
+                examples=[
+                    OpenApiExample(
+                        "Detailed Catalog Metadata Response",
+                        description=(
+                            "Illustrates a typical, dynamic data structure for a course, "
+                            "including common nested fields like course_runs, owners, and subjects. "
+                            "Note: The actual fields returned can vary."
+                        ),
+                        value={
+                            "count": 20,
+                            "next": "https://api.example.org/enterprise/v2/enterprise-catalogs/{catalog_id}?page=2",
+                            "previous": None,
+                            "results": [
+                                {
+                                    "aggregation_key": "course:edX+DemoX",
+                                    "content_type": "course",
+                                    "full_description": "<p><strong>This is a sample course description.</strong></p>",
+                                    "key": "edX+DemoX",
+                                    "short_description": "<p>This is a sample short description.</p>",
+                                    "card_image_url": None,
+                                    "image_url": "https://prod-discovery.edx-cdn.org/...",
+                                    "uuid": "11111111-1111-1111-1111-111111111111",
+                                    "title": "edX Demonstration Course",
+                                    "seat_types": ["audit", "verified"],
+                                    "course_runs": [
+                                        {
+                                            "key": "course-v1:edX+DemoX+2025_T1",
+                                            "uuid": "22222222-2222-2222-2222-222222222222",
+                                            "status": "published",
+                                            "is_enrollable": True,
+                                            "is_marketable": True,
+                                            "availability": "Current",
+                                            "min_effort": 1,
+                                            "max_effort": 3,
+                                            "weeks_to_complete": 4,
+                                            "parent_content_key": "edX+DemoX",
+                                            "enrollment_url": "https://enterprise.example.org/acme/course/edX+DemoX?..."
+                                        }
+                                    ],
+                                    "owners": [
+                                        {
+                                            "uuid": "33333333-3333-3333-3333-333333333333",
+                                            "key": "AdelaideX",
+                                            "name": "University of Adelaide"
+                                        }
+                                    ],
+                                    "subjects": [
+                                        {
+                                            "name": "Business & Management",
+                                            "slug": "business-management"
+                                        }
+                                    ],
+                                    "normalized_metadata": {
+                                        "start_date": "2025-01-01T00:00:00Z",
+                                        "end_date": "2025-06-01T00:00:00Z",
+                                        "enroll_by_date": "2025-05-25T23:59:59Z",
+                                        "content_price": 99.0
+                                    },
+                                    "parent_content_key": None,
+                                    "content_last_modified": "2025-01-01T00:00:00Z",
+                                    "enrollment_url": "https://enterprise.example.org/acme/course/edX+DemoX",
+                                    "xapi_activity_id": "https://lms.example.org/xapi/activities/course/edX+DemoX",
+                                    "active": True
+                                }
+                            ],
+                        },
+                    )
+                ]
+            )
+        },
     )
     @action(detail=True)
     def get(self, request, **kwargs):
