@@ -344,6 +344,17 @@ class ContentMetadataSerializer(ImmutableStateSerializer):
                 self.context['enterprise_catalog'].get_content_enrollment_url(course_run_instance)
 
 
+class ContentMetadataListResponseSerializer(ImmutableStateSerializer):
+    """
+    A serializer for documenting the paginated response structure of the
+    get_content_metadata endpoint. For schema generation only.
+    """
+    count = serializers.IntegerField()
+    next = serializers.URLField(allow_null=True)
+    previous = serializers.URLField(allow_null=True)
+    results = ContentMetadataSerializer(many=True)
+
+
 class HighlightedContentSerializer(serializers.ModelSerializer):
     """
     Serializer for the `HighlightedContent` model.
