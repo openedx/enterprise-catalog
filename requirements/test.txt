@@ -45,7 +45,7 @@ billiard==4.2.1
     # via
     #   -r requirements/base.txt
     #   celery
-cachetools==6.1.0
+cachetools==6.2.0
     # via tox
 celery==5.5.3
     # via
@@ -103,7 +103,7 @@ code-annotations==2.3.0
     #   edx-toggles
 colorama==0.4.6
     # via tox
-coverage[toml]==7.10.5
+coverage[toml]==7.10.6
     # via
     #   -r requirements/test.in
     #   pytest-cov
@@ -251,7 +251,7 @@ edx-toggles==5.4.1
     #   edx-auth-backends
 factory-boy==3.3.3
     # via -r requirements/test.in
-faker==37.5.3
+faker==37.6.0
     # via factory-boy
 filelock==3.19.1
     # via
@@ -287,7 +287,7 @@ jinja2==3.1.6
     # via
     #   -r requirements/base.txt
     #   code-annotations
-joblib==1.5.1
+joblib==1.5.2
     # via
     #   -r requirements/base.txt
     #   scikit-learn
@@ -342,11 +342,7 @@ packaging==25.0
     #   pyproject-api
     #   pytest
     #   tox
-pbr==7.0.1
-    # via
-    #   -r requirements/base.txt
-    #   stevedore
-platformdirs==4.3.8
+platformdirs==4.4.0
     # via
     #   pylint
     #   tox
@@ -360,7 +356,7 @@ ply==3.11
     # via
     #   -r requirements/base.txt
     #   djangoql
-prompt-toolkit==3.0.51
+prompt-toolkit==3.0.52
     # via
     #   -r requirements/base.txt
     #   click-repl
@@ -471,7 +467,7 @@ requests-oauthlib==2.0.0
     #   social-auth-core
 responses==0.25.8
     # via -r requirements/test.in
-rpds-py==0.27.0
+rpds-py==0.27.1
     # via
     #   -r requirements/base.txt
     #   jsonschema
@@ -517,7 +513,7 @@ sqlparse==0.5.3
     # via
     #   -r requirements/base.txt
     #   django
-stevedore==5.4.1
+stevedore==5.5.0
     # via
     #   -r requirements/base.txt
     #   code-annotations
@@ -537,13 +533,13 @@ threadpoolctl==3.6.0
     #   scikit-learn
 tomlkit==0.13.3
     # via pylint
-tox==4.28.4
+tox==4.29.0
     # via -r requirements/test.in
 tqdm==4.67.1
     # via
     #   -r requirements/base.txt
     #   openai
-typing-extensions==4.14.1
+typing-extensions==4.15.0
     # via
     #   -r requirements/base.txt
     #   anyio
