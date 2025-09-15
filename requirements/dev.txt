@@ -79,7 +79,7 @@ certifi==2025.8.3
     #   httpcore
     #   httpx
     #   requests
-cffi==1.17.1
+cffi==2.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -225,7 +225,7 @@ django-config-models==2.9.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-django-cors-headers==4.7.0
+django-cors-headers==4.8.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -468,7 +468,7 @@ mysqlclient==2.2.7
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-numpy==2.3.2
+numpy==2.3.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -533,12 +533,12 @@ psutil==7.0.0
     #   edx-django-utils
 pycodestyle==2.14.0
     # via -r requirements/quality.txt
-pycparser==2.22
+pycparser==2.23
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   cffi
-pydantic==2.11.7
+pydantic==2.11.9
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -592,12 +592,12 @@ pymemcache==4.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-pymongo==4.14.1
+pymongo==4.15.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-opaque-keys
-pynacl==1.5.0
+pynacl==1.6.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -616,7 +616,7 @@ pytest==8.4.2
     #   -r requirements/test.txt
     #   pytest-cov
     #   pytest-django
-pytest-cov==6.3.0
+pytest-cov==7.0.0
     # via -r requirements/test.txt
 pytest-django==4.11.1
     # via -r requirements/test.txt
@@ -692,11 +692,11 @@ rules==3.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-scikit-learn==1.7.1
+scikit-learn==1.7.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-scipy==1.16.1
+scipy==1.16.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -837,7 +837,7 @@ wheel==0.45.1
     # via
     #   -r requirements/pip-tools.txt
     #   pip-tools
-xlsxwriter==3.2.5
+xlsxwriter==3.2.8
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
