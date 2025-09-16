@@ -72,7 +72,7 @@ certifi==2025.8.3
     #   httpcore
     #   httpx
     #   requests
-cffi==1.17.1
+cffi==2.0.0
     # via
     #   -r requirements/test.txt
     #   cryptography
@@ -188,7 +188,7 @@ django-clearcache==1.2.1
     # via -r requirements/test.txt
 django-config-models==2.9.0
     # via -r requirements/test.txt
-django-cors-headers==4.7.0
+django-cors-headers==4.8.0
     # via -r requirements/test.txt
 django-crum==0.7.9
     # via
@@ -367,7 +367,7 @@ mysqlclient==2.2.7
     # via -r requirements/test.txt
 nh3==0.3.0
     # via readme-renderer
-numpy==2.3.2
+numpy==2.3.3
     # via
     #   -r requirements/test.txt
     #   scikit-learn
@@ -414,11 +414,11 @@ psutil==7.0.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
-pycparser==2.22
+pycparser==2.23
     # via
     #   -r requirements/test.txt
     #   cffi
-pydantic==2.11.7
+pydantic==2.11.9
     # via
     #   -r requirements/test.txt
     #   openai
@@ -467,11 +467,11 @@ pylint-plugin-utils==0.9.0
     #   pylint-django
 pymemcache==4.0.0
     # via -r requirements/test.txt
-pymongo==4.14.1
+pymongo==4.15.0
     # via
     #   -r requirements/test.txt
     #   edx-opaque-keys
-pynacl==1.5.0
+pynacl==1.6.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
@@ -484,7 +484,7 @@ pytest==8.4.2
     #   -r requirements/test.txt
     #   pytest-cov
     #   pytest-django
-pytest-cov==6.3.0
+pytest-cov==7.0.0
     # via -r requirements/test.txt
 pytest-django==4.11.1
     # via -r requirements/test.txt
@@ -549,9 +549,9 @@ rpds-py==0.27.1
     #   referencing
 rules==3.5
     # via -r requirements/test.txt
-scikit-learn==1.7.1
+scikit-learn==1.7.2
     # via -r requirements/test.txt
-scipy==1.16.1
+scipy==1.16.2
     # via
     #   -r requirements/test.txt
     #   scikit-learn
@@ -684,7 +684,7 @@ wcwidth==0.2.13
     # via
     #   -r requirements/test.txt
     #   prompt-toolkit
-xlsxwriter==3.2.5
+xlsxwriter==3.2.8
     # via -r requirements/test.txt
 zipp==3.23.0
     # via -r requirements/test.txt
