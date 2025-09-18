@@ -466,6 +466,13 @@ SYSTEM_TO_FEATURE_ROLE_MAPPING = {
 # value of the setting below.
 UPDATE_EXISTING_CONTENT_METADATA_BATCH_SIZE = 4
 
+# We can go slightly bigger for selecting existing metadata, but should still
+# remain somewhat small to avoid deadlocks.
+SELECT_EXISTING_CONTENT_METADATA_BATCH_SIZE = 20
+
+# Allows us to opt into experimental deadlock mitigation strategy
+TRY_AVOID_DEADLOCK = False
+
 USE_DEPRECATED_PYTZ = True
 
 # (ENT-5968) This is temporary until offers are implemented in the learner portal

@@ -1311,7 +1311,7 @@ def create_content_metadata(metadata, catalog_query=None, dry_run=False):
         list: The list of ContentMetaData.
     """
     metadata_list = []
-    for batched_metadata in batch(metadata, batch_size=100):
+    for batched_metadata in batch(metadata, batch_size=settings.SELECT_EXISTING_CONTENT_METADATA_BATCH_SIZE):
         content_keys = []
         filtered_batched_metadata = []
         for entry in batched_metadata:
@@ -1319,18 +1319,16 @@ def create_content_metadata(metadata, catalog_query=None, dry_run=False):
             if _should_allow_metadata(entry, catalog_query):
                 content_keys.append(get_content_key(entry))
                 filtered_batched_metadata.append(entry)
-        existing_metadata = ContentMetadata.objects.filter(content_key__in=content_keys)
-        existing_metadata_by_key = {metadata.content_key: metadata for metadata in existing_metadata}
-        existing_metadata_defaults, nonexisting_metadata_defaults = _partition_content_metadata_defaults(
-            filtered_batched_metadata, existing_metadata_by_key
-        )
 
-        # Update existing ContentMetadata records
-        updated_metadata = _update_existing_content_metadata(
-            existing_metadata_defaults,
-            existing_metadata_by_key,
-            dry_run
-        )
+        if settings.TRY_AVOID_DEADLOCK:
+            updated_metadata, nonexisting_metadata_defaults = _execute_updates_existing_records_avoid_deadlock(
+                content_keys, filtered_batched_metadata, dry_run,
+            )
+        else:
+            updated_metadata, nonexisting_metadata_defaults = _execute_updates_existing_records(
+                content_keys, filtered_batched_metadata, dry_run,
+            )
+
         metadata_list.extend(updated_metadata)
 
         # Create new ContentMetadata records
@@ -1338,6 +1336,53 @@ def create_content_metadata(metadata, catalog_query=None, dry_run=False):
         metadata_list.extend(created_metadata)
 
     return metadata_list
+
+
+def _execute_updates_existing_records(content_keys, filtered_batched_metadata, dry_run):
+    """
+    Finds and updates existing metadata records matching the given content keys, returning
+    a list of the updated records, along with a set of metadata defaults for content_keys that
+    do *not* already exist in the system.
+    """
+    existing_metadata = ContentMetadata.objects.filter(content_key__in=content_keys)
+    existing_metadata_by_key = {metadata.content_key: metadata for metadata in existing_metadata}
+    existing_metadata_defaults, nonexisting_metadata_defaults = _partition_content_metadata_defaults(
+        filtered_batched_metadata, existing_metadata_by_key
+    )
+
+    # Update existing ContentMetadata records
+    updated_metadata = _update_existing_content_metadata(
+        existing_metadata_defaults,
+        existing_metadata_by_key,
+        dry_run
+    )
+    return updated_metadata, nonexisting_metadata_defaults
+
+
+@transaction.atomic()
+def _execute_updates_existing_records_avoid_deadlock(content_keys, filtered_batched_metadata, dry_run):
+    """
+    Finds and updates existing metadata records matching the given content keys, returning
+    a list of the updated records, along with a set of metadata defaults for content_keys that
+    do *not* already exist in the system. This version tries to avoid deadlocks by using
+    a transaction with select_for_update().
+    """
+    # see https://docs.djangoproject.com/en/5.2/ref/models/querysets/#select-for-update
+    existing_metadata = ContentMetadata.objects.filter(
+        content_key__in=content_keys
+    ).order_by('pk').select_for_update()
+    existing_metadata_by_key = {metadata.content_key: metadata for metadata in existing_metadata}
+    existing_metadata_defaults, nonexisting_metadata_defaults = _partition_content_metadata_defaults(
+        filtered_batched_metadata, existing_metadata_by_key
+    )
+
+    # Update existing ContentMetadata records
+    updated_metadata = _update_existing_content_metadata(
+        existing_metadata_defaults,
+        existing_metadata_by_key,
+        dry_run
+    )
+    return updated_metadata, nonexisting_metadata_defaults
 
 
 def _check_content_association_threshold(catalog_query, metadata_list):

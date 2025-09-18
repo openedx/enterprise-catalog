@@ -115,9 +115,10 @@ class TestModels(TestCase):
         mock_client.assert_called_once()
         self.assertEqual(ContentMetadata.objects.count(), 3)
 
+    @ddt.data(True, False)
     @override_settings(DISCOVERY_CATALOG_QUERY_CACHE_TIMEOUT=0)
     @mock.patch('enterprise_catalog.apps.api_client.discovery.DiscoveryApiClient')
-    def test_contentmetadata_update_from_discovery(self, mock_client):
+    def test_contentmetadata_update_from_discovery(self, try_avoid_deadlock, mock_client):
         """
         update_contentmetadata_from_discovery should update or create ContentMetadata
         objects from the discovery service /search/all api call.
@@ -145,7 +146,8 @@ class TestModels(TestCase):
         catalog = factories.EnterpriseCatalogFactory()
 
         self.assertEqual(ContentMetadata.objects.count(), 0)
-        update_contentmetadata_from_discovery(catalog.catalog_query)
+        with override_settings(TRY_AVOID_DEADLOCK=try_avoid_deadlock):
+            update_contentmetadata_from_discovery(catalog.catalog_query)
         mock_client.assert_called_once()
         self.assertEqual(ContentMetadata.objects.count(), 3)
 
