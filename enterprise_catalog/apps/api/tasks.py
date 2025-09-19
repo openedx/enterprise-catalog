@@ -238,11 +238,14 @@ class LoggedTaskWithRetry(LoggedTask):  # pylint: disable=abstract-method
         IntegrityError,
         OperationalError,
     )
-    retry_kwargs = {'max_retries': 5}
-    # Use exponential backoff for retrying tasks
-    retry_backoff = True
-    # Add randomness to backoff delays to prevent all tasks in queue from executing simultaneously
-    retry_jitter = True
+    # https://docs.celeryq.dev/en/stable/userguide/tasks.html#Task.retry_backoff
+    # The retry backoff calculation is computed as (retry_backoff * 2**(retry count))
+    # The retry delay with the configuration below will result in retry delays of
+    # [20, 40, 60, 60, 60] seconds.
+    retry_backoff = 20
+    retry_backoff_max = 60
+    max_retries = 5
+    retry_jitter = False
 
 
 @shared_task(base=LoggedTaskWithRetry, bind=True, default_retry_delay=UNREADY_TASK_RETRY_COUNTDOWN_SECONDS)
