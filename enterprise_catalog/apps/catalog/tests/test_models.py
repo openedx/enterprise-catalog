@@ -9,6 +9,7 @@ from uuid import uuid4
 
 import ddt
 from django.conf import settings
+from django.db import DatabaseError
 from django.test import TestCase, override_settings
 
 from enterprise_catalog.apps.catalog.constants import (
@@ -26,6 +27,10 @@ from enterprise_catalog.apps.catalog.models import (
     ContentMetadata,
     RestrictedCourseMetadata,
     _should_allow_metadata,
+)
+from enterprise_catalog.apps.catalog.models import \
+    create_content_metadata as create_content_metadata_func
+from enterprise_catalog.apps.catalog.models import (
     synchronize_restricted_content,
     update_contentmetadata_from_discovery,
 )
@@ -1662,3 +1667,116 @@ class TestRestrictedRunsModels(TestCase):
         )
         self.assertEqual(restricted_runs[0].json_metadata['other'], 'stuff')
         self.assertEqual(restricted_runs[1].json_metadata['other'], 'things')
+
+
+@ddt.ddt
+class TestCreateContentMetadata(TestCase):
+    """
+    Tests for the create_content_metadata function, specifically testing retry logic.
+    """
+
+    def setUp(self):
+        self.catalog_query = factories.CatalogQueryFactory()
+        self.sample_metadata = [
+            {
+                'key': 'course-1',
+                'uuid': 'uuid-1',
+                'content_type': 'course',
+                'title': 'Test Course 1',
+            },
+            {
+                'key': 'course-2',
+                'uuid': 'uuid-2',
+                'content_type': 'course',
+                'title': 'Test Course 2',
+            },
+            {
+                'key': 'course-3',
+                'uuid': 'uuid-3',
+                'content_type': 'course',
+                'title': 'Test Course 3',
+            }
+        ]
+
+    @mock.patch('enterprise_catalog.apps.catalog.models._execute_updates_existing_records_avoid_deadlock')
+    @mock.patch('enterprise_catalog.apps.catalog.models._should_allow_metadata')
+    @mock.patch('enterprise_catalog.apps.catalog.models.get_content_key')
+    @mock.patch('enterprise_catalog.apps.catalog.models.batch')
+    @override_settings(CATALOG_CONTENT_METADATA_RETRY_MAX=3, SELECT_EXISTING_CONTENT_METADATA_BATCH_SIZE=2)
+    def test_create_content_metadata_retry_logic_successful_retry(
+        self, mock_batch, mock_get_content_key, mock_should_allow, mock_execute_updates
+    ):
+        """
+        Test that create_content_metadata properly retries failed items and succeeds on retry.
+        """
+        mock_batch.return_value = [self.sample_metadata[:2], [self.sample_metadata[2]]]
+        mock_should_allow.return_value = True
+        mock_get_content_key.side_effect = lambda x: x['key']
+
+        call_count = 0
+
+        def mock_execute_side_effect(*args):
+            nonlocal call_count
+            call_count += 1
+
+            if call_count == 1:
+                raise DatabaseError("Persistent database error")
+            if call_count == 2:
+                return [self.sample_metadata[1]], []
+            else:
+                raise DatabaseError("Persistent database error")
+
+        mock_execute_updates.side_effect = mock_execute_side_effect
+
+        # Execute the function
+        result = create_content_metadata_func(self.sample_metadata, self.catalog_query)
+
+        # Verify retry logic worked
+        self.assertEqual(mock_execute_updates.call_count, 5)
+        self.assertEqual(len(result), 1)  # Should have 2 successful items
+
+        # Verify the retry call had correct parameters (single item)
+        retry_call = mock_execute_updates.call_args_list[1]
+        retry_content_keys = retry_call[0][0]
+        retry_metadata = retry_call[0][1]
+        self.assertEqual(len(retry_content_keys), 1)
+        self.assertEqual(len(retry_metadata), 1)
+
+    @mock.patch('enterprise_catalog.apps.catalog.models._execute_updates_existing_records_avoid_deadlock')
+    @mock.patch('enterprise_catalog.apps.catalog.models._should_allow_metadata')
+    @mock.patch('enterprise_catalog.apps.catalog.models.get_content_key')
+    @mock.patch('enterprise_catalog.apps.catalog.models.batch')
+    @override_settings(CATALOG_CONTENT_METADATA_RETRY_MAX=2, SELECT_EXISTING_CONTENT_METADATA_BATCH_SIZE=1)
+    def test_create_content_metadata_retry_logic_max_retries_exceeded(
+        self, mock_batch, mock_get_content_key, mock_should_allow, mock_execute_updates
+    ):
+        """
+        Test that create_content_metadata stops retrying after max retries is reached.
+        """
+        mock_batch.return_value = [[self.sample_metadata[0]], [self.sample_metadata[1]]]
+        mock_should_allow.return_value = True
+        mock_get_content_key.side_effect = lambda x: x['key']
+
+        # Track calls and simulate persistent failures
+        call_count = 0
+
+        def mock_execute_side_effect(*args):
+            nonlocal call_count
+            call_count += 1
+
+            if call_count == 1:
+                raise DatabaseError("Persistent database error")
+            if call_count == 2:
+                return [self.sample_metadata[1]], []
+            else:
+                raise DatabaseError("Persistent database error")
+
+        mock_execute_updates.side_effect = mock_execute_side_effect
+
+        # Execute the function
+        result = create_content_metadata_func(self.sample_metadata[:2], self.catalog_query)
+
+        # Verify it stops after max retries
+        # Should be: 2 initial batches + 2 retries = 4 total calls
+        self.assertEqual(mock_execute_updates.call_count, 4)
+        self.assertEqual(len(result), 1)  # Only the successful item from second batch
