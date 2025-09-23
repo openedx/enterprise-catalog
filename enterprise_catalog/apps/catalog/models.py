@@ -6,7 +6,13 @@ from uuid import uuid4
 
 from config_models.models import ConfigurationModel
 from django.conf import settings
-from django.db import IntegrityError, OperationalError, models, transaction
+from django.db import (
+    DatabaseError,
+    IntegrityError,
+    OperationalError,
+    models,
+    transaction,
+)
 from django.db.models import Q
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
@@ -1311,6 +1317,8 @@ def create_content_metadata(metadata, catalog_query=None, dry_run=False):
         list: The list of ContentMetaData.
     """
     metadata_list = []
+    retry_list = []
+
     for batched_metadata in batch(metadata, batch_size=settings.SELECT_EXISTING_CONTENT_METADATA_BATCH_SIZE):
         content_keys = []
         filtered_batched_metadata = []
@@ -1320,43 +1328,47 @@ def create_content_metadata(metadata, catalog_query=None, dry_run=False):
                 content_keys.append(get_content_key(entry))
                 filtered_batched_metadata.append(entry)
 
-        if settings.TRY_AVOID_DEADLOCK:
-            updated_metadata, nonexisting_metadata_defaults = _execute_updates_existing_records_avoid_deadlock(
-                content_keys, filtered_batched_metadata, dry_run,
-            )
-        else:
-            updated_metadata, nonexisting_metadata_defaults = _execute_updates_existing_records(
-                content_keys, filtered_batched_metadata, dry_run,
-            )
+        _update_or_create_content_metadata(
+            content_keys, filtered_batched_metadata, dry_run, metadata_list, retry_list,
+        )
 
-        metadata_list.extend(updated_metadata)
+    retry_count = 0
+    retry_max = getattr(settings, 'CATALOG_CONTENT_METADATA_RETRY_MAX', 1000)
 
-        # Create new ContentMetadata records
-        created_metadata = _create_new_content_metadata(nonexisting_metadata_defaults, dry_run)
-        metadata_list.extend(created_metadata)
+    LOGGER.info('Starting retry loop for keys %s', retry_list)
+    while retry_list and (retry_count < retry_max):
+        # in this second pass, we'll update one existing record at a time to avoid deadlocks
+        retry_count += 1
+        metadata_record = retry_list.pop(0)
+        content_keys = [get_content_key(metadata_record)]
+        filtered_batched_metadata = [metadata_record]
+        _update_or_create_content_metadata(
+            content_keys, filtered_batched_metadata, dry_run, metadata_list, retry_list,
+        )
+
+    LOGGER.info('End retry loop with remaining keys %s, retry_count %s', retry_list, retry_count)
 
     return metadata_list
 
 
-def _execute_updates_existing_records(content_keys, filtered_batched_metadata, dry_run):
+def _update_or_create_content_metadata(content_keys, filtered_batched_metadata, dry_run, metadata_list, retry_list):
     """
-    Finds and updates existing metadata records matching the given content keys, returning
-    a list of the updated records, along with a set of metadata defaults for content_keys that
-    do *not* already exist in the system.
+    Helper to do the updates of existing metadata and creation of new metadata.
+    Called for side-effect: modifies both ``metadata_list`` and ``retry_list``.
     """
-    existing_metadata = ContentMetadata.objects.filter(content_key__in=content_keys)
-    existing_metadata_by_key = {metadata.content_key: metadata for metadata in existing_metadata}
-    existing_metadata_defaults, nonexisting_metadata_defaults = _partition_content_metadata_defaults(
-        filtered_batched_metadata, existing_metadata_by_key
-    )
+    nonexisting_metadata_defaults = None
+    try:
+        updated_metadata, nonexisting_metadata_defaults = _execute_updates_existing_records_avoid_deadlock(
+            content_keys, filtered_batched_metadata, dry_run,
+        )
+        metadata_list.extend(updated_metadata)
+    except DatabaseError as exc:
+        LOGGER.warning('Error during update of existing content keys %s: %s', content_keys, exc)
+        retry_list.extend(filtered_batched_metadata)
 
-    # Update existing ContentMetadata records
-    updated_metadata = _update_existing_content_metadata(
-        existing_metadata_defaults,
-        existing_metadata_by_key,
-        dry_run
-    )
-    return updated_metadata, nonexisting_metadata_defaults
+    if nonexisting_metadata_defaults:
+        created_metadata = _create_new_content_metadata(nonexisting_metadata_defaults, dry_run)
+        metadata_list.extend(created_metadata)
 
 
 @transaction.atomic()
