@@ -28,7 +28,7 @@ attrs==25.3.0
     #   referencing
 backoff==1.10.0
     # via analytics-python
-billiard==4.2.1
+billiard==4.2.2
     # via celery
 celery==5.5.3
     # via
@@ -47,7 +47,7 @@ cffi==2.0.0
     #   pynacl
 charset-normalizer==3.4.3
     # via requests
-click==8.2.1
+click==8.3.0
     # via
     #   celery
     #   click-didyoumean
@@ -63,7 +63,7 @@ click-repl==0.3.0
     # via celery
 code-annotations==2.3.0
     # via edx-toggles
-cryptography==45.0.7
+cryptography==46.0.1
     # via
     #   pyjwt
     #   social-auth-core
@@ -110,7 +110,7 @@ django-clearcache==1.2.1
     # via -r requirements/base.in
 django-config-models==2.9.0
     # via -r requirements/base.in
-django-cors-headers==4.8.0
+django-cors-headers==4.9.0
     # via -r requirements/base.in
 django-crum==0.7.9
     # via
@@ -234,7 +234,7 @@ ply==3.11
     # via djangoql
 prompt-toolkit==3.0.52
     # via click-repl
-psutil==7.0.0
+psutil==7.1.0
     # via edx-django-utils
 pycparser==2.23
     # via cffi
@@ -251,7 +251,7 @@ pyjwt[crypto]==2.10.1
     #   social-auth-core
 pymemcache==4.0.0
     # via -r requirements/base.in
-pymongo==4.15.0
+pymongo==4.15.1
     # via edx-opaque-keys
 pynacl==1.6.0
     # via edx-django-utils
@@ -360,7 +360,7 @@ vine==5.1.0
     #   kombu
 wcwidth==0.2.13
     # via prompt-toolkit
-xlsxwriter==3.2.8
+xlsxwriter==3.2.9
     # via -r requirements/base.in
 zipp==3.23.0
     # via -r requirements/base.in
