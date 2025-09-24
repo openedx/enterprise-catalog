@@ -1335,7 +1335,16 @@ def create_content_metadata(metadata, catalog_query=None, dry_run=False):
     retry_count = 0
     retry_max = getattr(settings, 'CATALOG_CONTENT_METADATA_RETRY_MAX', 1000)
 
-    LOGGER.info('Starting retry loop for keys %s', retry_list)
+    if not retry_list:
+        return metadata_list
+
+    retry_keys = [get_content_key(entry) for entry in retry_list]
+    LOGGER.info(
+        'Starting retry loop for %s keys: %s',
+        len(retry_list),
+        retry_keys,
+    )
+
     while retry_list and (retry_count < retry_max):
         # in this second pass, we'll update one existing record at a time to avoid deadlocks
         retry_count += 1
@@ -1346,7 +1355,11 @@ def create_content_metadata(metadata, catalog_query=None, dry_run=False):
             content_keys, filtered_batched_metadata, dry_run, metadata_list, retry_list,
         )
 
-    LOGGER.info('End retry loop with remaining keys %s, retry_count %s', retry_list, retry_count)
+    LOGGER.info(
+        'End retry loop with remaining keys %s, retry_count %s',
+        retry_keys,
+        retry_count,
+    )
 
     return metadata_list
 
