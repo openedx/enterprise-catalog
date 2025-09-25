@@ -16,12 +16,12 @@ annotated-types==0.7.0
     # via
     #   -r requirements/base.txt
     #   pydantic
-anyio==4.10.0
+anyio==4.11.0
     # via
     #   -r requirements/base.txt
     #   httpx
     #   openai
-asgiref==3.9.1
+asgiref==3.9.2
     # via
     #   -r requirements/base.txt
     #   django
@@ -361,7 +361,7 @@ pyyaml==6.0.2
     #   code-annotations
     #   drf-spectacular
     #   edx-django-release-util
-redis==3.5.3
+redis==6.4.0
     # via -r requirements/base.txt
 referencing==0.36.2
     # via
@@ -480,7 +480,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-wcwidth==0.2.13
+wcwidth==0.2.14
     # via
     #   -r requirements/base.txt
     #   prompt-toolkit
@@ -490,7 +490,7 @@ zipp==3.23.0
     # via -r requirements/base.txt
 zope-event==6.0
     # via gevent
-zope-interface==8.0
+zope-interface==8.0.1
     # via gevent
 
 # The following packages are considered to be unsafe in a requirements file:
