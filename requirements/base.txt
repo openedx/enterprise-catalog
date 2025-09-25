@@ -14,11 +14,11 @@ analytics-python==1.4.post1
     # via -r requirements/base.in
 annotated-types==0.7.0
     # via pydantic
-anyio==4.10.0
+anyio==4.11.0
     # via
     #   httpx
     #   openai
-asgiref==3.9.1
+asgiref==3.9.2
     # via
     #   django
     #   django-cors-headers
@@ -270,10 +270,8 @@ pyyaml==6.0.2
     #   code-annotations
     #   drf-spectacular
     #   edx-django-release-util
-redis==3.5.3
-    # via
-    #   -c requirements/constraints.txt
-    #   -r requirements/base.in
+redis==6.4.0
+    # via -r requirements/base.in
 referencing==0.36.2
     # via
     #   jsonschema
@@ -358,7 +356,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-wcwidth==0.2.13
+wcwidth==0.2.14
     # via prompt-toolkit
 xlsxwriter==3.2.9
     # via -r requirements/base.in

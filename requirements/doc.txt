@@ -22,12 +22,12 @@ annotated-types==0.7.0
     # via
     #   -r requirements/test.txt
     #   pydantic
-anyio==4.10.0
+anyio==4.11.0
     # via
     #   -r requirements/test.txt
     #   httpx
     #   openai
-asgiref==3.9.1
+asgiref==3.9.2
     # via
     #   -r requirements/test.txt
     #   django
@@ -512,10 +512,8 @@ pyyaml==6.0.2
     #   responses
 readme-renderer==44.0
     # via -r requirements/doc.in
-redis==3.5.3
-    # via
-    #   -c requirements/constraints.txt
-    #   -r requirements/test.txt
+redis==6.4.0
+    # via -r requirements/test.txt
 referencing==0.36.2
     # via
     #   -r requirements/test.txt
@@ -680,7 +678,7 @@ virtualenv==20.34.0
     # via
     #   -r requirements/test.txt
     #   tox
-wcwidth==0.2.13
+wcwidth==0.2.14
     # via
     #   -r requirements/test.txt
     #   prompt-toolkit

@@ -18,12 +18,12 @@ annotated-types==0.7.0
     # via
     #   -r requirements/base.txt
     #   pydantic
-anyio==4.10.0
+anyio==4.11.0
     # via
     #   -r requirements/base.txt
     #   httpx
     #   openai
-asgiref==3.9.1
+asgiref==3.9.2
     # via
     #   -r requirements/base.txt
     #   django
@@ -442,10 +442,8 @@ pyyaml==6.0.2
     #   drf-spectacular
     #   edx-django-release-util
     #   responses
-redis==3.5.3
-    # via
-    #   -c requirements/constraints.txt
-    #   -r requirements/base.txt
+redis==6.4.0
+    # via -r requirements/base.txt
 referencing==0.36.2
     # via
     #   -r requirements/base.txt
@@ -575,7 +573,7 @@ vine==5.1.0
     #   kombu
 virtualenv==20.34.0
     # via tox
-wcwidth==0.2.13
+wcwidth==0.2.14
     # via
     #   -r requirements/base.txt
     #   prompt-toolkit
