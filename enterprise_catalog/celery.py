@@ -1,5 +1,5 @@
 """
-Defines the Celery application for the enterprise_catalog project
+Defines the Celery application for the enterprise_catalog project.
 """
 import logging
 from pathlib import Path
@@ -10,7 +10,6 @@ from celery.signals import heartbeat_sent, worker_ready, worker_shutdown
 
 HEARTBEAT_FILE = Path("/tmp/worker_heartbeat")
 READINESS_FILE = Path("/tmp/worker_ready")
-
 
 logger = logging.getLogger(__name__)
 
