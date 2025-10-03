@@ -50,7 +50,7 @@ backoff==1.10.0
     # via
     #   -r requirements/test.txt
     #   analytics-python
-beautifulsoup4==4.13.5
+beautifulsoup4==4.14.0
     # via pydata-sphinx-theme
 billiard==4.2.2
     # via
@@ -200,7 +200,7 @@ django-dynamic-fixture==4.0.1
     # via -r requirements/test.txt
 django-extensions==4.1
     # via -r requirements/test.txt
-django-import-export==4.3.9
+django-import-export==4.3.10
     # via -r requirements/test.txt
 django-log-request-id==2.1.0
     # via -r requirements/test.txt
@@ -351,7 +351,7 @@ kombu==5.5.4
     # via
     #   -r requirements/test.txt
     #   celery
-markupsafe==3.0.2
+markupsafe==3.0.3
     # via
     #   -r requirements/test.txt
     #   jinja2
@@ -503,7 +503,7 @@ python3-openid==3.2.0
     #   social-auth-core
 pytz==2025.2
     # via -r requirements/test.txt
-pyyaml==6.0.2
+pyyaml==6.0.3
     # via
     #   -r requirements/test.txt
     #   code-annotations
@@ -557,7 +557,7 @@ semantic-version==2.10.0
     # via
     #   -r requirements/test.txt
     #   edx-drf-extensions
-simplejson==3.20.1
+simplejson==3.20.2
     # via -r requirements/test.txt
 six==1.17.0
     # via
