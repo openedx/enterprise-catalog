@@ -27,7 +27,7 @@ anyio==4.11.0
     #   -r requirements/test.txt
     #   httpx
     #   openai
-asgiref==3.9.2
+asgiref==3.10.0
     # via
     #   -r requirements/test.txt
     #   django
@@ -50,7 +50,7 @@ backoff==1.10.0
     # via
     #   -r requirements/test.txt
     #   analytics-python
-beautifulsoup4==4.14.0
+beautifulsoup4==4.14.2
     # via pydata-sphinx-theme
 billiard==4.2.2
     # via
@@ -66,7 +66,7 @@ celery==5.5.3
     #   -r requirements/test.txt
     #   django-celery-results
     #   edx-celeryutils
-certifi==2025.8.3
+certifi==2025.10.5
     # via
     #   -r requirements/test.txt
     #   httpcore
@@ -125,7 +125,7 @@ coverage[toml]==7.10.7
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==46.0.1
+cryptography==46.0.2
     # via
     #   -r requirements/test.txt
     #   pyjwt
@@ -154,7 +154,7 @@ distro==1.9.0
     # via
     #   -r requirements/test.txt
     #   openai
-django==5.2.6
+django==5.2.7
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/test.txt
@@ -249,13 +249,13 @@ drf-jwt==1.19.2
     #   edx-drf-extensions
 drf-spectacular==0.28.0
     # via -r requirements/test.txt
-edx-auth-backends==4.6.0
+edx-auth-backends==4.6.1
     # via -r requirements/test.txt
 edx-celeryutils==1.4.0
     # via -r requirements/test.txt
 edx-django-release-util==1.5.0
     # via -r requirements/test.txt
-edx-django-utils==8.0.0
+edx-django-utils==8.0.1
     # via
     #   -r requirements/test.txt
     #   django-config-models
@@ -320,7 +320,7 @@ iniconfig==2.1.0
     # via
     #   -r requirements/test.txt
     #   pytest
-isort==6.0.1
+isort==6.1.0
     # via
     #   -r requirements/test.txt
     #   pylint
@@ -418,7 +418,7 @@ pycparser==2.23
     # via
     #   -r requirements/test.txt
     #   cffi
-pydantic==2.11.9
+pydantic==2.11.10
     # via
     #   -r requirements/test.txt
     #   openai
@@ -445,7 +445,7 @@ pyjwt[crypto]==2.10.1
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
-pylint==3.3.8
+pylint==3.3.9
     # via
     #   -r requirements/test.txt
     #   edx-lint
@@ -467,7 +467,7 @@ pylint-plugin-utils==0.9.0
     #   pylint-django
 pymemcache==4.0.0
     # via -r requirements/test.txt
-pymongo==4.15.1
+pymongo==4.15.2
     # via
     #   -r requirements/test.txt
     #   edx-opaque-keys
@@ -632,7 +632,7 @@ tomlkit==0.13.3
     # via
     #   -r requirements/test.txt
     #   pylint
-tox==4.30.2
+tox==4.30.3
     # via -r requirements/test.txt
 tqdm==4.67.1
     # via
@@ -650,7 +650,7 @@ typing-extensions==4.15.0
     #   pydata-sphinx-theme
     #   referencing
     #   typing-inspection
-typing-inspection==0.4.1
+typing-inspection==0.4.2
     # via
     #   -r requirements/test.txt
     #   pydantic
