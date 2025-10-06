@@ -21,7 +21,7 @@ anyio==4.11.0
     #   -r requirements/base.txt
     #   httpx
     #   openai
-asgiref==3.9.2
+asgiref==3.10.0
     # via
     #   -r requirements/base.txt
     #   django
@@ -44,7 +44,7 @@ celery==5.5.3
     #   -r requirements/base.txt
     #   django-celery-results
     #   edx-celeryutils
-certifi==2025.8.3
+certifi==2025.10.5
     # via
     #   -r requirements/base.txt
     #   httpcore
@@ -84,7 +84,7 @@ code-annotations==2.3.0
     # via
     #   -r requirements/base.txt
     #   edx-toggles
-cryptography==46.0.1
+cryptography==46.0.2
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -103,7 +103,7 @@ distro==1.9.0
     # via
     #   -r requirements/base.txt
     #   openai
-django==5.2.6
+django==5.2.7
     # via
     #   -r requirements/base.txt
     #   django-celery-results
@@ -184,13 +184,13 @@ drf-jwt==1.19.2
     #   edx-drf-extensions
 drf-spectacular==0.28.0
     # via -r requirements/base.txt
-edx-auth-backends==4.6.0
+edx-auth-backends==4.6.1
     # via -r requirements/base.txt
 edx-celeryutils==1.4.0
     # via -r requirements/base.txt
 edx-django-release-util==1.5.0
     # via -r requirements/base.txt
-edx-django-utils==8.0.0
+edx-django-utils==8.0.1
     # via
     #   -r requirements/base.txt
     #   django-config-models
@@ -311,7 +311,7 @@ pycparser==2.23
     # via
     #   -r requirements/base.txt
     #   cffi
-pydantic==2.11.9
+pydantic==2.11.10
     # via
     #   -r requirements/base.txt
     #   openai
@@ -329,7 +329,7 @@ pyjwt[crypto]==2.10.1
     #   social-auth-core
 pymemcache==4.0.0
     # via -r requirements/base.txt
-pymongo==4.15.1
+pymongo==4.15.2
     # via
     #   -r requirements/base.txt
     #   edx-opaque-keys
@@ -458,7 +458,7 @@ typing-extensions==4.15.0
     #   pydantic-core
     #   referencing
     #   typing-inspection
-typing-inspection==0.4.1
+typing-inspection==0.4.2
     # via
     #   -r requirements/base.txt
     #   pydantic

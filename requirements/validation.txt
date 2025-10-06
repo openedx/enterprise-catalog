@@ -29,7 +29,7 @@ anyio==4.11.0
     #   -r requirements/test.txt
     #   httpx
     #   openai
-asgiref==3.9.2
+asgiref==3.10.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -68,7 +68,7 @@ celery==5.5.3
     #   -r requirements/test.txt
     #   django-celery-results
     #   edx-celeryutils
-certifi==2025.8.3
+certifi==2025.10.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -136,7 +136,7 @@ coverage[toml]==7.10.7
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==46.0.1
+cryptography==46.0.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -170,7 +170,7 @@ distro==1.9.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   openai
-django==5.2.6
+django==5.2.7
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
@@ -284,7 +284,7 @@ drf-spectacular==0.28.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-edx-auth-backends==4.6.0
+edx-auth-backends==4.6.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -296,7 +296,7 @@ edx-django-release-util==1.5.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-edx-django-utils==8.0.0
+edx-django-utils==8.0.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -374,7 +374,7 @@ iniconfig==2.1.0
     # via
     #   -r requirements/test.txt
     #   pytest
-isort==6.0.1
+isort==6.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -492,7 +492,7 @@ pycparser==2.23
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   cffi
-pydantic==2.11.9
+pydantic==2.11.10
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -517,7 +517,7 @@ pyjwt[crypto]==2.10.1
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
-pylint==3.3.8
+pylint==3.3.9
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -545,7 +545,7 @@ pymemcache==4.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-pymongo==4.15.1
+pymongo==4.15.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -715,7 +715,7 @@ tomlkit==0.13.3
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pylint
-tox==4.30.2
+tox==4.30.3
     # via -r requirements/test.txt
 tqdm==4.67.1
     # via
@@ -733,7 +733,7 @@ typing-extensions==4.15.0
     #   pydantic-core
     #   referencing
     #   typing-inspection
-typing-inspection==0.4.1
+typing-inspection==0.4.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
