@@ -81,7 +81,7 @@ chardet==5.2.0
     # via
     #   -r requirements/test.txt
     #   tox
-charset-normalizer==3.4.3
+charset-normalizer==3.4.4
     # via
     #   -r requirements/test.txt
     #   requests
@@ -121,11 +121,11 @@ colorama==0.4.6
     # via
     #   -r requirements/test.txt
     #   tox
-coverage[toml]==7.10.7
+coverage[toml]==7.11.0
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==46.0.2
+cryptography==46.0.3
     # via
     #   -r requirements/test.txt
     #   pyjwt
@@ -199,7 +199,7 @@ django-dynamic-fixture==4.0.1
     # via -r requirements/test.txt
 django-extensions==4.1
     # via -r requirements/test.txt
-django-import-export==4.3.10
+django-import-export==4.3.12
     # via -r requirements/test.txt
 django-log-request-id==2.1.0
     # via -r requirements/test.txt
@@ -315,7 +315,7 @@ inflection==0.5.1
     # via
     #   -r requirements/test.txt
     #   drf-spectacular
-iniconfig==2.1.0
+iniconfig==2.3.0
     # via
     #   -r requirements/test.txt
     #   pytest
@@ -366,7 +366,7 @@ mysqlclient==2.2.7
     # via -r requirements/test.txt
 nh3==0.3.1
     # via readme-renderer
-numpy==2.3.3
+numpy==2.3.4
     # via
     #   -r requirements/test.txt
     #   scikit-learn
@@ -409,7 +409,7 @@ prompt-toolkit==3.0.52
     # via
     #   -r requirements/test.txt
     #   click-repl
-psutil==7.1.0
+psutil==7.1.1
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
@@ -417,11 +417,11 @@ pycparser==2.23
     # via
     #   -r requirements/test.txt
     #   cffi
-pydantic==2.12.0
+pydantic==2.12.3
     # via
     #   -r requirements/test.txt
     #   openai
-pydantic-core==2.41.1
+pydantic-core==2.41.4
     # via
     #   -r requirements/test.txt
     #   pydantic
@@ -513,7 +513,7 @@ readme-renderer==44.0
     # via -r requirements/doc.in
 redis==6.4.0
     # via -r requirements/test.txt
-referencing==0.36.2
+referencing==0.37.0
     # via
     #   -r requirements/test.txt
     #   jsonschema
@@ -615,7 +615,7 @@ stevedore==5.5.0
     #   doc8
     #   edx-django-utils
     #   edx-opaque-keys
-tablib==3.8.0
+tablib==3.9.0
     # via
     #   -r requirements/test.txt
     #   django-import-export

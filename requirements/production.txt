@@ -55,7 +55,7 @@ cffi==2.0.0
     #   -r requirements/base.txt
     #   cryptography
     #   pynacl
-charset-normalizer==3.4.3
+charset-normalizer==3.4.4
     # via
     #   -r requirements/base.txt
     #   requests
@@ -84,7 +84,7 @@ code-annotations==2.3.0
     # via
     #   -r requirements/base.txt
     #   edx-toggles
-cryptography==46.0.2
+cryptography==46.0.3
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -145,7 +145,7 @@ django-crum==0.7.9
     #   edx-toggles
 django-extensions==4.1
     # via -r requirements/base.txt
-django-import-export==4.3.10
+django-import-export==4.3.12
     # via -r requirements/base.txt
 django-log-request-id==2.1.0
     # via -r requirements/base.txt
@@ -277,7 +277,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.7
     # via -r requirements/base.txt
-numpy==2.3.3
+numpy==2.3.4
     # via
     #   -r requirements/base.txt
     #   scikit-learn
@@ -302,7 +302,7 @@ prompt-toolkit==3.0.52
     # via
     #   -r requirements/base.txt
     #   click-repl
-psutil==7.1.0
+psutil==7.1.1
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -310,11 +310,11 @@ pycparser==2.23
     # via
     #   -r requirements/base.txt
     #   cffi
-pydantic==2.12.0
+pydantic==2.12.3
     # via
     #   -r requirements/base.txt
     #   openai
-pydantic-core==2.41.1
+pydantic-core==2.41.4
     # via
     #   -r requirements/base.txt
     #   pydantic
@@ -362,7 +362,7 @@ pyyaml==6.0.3
     #   edx-django-release-util
 redis==6.4.0
     # via -r requirements/base.txt
-referencing==0.36.2
+referencing==0.37.0
     # via
     #   -r requirements/base.txt
     #   jsonschema
@@ -431,7 +431,7 @@ stevedore==5.5.0
     #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
-tablib==3.8.0
+tablib==3.9.0
     # via
     #   -r requirements/base.txt
     #   django-import-export
