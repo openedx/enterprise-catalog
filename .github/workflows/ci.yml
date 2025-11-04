@@ -25,7 +25,7 @@ jobs:
         docker compose -f .github/docker-compose-github.yml up -d
     - name: Install test dependencies and run validation
       run: |
-        docker exec -e TOXENV=py312-${{ matrix.django-version }} -u root enterprise.catalog.app /edx/app/enterprise_catalog/enterprise_catalog/validate.sh
+        docker exec -e TOXENV=py312-${{ matrix.django-version }} -u root edx.devstack.enterprise-catalog /edx/app/enterprise_catalog/enterprise_catalog/validate.sh
     - name: Code Coverage
       if: matrix.python-version == '3.12' && matrix.django-version=='django52'
       uses: codecov/codecov-action@v5
