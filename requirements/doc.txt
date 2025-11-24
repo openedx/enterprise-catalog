@@ -283,7 +283,7 @@ edx-toggles==5.4.1
     #   edx-auth-backends
 factory-boy==3.3.3
     # via -r requirements/test.txt
-faker==38.0.0
+faker==38.2.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -512,7 +512,7 @@ pyyaml==6.0.3
     #   responses
 readme-renderer==44.0
     # via -r requirements/doc.in
-redis==7.0.1
+redis==7.1.0
     # via -r requirements/test.txt
 referencing==0.37.0
     # via
@@ -536,7 +536,7 @@ requests-oauthlib==2.0.0
     #   social-auth-core
 responses==0.25.8
     # via -r requirements/test.txt
-restructuredtext-lint==1.4.0
+restructuredtext-lint==2.0.2
     # via doc8
 roman-numerals-py==3.1.0
     # via sphinx
@@ -609,7 +609,7 @@ sqlparse==0.5.3
     # via
     #   -r requirements/test.txt
     #   django
-stevedore==5.5.0
+stevedore==5.6.0
     # via
     #   -r requirements/test.txt
     #   code-annotations

@@ -334,7 +334,7 @@ edx-toggles==5.4.1
     #   edx-auth-backends
 factory-boy==3.3.3
     # via -r requirements/test.txt
-faker==38.0.0
+faker==38.2.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -596,7 +596,7 @@ pyyaml==6.0.3
     #   drf-spectacular
     #   edx-django-release-util
     #   responses
-redis==7.0.1
+redis==7.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -688,7 +688,7 @@ sqlparse==0.5.3
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   django
-stevedore==5.5.0
+stevedore==5.6.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
