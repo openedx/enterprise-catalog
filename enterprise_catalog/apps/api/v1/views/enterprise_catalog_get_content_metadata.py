@@ -209,23 +209,6 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
 
         return self.get_content_metadata(request, traverse_pagination, content_keys_filter)
 
-    # def is_active(self, item):
-    #     """
-    #     Determines if a content item is active.
-    #     Args:
-    #         item (ContentMetadata): The content metadata item to check.
-    #     Returns:
-    #         bool: True if the item is active, False otherwise.
-    #             For courses, checks if any course run is active.
-    #             For other content types, always returns True.
-    #     """
-    #     if item.content_type == 'course':
-    #         active = is_any_course_run_active(
-    #             item.json_metadata.get('course_runs', []))
-    #         if not active:
-    #             logger.debug(f'[get_content_metadata]: Content item {item.content_key} is not active.')
-    #         return active
-    #     return True
     def is_active(self, item):
         """
         Determines if a content item is active.
@@ -235,12 +218,8 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
             bool: True if the item is active, False otherwise.
                 For courses, checks if any course run is active.
                 For other content types, always returns True.
-                For courses, requires that the course has at least one published course run.
-                This prevents courses that only contain unsubmitted/draft runs from being
-                returned to enterprise customers. The serializer still uses
-                `is_any_course_run_active` to set the `active` field in the payload.
- """
-        if item.content_type == 'course':       
+        """
+        if item.content_type == 'course':
             course_runs = item.json_metadata.get('course_runs', []) or []
             has_published = any(
                 (run.get('status') or '').lower() == 'published' for run in course_runs
@@ -265,7 +244,7 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
         logger.debug(f'[get_content_metadata]: Original queryset length: {len(queryset)}, {self.enterprise_catalog}')
 
         # Only filter out archived courses if content_keys_filter is not provided,
-        # to ensure active content is always returned
+        # to ensure active content is always ret
         if not content_keys_filter:
             # queryset = [item for item in queryset if self.is_active(item)]
             # NEW: Remove courseruns from final output
