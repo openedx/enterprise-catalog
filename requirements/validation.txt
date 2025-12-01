@@ -23,7 +23,7 @@ annotated-types==0.7.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pydantic
-anyio==4.11.0
+anyio==4.12.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -52,7 +52,7 @@ backoff==1.10.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   analytics-python
-billiard==4.2.3
+billiard==4.2.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -61,7 +61,7 @@ cachetools==6.2.2
     # via
     #   -r requirements/test.txt
     #   tox
-celery==5.5.3
+celery==5.6.0
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/quality.txt
@@ -332,9 +332,14 @@ edx-toggles==5.4.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-auth-backends
+exceptiongroup==1.3.1
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   celery
 factory-boy==3.3.3
     # via -r requirements/test.txt
-faker==38.0.0
+faker==38.2.0
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -408,7 +413,7 @@ jsonschema-specifications==2025.9.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   jsonschema
-kombu==5.5.4
+kombu==5.6.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -492,7 +497,7 @@ pycparser==2.23
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   cffi
-pydantic==2.12.4
+pydantic==2.12.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -596,7 +601,7 @@ pyyaml==6.0.3
     #   drf-spectacular
     #   edx-django-release-util
     #   responses
-redis==7.0.1
+redis==7.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -624,7 +629,7 @@ requests-oauthlib==2.0.0
     #   social-auth-core
 responses==0.25.8
     # via -r requirements/test.txt
-rpds-py==0.29.0
+rpds-py==0.30.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -666,7 +671,6 @@ sniffio==1.3.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-    #   anyio
     #   openai
 snowballstemmer==3.0.1
     # via
@@ -683,12 +687,12 @@ social-auth-core==4.8.1
     #   -r requirements/test.txt
     #   edx-auth-backends
     #   social-auth-app-django
-sqlparse==0.5.3
+sqlparse==0.5.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   django
-stevedore==5.5.0
+stevedore==5.6.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -728,6 +732,7 @@ typing-extensions==4.15.0
     #   -r requirements/test.txt
     #   anyio
     #   edx-opaque-keys
+    #   exceptiongroup
     #   openai
     #   pydantic
     #   pydantic-core
@@ -744,6 +749,11 @@ tzdata==2025.2
     #   -r requirements/test.txt
     #   faker
     #   kombu
+tzlocal==5.3.1
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   celery
 uritemplate==4.2.0
     # via
     #   -r requirements/quality.txt
