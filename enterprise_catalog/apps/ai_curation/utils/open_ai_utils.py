@@ -81,3 +81,49 @@ def get_keywords_to_prose(query):
         return keywords_to_prose[0]
 
     return ''
+
+
+def translate_to_spanish(text):
+    """
+    Translate the given text to Spanish using OpenAI.
+
+    Args:
+        text (str): The text to translate.
+
+    Returns:
+        str: The translated text in Spanish.
+    """
+    if not text:
+        return ''
+
+    content = f"Translate the following text to Spanish: {text}"
+    messages = [
+        {
+            'content': content
+        }
+    ]
+    # LOGGER.info('[AI_CURATION] Translating text to Spanish. Prompt: [%s]', messages)
+    translated_text = chat_completions(messages=messages)
+    # LOGGER.info('[AI_CURATION] Translating text to Spanish. Response: [%s]', translated_text)
+
+    if translated_text:
+        return translated_text[0]
+    return ''
+
+
+def translate_object_fields(data, fields):
+    """
+    Translate specified fields in a dictionary to Spanish.
+
+    Args:
+        data (dict): The dictionary containing fields to translate.
+        fields (list): A list of field names to translate.
+
+    Returns:
+        dict: A new dictionary with translated fields.
+    """
+    translated_data = data.copy()
+    for field in fields:
+        if field in data and isinstance(data[field], str):
+            translated_data[field] = translate_to_spanish(data[field])
+    return translated_data
