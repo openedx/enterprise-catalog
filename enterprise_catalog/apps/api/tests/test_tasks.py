@@ -828,6 +828,13 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
     def setUp(self):
         super().setUp()
 
+        # Mock the Spanish translation to avoid OpenAI API calls
+        self.spanish_mock_patcher = mock.patch(
+            'enterprise_catalog.apps.api.tasks.create_spanish_algolia_object',
+            side_effect=lambda obj: {**obj, 'objectID': f"{obj['objectID']}-es"}
+        )
+        self.spanish_mock_patcher.start()
+
         # Set up a catalog, query, and metadata for a course and course associated program
         self.academy = AcademyFactory()
         self.tag1 = self.academy.tags.all()[0]
@@ -866,6 +873,11 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         self.course_run_metadata_unpublished.save()
 
         _hydrate_course_normalized_metadata()
+
+    def tearDown(self):
+        """Clean up mocks."""
+        self.spanish_mock_patcher.stop()
+        super().tearDown()
 
     def _set_up_factory_data_for_algolia(self):
         expected_catalog_uuids = sorted([
@@ -1105,7 +1117,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert ' 15 products found.' in products_found_log_records[0]
+        assert ' 30 products found.' in products_found_log_records[0]
 
         # create expected data to be added/updated in the Algolia index.
         expected_program_1_objects_to_index = []
@@ -1133,7 +1145,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # verify replace_all_objects is called with the correct Algolia object data.
         expected_program_call_args = sorted(expected_program_1_objects_to_index, key=itemgetter('objectID'))
         actual_program_call_args = sorted(
-            [product for product in actual_algolia_products_sent if program_uuid in product['objectID']],
+            [product for product in actual_algolia_products_sent 
+             if program_uuid in product['objectID'] and '-es-' not in product['objectID']],
             key=itemgetter('objectID'),
         )
         assert expected_program_call_args == actual_program_call_args
@@ -1206,7 +1219,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
         # count should be "9 products found", 5 additional products are from the test course in self.setUp()
-        assert ' 12 products found.' in products_found_log_records[0]
+        assert ' 24 products found.' in products_found_log_records[0]
 
         # assert the program was not indexed.
         program_uuid = program_1.json_metadata.get('uuid')
@@ -1569,7 +1582,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert ' 6 products found.' in products_found_log_records[0]
+        assert ' 12 products found.' in products_found_log_records[0]
 
         # create expected data to be added/updated in the Algolia index.
         expected_course_1_objects_to_index = []
@@ -1626,7 +1639,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         # verify replace_all_objects is called with the correct Algolia object data.
         expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
-        actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
+        actual_call_args = sorted([p for p in actual_algolia_products_sent if '-es-' not in p['objectID']], key=itemgetter('objectID'))
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
@@ -1678,7 +1691,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert ' 6 products found.' in products_found_log_records[0]
+        assert ' 12 products found.' in products_found_log_records[0]
 
         # create expected data to be added/updated in the Algolia index.
         expected_course_1_objects_to_index = []
@@ -1735,7 +1748,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         # verify replace_all_objects is called with the correct Algolia object data.
         expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
-        actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
+        actual_call_args = sorted([p for p in actual_algolia_products_sent if '-es-' not in p['objectID']], key=itemgetter('objectID'))
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
@@ -1775,7 +1788,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert ' 6 products found.' in products_found_log_records[0]
+        assert ' 12 products found.' in products_found_log_records[0]
 
         # create expected data to be added/updated in the Algolia index.
         expected_course_1_objects_to_index = []
@@ -1835,7 +1848,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         # verify replace_all_objects is called with the correct Algolia object data.
         expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
-        actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
+        actual_call_args = sorted([p for p in actual_algolia_products_sent if '-es-' not in p['objectID']], key=itemgetter('objectID'))
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
@@ -1879,7 +1892,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert ' 6 products found.' in products_found_log_records[0]
+        assert ' 12 products found.' in products_found_log_records[0]
 
         # create expected data to be added/updated in the Algolia index.
         expected_course_1_objects_to_index = []
@@ -1939,7 +1952,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         # verify replace_all_objects is called with the correct Algolia object data.
         expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
-        actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
+        actual_call_args = sorted([p for p in actual_algolia_products_sent if '-es-' not in p['objectID']], key=itemgetter('objectID'))
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
@@ -1993,7 +2006,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert ' 9 products found.' in products_found_log_records[0]
+        assert ' 18 products found.' in products_found_log_records[0]
 
         # create expected data to be added/updated in the Algolia index.
         expected_course_1_objects_to_index = []
@@ -2076,7 +2089,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         # verify replace_all_objects is called with the correct Algolia object data.
         expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
-        actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
+        actual_call_args = sorted([p for p in actual_algolia_products_sent if '-es-' not in p['objectID']], key=itemgetter('objectID'))
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
@@ -2226,7 +2239,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert ' 3 products found.' in products_found_log_records[0]
+        assert ' 6 products found.' in products_found_log_records[0]
 
         # create expected data to be added/updated in the Algolia index.
         expected_algolia_objects_to_index = []
@@ -2275,7 +2288,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         # Verify replace_all_objects is called with the correct Algolia object data.
         expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
-        actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
+        actual_call_args = sorted([p for p in actual_algolia_products_sent if '-es-' not in p['objectID']], key=itemgetter('objectID'))
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
@@ -2436,7 +2449,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert ' 3 products found.' in products_found_log_records[0]
+        assert ' 6 products found.' in products_found_log_records[0]
 
         # create expected data to be added/updated in the Algolia index.
         expected_algolia_objects_to_index = []
@@ -2481,7 +2494,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         # Verify replace_all_objects is called with the correct Algolia object data.
         expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
-        actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
+        actual_call_args = sorted([p for p in actual_algolia_products_sent if '-es-' not in p['objectID']], key=itemgetter('objectID'))
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
@@ -2506,7 +2519,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             with self.assertLogs(level='INFO') as info_logs:
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
-        assert ' 6 products found.' in info_logs.output[-1]
+        assert ' 12 products found.' in info_logs.output[-1]
 
         # create expected data to be added/updated in the Algolia index.
         expected_algolia_objects_to_index = []
@@ -2556,7 +2569,9 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'academy_tags': algolia_data['academy_tags'],
         })
         # verify replace_all_objects is called with the correct Algolia object data
-        self.assertEqual(expected_algolia_objects_to_index, actual_algolia_products_sent)
+        # Filter out Spanish objects (with -es in objectID) for comparison
+        english_only_products = [p for p in actual_algolia_products_sent if '-es-' not in p['objectID']]
+        self.assertEqual(expected_algolia_objects_to_index, english_only_products)
         mock_search_client().replace_all_objects.assert_called_once()
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
@@ -2583,7 +2598,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             with self.assertLogs(level='INFO') as info_logs:
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
-        assert ' 6 products found.' in info_logs.output[-1]
+        assert ' 12 products found.' in info_logs.output[-1]
 
         # create expected data to be added/updated in the Algolia index.
         expected_algolia_objects_to_index = []
@@ -2636,7 +2651,9 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         })
 
         # verify replace_all_objects is called with the correct Algolia object data
-        self.assertEqual(expected_algolia_objects_to_index, actual_algolia_products_sent)
+        # Filter out Spanish objects (with -es in objectID) for comparison
+        english_only_products = [p for p in actual_algolia_products_sent if '-es-' not in p['objectID']]
+        self.assertEqual(expected_algolia_objects_to_index, english_only_products)
         mock_search_client().replace_all_objects.assert_called_once()
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
@@ -2692,7 +2709,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task(force, dry_run)
 
         mock_search_client().replace_all_objects.assert_not_called()
-        assert '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] [DRY RUN] 6 products found.' in info_logs.output[-1]
+        assert '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] [DRY RUN] 12 products found.' in info_logs.output[-1]
         assert any(
             '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] [DRY RUN] skipping algolia_client.replace_all_objects().' in record
             for record in info_logs.output
@@ -3087,7 +3104,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert ' 15 products found.' in products_found_log_records[0]
+        assert ' 30 products found.' in products_found_log_records[0]
 
         # create expected data to be added/updated in the Algolia index.
         expected_algolia_objects_to_index = []
@@ -3224,5 +3241,5 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # verify replace_all_objects is called with the correct Algolia object data
         # on the first invocation and with programs/pathways only on the second invocation.
         expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
-        actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
+        actual_call_args = sorted([p for p in actual_algolia_products_sent if '-es-' not in p['objectID']], key=itemgetter('objectID'))
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
