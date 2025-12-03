@@ -1629,7 +1629,7 @@ def create_spanish_algolia_object(algolia_object):
     from enterprise_catalog.apps.ai_curation.utils.open_ai_utils import translate_object_fields
 
     spanish_object = copy.deepcopy(algolia_object)
-    
+
     # Fields to translate
     fields_to_translate = [
         'title',
@@ -1641,10 +1641,10 @@ def create_spanish_algolia_object(algolia_object):
     ]
 
     spanish_object = translate_object_fields(spanish_object, fields_to_translate)
-    
+
     # Update objectID to indicate Spanish version
     spanish_object['objectID'] = f"{spanish_object['objectID']}-es"
-    
+
     # Ensure aggregation_key remains the same to link them
     # (It's already in the object, so no action needed, but good to note)
 

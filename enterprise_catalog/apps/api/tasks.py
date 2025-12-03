@@ -870,7 +870,7 @@ def add_video_to_algolia_objects(
 
     # Create and index Spanish version
     json_metadata_es = create_spanish_algolia_object(json_metadata)
-    
+
     # enterprise customer uuids for Spanish
     batched_metadata_es = _batched_metadata(
         json_metadata_es,

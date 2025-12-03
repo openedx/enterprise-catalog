@@ -1145,7 +1145,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # verify replace_all_objects is called with the correct Algolia object data.
         expected_program_call_args = sorted(expected_program_1_objects_to_index, key=itemgetter('objectID'))
         actual_program_call_args = sorted(
-            [product for product in actual_algolia_products_sent 
+            [product for product in actual_algolia_products_sent
              if program_uuid in product['objectID'] and '-es-' not in product['objectID']],
             key=itemgetter('objectID'),
         )

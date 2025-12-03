@@ -4,6 +4,7 @@ from enterprise_catalog.apps.catalog.algolia_utils import create_spanish_algolia
 from enterprise_catalog.apps.api.tasks import add_metadata_to_algolia_objects
 from enterprise_catalog.apps.catalog.tests.factories import ContentMetadataFactory
 
+
 class AlgoliaTranslationTests(TestCase):
     def test_create_spanish_algolia_object(self):
         """
@@ -30,7 +31,7 @@ class AlgoliaTranslationTests(TestCase):
                 if 'Learn Python basics' in content:
                     return ['Aprende los conceptos básicos de Python']
                 return ['Translated text']
-            
+
             mock_chat.side_effect = side_effect
 
             spanish_object = create_spanish_algolia_object(original_object)
@@ -56,7 +57,7 @@ class AlgoliaTranslationTests(TestCase):
 
         with mock.patch('enterprise_catalog.apps.ai_curation.utils.open_ai_utils.chat_completions') as mock_chat:
             mock_chat.return_value = ['Translated Text']
-            
+
             add_metadata_to_algolia_objects(
                 metadata,
                 algolia_products,
@@ -75,7 +76,7 @@ class AlgoliaTranslationTests(TestCase):
             # Check for Spanish objects
             spanish_keys = [k for k in algolia_products.keys() if '-es-' in k and 'catalog-uuids' in k]
             self.assertTrue(len(spanish_keys) > 0)
-            
+
             # Verify structure of a Spanish object
             spanish_obj = algolia_products[spanish_keys[0]]
             self.assertIn('-es', spanish_obj['objectID'])
