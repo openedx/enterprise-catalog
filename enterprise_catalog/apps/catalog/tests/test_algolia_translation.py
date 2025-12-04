@@ -77,11 +77,11 @@ class AlgoliaTranslationTests(TestCase):
 
             # Check for English objects
             english_keys = [k for k in algolia_products.keys() if not k.endswith('-es') and 'catalog-uuids' in k]
-            self.assertTrue(len(english_keys) > 0)
+            self.assertGreater(len(english_keys), 0)
 
             # Check for Spanish objects
             spanish_keys = [k for k in algolia_products.keys() if '-es-' in k and 'catalog-uuids' in k]
-            self.assertTrue(len(spanish_keys) > 0)
+            self.assertGreater(len(spanish_keys), 0)
 
             # Verify structure of a Spanish object
             spanish_obj = algolia_products[spanish_keys[0]]

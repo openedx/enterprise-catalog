@@ -1145,8 +1145,10 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # verify replace_all_objects is called with the correct Algolia object data.
         expected_program_call_args = sorted(expected_program_1_objects_to_index, key=itemgetter('objectID'))
         actual_program_call_args = sorted(
-            [product for product in actual_algolia_products_sent
-             if program_uuid in product['objectID'] and '-es-' not in product['objectID']],
+            [
+                product for product in actual_algolia_products_sent
+                if program_uuid in product['objectID'] and '-es-' not in product['objectID']
+            ],
             key=itemgetter('objectID'),
         )
         assert expected_program_call_args == actual_program_call_args
@@ -1568,7 +1570,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # Associate published course with a published program and also an unpublished program.
         self.course_metadata_published.associated_content_metadata.set([program_1, program_2])
 
-        actual_algolia_products_sent = None
+        actual_algolia_products_sent = []
 
         # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
         # result into `actual_algolia_products_sent` for unit testing.
@@ -1639,7 +1641,10 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         # verify replace_all_objects is called with the correct Algolia object data.
         expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
-        actual_call_args = sorted([p for p in actual_algolia_products_sent if '-es-' not in p['objectID']], key=itemgetter('objectID'))
+        actual_call_args = sorted(
+            [p for p in actual_algolia_products_sent if '-es-' not in p['objectID']],
+            key=itemgetter('objectID')
+        )
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
@@ -1677,7 +1682,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # Associate unpublished course with a published program and also an unpublished program.
         self.course_metadata_unpublished.associated_content_metadata.set([program_1, program_2])
 
-        actual_algolia_products_sent = None
+        actual_algolia_products_sent = []
 
         # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
         # result into `actual_algolia_products_sent` for unit testing.
@@ -1748,7 +1753,10 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         # verify replace_all_objects is called with the correct Algolia object data.
         expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
-        actual_call_args = sorted([p for p in actual_algolia_products_sent if '-es-' not in p['objectID']], key=itemgetter('objectID'))
+        actual_call_args = sorted(
+            [p for p in actual_algolia_products_sent if '-es-' not in p['objectID']],
+            key=itemgetter('objectID')
+        )
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
@@ -1774,7 +1782,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # Associate published course with a pathway.
         self.course_metadata_published.associated_content_metadata.set([pathway_1])
 
-        actual_algolia_products_sent = None
+        actual_algolia_products_sent = []
 
         # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
         # result into `actual_algolia_products_sent` for unit testing.
@@ -1848,7 +1856,10 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         # verify replace_all_objects is called with the correct Algolia object data.
         expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
-        actual_call_args = sorted([p for p in actual_algolia_products_sent if '-es-' not in p['objectID']], key=itemgetter('objectID'))
+        actual_call_args = sorted(
+            [p for p in actual_algolia_products_sent if '-es-' not in p['objectID']],
+            key=itemgetter('objectID')
+        )
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
@@ -1878,7 +1889,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # Associate unpublished course with a pathway.
         self.course_metadata_unpublished.associated_content_metadata.set([pathway_1])
 
-        actual_algolia_products_sent = None
+        actual_algolia_products_sent = []
 
         # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
         # result into `actual_algolia_products_sent` for unit testing.
@@ -1952,7 +1963,10 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         # verify replace_all_objects is called with the correct Algolia object data.
         expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
-        actual_call_args = sorted([p for p in actual_algolia_products_sent if '-es-' not in p['objectID']], key=itemgetter('objectID'))
+        actual_call_args = sorted(
+            [p for p in actual_algolia_products_sent if '-es-' not in p['objectID']],
+            key=itemgetter('objectID')
+        )
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
@@ -1992,7 +2006,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         program_1.associated_content_metadata.set([pathway_1])
         program_2.associated_content_metadata.set([pathway_1])
 
-        actual_algolia_products_sent = None
+        actual_algolia_products_sent = []
 
         # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
         # result into `actual_algolia_products_sent` for unit testing.
@@ -2089,7 +2103,10 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         # verify replace_all_objects is called with the correct Algolia object data.
         expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
-        actual_call_args = sorted([p for p in actual_algolia_products_sent if '-es-' not in p['objectID']], key=itemgetter('objectID'))
+        actual_call_args = sorted(
+            [p for p in actual_algolia_products_sent if '-es-' not in p['objectID']],
+            key=itemgetter('objectID')
+        )
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
@@ -2225,7 +2242,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             run=courserun_restricted_for_catalog_B,
         )
 
-        actual_algolia_products_sent = None
+        actual_algolia_products_sent = []
 
         # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
         # result into `actual_algolia_products_sent` for unit testing.
@@ -2288,7 +2305,10 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         # Verify replace_all_objects is called with the correct Algolia object data.
         expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
-        actual_call_args = sorted([p for p in actual_algolia_products_sent if '-es-' not in p['objectID']], key=itemgetter('objectID'))
+        actual_call_args = sorted(
+            [p for p in actual_algolia_products_sent if '-es-' not in p['objectID']],
+            key=itemgetter('objectID')
+        )
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
@@ -2435,7 +2455,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             run=courserun_restricted_for_catalog_B,
         )
 
-        actual_algolia_products_sent = None
+        actual_algolia_products_sent = []
 
         # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
         # result into `actual_algolia_products_sent` for unit testing.
@@ -2494,7 +2514,10 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         # Verify replace_all_objects is called with the correct Algolia object data.
         expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
-        actual_call_args = sorted([p for p in actual_algolia_products_sent if '-es-' not in p['objectID']], key=itemgetter('objectID'))
+        actual_call_args = sorted(
+            [p for p in actual_algolia_products_sent if '-es-' not in p['objectID']],
+            key=itemgetter('objectID')
+        )
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
@@ -2505,7 +2528,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         """
         algolia_data = self._set_up_factory_data_for_algolia()
 
-        actual_algolia_products_sent = None
+        actual_algolia_products_sent = []
 
         # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
         # result into `actual_algolia_products_sent` for unit testing.
@@ -2583,7 +2606,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # override the explore UI titles with test data to show every batch contains them
         explore_titles = [algolia_data['query_titles'][0]]
 
-        actual_algolia_products_sent = None
+        actual_algolia_products_sent = []
 
         # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
         # result into `actual_algolia_products_sent` for unit testing.
@@ -3090,7 +3113,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             [program_for_unpublished_course, pathway_for_unpublished_course]
         )
 
-        actual_algolia_products_sent = None
+        actual_algolia_products_sent = []
 
         # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
         # result into `actual_algolia_products_sent` for unit testing.
@@ -3241,5 +3264,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # verify replace_all_objects is called with the correct Algolia object data
         # on the first invocation and with programs/pathways only on the second invocation.
         expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
-        actual_call_args = sorted([p for p in actual_algolia_products_sent if '-es-' not in p['objectID']], key=itemgetter('objectID'))
+        actual_call_args = sorted(
+            [p for p in actual_algolia_products_sent if '-es-' not in p['objectID']],
+            key=itemgetter('objectID')
+        )
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)

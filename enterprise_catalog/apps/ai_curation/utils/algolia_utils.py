@@ -5,9 +5,6 @@ from dataclasses import dataclass
 
 from django.utils.html import strip_tags
 
-from enterprise_catalog.apps.catalog.algolia_utils import (
-    get_initialized_algolia_client,
-)
 
 
 @dataclass
@@ -65,6 +62,10 @@ def fetch_catalog_metadata_from_algolia(enterprise_catalog_query_title: str):
     Returns the ocm_courses, exec_ed_courses, programs, subjects from the
     Algolia response for the provided catalog_query_title
     """
+    from enterprise_catalog.apps.catalog.algolia_utils import (
+        get_initialized_algolia_client,
+    )
+
     algolia_client = get_initialized_algolia_client()
     search_options = {
         'facetFilters': [
