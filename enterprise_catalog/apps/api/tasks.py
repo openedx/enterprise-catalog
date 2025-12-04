@@ -27,6 +27,7 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     _algolia_object_from_product,
     configure_algolia_index,
     create_algolia_objects,
+    create_spanish_algolia_object,
     get_algolia_object_id,
     get_initialized_algolia_client,
     get_pathway_course_keys,
@@ -34,7 +35,6 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     new_search_client_or_error,
     partition_course_keys_for_indexing,
     partition_program_keys_for_indexing,
-    create_spanish_algolia_object,
 )
 from enterprise_catalog.apps.catalog.constants import (
     COURSE,

@@ -1626,7 +1626,9 @@ def create_spanish_algolia_object(algolia_object):
     Returns:
         dict: A new Algolia object with translated fields and updated objectID.
     """
-    from enterprise_catalog.apps.ai_curation.utils.open_ai_utils import translate_object_fields
+    from enterprise_catalog.apps.ai_curation.utils.open_ai_utils import (
+        translate_object_fields,
+    )
 
     spanish_object = copy.deepcopy(algolia_object)
 

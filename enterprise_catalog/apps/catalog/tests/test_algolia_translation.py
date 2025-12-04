@@ -1,8 +1,14 @@
 from unittest import mock
+
 from django.test import TestCase
-from enterprise_catalog.apps.catalog.algolia_utils import create_spanish_algolia_object
+
 from enterprise_catalog.apps.api.tasks import add_metadata_to_algolia_objects
-from enterprise_catalog.apps.catalog.tests.factories import ContentMetadataFactory
+from enterprise_catalog.apps.catalog.algolia_utils import (
+    create_spanish_algolia_object,
+)
+from enterprise_catalog.apps.catalog.tests.factories import (
+    ContentMetadataFactory,
+)
 
 
 class AlgoliaTranslationTests(TestCase):
