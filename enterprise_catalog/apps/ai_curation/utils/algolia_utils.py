@@ -5,6 +5,8 @@ from dataclasses import dataclass
 
 from django.utils.html import strip_tags
 
+from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
+
 
 @dataclass
 class ContentType:
@@ -60,8 +62,6 @@ def get_initialized_algolia_client():
     """
     Initializes and returns an Algolia client for updating search indices
     """
-    from enterprise_catalog.apps.api_client.algolia import \
-        AlgoliaSearchClient  # pylint: disable=import-outside-toplevel
     algolia_client = AlgoliaSearchClient()
     algolia_client.init_index()
     return algolia_client
