@@ -834,7 +834,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             spanish_obj = obj.copy()
             spanish_obj['objectID'] = f"{obj['objectID']}-es"
             return spanish_obj
-        
+
         self.spanish_mock_patcher = mock.patch(
             'enterprise_catalog.apps.api.tasks.create_spanish_algolia_object',
             side_effect=mock_create_spanish_object
@@ -889,44 +889,44 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         """
         Create an expected Spanish object from an English object.
         This should mirror the mock behavior of create_spanish_algolia_object.
-        
+
         The Spanish objectID has '-es-' inserted before the batch suffix.
         For example:
         - English: 'course-{uuid}-catalog-uuids-0'
         - Spanish: 'course-{uuid}-es-catalog-uuids-0'
-        
+
         Args:
             english_object (dict): The English Algolia object
-            
+
         Returns:
             dict: The expected Spanish Algolia object
         """
         spanish_object = english_object.copy()
         object_id = english_object['objectID']
-        
+
         # Insert '-es-' before the batch type marker
         # The objectID pattern is: {content-type}-{uuid}-{batch-type}-{batch-subtype}-{batch-number}
         # Where batch-type is one of: catalog, customer
         # And batch-subtype is one of: uuids, query-uuids
         # Result: {content-type}-{uuid}-es-{batch-type}-{batch-subtype}-{batch-number}
-        
+
         # Find the position to insert '-es-' by looking for batch type markers
         batch_markers = ['-catalog-', '-customer-']
         insert_pos = -1
-        
+
         for marker in batch_markers:
             pos = object_id.find(marker)
             if pos != -1:
                 insert_pos = pos
                 break
-        
+
         if insert_pos != -1:
             # Insert '-es' before the batch marker
             spanish_object['objectID'] = object_id[:insert_pos] + '-es' + object_id[insert_pos:]
         else:
             # Fallback: just append -es if structure is unexpected
             spanish_object['objectID'] = f"{object_id}-es"
-        
+
         return spanish_object
 
     def _set_up_factory_data_for_algolia(self):
@@ -1192,14 +1192,11 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'academy_uuids': [],
         })
 
-
-        # verify replace_all_objects is called with the correct Algolia object data.
-        # Create Spanish versions of expected objects
         expected_spanish_objects = [
             self._create_expected_spanish_object(obj) for obj in expected_program_1_objects_to_index
         ]
         expected_all_objects = expected_program_1_objects_to_index + expected_spanish_objects
-        
+
         expected_program_call_args = sorted(expected_all_objects, key=itemgetter('objectID'))
         actual_program_call_args = sorted(
             [
@@ -1702,7 +1699,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             self._create_expected_spanish_object(obj) for obj in expected_algolia_objects_to_index
         ]
         expected_all_objects = expected_algolia_objects_to_index + expected_spanish_objects
-        
+
         expected_call_args = sorted(expected_all_objects, key=itemgetter('objectID'))
         actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
@@ -1817,7 +1814,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             self._create_expected_spanish_object(obj) for obj in expected_algolia_objects_to_index
         ]
         expected_all_objects = expected_algolia_objects_to_index + expected_spanish_objects
-        
+
         expected_call_args = sorted(expected_all_objects, key=itemgetter('objectID'))
         actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
@@ -1923,7 +1920,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             self._create_expected_spanish_object(obj) for obj in expected_algolia_objects_to_index
         ]
         expected_all_objects = expected_algolia_objects_to_index + expected_spanish_objects
-        
+
         expected_call_args = sorted(expected_all_objects, key=itemgetter('objectID'))
         actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
@@ -2033,7 +2030,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             self._create_expected_spanish_object(obj) for obj in expected_algolia_objects_to_index
         ]
         expected_all_objects = expected_algolia_objects_to_index + expected_spanish_objects
-        
+
         expected_call_args = sorted(expected_all_objects, key=itemgetter('objectID'))
         actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
@@ -2176,7 +2173,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             self._create_expected_spanish_object(obj) for obj in expected_algolia_objects_to_index
         ]
         expected_all_objects = expected_algolia_objects_to_index + expected_spanish_objects
-        
+
         expected_call_args = sorted(expected_all_objects, key=itemgetter('objectID'))
         actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
@@ -2381,7 +2378,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             self._create_expected_spanish_object(obj) for obj in expected_algolia_objects_to_index
         ]
         expected_all_objects = expected_algolia_objects_to_index + expected_spanish_objects
-        
+
         expected_call_args = sorted(expected_all_objects, key=itemgetter('objectID'))
         actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
@@ -2593,7 +2590,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             self._create_expected_spanish_object(obj) for obj in expected_algolia_objects_to_index
         ]
         expected_all_objects = expected_algolia_objects_to_index + expected_spanish_objects
-        
+
         expected_call_args = sorted(expected_all_objects, key=itemgetter('objectID'))
         actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
@@ -2675,7 +2672,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             self._create_expected_spanish_object(obj) for obj in expected_algolia_objects_to_index
         ]
         expected_all_objects = expected_algolia_objects_to_index + expected_spanish_objects
-        
+
         actual_all_products = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
         expected_all_sorted = sorted(expected_all_objects, key=itemgetter('objectID'))
         self.assertEqual(expected_all_sorted, actual_all_products)
@@ -2763,7 +2760,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             self._create_expected_spanish_object(obj) for obj in expected_algolia_objects_to_index
         ]
         expected_all_objects = expected_algolia_objects_to_index + expected_spanish_objects
-        
+
         actual_all_products = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
         expected_all_sorted = sorted(expected_all_objects, key=itemgetter('objectID'))
         self.assertEqual(expected_all_sorted, actual_all_products)
@@ -3358,7 +3355,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             self._create_expected_spanish_object(obj) for obj in expected_algolia_objects_to_index
         ]
         expected_all_objects = expected_algolia_objects_to_index + expected_spanish_objects
-        
+
         expected_call_args = sorted(expected_all_objects, key=itemgetter('objectID'))
         actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
