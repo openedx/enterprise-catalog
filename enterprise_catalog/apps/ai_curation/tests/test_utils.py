@@ -51,7 +51,7 @@ class TestUtils(TestCase):
         }
     ]}
 
-    @mock.patch('enterprise_catalog.apps.ai_curation.utils.algolia_utils.get_initialized_algolia_client')
+    @mock.patch('enterprise_catalog.apps.catalog.algolia_utils.get_initialized_algolia_client')
     def test_fetch_catalog_metadata_from_algolia(self, mock_algolia_client):
         """
         Verify that the catalog metadata from algolia is fetched correctly.
