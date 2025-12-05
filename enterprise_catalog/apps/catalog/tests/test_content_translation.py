@@ -3,8 +3,10 @@ Tests for ContentTranslation model and translation utilities.
 """
 from django.test import TestCase
 
-from enterprise_catalog.apps.catalog.models import ContentMetadata, ContentTranslation
-from enterprise_catalog.apps.catalog.tests.factories import ContentMetadataFactory
+from enterprise_catalog.apps.catalog.models import ContentTranslation
+from enterprise_catalog.apps.catalog.tests.factories import (
+    ContentMetadataFactory,
+)
 from enterprise_catalog.apps.catalog.utils import compute_source_hash
 
 

@@ -1,13 +1,12 @@
 """
 Tests for populate_spanish_translations management command.
 """
-from io import StringIO
 from unittest import mock
 
 from django.core.management import call_command
 from django.test import TestCase
 
-from enterprise_catalog.apps.catalog.models import ContentMetadata, ContentTranslation
+from enterprise_catalog.apps.catalog.models import ContentTranslation
 from enterprise_catalog.apps.catalog.tests.factories import ContentMetadataFactory
 from enterprise_catalog.apps.catalog.utils import compute_source_hash
 
@@ -37,7 +36,10 @@ class PopulateSpanishTranslationsCommandTests(TestCase):
             }
         )
 
-    @mock.patch('enterprise_catalog.apps.catalog.management.commands.populate_spanish_translations.translate_object_fields')
+    @mock.patch(
+        'enterprise_catalog.apps.catalog.management.commands.'
+        'populate_spanish_translations.translate_object_fields'
+    )
     def test_command_creates_translations(self, mock_translate):
         """Test that command creates new translations."""
         mock_translate.return_value = {
@@ -56,7 +58,10 @@ class PopulateSpanishTranslationsCommandTests(TestCase):
         self.assertEqual(translation1.title, 'Título traducido')
         self.assertIsNotNone(translation1.source_hash)
 
-    @mock.patch('enterprise_catalog.apps.catalog.management.commands.populate_spanish_translations.translate_object_fields')
+    @mock.patch(
+        'enterprise_catalog.apps.catalog.management.commands.'
+        'populate_spanish_translations.translate_object_fields'
+    )
     def test_command_skips_existing_translations(self, mock_translate):
         """Test that command skips translations with matching hash."""
         mock_translate.return_value = {'title': 'Translated'}
@@ -80,7 +85,10 @@ class PopulateSpanishTranslationsCommandTests(TestCase):
         # Should create translation for content2
         self.assertEqual(ContentTranslation.objects.count(), 2)
 
-    @mock.patch('enterprise_catalog.apps.catalog.management.commands.populate_spanish_translations.translate_object_fields')
+    @mock.patch(
+        'enterprise_catalog.apps.catalog.management.commands.'
+        'populate_spanish_translations.translate_object_fields'
+    )
     def test_command_force_retranslate(self, mock_translate):
         """Test that --force flag re-translates existing content."""
         mock_translate.return_value = {'title': 'New Translation'}
@@ -100,7 +108,10 @@ class PopulateSpanishTranslationsCommandTests(TestCase):
         translation = ContentTranslation.objects.get(content_metadata=self.content1)
         self.assertEqual(translation.title, 'New Translation')
 
-    @mock.patch('enterprise_catalog.apps.catalog.management.commands.populate_spanish_translations.translate_object_fields')
+    @mock.patch(
+        'enterprise_catalog.apps.catalog.management.commands.'
+        'populate_spanish_translations.translate_object_fields'
+    )
     def test_command_content_keys_filter(self, mock_translate):
         """Test filtering by content keys."""
         mock_translate.return_value = {'title': 'Translated'}
@@ -117,7 +128,10 @@ class PopulateSpanishTranslationsCommandTests(TestCase):
             ContentTranslation.objects.filter(content_metadata=self.content2).exists()
         )
 
-    @mock.patch('enterprise_catalog.apps.catalog.management.commands.populate_spanish_translations.translate_object_fields')
+    @mock.patch(
+        'enterprise_catalog.apps.catalog.management.commands.'
+        'populate_spanish_translations.translate_object_fields'
+    )
     def test_command_dry_run(self, mock_translate):
         """Test that--dry-run doesn't save translations."""
         mock_translate.return_value = {'title': 'Translated'}
@@ -131,7 +145,10 @@ class PopulateSpanishTranslationsCommandTests(TestCase):
         # But translate should still be called
         self.assertTrue(mock_translate.called)
 
-    @mock.patch('enterprise_catalog.apps.catalog.management.commands.populate_spanish_translations.translate_object_fields')
+    @mock.patch(
+        'enterprise_catalog.apps.catalog.management.commands.'
+        'populate_spanish_translations.translate_object_fields'
+    )
     def test_command_updates_stale_translations(self, mock_translate):
         """Test that command updates translations when content changes."""
         mock_translate.return_value = {'title': 'Updated Translation'}
@@ -151,7 +168,10 @@ class PopulateSpanishTranslationsCommandTests(TestCase):
         translation = ContentTranslation.objects.get(content_metadata=self.content1)
         self.assertEqual(translation.title, 'Updated Translation')
 
-    @mock.patch('enterprise_catalog.apps.catalog.management.commands.populate_spanish_translations.translate_object_fields')
+    @mock.patch(
+        'enterprise_catalog.apps.catalog.management.commands.'
+        'populate_spanish_translations.translate_object_fields'
+    )
     def test_command_batch_processing(self, mock_translate):
         """Test command processes in batches."""
         # Create more content
@@ -169,7 +189,10 @@ class PopulateSpanishTranslationsCommandTests(TestCase):
         # All content should be translated
         self.assertEqual(ContentTranslation.objects.count(), 7)  # 2 original + 5 new
 
-    @mock.patch('enterprise_catalog.apps.catalog.management.commands.populate_spanish_translations.translate_object_fields')
+    @mock.patch(
+        'enterprise_catalog.apps.catalog.management.commands.'
+        'populate_spanish_translations.translate_object_fields'
+    )
     def test_command_handles_translation_errors(self, mock_translate):
         """Test command continues after translation errors."""
         # First call succeeds, second fails, third succeeds
@@ -188,7 +211,10 @@ class PopulateSpanishTranslationsCommandTests(TestCase):
         # Should have created 2 translations (skipped the one that errored)
         self.assertEqual(ContentTranslation.objects.count(), 2)
 
-    @mock.patch('enterprise_catalog.apps.catalog.management.commands.populate_spanish_translations.translate_object_fields')
+    @mock.patch(
+        'enterprise_catalog.apps.catalog.management.commands.'
+        'populate_spanish_translations.translate_object_fields'
+    )
     def test_command_custom_language(self, mock_translate):
         """Test command supports custom language codes."""
         mock_translate.return_value = {'title': 'Titre français'}
@@ -200,7 +226,10 @@ class PopulateSpanishTranslationsCommandTests(TestCase):
         translation = ContentTranslation.objects.first()
         self.assertEqual(translation.language_code, 'fr')
 
-    @mock.patch('enterprise_catalog.apps.catalog.management.commands.populate_spanish_translations.translate_object_fields')
+    @mock.patch(
+        'enterprise_catalog.apps.catalog.management.commands.'
+        'populate_spanish_translations.translate_object_fields'
+    )
     def test_command_translates_all_fields(self, mock_translate):
         """Test that command translates all relevant fields."""
         mock_translate.return_value = {
