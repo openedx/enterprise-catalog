@@ -85,14 +85,14 @@ class Command(BaseCommand):
             queryset = queryset.filter(content_key__in=content_keys)
 
         total_count = queryset.count()
-        self.stdout.write(
-            self.style.SUCCESS(
-                f'Starting translation for {total_count} content items to {language_code}'
-            )
+        logger.info(
+            'Starting translation for %s content items to %s',
+            total_count,
+            language_code
         )
 
         if dry_run:
-            self.stdout.write(self.style.WARNING('DRY RUN MODE - No changes will be saved'))
+            logger.warning('DRY RUN MODE - No changes will be saved')
 
         processed_count = 0
         created_count = 0
@@ -105,7 +105,7 @@ class Command(BaseCommand):
             batch_end = min(batch_start + batch_size, total_count)
             batch = queryset[batch_start:batch_end]
 
-            self.stdout.write(f'Processing batch {batch_start}-{batch_end}...')
+            logger.info('Processing batch %s-%s...', batch_start, batch_end)
 
             for content in batch:
                 try:
@@ -126,34 +126,35 @@ class Command(BaseCommand):
                     processed_count += 1
 
                     if processed_count % 10 == 0:
-                        self.stdout.write(
-                            f'Progress: {processed_count}/{total_count} '
-                            f'(Created: {created_count}, Updated: {updated_count}, '
-                            f'Skipped: {skipped_count}, Errors: {error_count})'
+                        logger.info(
+                            'Progress: %s/%s (Created: %s, Updated: %s, Skipped: %s, Errors: %s)',
+                            processed_count,
+                            total_count,
+                            created_count,
+                            updated_count,
+                            skipped_count,
+                            error_count
                         )
 
                 except Exception as exc:  # pylint: disable=broad-except
                     error_count += 1
                     logger.error(
-                        f'Error processing content {content.content_key}: {exc}',
+                        'Error processing content %s: %s',
+                        content.content_key,
+                        exc,
                         exc_info=True
-                    )
-                    self.stdout.write(
-                        self.style.ERROR(
-                            f'Error processing {content.content_key}: {exc}'
-                        )
                     )
 
         # Final summary
-        self.stdout.write(self.style.SUCCESS('\n' + '=' * 60))
-        self.stdout.write(self.style.SUCCESS('Translation Complete!'))
-        self.stdout.write(self.style.SUCCESS('=' * 60))
-        self.stdout.write(f'Total processed: {processed_count}')
-        self.stdout.write(self.style.SUCCESS(f'Created: {created_count}'))
-        self.stdout.write(self.style.SUCCESS(f'Updated: {updated_count}'))
-        self.stdout.write(self.style.WARNING(f'Skipped: {skipped_count}'))
+        logger.info('=' * 60)
+        logger.info('Translation Complete!')
+        logger.info('=' * 60)
+        logger.info('Total processed: %s', processed_count)
+        logger.info('Created: %s', created_count)
+        logger.info('Updated: %s', updated_count)
+        logger.info('Skipped: %s', skipped_count)
         if error_count > 0:
-            self.stdout.write(self.style.ERROR(f'Errors: {error_count}'))
+            logger.error('Errors: %s', error_count)
 
     def _process_content(self, content, language_code, force, dry_run):
         """
