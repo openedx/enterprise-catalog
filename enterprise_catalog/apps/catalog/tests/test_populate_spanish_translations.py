@@ -157,8 +157,8 @@ class PopulateSpanishTranslationsCommandTests(TestCase):
         # Create more content
         for i in range(5):
             ContentMetadataFactory(
-                content_key=f'course-{i+3}',
-                json_metadata={'title': f'Course {i+3}'}
+                content_key=f'course-{i + 3}',
+                json_metadata={'title': f'Course {i + 3}'}
             )
 
         mock_translate.return_value = {'title': 'Translated'}
