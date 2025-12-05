@@ -102,9 +102,7 @@ def translate_to_spanish(text):
             'content': content
         }
     ]
-    # LOGGER.info('[AI_CURATION] Translating text to Spanish. Prompt: [%s]', messages)
     translated_text = chat_completions(messages=messages)
-    # LOGGER.info('[AI_CURATION] Translating text to Spanish. Response: [%s]', translated_text)
 
     if translated_text:
         return translated_text[0]
