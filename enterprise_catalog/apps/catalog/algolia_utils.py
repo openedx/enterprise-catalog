@@ -48,6 +48,9 @@ from enterprise_catalog.apps.catalog.utils import (
     localized_utcnow,
     to_timestamp,
 )
+
+LOGGER = logging.getLogger(__name__)
+
 from enterprise_catalog.apps.video_catalog.models import (
     Video,
     VideoSkill,
@@ -1619,12 +1622,14 @@ def create_algolia_objects(products, algolia_fields):
     return algolia_objects
 
 
-def create_spanish_algolia_object(algolia_object):
+def create_spanish_algolia_object(algolia_object, content_metadata=None):
     """
     Creates a Spanish version of the Algolia object.
 
     Args:
         algolia_object (dict): The original English Algolia object.
+        content_metadata (ContentMetadata, optional): The ContentMetadata instance
+            to fetch pre-computed translations from. If None, falls back to inline translation.
 
     Returns:
         dict: A new Algolia object with translated fields and updated objectID.
@@ -1632,17 +1637,51 @@ def create_spanish_algolia_object(algolia_object):
 
     spanish_object = copy.deepcopy(algolia_object)
 
-    # Fields to translate
-    fields_to_translate = [
-        'title',
-        'short_description',
-        'full_description',
-        'outcome',
-        'prerequisites',
-        'subtitle',
-    ]
+    # Try to fetch pre-computed translation
+    if content_metadata:
+        try:
+            from enterprise_catalog.apps.catalog.models import (
+                ContentTranslation,
+            )
+            translation = content_metadata.translations.get(language_code='es')
 
-    spanish_object = translate_object_fields(spanish_object, fields_to_translate)
+            # Use pre-computed translations
+            if translation.title:
+                spanish_object['title'] = translation.title
+            if translation.short_description:
+                spanish_object['short_description'] = translation.short_description
+            if translation.full_description:
+                spanish_object['full_description'] = translation.full_description
+            if translation.outcome:
+                spanish_object['outcome'] = translation.outcome
+            if translation.prerequisites:
+                spanish_object['prerequisites'] = translation.prerequisites
+            if translation.subtitle:
+                spanish_object['subtitle'] = translation.subtitle
+
+            LOGGER.debug(
+                f'[SPANISH_TRANSLATION] Using pre-computed translation for {content_metadata.content_key}'
+            )
+        except Exception as exc:  # pylint: disable=broad-except
+            # Fall back to inline translation (for backward compatibility)
+            content_identifier = getattr(content_metadata, 'content_key', getattr(content_metadata, 'edx_video_id', 'unknown'))
+            LOGGER.warning(
+                f'[SPANISH_TRANSLATION] No pre-computed translation found for {content_identifier}, '
+                f'falling back to inline translation. Error: {exc}'
+            )
+            fields_to_translate = [
+                'title', 'short_description', 'full_description',
+                'outcome', 'prerequisites', 'subtitle'
+            ]
+            spanish_object = translate_object_fields(spanish_object, fields_to_translate)
+    else:
+        # Fallback: inline translation (deprecated path, used for videos or when content_metadata not available)
+        LOGGER.debug('[SPANISH_TRANSLATION] No content_metadata provided, using inline translation')
+        fields_to_translate = [
+            'title', 'short_description', 'full_description',
+            'outcome', 'prerequisites', 'subtitle'
+        ]
+        spanish_object = translate_object_fields(spanish_object, fields_to_translate)
 
     # Update objectID to indicate Spanish version
     spanish_object['objectID'] = f"{spanish_object['objectID']}-es"

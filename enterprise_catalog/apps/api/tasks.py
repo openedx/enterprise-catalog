@@ -869,7 +869,7 @@ def add_video_to_algolia_objects(
     _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata)
 
     # Create and index Spanish version
-    json_metadata_es = create_spanish_algolia_object(json_metadata)
+    json_metadata_es = create_spanish_algolia_object(json_metadata, video)
 
     # enterprise customer uuids for Spanish
     batched_metadata_es = _batched_metadata(
@@ -981,7 +981,7 @@ def add_metadata_to_algolia_objects(
     _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata)
 
     # Create and index Spanish version
-    json_metadata_es = create_spanish_algolia_object(json_metadata)
+    json_metadata_es = create_spanish_algolia_object(json_metadata, metadata)
 
     # enterprise catalog uuids for Spanish
     batched_metadata_es = _batched_metadata(
