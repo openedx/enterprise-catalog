@@ -1684,9 +1684,15 @@ def create_spanish_algolia_object(algolia_object, content_metadata=None):
         # Fallback: inline translation
         if content_metadata:
             if isinstance(content_metadata, Video):
-                LOGGER.debug('[SPANISH_TRANSLATION] Using inline translation for Video (no pre-computed translation support)')
+                LOGGER.debug(
+                    '[SPANISH_TRANSLATION] Using inline translation for Video '
+                    '(no pre-computed translation support)'
+                )
             else:
-                LOGGER.debug('[SPANISH_TRANSLATION] Using inline translation (no pre-computed translation available)')
+                LOGGER.debug(
+                    '[SPANISH_TRANSLATION] Using inline translation '
+                    '(no pre-computed translation available)'
+                )
         else:
             LOGGER.debug('[SPANISH_TRANSLATION] Using inline translation (no content_metadata provided)')
 
