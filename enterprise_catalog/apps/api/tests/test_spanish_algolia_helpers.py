@@ -7,8 +7,10 @@ from unittest import mock
 from django.test import TestCase
 
 from enterprise_catalog.apps.api import tasks
-from enterprise_catalog.apps.catalog.constants import COURSE, VIDEO
-from enterprise_catalog.apps.catalog.tests.factories import ContentMetadataFactory
+from enterprise_catalog.apps.catalog.constants import COURSE
+from enterprise_catalog.apps.catalog.tests.factories import (
+    ContentMetadataFactory,
+)
 from enterprise_catalog.apps.video_catalog.tests.factories import VideoFactory
 
 
@@ -134,5 +136,6 @@ class TestSpanishTranslationInAlgoliaHelpers(TestCase):
         # Verify both objects exist and have same UUIDs
         assert english_catalog_obj is not None
         assert spanish_catalog_obj is not None
-        assert (english_catalog_obj.get('enterprise_catalog_uuids') ==  # noqa: W504
-                spanish_catalog_obj.get('enterprise_catalog_uuids'))
+        english_uuids = english_catalog_obj.get('enterprise_catalog_uuids')
+        spanish_uuids = spanish_catalog_obj.get('enterprise_catalog_uuids')
+        assert english_uuids == spanish_uuids
