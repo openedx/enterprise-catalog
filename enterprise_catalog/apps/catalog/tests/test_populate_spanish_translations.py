@@ -7,7 +7,9 @@ from django.core.management import call_command
 from django.test import TestCase
 
 from enterprise_catalog.apps.catalog.models import ContentTranslation
-from enterprise_catalog.apps.catalog.tests.factories import ContentMetadataFactory
+from enterprise_catalog.apps.catalog.tests.factories import (
+    ContentMetadataFactory,
+)
 from enterprise_catalog.apps.catalog.utils import compute_source_hash
 
 
