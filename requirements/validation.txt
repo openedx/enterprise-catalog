@@ -169,7 +169,7 @@ distro==1.9.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   openai
-django==5.2.8
+django==5.2.9
     # via
     #   -c requirements/common_constraints.txt
     #   -c requirements/constraints.txt
@@ -462,7 +462,7 @@ packaging==25.0
     #   pyproject-api
     #   pytest
     #   tox
-platformdirs==4.5.0
+platformdirs==4.5.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -550,7 +550,7 @@ pymemcache==4.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-pymongo==4.15.4
+pymongo==4.15.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -564,7 +564,7 @@ pyproject-api==1.10.0
     # via
     #   -r requirements/test.txt
     #   tox
-pytest==9.0.1
+pytest==9.0.2
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -759,7 +759,7 @@ uritemplate==4.2.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   drf-spectacular
-urllib3==2.5.0
+urllib3==2.6.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt

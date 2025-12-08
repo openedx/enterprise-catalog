@@ -346,7 +346,7 @@ packaging==25.0
     #   pyproject-api
     #   pytest
     #   tox
-platformdirs==4.5.0
+platformdirs==4.5.1
     # via
     #   pylint
     #   tox
@@ -406,7 +406,7 @@ pylint-plugin-utils==0.9.0
     #   pylint-django
 pymemcache==4.0.0
     # via -r requirements/base.txt
-pymongo==4.15.4
+pymongo==4.15.5
     # via
     #   -r requirements/base.txt
     #   edx-opaque-keys
@@ -416,7 +416,7 @@ pynacl==1.6.1
     #   edx-django-utils
 pyproject-api==1.10.0
     # via tox
-pytest==9.0.1
+pytest==9.0.2
     # via
     #   pytest-cov
     #   pytest-django
@@ -568,7 +568,7 @@ uritemplate==4.2.0
     # via
     #   -r requirements/base.txt
     #   drf-spectacular
-urllib3==2.5.0
+urllib3==2.6.0
     # via
     #   -r requirements/base.txt
     #   requests

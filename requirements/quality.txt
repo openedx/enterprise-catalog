@@ -116,7 +116,7 @@ distro==1.9.0
     # via
     #   -r requirements/base.txt
     #   openai
-django==5.2.8
+django==5.2.9
     # via
     #   -c requirements/common_constraints.txt
     #   -c requirements/constraints.txt
@@ -319,7 +319,7 @@ packaging==25.0
     # via
     #   -r requirements/base.txt
     #   kombu
-platformdirs==4.5.0
+platformdirs==4.5.1
     # via pylint
 ply==3.11
     # via
@@ -373,7 +373,7 @@ pylint-plugin-utils==0.9.0
     #   pylint-django
 pymemcache==4.0.0
     # via -r requirements/base.txt
-pymongo==4.15.4
+pymongo==4.15.5
     # via
     #   -r requirements/base.txt
     #   edx-opaque-keys
@@ -520,7 +520,7 @@ uritemplate==4.2.0
     # via
     #   -r requirements/base.txt
     #   drf-spectacular
-urllib3==2.5.0
+urllib3==2.6.0
     # via
     #   -r requirements/base.txt
     #   requests
