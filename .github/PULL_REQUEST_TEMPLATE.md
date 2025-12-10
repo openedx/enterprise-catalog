@@ -1,4 +1,8 @@
-## Post-review
+⚠️ **DEPRECATION NOTICE**
+-------------------------
 
-* [ ] Squash commits into discrete sets of changes
-* [ ] Ensure that once the changes have been [deployed to stage](https://gocd.tools.edx.org/go/pipeline/activity/stage-enterprise_catalog), prod is manually deployed
+This repository is **deprecated** and no longer actively developed.
+
+- 2U maintains a fork located at [edx/enterprise-catalog](https://github.com/edx/enterprise-catalog).
+- If you or your organization wants to adopt maintenance of openedx/enterprise-catalog,
+  please reach out to OpenEdx via [Slack](https://openedx.org/slack).
