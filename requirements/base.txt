@@ -74,7 +74,7 @@ diff-match-patch==20241021
     # via django-import-export
 distro==1.9.0
     # via openai
-django==5.2.8
+django==5.2.9
     # via
     #   -c requirements/common_constraints.txt
     #   -c requirements/constraints.txt
@@ -88,6 +88,7 @@ django==5.2.8
     #   django-import-export
     #   django-log-request-id
     #   django-model-utils
+    #   django-modeltranslation
     #   django-simple-history
     #   django-waffle
     #   djangorestframework
@@ -128,7 +129,9 @@ django-model-utils==5.0.0
     #   -r requirements/base.in
     #   edx-celeryutils
     #   edx-rbac
-django-simple-history==3.10.1
+django-modeltranslation==0.19.17
+    # via -r requirements/base.in
+django-simple-history==3.11.0
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.in
@@ -252,7 +255,7 @@ pyjwt[crypto]==2.10.1
     #   social-auth-core
 pymemcache==4.0.0
     # via -r requirements/base.in
-pymongo==4.15.4
+pymongo==4.15.5
     # via edx-opaque-keys
 pynacl==1.6.1
     # via edx-django-utils
@@ -293,7 +296,7 @@ rpds-py==0.30.0
     #   referencing
 rules==3.5
     # via -r requirements/base.in
-scikit-learn==1.7.2
+scikit-learn==1.8.0
     # via -r requirements/base.in
 scipy==1.16.3
     # via scikit-learn
@@ -351,7 +354,7 @@ tzlocal==5.3.1
     # via celery
 uritemplate==4.2.0
     # via drf-spectacular
-urllib3==2.5.0
+urllib3==2.6.2
     # via requests
 vine==5.1.0
     # via

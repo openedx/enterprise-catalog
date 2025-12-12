@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.utils import translation
 from django.utils.functional import cached_property
 from edx_rest_framework_extensions.auth.jwt.authentication import (
     JwtAuthentication,
@@ -18,6 +20,13 @@ class AcademiesReadOnlyViewSet(viewsets.ReadOnlyModelViewSet):
     renderer_classes = [JSONRenderer, XMLRenderer]
     serializer_class = AcademySerializer
     lookup_field = 'uuid'
+
+    def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
+        if 'lang' in request.query_params:
+            lang = request.query_params['lang']
+            if lang in settings.MODELTRANSLATION_LANGUAGES:
+                translation.activate(lang)
 
     @cached_property
     def request_action(self):

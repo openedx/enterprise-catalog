@@ -37,6 +37,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = (
     'clearcache',
+    'modeltranslation',  # For admin integration, modeltranslation must be put before django.contrib.admin
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -172,6 +173,13 @@ USE_DEPRECATED_PYTZ = True
 LOCALE_PATHS = (
     root('conf', 'locale'),
 )
+
+LANGUAGES = (
+    ('en', 'English'),
+    ('es', 'Spanish')
+)
+MODELTRANSLATION_LANGUAGES = ('en', 'es')
+MODELTRANSLATION_DEFAULT_LANGUAGE = 'en'
 
 
 # MEDIA CONFIGURATION

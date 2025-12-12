@@ -12,6 +12,7 @@ django-crum
 django-extensions
 django-import-export
 django-model-utils
+django-modeltranslation
 django-simple-history
 djangorestframework
 djangorestframework-xml

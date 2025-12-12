@@ -2133,6 +2133,221 @@ class AcademiesViewSetTests(APITestMixin):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 0)
 
+    # pylint: disable=unused-argument
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
+    @mock.patch('enterprise_catalog.apps.api.v1.serializers.get_initialized_algolia_client')
+    def test_list_returns_spanish_translations(self, mock_algolia_client, mock_client):
+        """
+        Test that the list endpoint returns Spanish translations when lang=es is provided.
+        """
+        # Set up Spanish translations
+        self.academy2.title_es = 'Academia de Prueba'
+        self.academy2.short_description_es = 'Descripción corta en español'
+        self.academy2.long_description_es = 'Descripción larga en español'
+        self.academy2.save()
+
+        self.tag1.title_es = 'liderazgo'
+        self.tag1.description_es = 'Descripción de liderazgo'
+        self.tag1.save()
+
+        mock_algolia_client.return_value.algolia_index.search_for_facet_values.side_effect = [
+            self.mock_algolia_hits, {'facetHits': []}
+        ]
+
+        params = {
+            'enterprise_customer': str(self.enterprise_catalog2.enterprise_customer.uuid),
+            'lang': 'es'
+        }
+        url = reverse('api:v1:academies-list') + '?{}'.format(urlencode(params))
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 1)
+
+        # Verify Spanish translations are returned
+        academy_data = response.data['results'][0]
+        self.assertEqual(academy_data['title'], 'Academia de Prueba')
+        self.assertEqual(academy_data['short_description'], 'Descripción corta en español')
+        self.assertEqual(academy_data['long_description'], 'Descripción larga en español')
+
+    # pylint: disable=unused-argument
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
+    @mock.patch('enterprise_catalog.apps.api.v1.serializers.get_initialized_algolia_client')
+    def test_list_returns_english_translations(self, mock_algolia_client, mock_client):
+        """
+        Test that the list endpoint returns English translations when lang=en is provided.
+        """
+        # Set up English translations
+        self.academy2.title_en = 'Test Academy'
+        self.academy2.short_description_en = 'Short description in English'
+        self.academy2.long_description_en = 'Long description in English'
+        self.academy2.save()
+
+        mock_algolia_client.return_value.algolia_index.search_for_facet_values.side_effect = [
+            self.mock_algolia_hits, {'facetHits': []}
+        ]
+
+        params = {
+            'enterprise_customer': str(self.enterprise_catalog2.enterprise_customer.uuid),
+            'lang': 'en'
+        }
+        url = reverse('api:v1:academies-list') + '?{}'.format(urlencode(params))
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 1)
+
+        # Verify English translations are returned
+        academy_data = response.data['results'][0]
+        self.assertEqual(academy_data['title'], 'Test Academy')
+        self.assertEqual(academy_data['short_description'], 'Short description in English')
+        self.assertEqual(academy_data['long_description'], 'Long description in English')
+
+    @mock.patch('enterprise_catalog.apps.api.v1.serializers.get_initialized_algolia_client')
+    def test_detail_returns_spanish_translations(self, mock_algolia_client):
+        """
+        Test that the detail endpoint returns Spanish translations when lang=es is provided.
+        """
+        # Set up Spanish translations
+        self.academy2.title_es = 'Academia Detallada'
+        self.academy2.short_description_es = 'Descripción corta detallada'
+        self.academy2.long_description_es = 'Descripción larga detallada'
+        self.academy2.save()
+
+        mock_algolia_client.return_value.algolia_index.search_for_facet_values.side_effect = [
+            self.mock_algolia_hits, {'facetHits': []}
+        ]
+
+        url = reverse('api:v1:academies-detail', kwargs={'uuid': self.academy2.uuid})
+        response = self.client.get(url + '?lang=es')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Verify Spanish translations are returned
+        self.assertEqual(response.data['title'], 'Academia Detallada')
+        self.assertEqual(response.data['short_description'], 'Descripción corta detallada')
+        self.assertEqual(response.data['long_description'], 'Descripción larga detallada')
+
+    @mock.patch('enterprise_catalog.apps.api.v1.serializers.get_initialized_algolia_client')
+    def test_detail_returns_english_translations(self, mock_algolia_client):
+        """
+        Test that the detail endpoint returns English translations when lang=en is provided.
+        """
+        # Set up English translations
+        self.academy2.title_en = 'Detailed Academy'
+        self.academy2.short_description_en = 'Detailed short description'
+        self.academy2.long_description_en = 'Detailed long description'
+        self.academy2.save()
+
+        mock_algolia_client.return_value.algolia_index.search_for_facet_values.side_effect = [
+            self.mock_algolia_hits, {'facetHits': []}
+        ]
+
+        url = reverse('api:v1:academies-detail', kwargs={'uuid': self.academy2.uuid})
+        response = self.client.get(url + '?lang=en')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Verify English translations are returned
+        self.assertEqual(response.data['title'], 'Detailed Academy')
+        self.assertEqual(response.data['short_description'], 'Detailed short description')
+        self.assertEqual(response.data['long_description'], 'Detailed long description')
+
+    # pylint: disable=unused-argument
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
+    @mock.patch('enterprise_catalog.apps.api.v1.serializers.get_initialized_algolia_client')
+    def test_list_ignores_invalid_language_parameter(self, mock_algolia_client, mock_client):
+        """
+        Test that the endpoint ignores invalid language codes and returns default (English) content.
+        """
+        # Set up both English and Spanish translations
+        self.academy2.title_en = 'English Title'
+        self.academy2.title_es = 'Título en Español'
+        self.academy2.short_description_en = 'English description'
+        self.academy2.short_description_es = 'Descripción en español'
+        self.academy2.save()
+
+        mock_algolia_client.return_value.algolia_index.search_for_facet_values.side_effect = [
+            self.mock_algolia_hits, {'facetHits': []}
+        ]
+
+        params = {
+            'enterprise_customer': str(self.enterprise_catalog2.enterprise_customer.uuid),
+            'lang': 'fr'  # French is not in MODELTRANSLATION_LANGUAGES
+        }
+        url = reverse('api:v1:academies-list') + '?{}'.format(urlencode(params))
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Verify default English content is returned (invalid language ignored)
+        academy_data = response.data['results'][0]
+        self.assertEqual(academy_data['title'], 'English Title')
+        self.assertEqual(academy_data['short_description'], 'English description')
+
+    @mock.patch('enterprise_catalog.apps.api.v1.serializers.get_initialized_algolia_client')
+    def test_tags_include_english_title_for_algolia_matching(self, mock_algolia_client):
+        """
+        Test that tags use title_en internally for Algolia matching but don't include it in response.
+        """
+        self.tag1.title_en = 'leadership'
+        self.tag1.title_es = 'liderazgo'
+        self.tag1.save()
+
+        mock_algolia_client.return_value.algolia_index.search_for_facet_values.side_effect = [
+            self.mock_algolia_hits, {'facetHits': []}
+        ]
+
+        url = reverse('api:v1:academies-detail', kwargs={'uuid': self.academy2.uuid})
+        response = self.client.get(url + '?lang=es')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Verify tags do NOT include title_en in the response (only used internally for matching)
+        tags = response.data['tags']
+        self.assertGreater(len(tags), 0)
+        self.assertNotIn('title_en', tags[0])
+
+    # pylint: disable=unused-argument
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
+    @mock.patch('enterprise_catalog.apps.api.v1.serializers.get_initialized_algolia_client')
+    def test_list_returns_english_fallback_for_missing_spanish_translations(self, mock_algolia_client, mock_client):
+        """
+        Test that when Spanish is requested but some translations are missing,
+        the endpoint returns English values for those missing fields (fallback behavior).
+        """
+        # Set up partial Spanish translations - only title has Spanish, descriptions are missing
+        self.academy2.title_en = 'English Academy Title'
+        self.academy2.title_es = 'Título de Academia en Español'
+        self.academy2.short_description_en = 'English short description'
+        self.academy2.short_description_es = ''  # Missing Spanish translation
+        self.academy2.long_description_en = 'English long description'
+        self.academy2.long_description_es = None  # Missing Spanish translation
+        self.academy2.save()
+
+        mock_algolia_client.return_value.algolia_index.search_for_facet_values.side_effect = [
+            self.mock_algolia_hits, {'facetHits': []}
+        ]
+
+        params = {
+            'enterprise_customer': str(self.enterprise_catalog2.enterprise_customer.uuid),
+            'lang': 'es'
+        }
+        url = reverse('api:v1:academies-list') + '?{}'.format(urlencode(params))
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 1)
+
+        academy_data = response.data['results'][0]
+
+        # Verify Spanish translation is used where available
+        self.assertEqual(academy_data['title'], 'Título de Academia en Español')
+
+        # Verify English fallback is used for missing Spanish translations
+        self.assertEqual(academy_data['short_description'], 'English short description')
+        self.assertEqual(academy_data['long_description'], 'English long description')
+
 
 def ddt_cross_product(data_x, data_y):
     """

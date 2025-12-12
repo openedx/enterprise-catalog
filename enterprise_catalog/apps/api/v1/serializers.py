@@ -465,6 +465,14 @@ class AcademyTagsListSerializer(serializers.ListSerializer):  # pylint: disable=
     def to_representation(self, obj):  # pylint: disable=arguments-renamed
         """Filter academy tags with no index hits. """
         tags = super().to_representation(obj)
+
+        # Map tag IDs to title_en for lookup
+        title_en_by_id = {tag.id: tag.title_en for tag in obj}
+
+        # Add title_en to each serialized tag
+        for tag_dict in tags:
+            tag_dict['title_en'] = title_en_by_id.get(tag_dict['id'])
+
         algolia_client = get_initialized_algolia_client()
         academy_uuid = self.context.get('academy_uuid')
         enterprise_uuid = self.context.get('enterprise_uuid')
@@ -482,8 +490,12 @@ class AcademyTagsListSerializer(serializers.ListSerializer):  # pylint: disable=
                 tag_titles_with_results.append(hit.get('value'))
         tags_with_results = []
         for tag in tags:
+            # Match using both current active language title and English title
             tag_title = tag['title']
-            if tag_title in tag_titles_with_results:
+            tag_title_en = tag.get('title_en', tag_title)
+            if tag_title in tag_titles_with_results or tag_title_en in tag_titles_with_results:
+                # Remove title_en before adding to results (only used for internal matching)
+                tag.pop('title_en', None)
                 tags_with_results.append(tag)
         return tags_with_results
 

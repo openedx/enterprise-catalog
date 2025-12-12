@@ -6,7 +6,6 @@ from uuid import uuid4
 from django.db import models
 from django.utils.translation import gettext as _
 from model_utils.models import TimeStampedModel
-from simple_history.models import HistoricalRecords
 
 from enterprise_catalog.apps.catalog.models import (
     ContentMetadata,
@@ -51,8 +50,6 @@ class Academy(TimeStampedModel):
     image = models.URLField(help_text=_('URL of the image shown on academy card on the frontend.'))
 
     tags = models.ManyToManyField(Tag, related_name='academies')
-
-    history = HistoricalRecords()
 
     class Meta:
         verbose_name = _('Academy')
