@@ -235,6 +235,7 @@ def _should_index_course(course_metadata):
     Returns:
         bool: Whether or not the course should be indexed by algolia.
     """
+
     course_json_metadata = course_metadata.json_metadata
     advertised_course_run = get_advertised_course_run(course_json_metadata)
 

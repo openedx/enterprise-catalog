@@ -32,7 +32,7 @@ class TestSpanishTranslationInAlgoliaHelpers(TestCase):
             language_code='es',
             title='Curso de Prueba'
         )
-        
+
         algolia_products_by_object_id = {}
         catalog_uuid = str(uuid.uuid4())
         customer_uuid = str(uuid.uuid4())
@@ -108,7 +108,7 @@ class TestSpanishTranslationInAlgoliaHelpers(TestCase):
             language_code='es',
             title='Curso de Prueba'
         )
-        
+
         algolia_products_by_object_id = {}
         catalog_uuids = [str(uuid.uuid4()), str(uuid.uuid4())]
         customer_uuids = [str(uuid.uuid4()), str(uuid.uuid4())]

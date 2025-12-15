@@ -17,7 +17,7 @@ class AlgoliaTranslationTests(TestCase):
         """
         original_object = {'objectID': 'course-123'}
         content_metadata = ContentMetadataFactory(content_type='course', content_key='course-123')
-        
+
         result = create_spanish_algolia_object(original_object, content_metadata)
         self.assertIsNone(result)
 
@@ -47,7 +47,7 @@ class AlgoliaTranslationTests(TestCase):
         )
 
         result = create_spanish_algolia_object(original_object, content_metadata)
-        
+
         self.assertIsNotNone(result)
         self.assertEqual(result['objectID'], 'course-123-es')
         self.assertEqual(result['title'], 'Título Español')
@@ -68,7 +68,7 @@ class AlgoliaTranslationTests(TestCase):
             language_code='es',
             title='Título Español'
         )
-        
+
         algolia_products = {}
         catalog_uuids = ['cat-1']
         customer_uuids = ['cust-1']
@@ -91,7 +91,7 @@ class AlgoliaTranslationTests(TestCase):
         # Check for Spanish objects
         spanish_keys = [k for k in algolia_products.keys() if '-es' in k]
         self.assertGreater(len(spanish_keys), 0)
-        
+
         # Verify one of the Spanish objects
         spanish_obj = algolia_products[spanish_keys[0]]
         self.assertEqual(spanish_obj['title'], 'Título Español')
@@ -103,7 +103,7 @@ class AlgoliaTranslationTests(TestCase):
         """
         metadata = ContentMetadataFactory(content_type='course')
         # No translation created
-        
+
         algolia_products = {}
         catalog_uuids = ['cat-1']
         customer_uuids = ['cust-1']
@@ -126,7 +126,7 @@ class AlgoliaTranslationTests(TestCase):
         # Check for Spanish objects - should be none
         spanish_keys = [k for k in algolia_products.keys() if '-es' in k]
         self.assertEqual(len(spanish_keys), 0)
-        
+
         # Check for English objects - should exist
         english_keys = [k for k in algolia_products.keys() if not k.endswith('-es') and 'catalog-uuids' in k]
         self.assertGreater(len(english_keys), 0)
