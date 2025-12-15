@@ -2,12 +2,12 @@
 Unit tests for Spanish translation in Algolia helper functions.
 """
 import uuid
-from unittest import mock
 
 from django.test import TestCase
 
 from enterprise_catalog.apps.api import tasks
 from enterprise_catalog.apps.catalog.constants import COURSE
+from enterprise_catalog.apps.catalog.models import ContentTranslation
 from enterprise_catalog.apps.catalog.tests.factories import (
     ContentMetadataFactory,
 )
@@ -19,21 +19,26 @@ class TestSpanishTranslationInAlgoliaHelpers(TestCase):
     Tests for Spanish translation in add_metadata_to_algolia_objects and add_video_to_algolia_objects.
     """
 
-    @mock.patch('enterprise_catalog.apps.catalog.algolia_utils.translate_object_fields')
-    def test_add_metadata_to_algolia_objects_creates_spanish_objects(self, mock_translate):
+    def test_add_metadata_to_algolia_objects_creates_spanish_objects(self):
         """
-        Test that add_metadata_to_algolia_objects creates Spanish versions of all batched objects.
+        Test that add_metadata_to_algolia_objects creates Spanish versions of all batched objects
+        when translation exists.
         """
-        # Mock translation to return the same object (no actual translation needed for this test)
-        mock_translate.side_effect = lambda obj, fields: obj
         # Setup
         course = ContentMetadataFactory(content_type=COURSE, content_key='test-course')
+        # Create translation so Spanish objects are generated
+        ContentTranslation.objects.create(
+            content_metadata=course,
+            language_code='es',
+            title='Curso de Prueba'
+        )
+        
         algolia_products_by_object_id = {}
         catalog_uuid = str(uuid.uuid4())
         customer_uuid = str(uuid.uuid4())
         query_uuid = str(uuid.uuid4())
 
-        # Execute - let the actual function run to get coverage
+        # Execute
         tasks.add_metadata_to_algolia_objects(
             metadata=course,
             algolia_products_by_object_id=algolia_products_by_object_id,
@@ -47,8 +52,8 @@ class TestSpanishTranslationInAlgoliaHelpers(TestCase):
 
         # Verify both English and Spanish objects were created
         object_ids = list(algolia_products_by_object_id.keys())
-        english_objects = [oid for oid in object_ids if '-es-' not in oid]
-        spanish_objects = [oid for oid in object_ids if '-es-' in oid]
+        english_objects = [oid for oid in object_ids if '-es' not in oid]
+        spanish_objects = [oid for oid in object_ids if '-es' in oid]
 
         # Should have 3 English objects (catalog, customer, query)
         assert len(english_objects) == 3
@@ -57,16 +62,14 @@ class TestSpanishTranslationInAlgoliaHelpers(TestCase):
 
         # Verify Spanish objects have correct format
         for spanish_oid in spanish_objects:
-            assert '-es-' in spanish_oid
+            assert '-es' in spanish_oid
             assert str(course.content_uuid) in spanish_oid
+            assert algolia_products_by_object_id[spanish_oid]['language'] == 'es'
 
-    @mock.patch('enterprise_catalog.apps.catalog.algolia_utils.translate_object_fields')
-    def test_add_video_to_algolia_objects_creates_spanish_objects(self, mock_translate):
+    def test_add_video_to_algolia_objects_skips_spanish_objects(self):
         """
-        Test that add_video_to_algolia_objects creates Spanish versions of all batched objects.
+        Test that add_video_to_algolia_objects skips Spanish versions (Video not supported yet).
         """
-        # Mock translation to return the same object (no actual translation needed for this test)
-        mock_translate.side_effect = lambda obj, fields: obj
         # Setup
         video = VideoFactory()
         algolia_products_by_object_id = {}
@@ -74,7 +77,7 @@ class TestSpanishTranslationInAlgoliaHelpers(TestCase):
         customer_uuid = str(uuid.uuid4())
         query_uuid = str(uuid.uuid4())
 
-        # Execute - let the actual function run to get coverage
+        # Execute
         tasks.add_video_to_algolia_objects(
             video=video,
             algolia_products_by_object_id=algolia_products_by_object_id,
@@ -83,35 +86,34 @@ class TestSpanishTranslationInAlgoliaHelpers(TestCase):
             catalog_queries=[(query_uuid, "Test Query")],
         )
 
-        # Verify both English and Spanish objects were created
+        # Verify only English objects were created
         object_ids = list(algolia_products_by_object_id.keys())
-        english_objects = [oid for oid in object_ids if '-es-' not in oid]
-        spanish_objects = [oid for oid in object_ids if '-es-' in oid]
+        english_objects = [oid for oid in object_ids if '-es' not in oid]
+        spanish_objects = [oid for oid in object_ids if '-es' in oid]
 
         # Should have 3 English objects (customer, catalog, query)
         assert len(english_objects) == 3
-        # Should have 3 Spanish objects (customer, catalog, query)
-        assert len(spanish_objects) == 3
+        # Should have 0 Spanish objects (Video not supported)
+        assert len(spanish_objects) == 0
 
-        # Verify Spanish objects have correct format
-        for spanish_oid in spanish_objects:
-            assert '-es-' in spanish_oid
-            assert video.edx_video_id in spanish_oid
-
-    @mock.patch('enterprise_catalog.apps.catalog.algolia_utils.translate_object_fields')
-    def test_spanish_objects_include_same_uuids_as_english(self, mock_translate):
+    def test_spanish_objects_include_same_uuids_as_english(self):
         """
         Test that Spanish objects contain the same UUID lists as their English counterparts.
         """
-        # Mock translation to return the same object (no actual translation needed for this test)
-        mock_translate.side_effect = lambda obj, fields: obj
         # Setup
         course = ContentMetadataFactory(content_type=COURSE, content_key='test-course')
+        # Create translation
+        ContentTranslation.objects.create(
+            content_metadata=course,
+            language_code='es',
+            title='Curso de Prueba'
+        )
+        
         algolia_products_by_object_id = {}
         catalog_uuids = [str(uuid.uuid4()), str(uuid.uuid4())]
         customer_uuids = [str(uuid.uuid4()), str(uuid.uuid4())]
 
-        # Execute - let the actual function run to get coverage
+        # Execute
         tasks.add_metadata_to_algolia_objects(
             metadata=course,
             algolia_products_by_object_id=algolia_products_by_object_id,
@@ -128,9 +130,9 @@ class TestSpanishTranslationInAlgoliaHelpers(TestCase):
         spanish_catalog_obj = None
 
         for oid, obj in algolia_products_by_object_id.items():
-            if 'catalog-uuids' in oid and '-es-' not in oid:
+            if 'catalog-uuids' in oid and '-es' not in oid:
                 english_catalog_obj = obj
-            elif 'catalog-uuids' in oid and '-es-' in oid:
+            elif 'catalog-uuids' in oid and '-es' in oid:
                 spanish_catalog_obj = obj
 
         # Verify both objects exist and have same UUIDs

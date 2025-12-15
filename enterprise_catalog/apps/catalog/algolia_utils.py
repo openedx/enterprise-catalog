@@ -1680,7 +1680,7 @@ def create_spanish_algolia_object(algolia_object, content_metadata=None):
     else:
         LOGGER.debug(
             '[SPANISH_TRANSLATION] No pre-computed translation available for %s, skipping Spanish object',
-            content_metadata.content_key if content_metadata else 'unknown'
+            getattr(content_metadata, 'content_key', 'unknown') if content_metadata else 'unknown'
         )
         return None
 
