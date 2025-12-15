@@ -871,27 +871,28 @@ def add_video_to_algolia_objects(
     # Create and index Spanish version
     json_metadata_es = create_spanish_algolia_object(json_metadata, video)
 
-    # enterprise customer uuids for Spanish
-    batched_metadata_es = _batched_metadata(
-        json_metadata_es,
-        customer_uuids,
-        'enterprise_customer_uuids',
-        '{}-customer-uuids-{}',
-    )
-    _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata_es)
+    if json_metadata_es:
+        # enterprise customer uuids for Spanish
+        batched_metadata_es = _batched_metadata(
+            json_metadata_es,
+            customer_uuids,
+            'enterprise_customer_uuids',
+            '{}-customer-uuids-{}',
+        )
+        _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata_es)
 
-    # enterprise catalog uuids for Spanish
-    batched_metadata_es = _batched_metadata(
-        json_metadata_es,
-        catalog_uuids,
-        'enterprise_catalog_uuids',
-        '{}-catalog-uuids-{}',
-    )
-    _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata_es)
+        # enterprise catalog uuids for Spanish
+        batched_metadata_es = _batched_metadata(
+            json_metadata_es,
+            catalog_uuids,
+            'enterprise_catalog_uuids',
+            '{}-catalog-uuids-{}',
+        )
+        _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata_es)
 
-    # enterprise catalog queries for Spanish
-    batched_metadata_es = _batched_metadata_with_queries(json_metadata_es, queries)
-    _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata_es)
+        # enterprise catalog queries for Spanish
+        batched_metadata_es = _batched_metadata_with_queries(json_metadata_es, queries)
+        _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata_es)
 
 
 def add_metadata_to_algolia_objects(
@@ -983,27 +984,28 @@ def add_metadata_to_algolia_objects(
     # Create and index Spanish version
     json_metadata_es = create_spanish_algolia_object(json_metadata, metadata)
 
-    # enterprise catalog uuids for Spanish
-    batched_metadata_es = _batched_metadata(
-        json_metadata_es,
-        catalog_uuids,
-        'enterprise_catalog_uuids',
-        '{}-catalog-uuids-{}',
-    )
-    _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata_es)
+    if json_metadata_es:
+        # enterprise catalog uuids for Spanish
+        batched_metadata_es = _batched_metadata(
+            json_metadata_es,
+            catalog_uuids,
+            'enterprise_catalog_uuids',
+            '{}-catalog-uuids-{}',
+        )
+        _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata_es)
 
-    # enterprise customer uuids for Spanish
-    batched_metadata_es = _batched_metadata(
-        json_metadata_es,
-        customer_uuids,
-        'enterprise_customer_uuids',
-        '{}-customer-uuids-{}',
-    )
-    _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata_es)
+        # enterprise customer uuids for Spanish
+        batched_metadata_es = _batched_metadata(
+            json_metadata_es,
+            customer_uuids,
+            'enterprise_customer_uuids',
+            '{}-customer-uuids-{}',
+        )
+        _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata_es)
 
-    # enterprise catalog queries for Spanish
-    batched_metadata_es = _batched_metadata_with_queries(json_metadata_es, queries)
-    _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata_es)
+        # enterprise catalog queries for Spanish
+        batched_metadata_es = _batched_metadata_with_queries(json_metadata_es, queries)
+        _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata_es)
 
 
 def get_algolia_objects_from_course_content_metadata(content_metadata):

@@ -12,9 +12,6 @@ from django.utils.dateparse import parse_datetime
 from django.utils.translation import gettext as _
 from pytz import UTC
 
-from enterprise_catalog.apps.ai_curation.utils.open_ai_utils import (
-    translate_object_fields,
-)
 from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
 from enterprise_catalog.apps.api_client.constants import (
     COURSE_REVIEW_BASE_AVG_REVIEW_SCORE,
@@ -1681,28 +1678,14 @@ def create_spanish_algolia_object(algolia_object, content_metadata=None):
             content_metadata.content_key
         )
     else:
-        # Fallback: inline translation
-        if content_metadata:
-            if isinstance(content_metadata, Video):
-                LOGGER.debug(
-                    '[SPANISH_TRANSLATION] Using inline translation for Video '
-                    '(no pre-computed translation support)'
-                )
-            else:
-                LOGGER.debug(
-                    '[SPANISH_TRANSLATION] Using inline translation '
-                    '(no pre-computed translation available)'
-                )
-        else:
-            LOGGER.debug('[SPANISH_TRANSLATION] Using inline translation (no content_metadata provided)')
-
-        fields_to_translate = [
-            'title', 'short_description', 'full_description',
-            'outcome', 'prerequisites', 'subtitle'
-        ]
-        spanish_object = translate_object_fields(spanish_object, fields_to_translate)
+        LOGGER.debug(
+            '[SPANISH_TRANSLATION] No pre-computed translation available for %s, skipping Spanish object',
+            content_metadata.content_key if content_metadata else 'unknown'
+        )
+        return None
 
     # Update objectID to indicate Spanish version
     spanish_object['objectID'] = f"{spanish_object['objectID']}-es"
+    spanish_object['language'] = 'es'
 
     return spanish_object
