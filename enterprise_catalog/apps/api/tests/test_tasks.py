@@ -1,6 +1,7 @@
 """
 Tests for the enterprise_catalog API celery tasks
 """
+import copy
 import json
 import uuid
 from datetime import datetime, timedelta
@@ -830,9 +831,9 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         # Mock the Spanish translation to avoid OpenAI API calls
         # This mock mimics the actual create_spanish_algolia_object behavior
-        def mock_create_spanish_object(obj):
-            spanish_obj = obj.copy()
-            spanish_obj['objectID'] = f"{obj['objectID']}-es"
+        def mock_create_spanish_object(obj, content_metadata=None):  # pylint: disable=unused-argument
+            spanish_obj = copy.deepcopy(obj)
+            spanish_obj['objectID'] = f"{spanish_obj['objectID']}-es"
             return spanish_obj
 
         self.spanish_mock_patcher = mock.patch(

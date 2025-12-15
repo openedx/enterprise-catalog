@@ -12,9 +12,6 @@ from django.utils.dateparse import parse_datetime
 from django.utils.translation import gettext as _
 from pytz import UTC
 
-from enterprise_catalog.apps.ai_curation.utils.open_ai_utils import (
-    translate_object_fields,
-)
 from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
 from enterprise_catalog.apps.api_client.constants import (
     COURSE_REVIEW_BASE_AVG_REVIEW_SCORE,
@@ -39,7 +36,10 @@ from enterprise_catalog.apps.catalog.content_metadata_utils import (
     get_course_first_paid_enrollable_seat_price,
     is_course_run_active,
 )
-from enterprise_catalog.apps.catalog.models import ContentMetadata
+from enterprise_catalog.apps.catalog.models import (
+    ContentMetadata,
+    ContentTranslation,
+)
 from enterprise_catalog.apps.catalog.serializers import (
     NormalizedContentMetadataSerializer,
 )
@@ -53,6 +53,9 @@ from enterprise_catalog.apps.video_catalog.models import (
     VideoSkill,
     VideoTranscriptSummary,
 )
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 logger = logging.getLogger(__name__)
@@ -232,6 +235,7 @@ def _should_index_course(course_metadata):
     Returns:
         bool: Whether or not the course should be indexed by algolia.
     """
+
     course_json_metadata = course_metadata.json_metadata
     advertised_course_run = get_advertised_course_run(course_json_metadata)
 
@@ -1619,35 +1623,70 @@ def create_algolia_objects(products, algolia_fields):
     return algolia_objects
 
 
-def create_spanish_algolia_object(algolia_object):
+def create_spanish_algolia_object(algolia_object, content_metadata=None):
     """
     Creates a Spanish version of the Algolia object.
 
     Args:
         algolia_object (dict): The original English Algolia object.
+        content_metadata (ContentMetadata or Video, optional): The metadata instance
+            to fetch pre-computed translations from. If None or if it's a Video object,
+            falls back to inline translation.
 
     Returns:
         dict: A new Algolia object with translated fields and updated objectID.
     """
-
     spanish_object = copy.deepcopy(algolia_object)
+    translation = None
 
-    # Fields to translate
-    fields_to_translate = [
-        'title',
-        'short_description',
-        'full_description',
-        'outcome',
-        'prerequisites',
-        'subtitle',
-    ]
+    # Only attempt to fetch pre-computed translation for ContentMetadata objects
+    # Videos don't have ContentTranslation support yet
+    if content_metadata and isinstance(content_metadata, ContentMetadata):
+        try:
+            translation = content_metadata.translations.get(language_code='es')
+        except ContentTranslation.DoesNotExist:
+            LOGGER.warning(
+                '[SPANISH_TRANSLATION] No pre-computed translation found for %s, '
+                'falling back to inline translation',
+                content_metadata.content_key
+            )
+        except Exception as exc:  # pylint: disable=broad-except
+            LOGGER.error(
+                '[SPANISH_TRANSLATION] Error fetching translation for %s: %s',
+                content_metadata.content_key,
+                exc,
+                exc_info=True
+            )
 
-    spanish_object = translate_object_fields(spanish_object, fields_to_translate)
+    # Use pre-computed translation if available
+    if translation:
+        # Apply translated fields
+        if translation.title:
+            spanish_object['title'] = translation.title
+        if translation.short_description:
+            spanish_object['short_description'] = translation.short_description
+        if translation.full_description:
+            spanish_object['full_description'] = translation.full_description
+        if translation.outcome:
+            spanish_object['outcome'] = translation.outcome
+        if translation.prerequisites:
+            spanish_object['prerequisites'] = translation.prerequisites
+        if translation.subtitle:
+            spanish_object['subtitle'] = translation.subtitle
+
+        LOGGER.debug(
+            '[SPANISH_TRANSLATION] Using pre-computed translation for %s',
+            content_metadata.content_key
+        )
+    else:
+        LOGGER.debug(
+            '[SPANISH_TRANSLATION] No pre-computed translation available for %s, skipping Spanish object',
+            getattr(content_metadata, 'content_key', 'unknown') if content_metadata else 'unknown'
+        )
+        return None
 
     # Update objectID to indicate Spanish version
     spanish_object['objectID'] = f"{spanish_object['objectID']}-es"
-
-    # Ensure aggregation_key remains the same to link them
-    # (It's already in the object, so no action needed, but good to note)
+    spanish_object['language'] = 'es'
 
     return spanish_object

@@ -14,6 +14,7 @@ from enterprise_catalog.apps.catalog.forms import (
 from enterprise_catalog.apps.catalog.models import (
     CatalogQuery,
     ContentMetadata,
+    ContentTranslation,
     EnterpriseCatalog,
     EnterpriseCatalogRoleAssignment,
     RestrictedCourseMetadata,
@@ -307,3 +308,28 @@ class EnterpriseCatalogRoleAssignmentAdmin(UserRoleAssignmentAdmin):
 
     fields = ('user', 'role', 'enterprise_id', 'applies_to_all_contexts')
     form = EnterpriseCatalogRoleAssignmentAdminForm
+
+
+@admin.register(ContentTranslation)
+class ContentTranslationAdmin(admin.ModelAdmin):
+    """
+    Admin configuration for the ContentTranslation model.
+    """
+    list_display = ('content_metadata', 'language_code', 'modified', 'source_hash')
+    list_filter = ('language_code', 'modified')
+    search_fields = ('content_metadata__content_key', 'title')
+    readonly_fields = ('created', 'modified', 'source_hash')
+    raw_id_fields = ('content_metadata',)
+    fields = (
+        'content_metadata',
+        'language_code',
+        'title',
+        'short_description',
+        'full_description',
+        'outcome',
+        'prerequisites',
+        'subtitle',
+        'source_hash',
+        'created',
+        'modified',
+    )

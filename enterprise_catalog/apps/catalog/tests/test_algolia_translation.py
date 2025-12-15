@@ -1,58 +1,74 @@
-from unittest import mock
-
 from django.test import TestCase
 
 from enterprise_catalog.apps.api.tasks import add_metadata_to_algolia_objects
 from enterprise_catalog.apps.catalog.algolia_utils import (
     create_spanish_algolia_object,
 )
+from enterprise_catalog.apps.catalog.models import ContentTranslation
 from enterprise_catalog.apps.catalog.tests.factories import (
     ContentMetadataFactory,
 )
 
 
 class AlgoliaTranslationTests(TestCase):
-    def test_create_spanish_algolia_object(self):
+    def test_create_spanish_algolia_object_no_translation(self):
         """
-        Test that create_spanish_algolia_object correctly translates fields and updates objectID.
+        Test that create_spanish_algolia_object returns None when no translation exists.
+        """
+        original_object = {'objectID': 'course-123'}
+        content_metadata = ContentMetadataFactory(content_type='course', content_key='course-123')
+
+        result = create_spanish_algolia_object(original_object, content_metadata)
+        self.assertIsNone(result)
+
+    def test_create_spanish_algolia_object_with_translation(self):
+        """
+        Test that create_spanish_algolia_object returns translated object when translation exists.
         """
         original_object = {
             'objectID': 'course-123',
-            'title': 'Introduction to Python',
-            'short_description': 'Learn Python basics',
-            'full_description': 'A comprehensive guide to Python.',
-            'outcome': 'You will know Python.',
-            'prerequisites': 'None',
-            'subtitle': 'Beginner friendly',
-            'aggregation_key': 'course-123',
-            'other_field': 'Should not change'
+            'title': 'Original Title',
+            'short_description': 'Original Description',
+            'full_description': 'Original Full',
+            'outcome': 'Original Outcome',
+            'prerequisites': 'Original Prereqs',
+            'subtitle': 'Original Subtitle'
         }
+        content_metadata = ContentMetadataFactory(content_type='course', content_key='course-123')
+        ContentTranslation.objects.create(
+            content_metadata=content_metadata,
+            language_code='es',
+            title='Título Español',
+            short_description='Descripción Español',
+            full_description='Descripción Completa Español',
+            outcome='Resultados Español',
+            prerequisites='Requisitos Español',
+            subtitle='Subtítulo Español'
+        )
 
-        with mock.patch('enterprise_catalog.apps.ai_curation.utils.open_ai_utils.chat_completions') as mock_chat:
-            # Mock translation response
-            def side_effect(messages):
-                content = messages[0]['content']
-                if 'Introduction to Python' in content:
-                    return ['Introducción a Python']
-                if 'Learn Python basics' in content:
-                    return ['Aprende los conceptos básicos de Python']
-                return ['Translated text']
+        result = create_spanish_algolia_object(original_object, content_metadata)
 
-            mock_chat.side_effect = side_effect
-
-            spanish_object = create_spanish_algolia_object(original_object)
-
-            self.assertEqual(spanish_object['objectID'], 'course-123-es')
-            self.assertEqual(spanish_object['title'], 'Introducción a Python')
-            self.assertEqual(spanish_object['short_description'], 'Aprende los conceptos básicos de Python')
-            self.assertEqual(spanish_object['other_field'], 'Should not change')
-            self.assertEqual(spanish_object['aggregation_key'], 'course-123')
+        self.assertIsNotNone(result)
+        self.assertEqual(result['objectID'], 'course-123-es')
+        self.assertEqual(result['title'], 'Título Español')
+        self.assertEqual(result['short_description'], 'Descripción Español')
+        self.assertEqual(result['full_description'], 'Descripción Completa Español')
+        self.assertEqual(result['outcome'], 'Resultados Español')
+        self.assertEqual(result['prerequisites'], 'Requisitos Español')
+        self.assertEqual(result['subtitle'], 'Subtítulo Español')
+        self.assertEqual(result['language'], 'es')
 
     def test_add_metadata_to_algolia_objects_creates_spanish_version(self):
         """
-        Test that add_metadata_to_algolia_objects creates both English and Spanish objects.
+        Test that add_metadata_to_algolia_objects creates Spanish objects when translation exists.
         """
         metadata = ContentMetadataFactory(content_type='course')
+        ContentTranslation.objects.create(
+            content_metadata=metadata,
+            language_code='es',
+            title='Título Español'
+        )
+
         algolia_products = {}
         catalog_uuids = ['cat-1']
         customer_uuids = ['cust-1']
@@ -61,29 +77,56 @@ class AlgoliaTranslationTests(TestCase):
         academy_tags = []
         video_ids = []
 
-        with mock.patch('enterprise_catalog.apps.ai_curation.utils.open_ai_utils.chat_completions') as mock_chat:
-            mock_chat.return_value = ['Translated Text']
+        add_metadata_to_algolia_objects(
+            metadata,
+            algolia_products,
+            catalog_uuids,
+            customer_uuids,
+            catalog_queries,
+            academy_uuids,
+            academy_tags,
+            video_ids
+        )
 
-            add_metadata_to_algolia_objects(
-                metadata,
-                algolia_products,
-                catalog_uuids,
-                customer_uuids,
-                catalog_queries,
-                academy_uuids,
-                academy_tags,
-                video_ids
-            )
+        # Check for Spanish objects
+        spanish_keys = [k for k in algolia_products.keys() if '-es' in k]
+        self.assertGreater(len(spanish_keys), 0)
 
-            # Check for English objects
-            english_keys = [k for k in algolia_products.keys() if not k.endswith('-es') and 'catalog-uuids' in k]
-            self.assertGreater(len(english_keys), 0)
+        # Verify one of the Spanish objects
+        spanish_obj = algolia_products[spanish_keys[0]]
+        self.assertEqual(spanish_obj['title'], 'Título Español')
+        self.assertIn('-es', spanish_obj['objectID'])
 
-            # Check for Spanish objects
-            spanish_keys = [k for k in algolia_products.keys() if '-es-' in k and 'catalog-uuids' in k]
-            self.assertGreater(len(spanish_keys), 0)
+    def test_add_metadata_to_algolia_objects_skips_spanish_version(self):
+        """
+        Test that add_metadata_to_algolia_objects skips Spanish objects when no translation exists.
+        """
+        metadata = ContentMetadataFactory(content_type='course')
+        # No translation created
 
-            # Verify structure of a Spanish object
-            spanish_obj = algolia_products[spanish_keys[0]]
-            self.assertIn('-es', spanish_obj['objectID'])
-            self.assertEqual(spanish_obj['enterprise_catalog_uuids'], catalog_uuids)
+        algolia_products = {}
+        catalog_uuids = ['cat-1']
+        customer_uuids = ['cust-1']
+        catalog_queries = [('query-1', 'Query Title')]
+        academy_uuids = []
+        academy_tags = []
+        video_ids = []
+
+        add_metadata_to_algolia_objects(
+            metadata,
+            algolia_products,
+            catalog_uuids,
+            customer_uuids,
+            catalog_queries,
+            academy_uuids,
+            academy_tags,
+            video_ids
+        )
+
+        # Check for Spanish objects - should be none
+        spanish_keys = [k for k in algolia_products.keys() if '-es' in k]
+        self.assertEqual(len(spanish_keys), 0)
+
+        # Check for English objects - should exist
+        english_keys = [k for k in algolia_products.keys() if not k.endswith('-es') and 'catalog-uuids' in k]
+        self.assertGreater(len(english_keys), 0)
