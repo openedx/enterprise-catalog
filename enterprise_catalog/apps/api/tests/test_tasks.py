@@ -28,7 +28,7 @@ from enterprise_catalog.apps.catalog.constants import (
     PROGRAM,
     QUERY_FOR_RESTRICTED_RUNS,
 )
-from enterprise_catalog.apps.catalog.models import CatalogQuery, ContentMetadata
+from enterprise_catalog.apps.catalog.models import CatalogQuery, ContentMetadata, ContentTranslation
 from enterprise_catalog.apps.catalog.serializers import (
     DEFAULT_NORMALIZED_PRICE,
     NormalizedContentMetadataSerializer,
@@ -829,18 +829,10 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
     def setUp(self):
         super().setUp()
 
-        # Mock the Spanish translation to avoid OpenAI API calls
-        # This mock mimics the actual create_spanish_algolia_object behavior
-        def mock_create_spanish_object(obj, content_metadata=None):  # pylint: disable=unused-argument
-            spanish_obj = copy.deepcopy(obj)
-            spanish_obj['objectID'] = f"{spanish_obj['objectID']}-es"
-            return spanish_obj
+        # Create translations for the courses to ensure Spanish objects are generated
+        # This replaces the previous mock that forced Spanish object creation
+        # We'll create translations later after objects are created
 
-        self.spanish_mock_patcher = mock.patch(
-            'enterprise_catalog.apps.api.tasks.create_spanish_algolia_object',
-            side_effect=mock_create_spanish_object
-        )
-        self.spanish_mock_patcher.start()
 
         # Set up a catalog, query, and metadata for a course and course associated program
         self.academy = AcademyFactory()
@@ -881,10 +873,29 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         _hydrate_course_normalized_metadata()
 
-    def tearDown(self):
-        """Clean up mocks."""
-        self.spanish_mock_patcher.stop()
-        super().tearDown()
+        # Create translations
+        ContentTranslation.objects.create(
+            content_metadata=self.course_metadata_published,
+            language_code='es',
+            title="Spanish Course Title"
+        )
+        ContentTranslation.objects.create(
+            content_metadata=self.course_metadata_unpublished,
+            language_code='es',
+            title="Spanish Unpublished Course Title"
+        )
+        ContentTranslation.objects.create(
+            content_metadata=self.course_run_metadata_published,
+            language_code='es',
+            title="Spanish Course Run Title"
+        )
+        ContentTranslation.objects.create(
+            content_metadata=self.course_run_metadata_unpublished,
+            language_code='es',
+            title="Spanish Unpublished Course Run Title"
+        )
+
+
 
     def _create_expected_spanish_object(self, english_object):
         """
@@ -1022,6 +1033,15 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         test_course.catalog_queries.set(catalog_queries[0:3])
 
+        test_course.catalog_queries.set(catalog_queries[0:3])
+
+        # Create translation
+        ContentTranslation.objects.create(
+            content_metadata=test_course,
+            language_code='es',
+            title="Spanish Test Course Title"
+        )
+
         algolia_objects = tasks.get_algolia_objects_from_course_content_metadata(test_course)
 
         expected_transformed_advertised_course_run = {
@@ -1152,7 +1172,20 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         test_course_1.save()
         test_course_2.save()
         test_course_3.save()
+        test_course_3.save()
         _hydrate_course_normalized_metadata()
+
+        # Create translation for the program to ensure Spanish objects are generated
+        ContentTranslation.objects.create(
+            content_metadata=program_1,
+            language_code='es',
+            title="Spanish Program Title"
+        )
+
+        # Create translations for courses
+        ContentTranslation.objects.create(content_metadata=test_course_1, language_code='es', title="Spanish Course 1")
+        ContentTranslation.objects.create(content_metadata=test_course_2, language_code='es', title="Spanish Course 2")
+        ContentTranslation.objects.create(content_metadata=test_course_3, language_code='es', title="Spanish Course 3")
 
         actual_algolia_products_sent = []
 
@@ -1261,6 +1294,11 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         test_course_3.save()
         _hydrate_course_normalized_metadata()
 
+        # Create translations for courses
+        ContentTranslation.objects.create(content_metadata=test_course_1, language_code='es', title="Spanish Course 1")
+        ContentTranslation.objects.create(content_metadata=test_course_2, language_code='es', title="Spanish Course 2")
+        ContentTranslation.objects.create(content_metadata=test_course_3, language_code='es', title="Spanish Course 3")
+
         actual_algolia_products_sent = []
 
         # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
@@ -1275,7 +1313,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        # count should be "9 products found", 5 additional products are from the test course in self.setUp()
+        # count should be "24 products found", 5 additional products are from the test course in self.setUp()
         assert ' 24 products found.' in products_found_log_records[0]
 
         # assert the program was not indexed.
@@ -1625,6 +1663,13 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # Associate published course with a published program and also an unpublished program.
         self.course_metadata_published.associated_content_metadata.set([program_1, program_2])
 
+        # Create translation for the program
+        ContentTranslation.objects.create(
+            content_metadata=program_1,
+            language_code='es',
+            title="Spanish Program Title"
+        )
+
         actual_algolia_products_sent = []
 
         # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
@@ -1740,6 +1785,13 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # Associate unpublished course with a published program and also an unpublished program.
         self.course_metadata_unpublished.associated_content_metadata.set([program_1, program_2])
 
+        # Create translation for the program
+        ContentTranslation.objects.create(
+            content_metadata=program_1,
+            language_code='es',
+            title="Spanish Program Title"
+        )
+
         actual_algolia_products_sent = []
 
         # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
@@ -1842,6 +1894,13 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         # Associate published course with a pathway.
         self.course_metadata_published.associated_content_metadata.set([pathway_1])
+
+        # Create translation for the pathway
+        ContentTranslation.objects.create(
+            content_metadata=pathway_1,
+            language_code='es',
+            title="Spanish Pathway Title"
+        )
 
         actual_algolia_products_sent = []
 
@@ -1952,6 +2011,13 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         # Associate unpublished course with a pathway.
         self.course_metadata_unpublished.associated_content_metadata.set([pathway_1])
+
+        # Create translation for the pathway
+        ContentTranslation.objects.create(
+            content_metadata=pathway_1,
+            language_code='es',
+            title="Spanish Pathway Title"
+        )
 
         actual_algolia_products_sent = []
 
@@ -2072,6 +2138,18 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # Associate both programs with the pathway.
         program_1.associated_content_metadata.set([pathway_1])
         program_2.associated_content_metadata.set([pathway_1])
+
+        # Create translations
+        ContentTranslation.objects.create(
+            content_metadata=program_1,
+            language_code='es',
+            title="Spanish Program 1 Title"
+        )
+        ContentTranslation.objects.create(
+            content_metadata=pathway_1,
+            language_code='es',
+            title="Spanish Pathway Title"
+        )
 
         actual_algolia_products_sent = []
 
@@ -3200,6 +3278,14 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         self.course_metadata_unpublished.associated_content_metadata.set(
             [program_for_unpublished_course, pathway_for_unpublished_course]
         )
+
+        # Create translations
+        ContentTranslation.objects.create(content_metadata=program_for_main_course, language_code='es', title="Spanish Program 1")
+        ContentTranslation.objects.create(content_metadata=program_for_pathway, language_code='es', title="Spanish Program 2")
+        ContentTranslation.objects.create(content_metadata=pathway_for_course, language_code='es', title="Spanish Pathway 1")
+        ContentTranslation.objects.create(content_metadata=pathway_for_courserun, language_code='es', title="Spanish Pathway 2")
+        ContentTranslation.objects.create(content_metadata=program_for_unpublished_course, language_code='es', title="Spanish Program 3")
+        ContentTranslation.objects.create(content_metadata=pathway_for_unpublished_course, language_code='es', title="Spanish Pathway 3")
 
         actual_algolia_products_sent = []
 
