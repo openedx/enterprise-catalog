@@ -1,7 +1,7 @@
 """
 Tests for the enterprise_catalog API celery tasks
 """
-import copy
+
 import json
 import uuid
 from datetime import datetime, timedelta
@@ -3281,12 +3281,36 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         )
 
         # Create translations
-        ContentTranslation.objects.create(content_metadata=program_for_main_course, language_code='es', title="Spanish Program 1")
-        ContentTranslation.objects.create(content_metadata=program_for_pathway, language_code='es', title="Spanish Program 2")
-        ContentTranslation.objects.create(content_metadata=pathway_for_course, language_code='es', title="Spanish Pathway 1")
-        ContentTranslation.objects.create(content_metadata=pathway_for_courserun, language_code='es', title="Spanish Pathway 2")
-        ContentTranslation.objects.create(content_metadata=program_for_unpublished_course, language_code='es', title="Spanish Program 3")
-        ContentTranslation.objects.create(content_metadata=pathway_for_unpublished_course, language_code='es', title="Spanish Pathway 3")
+        ContentTranslation.objects.create(
+            content_metadata=program_for_main_course,
+            language_code='es',
+            title="Spanish Program 1"
+        )
+        ContentTranslation.objects.create(
+            content_metadata=program_for_pathway,
+            language_code='es',
+            title="Spanish Program 2"
+        )
+        ContentTranslation.objects.create(
+            content_metadata=pathway_for_course,
+            language_code='es',
+            title="Spanish Pathway 1"
+        )
+        ContentTranslation.objects.create(
+            content_metadata=pathway_for_courserun,
+            language_code='es',
+            title="Spanish Pathway 2"
+        )
+        ContentTranslation.objects.create(
+            content_metadata=program_for_unpublished_course,
+            language_code='es',
+            title="Spanish Program 3"
+        )
+        ContentTranslation.objects.create(
+            content_metadata=pathway_for_unpublished_course,
+            language_code='es',
+            title="Spanish Pathway 3"
+        )
 
         actual_algolia_products_sent = []
 
