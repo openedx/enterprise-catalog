@@ -28,7 +28,11 @@ from enterprise_catalog.apps.catalog.constants import (
     PROGRAM,
     QUERY_FOR_RESTRICTED_RUNS,
 )
-from enterprise_catalog.apps.catalog.models import CatalogQuery, ContentMetadata, ContentTranslation
+from enterprise_catalog.apps.catalog.models import (
+    CatalogQuery,
+    ContentMetadata,
+    ContentTranslation,
+)
 from enterprise_catalog.apps.catalog.serializers import (
     DEFAULT_NORMALIZED_PRICE,
     NormalizedContentMetadataSerializer,
@@ -833,7 +837,6 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # This replaces the previous mock that forced Spanish object creation
         # We'll create translations later after objects are created
 
-
         # Set up a catalog, query, and metadata for a course and course associated program
         self.academy = AcademyFactory()
         self.tag1 = self.academy.tags.all()[0]
@@ -894,8 +897,6 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             language_code='es',
             title="Spanish Unpublished Course Run Title"
         )
-
-
 
     def _create_expected_spanish_object(self, english_object):
         """

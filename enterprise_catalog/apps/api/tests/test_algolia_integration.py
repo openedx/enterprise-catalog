@@ -3,13 +3,17 @@ Integration tests for Algolia indexing.
 """
 from unittest import mock
 
+from django.db import connection
 from django.test import TestCase
+from django.test.utils import CaptureQueriesContext
 
 from enterprise_catalog.apps.api.tasks import _reindex_algolia
 from enterprise_catalog.apps.catalog.constants import COURSE
 from enterprise_catalog.apps.catalog.models import ContentTranslation
 from enterprise_catalog.apps.catalog.tests.factories import (
+    CatalogQueryFactory,
     ContentMetadataFactory,
+    EnterpriseCatalogFactory,
 )
 
 
@@ -25,9 +29,9 @@ class AlgoliaIntegrationTests(TestCase):
     def test_algolia_indexing_with_spanish_translation(
         self,
         mock_get_client,
-        mock_configure,
-        mock_delete,
-        mock_retrieve
+        _mock_configure,
+        _mock_delete,
+        _mock_retrieve
     ):
         """
         Test that _reindex_algolia pushes double the objects when Spanish translation exists.
@@ -35,15 +39,14 @@ class AlgoliaIntegrationTests(TestCase):
         # Setup
         mock_client = mock.Mock()
         mock_get_client.return_value = mock_client
-        
+
         # Create a course
         course = ContentMetadataFactory(content_type=COURSE, content_key='course-v1:Test+Course')
-        
+
         # Create catalog query and associate with course
-        from enterprise_catalog.apps.catalog.tests.factories import CatalogQueryFactory, EnterpriseCatalogFactory
         catalog_query = CatalogQueryFactory()
         course.catalog_queries.add(catalog_query)
-        
+
         # Create enterprise catalog associated with query
         EnterpriseCatalogFactory(catalog_query=catalog_query)
 
@@ -88,11 +91,11 @@ class AlgoliaIntegrationTests(TestCase):
         generator = args[0]
         objects = list(generator)
         self.assertEqual(len(objects), 6, "Should have 6 objects (English + Spanish)")
-        
+
         # Verify IDs
         english_obj = next(obj for obj in objects if '-es-' not in obj['objectID'])
         spanish_obj = next(obj for obj in objects if '-es-' in obj['objectID'])
-        
+
         self.assertIsNotNone(english_obj)
         self.assertIsNotNone(spanish_obj)
         self.assertEqual(spanish_obj['title'], 'Curso de Prueba')
@@ -104,20 +107,19 @@ class AlgoliaIntegrationTests(TestCase):
     def test_algolia_indexing_performance(
         self,
         mock_get_client,
-        mock_configure,
-        mock_delete,
-        mock_retrieve
+        _mock_configure,
+        _mock_delete,
+        _mock_retrieve
     ):
         """
         Test that indexing performance (DB queries) does not scale linearly with number of items.
         """
         mock_client = mock.Mock()
         mock_get_client.return_value = mock_client
-        
+
         # Helper to create content
         def create_content(key_suffix):
             course = ContentMetadataFactory(content_type=COURSE, content_key=f'course-v1:Test+Course+{key_suffix}')
-            from enterprise_catalog.apps.catalog.tests.factories import CatalogQueryFactory, EnterpriseCatalogFactory
             catalog_query = CatalogQueryFactory()
             course.catalog_queries.add(catalog_query)
             EnterpriseCatalogFactory(catalog_query=catalog_query)
@@ -126,9 +128,6 @@ class AlgoliaIntegrationTests(TestCase):
         # Warmup
         key1 = create_content('1')
         _reindex_algolia([key1], [], dry_run=False)
-
-        from django.test.utils import CaptureQueriesContext
-        from django.db import connection
 
         # Measure for 1 item
         key2 = create_content('2')
@@ -146,6 +145,6 @@ class AlgoliaIntegrationTests(TestCase):
         # The difference should be small (constant overhead), not double.
         # Ideally count_2_items should be close to count_1_item.
         diff = count_2_items - count_1_item
-        
+
         # We expect the difference to be 0 or very small (not proportional to N)
         self.assertLess(diff, 5, f"Query count increased significantly: {count_1_item} vs {count_2_items}")

@@ -146,15 +146,14 @@ class Command(BaseCommand):
                     )
 
         # Final summary
-        logger.info('=' * 60)
-        logger.info('Translation Complete!')
-        logger.info('=' * 60)
-        logger.info('Total processed: %s', processed_count)
-        logger.info('Created: %s', created_count)
-        logger.info('Updated: %s', updated_count)
-        logger.info('Skipped: %s', skipped_count)
-        if error_count > 0:
-            logger.error('Errors: %s', error_count)
+        logger.info(
+            'Translation Complete! Processed: %s | Created: %s | Updated: %s | Skipped: %s | Errors: %s',
+            processed_count,
+            created_count,
+            updated_count,
+            skipped_count,
+            error_count
+        )
 
     def _process_content(self, content, language_code, force, dry_run):
         """
