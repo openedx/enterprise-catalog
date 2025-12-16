@@ -1112,6 +1112,7 @@ def _get_algolia_products_for_batch(
         )
     ).prefetch_related(
         Prefetch('catalog_queries', queryset=all_catalog_queries),
+        'translations',
     )
     if getattr(settings, 'SHOULD_INDEX_COURSES_WITH_RESTRICTED_RUNS', False):
         # Make the courses that we index actually contain restricted runs in the payload.
@@ -1134,6 +1135,7 @@ def _get_algolia_products_for_batch(
         parent_content_key__in=course_content_keys
     ).prefetch_related(
         Prefetch('catalog_queries', queryset=all_catalog_queries),
+        'translations',
     )
     course_run_content_keys = [cm.content_key for cm in content_metadata_courseruns]
     videos = Video.objects.filter(

@@ -96,3 +96,56 @@ class AlgoliaIntegrationTests(TestCase):
         self.assertIsNotNone(english_obj)
         self.assertIsNotNone(spanish_obj)
         self.assertEqual(spanish_obj['title'], 'Curso de Prueba')
+
+    @mock.patch('enterprise_catalog.apps.api.tasks._retrieve_inactive_tmp_indices')
+    @mock.patch('enterprise_catalog.apps.api.tasks._delete_indices')
+    @mock.patch('enterprise_catalog.apps.api.tasks.configure_algolia_index')
+    @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client')
+    def test_algolia_indexing_performance(
+        self,
+        mock_get_client,
+        mock_configure,
+        mock_delete,
+        mock_retrieve
+    ):
+        """
+        Test that indexing performance (DB queries) does not scale linearly with number of items.
+        """
+        mock_client = mock.Mock()
+        mock_get_client.return_value = mock_client
+        
+        # Helper to create content
+        def create_content(key_suffix):
+            course = ContentMetadataFactory(content_type=COURSE, content_key=f'course-v1:Test+Course+{key_suffix}')
+            from enterprise_catalog.apps.catalog.tests.factories import CatalogQueryFactory, EnterpriseCatalogFactory
+            catalog_query = CatalogQueryFactory()
+            course.catalog_queries.add(catalog_query)
+            EnterpriseCatalogFactory(catalog_query=catalog_query)
+            return course.content_key
+
+        # Warmup
+        key1 = create_content('1')
+        _reindex_algolia([key1], [], dry_run=False)
+
+        from django.test.utils import CaptureQueriesContext
+        from django.db import connection
+
+        # Measure for 1 item
+        key2 = create_content('2')
+        with CaptureQueriesContext(connection) as ctx1:
+            _reindex_algolia([key2], [], dry_run=False)
+        count_1_item = len(ctx1)
+
+        # Measure for 2 items
+        key3 = create_content('3')
+        key4 = create_content('4')
+        with CaptureQueriesContext(connection) as ctx2:
+            _reindex_algolia([key3, key4], [], dry_run=False)
+        count_2_items = len(ctx2)
+
+        # The difference should be small (constant overhead), not double.
+        # Ideally count_2_items should be close to count_1_item.
+        diff = count_2_items - count_1_item
+        
+        # We expect the difference to be 0 or very small (not proportional to N)
+        self.assertLess(diff, 5, f"Query count increased significantly: {count_1_item} vs {count_2_items}")
