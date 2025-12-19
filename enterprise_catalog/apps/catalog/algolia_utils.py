@@ -1667,10 +1667,6 @@ def create_spanish_algolia_object(algolia_object, content_metadata=None):
             spanish_object['short_description'] = translation.short_description
         if translation.full_description:
             spanish_object['full_description'] = translation.full_description
-        if translation.outcome:
-            spanish_object['outcome'] = translation.outcome
-        if translation.prerequisites:
-            spanish_object['prerequisites'] = translation.prerequisites
         if translation.subtitle:
             spanish_object['subtitle'] = translation.subtitle
 

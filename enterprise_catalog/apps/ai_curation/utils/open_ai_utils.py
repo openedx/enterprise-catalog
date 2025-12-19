@@ -96,7 +96,11 @@ def translate_to_spanish(text):
     if not text:
         return ''
 
-    content = f"Translate the following text to Spanish: {text}"
+    content = (
+        f"Translate the following text to Spanish. "
+        f"Return ONLY the translated text without any comments, "
+        f"explanations, or conversational responses:\n\n{text}"
+    )
     messages = [
         {
             'content': content

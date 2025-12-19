@@ -4,7 +4,6 @@ Management command to pre-populate Spanish translations for content metadata.
 import logging
 
 from django.core.management.base import BaseCommand
-from django.db.models import Q
 
 from enterprise_catalog.apps.ai_curation.utils.open_ai_utils import (
     translate_object_fields,
@@ -194,8 +193,7 @@ class Command(BaseCommand):
 
         # Translate fields
         fields_to_translate = [
-            'title', 'short_description', 'full_description',
-            'outcome', 'prerequisites', 'subtitle'
+            'title', 'short_description', 'full_description', 'subtitle'
         ]
 
         translated_data = translate_object_fields(
@@ -207,8 +205,6 @@ class Command(BaseCommand):
         translation.title = translated_data.get('title')
         translation.short_description = translated_data.get('short_description')
         translation.full_description = translated_data.get('full_description')
-        translation.outcome = translated_data.get('outcome')
-        translation.prerequisites = translated_data.get('prerequisites')
         translation.subtitle = translated_data.get('subtitle')
         translation.source_hash = source_hash
 

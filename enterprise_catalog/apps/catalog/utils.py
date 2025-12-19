@@ -171,9 +171,9 @@ def compute_source_hash(content_metadata, fields=None):
         str: SHA256 hash of concatenated field values
     """
     if fields is None:
+        # Only hash fields that are actually translated
         fields = [
-            'title', 'short_description', 'full_description',
-            'outcome', 'prerequisites', 'subtitle'
+            'title', 'short_description', 'full_description', 'subtitle'
         ]
 
     content_parts = []

@@ -238,8 +238,6 @@ class PopulateSpanishTranslationsCommandTests(TestCase):
             'title': 'Título',
             'short_description': 'Descripción corta',
             'full_description': 'Descripción completa',
-            'outcome': 'Resultados',
-            'prerequisites': 'Requisitos',
             'subtitle': 'Subtítulo',
         }
 
@@ -250,6 +248,4 @@ class PopulateSpanishTranslationsCommandTests(TestCase):
         self.assertEqual(translation.title, 'Título')
         self.assertEqual(translation.short_description, 'Descripción corta')
         self.assertEqual(translation.full_description, 'Descripción completa')
-        self.assertEqual(translation.outcome, 'Resultados')
-        self.assertEqual(translation.prerequisites, 'Requisitos')
         self.assertEqual(translation.subtitle, 'Subtítulo')
