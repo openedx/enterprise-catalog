@@ -30,8 +30,6 @@ class AlgoliaTranslationTests(TestCase):
             'title': 'Original Title',
             'short_description': 'Original Description',
             'full_description': 'Original Full',
-            'outcome': 'Original Outcome',
-            'prerequisites': 'Original Prereqs',
             'subtitle': 'Original Subtitle'
         }
         content_metadata = ContentMetadataFactory(content_type='course', content_key='course-123')
@@ -41,8 +39,6 @@ class AlgoliaTranslationTests(TestCase):
             title='Título Español',
             short_description='Descripción Español',
             full_description='Descripción Completa Español',
-            outcome='Resultados Español',
-            prerequisites='Requisitos Español',
             subtitle='Subtítulo Español'
         )
 
@@ -53,8 +49,6 @@ class AlgoliaTranslationTests(TestCase):
         self.assertEqual(result['title'], 'Título Español')
         self.assertEqual(result['short_description'], 'Descripción Español')
         self.assertEqual(result['full_description'], 'Descripción Completa Español')
-        self.assertEqual(result['outcome'], 'Resultados Español')
-        self.assertEqual(result['prerequisites'], 'Requisitos Español')
         self.assertEqual(result['subtitle'], 'Subtítulo Español')
         self.assertEqual(result['language'], 'es')
 
