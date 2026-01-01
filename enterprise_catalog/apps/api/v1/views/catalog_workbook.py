@@ -13,6 +13,7 @@ from enterprise_catalog.apps.api.v1 import export_utils
 from enterprise_catalog.apps.catalog.algolia_utils import (
     get_initialized_algolia_client,
 )
+from enterprise_catalog.apps.catalog.constants import TIMESTAMP_FORMAT
 
 
 logger = logging.getLogger(__name__)
@@ -144,7 +145,7 @@ class CatalogWorkbookView(GenericAPIView):
             output,
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
-        filename = f'Enterprise-Catalog-Export-{time.strftime("%Y%m%d%H%M%S")}.xlsx'
+        filename = f'Enterprise-Catalog-Export-{time.strftime(TIMESTAMP_FORMAT)}.xlsx'
         response['Content-Disposition'] = f'attachment; filename={filename}'
 
         return response
