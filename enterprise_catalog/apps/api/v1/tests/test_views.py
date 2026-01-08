@@ -1795,6 +1795,36 @@ class EnterpriseCatalogRefreshDataFromDiscoveryTests(APITestMixin):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
+    def test_excludes_unpublished_courses(self):
+        """
+        Verify that unpublished courses are never returned
+        in the content metadata API response.
+        """
+    
+        unpublished_course = ContentMetadataFactory(
+            content_type=COURSE,
+            json_metadata={
+                'status': 'unpublished',
+                'course_runs': [],
+            }
+        )
+    
+        self.add_metadata_to_catalog(
+            self.enterprise_catalog,
+            [unpublished_course],
+        )
+    
+        url = self._get_content_metadata_url(self.enterprise_catalog)
+        response = self.client.get(url)
+    
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+    
+        response_data = response.json()
+    
+        # Core assertions
+        self.assertEqual(response_data['count'], 0)
+        self.assertEqual(response_data['results'], [])
+
     def test_refresh_catalog_on_invalid_uuid_returns_400_bad_request(self):
         """
         Verify the refresh_metadata endpoint returns an HTTP_400_BAD_REQUEST status when passed an invalid ID
