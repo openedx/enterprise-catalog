@@ -240,12 +240,12 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
         queryset = self.filter_queryset(self.get_queryset(content_keys_filter=content_keys_filter))
         logger.debug(f'[get_content_metadata]: Original queryset length: {len(queryset)}, {self.enterprise_catalog}')
 
-        # Only filter out archived courses if content_keys_filter is not provided,
-        # to ensure active content is always returned
-        if not content_keys_filter:
-            queryset = [item for item in queryset if self.is_active(item)]
-            filtered_queryset_length = len(queryset)
-            logger.debug(f'[get_content_metadata]: Filtered queryset length: {filtered_queryset_length}, '
+        # Always filter out inactive courses 
+        # to ensure only active content is always returned via API
+        
+        queryset = [item for item in queryset if self.is_active(item)]
+        filtered_queryset_length = len(queryset)
+        logger.debug(f'[get_content_metadata]: Filtered queryset length: {filtered_queryset_length}, '
                          f'{self.enterprise_catalog}')
         context = self.get_serializer_context()
         context['enterprise_catalog'] = self.enterprise_catalog
