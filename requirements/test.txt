@@ -123,7 +123,7 @@ diff-match-patch==20241021
     # via
     #   -r requirements/base.txt
     #   django-import-export
-dill==0.4.0
+dill==0.4.1
     # via pylint
 distlib==0.4.0
     # via virtualenv
@@ -251,7 +251,7 @@ edx-toggles==5.4.1
     #   edx-auth-backends
 factory-boy==3.3.3
     # via -r requirements/test.in
-faker==40.1.0
+faker==40.1.2
     # via factory-boy
 filelock==3.20.3
     # via
@@ -528,7 +528,7 @@ threadpoolctl==3.6.0
     # via
     #   -r requirements/base.txt
     #   scikit-learn
-tomlkit==0.13.3
+tomlkit==0.14.0
     # via pylint
 tox==4.34.1
     # via -r requirements/test.in
@@ -553,7 +553,6 @@ typing-inspection==0.4.2
 tzdata==2025.3
     # via
     #   -r requirements/base.txt
-    #   faker
     #   kombu
 tzlocal==5.3.1
     # via

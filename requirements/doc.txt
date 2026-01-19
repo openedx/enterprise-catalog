@@ -141,7 +141,7 @@ diff-match-patch==20241021
     # via
     #   -r requirements/test.txt
     #   django-import-export
-dill==0.4.0
+dill==0.4.1
     # via
     #   -r requirements/test.txt
     #   pylint
@@ -283,7 +283,7 @@ edx-toggles==5.4.1
     #   edx-auth-backends
 factory-boy==3.3.3
     # via -r requirements/test.txt
-faker==40.1.0
+faker==40.1.2
     # via
     #   -r requirements/test.txt
     #   factory-boy
@@ -583,7 +583,7 @@ social-auth-core==4.8.3
     #   -r requirements/test.txt
     #   edx-auth-backends
     #   social-auth-app-django
-soupsieve==2.8.1
+soupsieve==2.8.2
     # via beautifulsoup4
 sphinx==9.1.0
     # via
@@ -627,7 +627,7 @@ threadpoolctl==3.6.0
     # via
     #   -r requirements/test.txt
     #   scikit-learn
-tomlkit==0.13.3
+tomlkit==0.14.0
     # via
     #   -r requirements/test.txt
     #   pylint
@@ -656,7 +656,6 @@ typing-inspection==0.4.2
 tzdata==2025.3
     # via
     #   -r requirements/test.txt
-    #   faker
     #   kombu
 tzlocal==5.3.1
     # via
