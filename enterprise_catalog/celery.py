@@ -32,6 +32,18 @@ def heartbeat(**_):
     HEARTBEAT_FILE.touch()
 
 
+# TEMP: This code will be removed by ARCH-BOM on 4/22/24
+# ddtrace allows celery task logs to be traced by the dd agent.
+# TODO: remove this code.
+try:
+    from ddtrace import patch
+except ImportError:
+    pass
+try:
+    patch(celery=True)
+except NameError:
+    pass
+
 app = Celery('enterprise_catalog', )
 
 # - namespace='CELERY' means all celery-related configuration keys
