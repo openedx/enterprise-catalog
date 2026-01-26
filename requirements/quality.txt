@@ -110,7 +110,7 @@ diff-match-patch==20241021
     # via
     #   -r requirements/base.txt
     #   django-import-export
-dill==0.4.0
+dill==0.4.1
     # via pylint
 distro==1.9.0
     # via
@@ -180,7 +180,7 @@ django-waffle==5.0.0
     #   edx-django-utils
     #   edx-drf-extensions
     #   edx-toggles
-djangoql==0.18.1
+djangoql==0.18.2
     # via -r requirements/base.txt
 djangorestframework==3.16.1
     # via
@@ -311,7 +311,7 @@ openai==1.13.3
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.txt
-packaging==25.0
+packaging==26.0
     # via
     #   -r requirements/base.txt
     #   kombu
@@ -331,7 +331,7 @@ psutil==7.2.1
     #   edx-django-utils
 pycodestyle==2.14.0
     # via -r requirements/quality.in
-pycparser==2.23
+pycparser==3.0
     # via
     #   -r requirements/base.txt
     #   cffi
@@ -483,7 +483,7 @@ threadpoolctl==3.6.0
     # via
     #   -r requirements/base.txt
     #   scikit-learn
-tomlkit==0.13.3
+tomlkit==0.14.0
     # via pylint
 tqdm==4.67.1
     # via
@@ -525,7 +525,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-wcwidth==0.2.14
+wcwidth==0.4.0
     # via
     #   -r requirements/base.txt
     #   prompt-toolkit

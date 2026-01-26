@@ -137,7 +137,7 @@ django-waffle==5.0.0
     #   edx-django-utils
     #   edx-drf-extensions
     #   edx-toggles
-djangoql==0.18.1
+djangoql==0.18.2
     # via -r requirements/base.in
 djangorestframework==3.16.1
     # via
@@ -227,7 +227,7 @@ openai==1.13.3
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.in
-packaging==25.0
+packaging==26.0
     # via kombu
 ply==3.11
     # via djangoql
@@ -235,7 +235,7 @@ prompt-toolkit==3.0.52
     # via click-repl
 psutil==7.2.1
     # via edx-django-utils
-pycparser==2.23
+pycparser==3.0
     # via cffi
 pydantic==2.12.5
     # via openai
@@ -355,7 +355,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-wcwidth==0.2.14
+wcwidth==0.4.0
     # via prompt-toolkit
 xlsxwriter==3.2.9
     # via -r requirements/base.in
