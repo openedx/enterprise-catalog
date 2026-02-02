@@ -242,7 +242,11 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
 
         # Always filter out inactive courses 
         # to ensure only active content is always returned via API
+<<<<<<< Updated upstream
         
+=======
+
+>>>>>>> Stashed changes
         queryset = [item for item in queryset if self.is_active(item)]
         filtered_queryset_length = len(queryset)
         logger.debug(f'[get_content_metadata]: Filtered queryset length: {filtered_queryset_length}, '
