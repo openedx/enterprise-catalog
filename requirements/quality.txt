@@ -96,7 +96,7 @@ code-annotations==2.3.0
     #   -r requirements/base.txt
     #   edx-lint
     #   edx-toggles
-cryptography==46.0.3
+cryptography==46.0.4
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -110,7 +110,7 @@ diff-match-patch==20241021
     # via
     #   -r requirements/base.txt
     #   django-import-export
-dill==0.4.0
+dill==0.4.1
     # via pylint
 distro==1.9.0
     # via
@@ -180,7 +180,7 @@ django-waffle==5.0.0
     #   edx-django-utils
     #   edx-drf-extensions
     #   edx-toggles
-djangoql==0.18.1
+djangoql==0.19.1
     # via -r requirements/base.txt
 djangorestframework==3.16.1
     # via
@@ -297,7 +297,7 @@ monotonic==1.6
     #   analytics-python
 mysqlclient==2.2.7
     # via -r requirements/base.txt
-numpy==2.4.1
+numpy==2.4.2
     # via
     #   -r requirements/base.txt
     #   scikit-learn
@@ -311,7 +311,7 @@ openai==1.13.3
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.txt
-packaging==25.0
+packaging==26.0
     # via
     #   -r requirements/base.txt
     #   kombu
@@ -325,13 +325,13 @@ prompt-toolkit==3.0.52
     # via
     #   -r requirements/base.txt
     #   click-repl
-psutil==7.2.1
+psutil==7.2.2
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
 pycodestyle==2.14.0
     # via -r requirements/quality.in
-pycparser==2.23
+pycparser==3.0
     # via
     #   -r requirements/base.txt
     #   cffi
@@ -345,7 +345,7 @@ pydantic-core==2.41.5
     #   pydantic
 pydocstyle==6.3.0
     # via -r requirements/quality.in
-pyjwt[crypto]==2.10.1
+pyjwt[crypto]==2.11.0
     # via
     #   -r requirements/base.txt
     #   drf-jwt
@@ -483,9 +483,9 @@ threadpoolctl==3.6.0
     # via
     #   -r requirements/base.txt
     #   scikit-learn
-tomlkit==0.13.3
+tomlkit==0.14.0
     # via pylint
-tqdm==4.67.1
+tqdm==4.67.2
     # via
     #   -r requirements/base.txt
     #   openai
@@ -525,7 +525,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-wcwidth==0.2.14
+wcwidth==0.5.3
     # via
     #   -r requirements/base.txt
     #   prompt-toolkit
