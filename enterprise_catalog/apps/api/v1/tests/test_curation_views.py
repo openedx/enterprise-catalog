@@ -971,6 +971,17 @@ class HighlightSetViewSetTests(CurationAPITestBase):
         self.highlighted_content_list_one[0].refresh_from_db()
         assert self.highlighted_content_list_one[0].is_favorite is False
 
+        # Success case - boolean false
+        response = self.client.post(
+            edit_url, {
+                'content_uuid': str(self.highlighted_content_list_one[0].uuid),
+                'favorite': False
+            },
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+        self.highlighted_content_list_one[0].refresh_from_db()
+        assert self.highlighted_content_list_one[0].is_favorite is False
+
         # Failure case - no content uuid
         response = self.client.post(
             edit_url, {
@@ -1018,3 +1029,61 @@ class HighlightSetViewSetTests(CurationAPITestBase):
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert response.json()['Error'] == 'Highlighted content not part of the given highlight set'
+
+    def test_toggle_favorite_highlight_sets_sort_order(self):
+        """
+        Test favoriting highlighted content updates sort order and returns favorites first.
+        """
+        edit_url = reverse(
+            'api:v1:highlight-sets-admin-toggle-favorite-highlight',
+            kwargs={'uuid': str(self.highlight_set_one.uuid)}
+        )
+        detail_url = reverse(
+            'api:v1:highlight-sets-admin-detail',
+            kwargs={'uuid': str(self.highlight_set_one.uuid)}
+        )
+        self.set_up_staff()
+
+        first_favorite = self.highlighted_content_list_one[2]
+        second_favorite = self.highlighted_content_list_one[4]
+
+        response = self.client.post(
+            edit_url,
+            {'content_uuid': str(first_favorite.uuid), 'favorite': 'true'},
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+        first_favorite.refresh_from_db()
+        assert first_favorite.is_favorite is True
+        assert first_favorite.sort_order == 0
+
+        response = self.client.post(
+            edit_url,
+            {'content_uuid': str(second_favorite.uuid), 'favorite': 'true'},
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+        second_favorite.refresh_from_db()
+        assert second_favorite.is_favorite is True
+        assert second_favorite.sort_order == 1
+
+        response = self.client.get(detail_url)
+        assert response.status_code == status.HTTP_200_OK
+        highlighted_content = response.json()['highlighted_content']
+        assert highlighted_content[0]['uuid'] == str(first_favorite.uuid)
+        assert highlighted_content[1]['uuid'] == str(second_favorite.uuid)
+
+        response = self.client.post(
+            edit_url,
+            {'content_uuid': str(first_favorite.uuid), 'favorite': 'false'},
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+        first_favorite.refresh_from_db()
+        second_favorite.refresh_from_db()
+        assert first_favorite.is_favorite is False
+        assert first_favorite.sort_order == 0
+        assert second_favorite.is_favorite is True
+        assert second_favorite.sort_order == 0
+
+        response = self.client.get(detail_url)
+        assert response.status_code == status.HTTP_200_OK
+        highlighted_content = response.json()['highlighted_content']
+        assert highlighted_content[0]['uuid'] == str(second_favorite.uuid)

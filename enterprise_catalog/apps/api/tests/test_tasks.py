@@ -40,7 +40,7 @@ from enterprise_catalog.apps.catalog.tests.factories import (
     RestrictedCourseMetadataFactory,
     RestrictedRunAllowedForRestrictedCourseFactory,
 )
-from enterprise_catalog.apps.catalog.utils import localized_utcnow
+from enterprise_catalog.apps.catalog.utils import localized_utcnow, to_timestamp
 
 
 # An object that represents the output of some hard work done by a task.
@@ -960,18 +960,20 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         test_course.catalog_queries.set(catalog_queries[0:3])
 
         algolia_objects = tasks.get_algolia_objects_from_course_content_metadata(test_course)
+        advertised_course_run = test_course.json_metadata['course_runs'][0]
+        enroll_by_timestamp = to_timestamp(test_course.json_metadata['normalized_metadata']['enroll_by_date'])
 
         expected_transformed_advertised_course_run = {
             'key': 'course-v1:edX+DemoX+2T2024',
             'pacing_type': None,
             'availability': 'current',
             'start': '2024-02-12T11:00:00Z',
-            'end': '2026-02-05T11:00:00Z',
+            'end': advertised_course_run['end'],
             'min_effort': None,
             'max_effort': None,
             'weeks_to_complete': None,
-            'upgrade_deadline': 1769471999.0,
-            'enroll_by': 1769471999.0,
+            'upgrade_deadline': enroll_by_timestamp,
+            'enroll_by': enroll_by_timestamp,
             'has_enroll_by': True,
             'enroll_start': None,
             'has_enroll_start': False,

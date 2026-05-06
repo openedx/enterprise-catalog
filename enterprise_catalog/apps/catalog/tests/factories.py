@@ -29,6 +29,8 @@ FAKE_ADVERTISED_COURSE_RUN_UUID = uuid4()
 FAKE_CONTENT_AUTHOR_NAME = 'Partner Name'
 FAKE_CONTENT_AUTHOR_UUID = uuid4()
 FAKE_CONTENT_TITLE_PREFIX = 'Fake Content Title'
+FUTURE_ENROLL_BY_DATE = (datetime.datetime.utcnow() + datetime.timedelta(days=365)).strftime('%Y-%m-%dT23:59:59Z')
+FUTURE_COURSE_END_DATE = (datetime.datetime.utcnow() + datetime.timedelta(days=375)).strftime('%Y-%m-%dT11:00:00Z')
 
 fake = Faker()
 
@@ -89,7 +91,7 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
             'uuid': str(self.content_uuid),
             'title': self.title,
             'normalized_metadata': {
-                'enroll_by_date': '2026-01-26T23:59:59Z',
+                'enroll_by_date': FUTURE_ENROLL_BY_DATE,
             },
         }
         if self.content_type == COURSE:
@@ -122,7 +124,7 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
                         'type': 'verified',
                         'price': '50.00',
                         'currency': 'USD',
-                        'upgrade_deadline': '2026-01-26T23:59:59Z',
+                        'upgrade_deadline': FUTURE_ENROLL_BY_DATE,
                         'upgrade_deadline_override': None,
                         'credit_provider': None,
                         'credit_hours': None,
@@ -131,7 +133,7 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
                     }
                 ],
                 'start': '2024-02-12T11:00:00Z',
-                'end': '2026-02-05T11:00:00Z',
+                'end': FUTURE_COURSE_END_DATE,
                 'fixed_price_price_usd': None,
                 'first_enrollable_paid_seat_price': 50,
             }]
