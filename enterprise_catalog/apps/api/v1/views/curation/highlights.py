@@ -1,6 +1,9 @@
 import logging
 from uuid import UUID
 
+from django.db import transaction
+from django.db.models import F, Max, Prefetch
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_cookie
@@ -50,6 +53,7 @@ from enterprise_catalog.apps.curation.models import (
 REQUEST_CACHE_NAMESPACE = 'CURATION_REQUEST_CACHE'
 CONTENT_PER_HIGHLIGHTSET_LIMIT = 24
 HIGHLIGHTSETS_PER_ENTERPRISE_LIMIT = 16
+HIGHLIGHTED_CONTENT_ORDER = ('-is_favorite', 'sort_order', 'created')
 logger = logging.getLogger(__name__)
 
 
@@ -273,9 +277,12 @@ class HighlightSetBaseViewSet(PermissionRequiredForListingMixin, BaseViewSet):
             kwargs.update({'enterprise_curation__enterprise_uuid': self.requested_enterprise_uuid})
         if self.requested_highlight_set_uuid:
             kwargs.update({'uuid': self.requested_highlight_set_uuid})
+        highlighted_content_queryset = HighlightedContent.objects.select_related('content_metadata').order_by(
+            *HIGHLIGHTED_CONTENT_ORDER
+        )
         return HighlightSet.objects.filter(**kwargs).prefetch_related(
             'enterprise_curation',
-            'highlighted_content',
+            Prefetch('highlighted_content', queryset=highlighted_content_queryset),
         ).order_by('-created')
 
 
@@ -569,28 +576,66 @@ class HighlightSetViewSet(HighlightSetBaseViewSet, viewsets.ModelViewSet):
                     `Error` key.
                 201: If highlighted content favorite state was successfully updated.
         """
-        highlight_set = HighlightSet.objects.get(uuid=uuid)
         content_uuid = request.data.get('content_uuid')
         favorite_param = request.data.get('favorite')
-        if not favorite_param:
+
+        if not content_uuid:
+            return Response({'Error': 'Missing content_uuid parameter'}, status=status.HTTP_400_BAD_REQUEST)
+        if favorite_param is None:
             return Response({'Error': 'Missing favorite parameter'}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
             favorite_toggle = str_to_bool(favorite_param)
-            if not content_uuid:
-                return Response({'Error': 'Missing content_uuid parameter'}, status=status.HTTP_400_BAD_REQUEST)
-            highlighted_content = HighlightedContent.objects.get(uuid=content_uuid)
-            if highlighted_content.catalog_highlight_set.uuid != highlight_set.uuid:
-                return Response({'Error': 'Highlighted content not part of the given highlight set'},
-                                status=status.HTTP_400_BAD_REQUEST)
-            highlighted_content.is_favorite = favorite_toggle
-            highlighted_content.save()
-            return Response({}, status=status.HTTP_201_CREATED)
         except TypeError:
             return Response({'Error': f'favorite parameter "{favorite_param}" is not a valid true/false value'},
                             status=status.HTTP_400_BAD_REQUEST)
-        except HighlightedContent.DoesNotExist:
+
+        try:
+            content_uuid = UUID(str(content_uuid))
+            highlight_set_uuid = UUID(str(uuid))
+        except (AttributeError, TypeError, ValueError):
             return Response({'Error': 'content_uuid does not refer to any existing highlighted content'},
                             status=status.HTTP_400_BAD_REQUEST)
+
+        with transaction.atomic():
+            try:
+                highlighted_content = (
+                    HighlightedContent.objects
+                    .select_for_update()
+                    .only('uuid', 'catalog_highlight_set_id', 'is_favorite', 'sort_order')
+                    .get(uuid=content_uuid)
+                )
+            except HighlightedContent.DoesNotExist:
+                return Response({'Error': 'content_uuid does not refer to any existing highlighted content'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            if highlighted_content.catalog_highlight_set_id != highlight_set_uuid:
+                return Response({'Error': 'Highlighted content not part of the given highlight set'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            highlight_set_content = HighlightedContent.objects.filter(catalog_highlight_set_id=highlight_set_uuid)
+            if highlighted_content.is_favorite != favorite_toggle:
+                # Highlight sets are bounded to 24 items, so locking the set keeps sort_order updates consistent
+                # without adding meaningful overhead.
+                list(highlight_set_content.select_for_update().values_list('uuid', flat=True))
+                update_fields = ['is_favorite', 'sort_order', 'modified']
+                if favorite_toggle:
+                    max_sort_order = highlight_set_content.filter(is_favorite=True).aggregate(
+                        Max('sort_order')
+                    )['sort_order__max']
+                    highlighted_content.sort_order = 0 if max_sort_order is None else max_sort_order + 1
+                else:
+                    removed_sort_order = highlighted_content.sort_order
+                    highlighted_content.sort_order = 0
+                    highlight_set_content.filter(
+                        is_favorite=True,
+                        sort_order__gt=removed_sort_order,
+                    ).update(sort_order=F('sort_order') - 1, modified=timezone.now())
+
+                highlighted_content.is_favorite = favorite_toggle
+                highlighted_content.save(update_fields=update_fields)
+
+        return Response({}, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['post'], url_path='add-content')
     def add_content(self, request, uuid, *args, **kwargs):

@@ -804,7 +804,7 @@ class ContentMetadata(BaseContentMetadata):
         # runs were actually found for this specific course and the requester's
         # specific Catalog.
         if restricted_course_metadata_for_catalog_query:
-            # pylint: disable=protected-access, unsubscriptable-object
+            # pylint: disable=protected-access
             return restricted_course_metadata_for_catalog_query[0]._json_metadata
         return self._json_metadata
 
@@ -857,7 +857,6 @@ class RestrictedCourseMetadata(BaseContentMetadata):
     restricted_run_allowed_for_restricted_course = models.ManyToManyField(
         ContentMetadata,
         through='RestrictedRunAllowedForRestrictedCourse',
-        through_fields=('course', 'run'),
     )
     history = HistoricalRecords()
 

@@ -36,6 +36,7 @@ from enterprise_catalog.apps.video_catalog.models import Video, VideoSkill
 
 
 logger = logging.getLogger(__name__)
+HIGHLIGHTED_CONTENT_ORDER = ('-is_favorite', 'sort_order', 'created')
 
 
 def find_and_modify_catalog_query(
@@ -406,7 +407,9 @@ class HighlightSetSerializer(serializers.ModelSerializer):
         """
         Returns the data for the associated content included in this HighlightSet object.
         """
-        qs = obj.highlighted_content.order_by('created').select_related('content_metadata')
+        qs = obj.highlighted_content.all()
+        if 'highlighted_content' not in getattr(obj, '_prefetched_objects_cache', {}):
+            qs = qs.order_by(*HIGHLIGHTED_CONTENT_ORDER).select_related('content_metadata')
         return HighlightedContentSerializer(qs, many=True).data
 
 
