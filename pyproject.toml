@@ -3,8 +3,132 @@ name = "enterprise-catalog"
 version = "0.1.0"
 requires-python = ">=3.12"
 
+[dependency-groups]
+base = [
+    "analytics-python",
+    "Django",
+    "django-celery-results",
+    "django-config-models",
+    "django-cors-headers",
+    "django-crum",
+    "django-extensions",
+    "django-import-export",
+    "django-model-utils",
+    "django-simple-history",
+    "djangorestframework",
+    "djangorestframework-xml",
+    "djangoql",
+    "drf-spectacular",
+    "edx-auth-backends",
+    "edx-celeryutils",
+    "edx-django-release-util",
+    "edx-django-utils",
+    "edx-drf-extensions",
+    "edx_rbac",
+    "edx-rest-api-client",
+    "edx-toggles",
+    "mysqlclient",
+    "pymemcache",
+    "pytz",
+    "jsonfield2",
+    "celery",
+    "redis",
+    "rules",
+    "simplejson",
+    "zipp",
+    "algoliasearch",
+    "social-auth-app-django",
+    "xlsxwriter",
+    "django-clearcache",
+    "django-log-request-id",
+    "openai",
+    "scikit-learn",
+]
+test = [
+    {include-group = "base"},
+    "code-annotations",
+    "coverage",
+    "ddt",
+    "django-dynamic-fixture",
+    "edx-lint",
+    "factory-boy",
+    "pytest-cov",
+    "pytest-django",
+    "responses",
+]
+quality = [
+    {include-group = "base"},
+    "edx-lint",
+    "isort",
+    "pycodestyle",
+    "pydocstyle",
+]
+doc = [
+    {include-group = "test"},
+    "doc8",
+    "sphinx-book-theme",
+    "readme_renderer",
+    "Sphinx",
+]
+production = [
+    {include-group = "base"},
+    "gevent",
+    "gunicorn",
+    "python-memcached",
+    "PyYAML>=5.1",
+]
+ci = [
+    "tox",
+    "tox-uv",
+]
+dev = [
+    {include-group = "test"},
+    {include-group = "quality"},
+    {include-group = "ci"},
+    "diff-cover==4.0.0",
+    "edx-i18n-tools",
+    "django-debug-toolbar",
+    "gunicorn",
+    "inflect",
+    "python-memcached",
+]
+
 [tool.uv]
 package = false
+#  DO NOT EDIT constraint-dependencies DIRECTLY.
+#  This list is managed by `edx_lint write_uv_constraints`
+#  and will be overwritten the next time `make upgrade` is run.
+#  - GLOBAL constraints: edit edx_lint/files/common_constraints.txt
+#  - REPO-SPECIFIC constraints: edit [tool.edx_lint].uv_constraints in this file
+constraint-dependencies = [
+    "Django>=5.2,<5.3",
+    "elasticsearch<7.14.0",
+    "django-simple-history>=3.4.0",
+    "celery>=5.2.2,<6.0.0",
+    "diff-cover==4.0.0",
+    "openai<=1.13.3",
+    "algoliasearch<4",
+]
+
+[tool.edx_lint]
+uv_constraints = [
+    # using LTS django version
+    "Django>=5.2,<5.3",
+    # At least version 3.4.0 of django simple history
+    "django-simple-history>=3.4.0",
+    # As it is not clarified what exact breaking changes will be introduced as per
+    # the next major release, ensure the installed version is within boundaries.
+    "celery>=5.2.2,<6.0.0",
+    # diff-cover latest requires (pluggy>=0.13.1,<0.14.0)
+    # which conflicts with pytest(pluggy>=0.12,<2.0.0) and tox(pluggy>0.12) both of these fetch pluggy==1.0.0
+    # but diff-cover latest has a pin (pluggy<1.0.0a1)
+    # Using the same version of diff-cover which is being used currently in edx-platform to avoid this conflict.
+    "diff-cover==4.0.0",
+    # To avoid any breaking changes
+    "openai<=1.13.3",
+    # algoliasearch 4.0 is not backwards compatible with 3.0
+    "algoliasearch<4",
+]
 
 [tool.isort]
 indent = '    '
