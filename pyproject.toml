@@ -57,7 +57,7 @@ test = [
     "responses",
 ]
 quality = [
-    {include-group = "base"},
+    {include-group = "test"},
     "edx-lint",
     "isort",
     "pycodestyle",
