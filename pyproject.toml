@@ -58,7 +58,6 @@ test = [
 ]
 quality = [
     {include-group = "test"},
-    "edx-lint",
     "isort",
     "pycodestyle",
     "pydocstyle",
