@@ -152,3 +152,16 @@ filterwarnings = [
     "ignore:.*invalid escape sequence.*:DeprecationWarning:.*(newrelic|uritemplate|psutil).*",
     "ignore:.*the imp module is deprecated in favour of importlib.*:DeprecationWarning:.*distutils.*",
 ]
+
+[tool.coverage.run]
+branch = true
+source = ["enterprise_catalog"]
+omit = [
+    "enterprise_catalog/settings*",
+    "enterprise_catalog/conf*",
+    "*wsgi.py",
+    "*migrations*",
+    "*admin.py",
+    "*static*",
+    "*templates*",
+]

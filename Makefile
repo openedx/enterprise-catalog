@@ -59,26 +59,26 @@ test: clean ## run tests and generate coverage report
 
 # To be run from CI context
 coverage: clean
-	pytest --cov-report html
+	$(TOX)pytest --cov-report html
 	$(BROWSER) htmlcov/index.html
 
 isort_check: ## check that isort has been run
-	isort --check-only --diff enterprise_catalog/
+	$(TOX)isort --check-only --diff enterprise_catalog/
 
 isort: ## run isort to sort imports in all Python files
-	isort --atomic enterprise_catalog/
+	$(TOX)isort --atomic enterprise_catalog/
 
 style: ## run Python style checker
-	pycodestyle enterprise_catalog *.py
+	$(TOX)pycodestyle enterprise_catalog *.py
 
 lint: ## run Python code linting
-	pylint --rcfile=pylintrc enterprise_catalog *.py
+	$(TOX)pylint --rcfile=pylintrc enterprise_catalog *.py
 
 quality: clean style isort_check lint ## check code style and import sorting, then lint
 
 pii_check: ## check for PII annotations on all Django models
 	DJANGO_SETTINGS_MODULE=enterprise_catalog.settings.test \
-	code_annotations django_find_annotations --config_file .pii_annotations.yml --lint --report --coverage
+	$(TOX)code_annotations django_find_annotations --config_file .pii_annotations.yml --lint --report --coverage
 
 validate: test quality pii_check ## run tests, quality, and PII annotation checks
 
@@ -86,7 +86,7 @@ migrate: ## apply database migrations
 	python3 manage.py migrate
 
 html_coverage: ## generate and view HTML coverage report
-	coverage html && open htmlcov/index.html
+	$(TOX)coverage html && open htmlcov/index.html
 
 upgrade: ## upgrade all packages in uv.lock and sync constraints from edx-lint
 	uv run --with edx-lint edx_lint write_uv_constraints pyproject.toml
