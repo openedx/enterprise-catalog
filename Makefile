@@ -50,11 +50,11 @@ shell: ## run Django shell
 	python3 manage.py shell
 
 test: clean ## run tests and generate coverage report
-        uv run python3 -Wd -m pytest
+	uv run python3 -Wd -m pytest
 
 # To be run from CI context
 coverage: clean
-        uv run pytest --cov-report html
+	uv run pytest --cov-report html
 
 isort_check: ## check that isort has been run
 	uv run isort --check-only --diff enterprise_catalog/
