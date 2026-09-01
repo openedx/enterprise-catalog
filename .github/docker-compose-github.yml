@@ -11,7 +11,7 @@ services:
 
   app:
     image: edxops/enterprise-catalog-dev
-    container_name: enterprise.catalog.app
+    container_name: edx.devstack.enterprise-catalog
     volumes:
       - ..:/edx/app/enterprise_catalog/enterprise_catalog
     # Use the Django devserver, so that we can hot-reload code changes

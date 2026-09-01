@@ -15,11 +15,11 @@ sleep 5
 
 # Run migrations
 echo -e "${GREEN}Running migrations for ${name}...${NC}"
-docker exec -t enterprise.catalog.app bash -c "cd /edx/app/${directory}/ && make migrate"
+docker exec -t edx.devstack.enterprise-catalog bash -c "cd /edx/app/${directory}/ && make migrate"
 
 # Create superuser
 echo -e "${GREEN}Creating super-user for ${name}...${NC}"
-docker exec -t enterprise.catalog.app bash -c "echo 'from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser(\"edx\", \"edx@example.com\", \"edx\") if not User.objects.filter(username=\"edx\").exists() else None' | python /edx/app/${directory}/manage.py shell"
+docker exec -t edx.devstack.enterprise-catalog bash -c "echo 'from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser(\"edx\", \"edx@example.com\", \"edx\") if not User.objects.filter(username=\"edx\").exists() else None' | python /edx/app/${directory}/manage.py shell"
 
 # Provision IDA User in LMS
 echo -e "${GREEN}Provisioning ${name}_worker in LMS...${NC}"
