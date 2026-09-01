@@ -5,9 +5,7 @@ from dataclasses import dataclass
 
 from django.utils.html import strip_tags
 
-from enterprise_catalog.apps.catalog.algolia_utils import (
-    get_initialized_algolia_client,
-)
+from enterprise_catalog.apps.api_client.algolia import AlgoliaSearchClient
 
 
 @dataclass
@@ -58,6 +56,15 @@ def extract_program_data(hit: dict):
         'skills': hit.get('skill_names', []),
         'subjects': hit.get('subjects', []),
     }
+
+
+def get_initialized_algolia_client():
+    """
+    Initializes and returns an Algolia client for updating search indices
+    """
+    algolia_client = AlgoliaSearchClient()
+    algolia_client.init_index()
+    return algolia_client
 
 
 def fetch_catalog_metadata_from_algolia(enterprise_catalog_query_title: str):

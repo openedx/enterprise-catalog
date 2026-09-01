@@ -157,3 +157,30 @@ def to_timestamp(datetime_str):
     except (ValueError, TypeError) as exc:
         LOGGER.error(f"[to_timestamp][{exc}] Could not parse date string: {datetime_str}")
         return None
+
+
+def compute_source_hash(content_metadata, fields=None):
+    """
+    Compute a SHA256 hash of source content fields for change detection.
+
+    Args:
+        content_metadata: ContentMetadata instance
+        fields: List of field names to include in hash (default: translatable fields)
+
+    Returns:
+        str: SHA256 hash of concatenated field values
+    """
+    if fields is None:
+        # Only hash fields that are actually translated
+        fields = [
+            'title', 'short_description', 'full_description', 'subtitle'
+        ]
+
+    content_parts = []
+    for field in fields:
+        value = content_metadata.json_metadata.get(field, '')
+        if value:
+            content_parts.append(str(value))
+
+    combined = '|'.join(content_parts)
+    return hashlib.sha256(combined.encode('utf-8')).hexdigest()
