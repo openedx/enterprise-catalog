@@ -10,6 +10,7 @@ from enterprise_catalog.apps.catalog.constants import (
     COURSE_RUN,
     LEARNER_PATHWAY,
     PROGRAM,
+    TIMESTAMP_FORMAT,
     json_serialized_course_modes,
 )
 from enterprise_catalog.apps.catalog.models import (
@@ -180,7 +181,7 @@ class ContentMetadataFactory(factory.django.DjangoModelFactory):
                 'overview': 'Pathway for a data engineer.',
                 'published': True,
                 'visible_via_association': True,
-                'created': datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
+                'created': datetime.datetime.utcnow().strftime(TIMESTAMP_FORMAT),
                 'card_image': {
                     'card': {
                         'url': self.card_image_url,
