@@ -6,6 +6,8 @@ from enterprise_catalog.apps.catalog.waffle import (
 )
 
 
+TIMESTAMP_FORMAT = '%Y%m%d%H%M%SZ'
+
 # Algolia timestamp default
 ALGOLIA_DEFAULT_TIMESTAMP = (datetime(3000, 1, 1)).timestamp()
 

@@ -13,6 +13,7 @@ from enterprise_catalog.apps.api_client.discovery import DiscoveryApiClient
 from enterprise_catalog.apps.catalog.algolia_utils import (
     get_initialized_algolia_client,
 )
+from enterprise_catalog.apps.catalog.constants import TIMESTAMP_FORMAT
 
 
 # CatalogCsvView's StreamingHttpResponse requires a File-like class that has a 'write' method
@@ -110,7 +111,7 @@ class CatalogCsvView(GenericAPIView):
         if invalid_facets:
             return Response(f'Error: invalid facet(s): {invalid_facets} provided.', status=HTTP_400_BAD_REQUEST)
 
-        filename = f'Enterprise-Catalog-Export-{time.strftime("%Y%m%d%H%M%S")}.csv'
+        filename = f'Enterprise-Catalog-Export-{time.strftime(TIMESTAMP_FORMAT)}.csv'
 
         response = StreamingHttpResponse(
             streaming_content=(self.iter_items(facets, algoliaQuery)),
