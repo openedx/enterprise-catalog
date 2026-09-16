@@ -27,6 +27,7 @@ from enterprise_catalog.apps.catalog.algolia_utils import (
     _algolia_object_from_product,
     configure_algolia_index,
     create_algolia_objects,
+    create_spanish_algolia_object,
     get_algolia_object_id,
     get_initialized_algolia_client,
     get_pathway_course_keys,
@@ -867,6 +868,32 @@ def add_video_to_algolia_objects(
     batched_metadata = _batched_metadata_with_queries(json_metadata, queries)
     _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata)
 
+    # Create and index Spanish version
+    json_metadata_es = create_spanish_algolia_object(json_metadata, video)
+
+    if json_metadata_es:
+        # enterprise customer uuids for Spanish
+        batched_metadata_es = _batched_metadata(
+            json_metadata_es,
+            customer_uuids,
+            'enterprise_customer_uuids',
+            '{}-customer-uuids-{}',
+        )
+        _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata_es)
+
+        # enterprise catalog uuids for Spanish
+        batched_metadata_es = _batched_metadata(
+            json_metadata_es,
+            catalog_uuids,
+            'enterprise_catalog_uuids',
+            '{}-catalog-uuids-{}',
+        )
+        _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata_es)
+
+        # enterprise catalog queries for Spanish
+        batched_metadata_es = _batched_metadata_with_queries(json_metadata_es, queries)
+        _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata_es)
+
 
 def add_metadata_to_algolia_objects(
     metadata,
@@ -953,6 +980,32 @@ def add_metadata_to_algolia_objects(
     queries = sorted(list(catalog_queries))
     batched_metadata = _batched_metadata_with_queries(json_metadata, queries)
     _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata)
+
+    # Create and index Spanish version
+    json_metadata_es = create_spanish_algolia_object(json_metadata, metadata)
+
+    if json_metadata_es:
+        # enterprise catalog uuids for Spanish
+        batched_metadata_es = _batched_metadata(
+            json_metadata_es,
+            catalog_uuids,
+            'enterprise_catalog_uuids',
+            '{}-catalog-uuids-{}',
+        )
+        _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata_es)
+
+        # enterprise customer uuids for Spanish
+        batched_metadata_es = _batched_metadata(
+            json_metadata_es,
+            customer_uuids,
+            'enterprise_customer_uuids',
+            '{}-customer-uuids-{}',
+        )
+        _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata_es)
+
+        # enterprise catalog queries for Spanish
+        batched_metadata_es = _batched_metadata_with_queries(json_metadata_es, queries)
+        _add_in_algolia_products_by_object_id(algolia_products_by_object_id, batched_metadata_es)
 
 
 def get_algolia_objects_from_course_content_metadata(content_metadata):
@@ -1059,6 +1112,7 @@ def _get_algolia_products_for_batch(
         )
     ).prefetch_related(
         Prefetch('catalog_queries', queryset=all_catalog_queries),
+        'translations',
     )
     if getattr(settings, 'SHOULD_INDEX_COURSES_WITH_RESTRICTED_RUNS', False):
         # Make the courses that we index actually contain restricted runs in the payload.
@@ -1081,6 +1135,7 @@ def _get_algolia_products_for_batch(
         parent_content_key__in=course_content_keys
     ).prefetch_related(
         Prefetch('catalog_queries', queryset=all_catalog_queries),
+        'translations',
     )
     course_run_content_keys = [cm.content_key for cm in content_metadata_courseruns]
     videos = Video.objects.filter(

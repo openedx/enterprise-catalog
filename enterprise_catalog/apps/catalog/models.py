@@ -1741,3 +1741,79 @@ class CatalogUpdateCommandConfig(ConfigurationModel):
                 'no_async': current_config.no_async,
             }
         return {}
+
+
+class ContentTranslation(TimeStampedModel):
+    """
+    Stores pre-computed translations for content metadata.
+
+    This model caches translations to improve Algolia indexing performance
+    by avoiding inline API calls during the indexing process.
+
+    .. no_pii:
+    """
+    content_metadata = models.ForeignKey(
+        ContentMetadata,
+        on_delete=models.CASCADE,
+        related_name='translations',
+        help_text=_("The content metadata this translation belongs to")
+    )
+    language_code = models.CharField(
+        max_length=10,
+        help_text=_("ISO 639-1 language code (e.g., 'es' for Spanish)")
+    )
+
+    # Translated fields
+    title = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text=_("Translated title")
+    )
+    short_description = models.TextField(
+        blank=True,
+        null=True,
+        help_text=_("Translated short description")
+    )
+    full_description = models.TextField(
+        blank=True,
+        null=True,
+        help_text=_("Translated full description")
+    )
+    outcome = models.TextField(
+        blank=True,
+        null=True,
+        help_text=_("Translated learning outcomes")
+    )
+    prerequisites = models.TextField(
+        blank=True,
+        null=True,
+        help_text=_("Translated prerequisites")
+    )
+    subtitle = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text=_("Translated subtitle")
+    )
+
+    # Metadata for change detection
+    source_hash = models.CharField(
+        max_length=64,
+        help_text=_("SHA256 hash of source content to detect changes")
+    )
+
+    class Meta:
+        verbose_name = _("Content Translation")
+        verbose_name_plural = _("Content Translations")
+        app_label = 'catalog'
+        unique_together = ('content_metadata', 'language_code')
+        indexes = [
+            models.Index(fields=['content_metadata', 'language_code']),
+        ]
+
+    def __str__(self):
+        """
+        Return human-readable string representation.
+        """
+        return f"<ContentTranslation: {self.content_metadata.content_key} - {self.language_code}>"
