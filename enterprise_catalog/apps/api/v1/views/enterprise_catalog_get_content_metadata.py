@@ -220,12 +220,15 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
                 For other content types, always returns True.
         """
         if item.content_type == 'course':
-            active = is_any_course_run_active(
-                item.json_metadata.get('course_runs', []))
-            if not active:
-                logger.debug(f'[get_content_metadata]: Content item {item.content_key} is not active.')
-            return active
-        return True
+            course_runs = item.json_metadata.get('course_runs', []) or []
+            has_published = any(
+                (run.get('status') or '').lower() == 'published' for run in course_runs
+            )
+            if not has_published:
+                logger.debug(
+                    f"[get_content_metadata]: Excluding course {item.content_key} because it has no published runs."
+                )
+            return has_published
 
     @action(detail=True)
     def get_content_metadata(self, request, traverse_pagination, content_keys_filter):
@@ -241,9 +244,11 @@ class EnterpriseCatalogGetContentMetadata(BaseViewSet, GenericAPIView):
         logger.debug(f'[get_content_metadata]: Original queryset length: {len(queryset)}, {self.enterprise_catalog}')
 
         # Only filter out archived courses if content_keys_filter is not provided,
-        # to ensure active content is always returned
+        # to ensure active content is always ret
         if not content_keys_filter:
-            queryset = [item for item in queryset if self.is_active(item)]
+            # queryset = [item for item in queryset if self.is_active(item)]
+            # NEW: Remove courseruns from final output
+            queryset = [item for item in queryset if item.content_type == "course"]
             filtered_queryset_length = len(queryset)
             logger.debug(f'[get_content_metadata]: Filtered queryset length: {filtered_queryset_length}, '
                          f'{self.enterprise_catalog}')
