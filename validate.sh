@@ -14,5 +14,5 @@ make requirements
 # Alex Dusenbery 2022-04-12: This is failing CI for a reason I don't understand
 # and I don't know why we care about translations here, anyway.
 # make validate_translations
-make validate
-make check_keywords
+uv run --no-sync make validate
+uv run --no-sync make check_keywords
