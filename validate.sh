@@ -11,13 +11,8 @@ command -v uv >/dev/null 2>&1 || pip install uv
 
 make requirements
 
-# The Makefile's targets assume an already-activated env (uv run was
-# dropped from the Makefile itself); activate the venv make requirements
-# just synced so the bare tool calls below resolve to it.
-source .venv/bin/activate
-
 # Alex Dusenbery 2022-04-12: This is failing CI for a reason I don't understand
 # and I don't know why we care about translations here, anyway.
 # make validate_translations
-make validate
-make check_keywords
+uv run --no-sync make validate
+uv run --no-sync make check_keywords
