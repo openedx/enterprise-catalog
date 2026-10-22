@@ -36,7 +36,7 @@ celery==5.6.2
     #   -r requirements/base.in
     #   django-celery-results
     #   edx-celeryutils
-certifi==2026.1.4
+certifi==2026.10.19
     # via
     #   httpcore
     #   httpx
