@@ -1,6 +1,7 @@
 """
 Tests for the enterprise_catalog API celery tasks
 """
+
 import json
 import uuid
 from datetime import datetime, timedelta
@@ -27,7 +28,11 @@ from enterprise_catalog.apps.catalog.constants import (
     PROGRAM,
     QUERY_FOR_RESTRICTED_RUNS,
 )
-from enterprise_catalog.apps.catalog.models import CatalogQuery, ContentMetadata
+from enterprise_catalog.apps.catalog.models import (
+    CatalogQuery,
+    ContentMetadata,
+    ContentTranslation,
+)
 from enterprise_catalog.apps.catalog.serializers import (
     DEFAULT_NORMALIZED_PRICE,
     NormalizedContentMetadataSerializer,
@@ -828,6 +833,10 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
     def setUp(self):
         super().setUp()
 
+        # Create translations for the courses to ensure Spanish objects are generated
+        # This replaces the previous mock that forced Spanish object creation
+        # We'll create translations later after objects are created
+
         # Set up a catalog, query, and metadata for a course and course associated program
         self.academy = AcademyFactory()
         self.tag1 = self.academy.tags.all()[0]
@@ -866,6 +875,72 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         self.course_run_metadata_unpublished.save()
 
         _hydrate_course_normalized_metadata()
+
+        # Create translations
+        ContentTranslation.objects.create(
+            content_metadata=self.course_metadata_published,
+            language_code='es',
+            title="Spanish Course Title"
+        )
+        ContentTranslation.objects.create(
+            content_metadata=self.course_metadata_unpublished,
+            language_code='es',
+            title="Spanish Unpublished Course Title"
+        )
+        ContentTranslation.objects.create(
+            content_metadata=self.course_run_metadata_published,
+            language_code='es',
+            title="Spanish Course Run Title"
+        )
+        ContentTranslation.objects.create(
+            content_metadata=self.course_run_metadata_unpublished,
+            language_code='es',
+            title="Spanish Unpublished Course Run Title"
+        )
+
+    def _create_expected_spanish_object(self, english_object):
+        """
+        Create an expected Spanish object from an English object.
+        This should mirror the mock behavior of create_spanish_algolia_object.
+
+        The Spanish objectID has '-es-' inserted before the batch suffix.
+        For example:
+        - English: 'course-{uuid}-catalog-uuids-0'
+        - Spanish: 'course-{uuid}-es-catalog-uuids-0'
+
+        Args:
+            english_object (dict): The English Algolia object
+
+        Returns:
+            dict: The expected Spanish Algolia object
+        """
+        spanish_object = english_object.copy()
+        object_id = english_object['objectID']
+
+        # Insert '-es-' before the batch type marker
+        # The objectID pattern is: {content-type}-{uuid}-{batch-type}-{batch-subtype}-{batch-number}
+        # Where batch-type is one of: catalog, customer
+        # And batch-subtype is one of: uuids, query-uuids
+        # Result: {content-type}-{uuid}-es-{batch-type}-{batch-subtype}-{batch-number}
+
+        # Find the position to insert '-es-' by looking for batch type markers
+        batch_markers = ['-catalog-', '-customer-']
+        insert_pos = -1
+
+        for marker in batch_markers:
+            pos = object_id.find(marker)
+            if pos != -1:
+                insert_pos = pos
+                break
+
+        if insert_pos != -1:
+            # Insert '-es' before the batch marker
+            spanish_object['objectID'] = object_id[:insert_pos] + '-es' + object_id[insert_pos:]
+        else:
+            # Fallback: just append -es if structure is unexpected
+            spanish_object['objectID'] = f"{object_id}-es"
+
+        return spanish_object
 
     def _set_up_factory_data_for_algolia(self):
         expected_catalog_uuids = sorted([
@@ -958,6 +1033,15 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         ]
 
         test_course.catalog_queries.set(catalog_queries[0:3])
+
+        test_course.catalog_queries.set(catalog_queries[0:3])
+
+        # Create translation
+        ContentTranslation.objects.create(
+            content_metadata=test_course,
+            language_code='es',
+            title="Spanish Test Course Title"
+        )
 
         algolia_objects = tasks.get_algolia_objects_from_course_content_metadata(test_course)
 
@@ -1089,7 +1173,20 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         test_course_1.save()
         test_course_2.save()
         test_course_3.save()
+        test_course_3.save()
         _hydrate_course_normalized_metadata()
+
+        # Create translation for the program to ensure Spanish objects are generated
+        ContentTranslation.objects.create(
+            content_metadata=program_1,
+            language_code='es',
+            title="Spanish Program Title"
+        )
+
+        # Create translations for courses
+        ContentTranslation.objects.create(content_metadata=test_course_1, language_code='es', title="Spanish Course 1")
+        ContentTranslation.objects.create(content_metadata=test_course_2, language_code='es', title="Spanish Course 2")
+        ContentTranslation.objects.create(content_metadata=test_course_3, language_code='es', title="Spanish Course 3")
 
         actual_algolia_products_sent = []
 
@@ -1105,7 +1202,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert ' 15 products found.' in products_found_log_records[0]
+        assert ' 30 products found.' in products_found_log_records[0]
 
         # create expected data to be added/updated in the Algolia index.
         expected_program_1_objects_to_index = []
@@ -1130,10 +1227,17 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'academy_uuids': [],
         })
 
-        # verify replace_all_objects is called with the correct Algolia object data.
-        expected_program_call_args = sorted(expected_program_1_objects_to_index, key=itemgetter('objectID'))
+        expected_spanish_objects = [
+            self._create_expected_spanish_object(obj) for obj in expected_program_1_objects_to_index
+        ]
+        expected_all_objects = expected_program_1_objects_to_index + expected_spanish_objects
+
+        expected_program_call_args = sorted(expected_all_objects, key=itemgetter('objectID'))
         actual_program_call_args = sorted(
-            [product for product in actual_algolia_products_sent if program_uuid in product['objectID']],
+            [
+                product for product in actual_algolia_products_sent
+                if program_uuid in product['objectID']
+            ],
             key=itemgetter('objectID'),
         )
         assert expected_program_call_args == actual_program_call_args
@@ -1191,6 +1295,11 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         test_course_3.save()
         _hydrate_course_normalized_metadata()
 
+        # Create translations for courses
+        ContentTranslation.objects.create(content_metadata=test_course_1, language_code='es', title="Spanish Course 1")
+        ContentTranslation.objects.create(content_metadata=test_course_2, language_code='es', title="Spanish Course 2")
+        ContentTranslation.objects.create(content_metadata=test_course_3, language_code='es', title="Spanish Course 3")
+
         actual_algolia_products_sent = []
 
         # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
@@ -1205,8 +1314,8 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        # count should be "9 products found", 5 additional products are from the test course in self.setUp()
-        assert ' 12 products found.' in products_found_log_records[0]
+        # count should be "24 products found", 5 additional products are from the test course in self.setUp()
+        assert ' 24 products found.' in products_found_log_records[0]
 
         # assert the program was not indexed.
         program_uuid = program_1.json_metadata.get('uuid')
@@ -1555,7 +1664,14 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # Associate published course with a published program and also an unpublished program.
         self.course_metadata_published.associated_content_metadata.set([program_1, program_2])
 
-        actual_algolia_products_sent = None
+        # Create translation for the program
+        ContentTranslation.objects.create(
+            content_metadata=program_1,
+            language_code='es',
+            title="Spanish Program Title"
+        )
+
+        actual_algolia_products_sent = []
 
         # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
         # result into `actual_algolia_products_sent` for unit testing.
@@ -1569,7 +1685,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert ' 6 products found.' in products_found_log_records[0]
+        assert ' 12 products found.' in products_found_log_records[0]
 
         # create expected data to be added/updated in the Algolia index.
         expected_course_1_objects_to_index = []
@@ -1625,7 +1741,13 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         )
 
         # verify replace_all_objects is called with the correct Algolia object data.
-        expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
+        # Create Spanish versions of expected objects
+        expected_spanish_objects = [
+            self._create_expected_spanish_object(obj) for obj in expected_algolia_objects_to_index
+        ]
+        expected_all_objects = expected_algolia_objects_to_index + expected_spanish_objects
+
+        expected_call_args = sorted(expected_all_objects, key=itemgetter('objectID'))
         actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
@@ -1664,7 +1786,14 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # Associate unpublished course with a published program and also an unpublished program.
         self.course_metadata_unpublished.associated_content_metadata.set([program_1, program_2])
 
-        actual_algolia_products_sent = None
+        # Create translation for the program
+        ContentTranslation.objects.create(
+            content_metadata=program_1,
+            language_code='es',
+            title="Spanish Program Title"
+        )
+
+        actual_algolia_products_sent = []
 
         # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
         # result into `actual_algolia_products_sent` for unit testing.
@@ -1678,7 +1807,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert ' 6 products found.' in products_found_log_records[0]
+        assert ' 12 products found.' in products_found_log_records[0]
 
         # create expected data to be added/updated in the Algolia index.
         expected_course_1_objects_to_index = []
@@ -1734,7 +1863,13 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         )
 
         # verify replace_all_objects is called with the correct Algolia object data.
-        expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
+        # Create Spanish versions of expected objects
+        expected_spanish_objects = [
+            self._create_expected_spanish_object(obj) for obj in expected_algolia_objects_to_index
+        ]
+        expected_all_objects = expected_algolia_objects_to_index + expected_spanish_objects
+
+        expected_call_args = sorted(expected_all_objects, key=itemgetter('objectID'))
         actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
@@ -1761,7 +1896,14 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # Associate published course with a pathway.
         self.course_metadata_published.associated_content_metadata.set([pathway_1])
 
-        actual_algolia_products_sent = None
+        # Create translation for the pathway
+        ContentTranslation.objects.create(
+            content_metadata=pathway_1,
+            language_code='es',
+            title="Spanish Pathway Title"
+        )
+
+        actual_algolia_products_sent = []
 
         # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
         # result into `actual_algolia_products_sent` for unit testing.
@@ -1775,7 +1917,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert ' 6 products found.' in products_found_log_records[0]
+        assert ' 12 products found.' in products_found_log_records[0]
 
         # create expected data to be added/updated in the Algolia index.
         expected_course_1_objects_to_index = []
@@ -1834,7 +1976,13 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         )
 
         # verify replace_all_objects is called with the correct Algolia object data.
-        expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
+        # Create Spanish versions of expected objects
+        expected_spanish_objects = [
+            self._create_expected_spanish_object(obj) for obj in expected_algolia_objects_to_index
+        ]
+        expected_all_objects = expected_algolia_objects_to_index + expected_spanish_objects
+
+        expected_call_args = sorted(expected_all_objects, key=itemgetter('objectID'))
         actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
@@ -1865,7 +2013,14 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # Associate unpublished course with a pathway.
         self.course_metadata_unpublished.associated_content_metadata.set([pathway_1])
 
-        actual_algolia_products_sent = None
+        # Create translation for the pathway
+        ContentTranslation.objects.create(
+            content_metadata=pathway_1,
+            language_code='es',
+            title="Spanish Pathway Title"
+        )
+
+        actual_algolia_products_sent = []
 
         # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
         # result into `actual_algolia_products_sent` for unit testing.
@@ -1879,7 +2034,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert ' 6 products found.' in products_found_log_records[0]
+        assert ' 12 products found.' in products_found_log_records[0]
 
         # create expected data to be added/updated in the Algolia index.
         expected_course_1_objects_to_index = []
@@ -1938,7 +2093,13 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         )
 
         # verify replace_all_objects is called with the correct Algolia object data.
-        expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
+        # Create Spanish versions of expected objects
+        expected_spanish_objects = [
+            self._create_expected_spanish_object(obj) for obj in expected_algolia_objects_to_index
+        ]
+        expected_all_objects = expected_algolia_objects_to_index + expected_spanish_objects
+
+        expected_call_args = sorted(expected_all_objects, key=itemgetter('objectID'))
         actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
@@ -1979,7 +2140,19 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         program_1.associated_content_metadata.set([pathway_1])
         program_2.associated_content_metadata.set([pathway_1])
 
-        actual_algolia_products_sent = None
+        # Create translations
+        ContentTranslation.objects.create(
+            content_metadata=program_1,
+            language_code='es',
+            title="Spanish Program 1 Title"
+        )
+        ContentTranslation.objects.create(
+            content_metadata=pathway_1,
+            language_code='es',
+            title="Spanish Pathway Title"
+        )
+
+        actual_algolia_products_sent = []
 
         # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
         # result into `actual_algolia_products_sent` for unit testing.
@@ -1993,7 +2166,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert ' 9 products found.' in products_found_log_records[0]
+        assert ' 18 products found.' in products_found_log_records[0]
 
         # create expected data to be added/updated in the Algolia index.
         expected_course_1_objects_to_index = []
@@ -2075,7 +2248,13 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         )
 
         # verify replace_all_objects is called with the correct Algolia object data.
-        expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
+        # Create Spanish versions of expected objects
+        expected_spanish_objects = [
+            self._create_expected_spanish_object(obj) for obj in expected_algolia_objects_to_index
+        ]
+        expected_all_objects = expected_algolia_objects_to_index + expected_spanish_objects
+
+        expected_call_args = sorted(expected_all_objects, key=itemgetter('objectID'))
         actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
@@ -2212,7 +2391,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             run=courserun_restricted_for_catalog_B,
         )
 
-        actual_algolia_products_sent = None
+        actual_algolia_products_sent = []
 
         # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
         # result into `actual_algolia_products_sent` for unit testing.
@@ -2226,7 +2405,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert ' 3 products found.' in products_found_log_records[0]
+        assert ' 6 products found.' in products_found_log_records[0]
 
         # create expected data to be added/updated in the Algolia index.
         expected_algolia_objects_to_index = []
@@ -2274,7 +2453,13 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         })
 
         # Verify replace_all_objects is called with the correct Algolia object data.
-        expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
+        # Create Spanish versions of expected objects
+        expected_spanish_objects = [
+            self._create_expected_spanish_object(obj) for obj in expected_algolia_objects_to_index
+        ]
+        expected_all_objects = expected_algolia_objects_to_index + expected_spanish_objects
+
+        expected_call_args = sorted(expected_all_objects, key=itemgetter('objectID'))
         actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
@@ -2422,7 +2607,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             run=courserun_restricted_for_catalog_B,
         )
 
-        actual_algolia_products_sent = None
+        actual_algolia_products_sent = []
 
         # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
         # result into `actual_algolia_products_sent` for unit testing.
@@ -2436,7 +2621,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert ' 3 products found.' in products_found_log_records[0]
+        assert ' 6 products found.' in products_found_log_records[0]
 
         # create expected data to be added/updated in the Algolia index.
         expected_algolia_objects_to_index = []
@@ -2480,7 +2665,13 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         })
 
         # Verify replace_all_objects is called with the correct Algolia object data.
-        expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
+        # Create Spanish versions of expected objects
+        expected_spanish_objects = [
+            self._create_expected_spanish_object(obj) for obj in expected_algolia_objects_to_index
+        ]
+        expected_all_objects = expected_algolia_objects_to_index + expected_spanish_objects
+
+        expected_call_args = sorted(expected_all_objects, key=itemgetter('objectID'))
         actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
 
@@ -2492,7 +2683,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         """
         algolia_data = self._set_up_factory_data_for_algolia()
 
-        actual_algolia_products_sent = None
+        actual_algolia_products_sent = []
 
         # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
         # result into `actual_algolia_products_sent` for unit testing.
@@ -2506,7 +2697,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             with self.assertLogs(level='INFO') as info_logs:
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
-        assert ' 6 products found.' in info_logs.output[-1]
+        assert ' 12 products found.' in info_logs.output[-1]
 
         # create expected data to be added/updated in the Algolia index.
         expected_algolia_objects_to_index = []
@@ -2556,7 +2747,15 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             'academy_tags': algolia_data['academy_tags'],
         })
         # verify replace_all_objects is called with the correct Algolia object data
-        self.assertEqual(expected_algolia_objects_to_index, actual_algolia_products_sent)
+        # Create Spanish versions of expected objects
+        expected_spanish_objects = [
+            self._create_expected_spanish_object(obj) for obj in expected_algolia_objects_to_index
+        ]
+        expected_all_objects = expected_algolia_objects_to_index + expected_spanish_objects
+
+        actual_all_products = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
+        expected_all_sorted = sorted(expected_all_objects, key=itemgetter('objectID'))
+        self.assertEqual(expected_all_sorted, actual_all_products)
         mock_search_client().replace_all_objects.assert_called_once()
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
@@ -2568,7 +2767,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         # override the explore UI titles with test data to show every batch contains them
         explore_titles = [algolia_data['query_titles'][0]]
 
-        actual_algolia_products_sent = None
+        actual_algolia_products_sent = []
 
         # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
         # result into `actual_algolia_products_sent` for unit testing.
@@ -2583,7 +2782,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             with self.assertLogs(level='INFO') as info_logs:
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
-        assert ' 6 products found.' in info_logs.output[-1]
+        assert ' 12 products found.' in info_logs.output[-1]
 
         # create expected data to be added/updated in the Algolia index.
         expected_algolia_objects_to_index = []
@@ -2636,7 +2835,15 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
         })
 
         # verify replace_all_objects is called with the correct Algolia object data
-        self.assertEqual(expected_algolia_objects_to_index, actual_algolia_products_sent)
+        # Create Spanish versions of expected objects
+        expected_spanish_objects = [
+            self._create_expected_spanish_object(obj) for obj in expected_algolia_objects_to_index
+        ]
+        expected_all_objects = expected_algolia_objects_to_index + expected_spanish_objects
+
+        actual_all_products = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
+        expected_all_sorted = sorted(expected_all_objects, key=itemgetter('objectID'))
+        self.assertEqual(expected_all_sorted, actual_all_products)
         mock_search_client().replace_all_objects.assert_called_once()
 
     @mock.patch('enterprise_catalog.apps.api.tasks.get_initialized_algolia_client', return_value=mock.MagicMock())
@@ -2692,7 +2899,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task(force, dry_run)
 
         mock_search_client().replace_all_objects.assert_not_called()
-        assert '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] [DRY RUN] 6 products found.' in info_logs.output[-1]
+        assert '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] [DRY RUN] 12 products found.' in info_logs.output[-1]
         assert any(
             '[ENTERPRISE_CATALOG_ALGOLIA_REINDEX] [DRY RUN] skipping algolia_client.replace_all_objects().' in record
             for record in info_logs.output
@@ -3073,7 +3280,39 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
             [program_for_unpublished_course, pathway_for_unpublished_course]
         )
 
-        actual_algolia_products_sent = None
+        # Create translations
+        ContentTranslation.objects.create(
+            content_metadata=program_for_main_course,
+            language_code='es',
+            title="Spanish Program 1"
+        )
+        ContentTranslation.objects.create(
+            content_metadata=program_for_pathway,
+            language_code='es',
+            title="Spanish Program 2"
+        )
+        ContentTranslation.objects.create(
+            content_metadata=pathway_for_course,
+            language_code='es',
+            title="Spanish Pathway 1"
+        )
+        ContentTranslation.objects.create(
+            content_metadata=pathway_for_courserun,
+            language_code='es',
+            title="Spanish Pathway 2"
+        )
+        ContentTranslation.objects.create(
+            content_metadata=program_for_unpublished_course,
+            language_code='es',
+            title="Spanish Program 3"
+        )
+        ContentTranslation.objects.create(
+            content_metadata=pathway_for_unpublished_course,
+            language_code='es',
+            title="Spanish Pathway 3"
+        )
+
+        actual_algolia_products_sent = []
 
         # `replace_all_objects` is swapped out for a mock implementation that forces generator evaluation and saves the
         # result into `actual_algolia_products_sent` for unit testing.
@@ -3087,7 +3326,7 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
                 tasks.index_enterprise_catalog_in_algolia_task()  # pylint: disable=no-value-for-parameter
 
         products_found_log_records = [record for record in info_logs.output if ' products found.' in record]
-        assert ' 15 products found.' in products_found_log_records[0]
+        assert ' 30 products found.' in products_found_log_records[0]
 
         # create expected data to be added/updated in the Algolia index.
         expected_algolia_objects_to_index = []
@@ -3223,6 +3462,12 @@ class IndexEnterpriseCatalogCoursesInAlgoliaTaskTests(TestCase):
 
         # verify replace_all_objects is called with the correct Algolia object data
         # on the first invocation and with programs/pathways only on the second invocation.
-        expected_call_args = sorted(expected_algolia_objects_to_index, key=itemgetter('objectID'))
+        # Create Spanish versions of expected objects
+        expected_spanish_objects = [
+            self._create_expected_spanish_object(obj) for obj in expected_algolia_objects_to_index
+        ]
+        expected_all_objects = expected_algolia_objects_to_index + expected_spanish_objects
+
+        expected_call_args = sorted(expected_all_objects, key=itemgetter('objectID'))
         actual_call_args = sorted(actual_algolia_products_sent, key=itemgetter('objectID'))
         assert expected_call_args == self._sort_tags_in_algolia_object_list(actual_call_args)
