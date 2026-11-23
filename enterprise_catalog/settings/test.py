@@ -11,18 +11,17 @@ ECOMMERCE_BASE_URL = 'https://edx.test.ecommerce/'
 LICENSE_MANAGER_BASE_URL = 'https://edx.test.licensemanager/'
 STUDIO_BASE_URL = 'https://edx.test.cms'
 
-# IN-MEMORY TEST DATABASE
+# Use in-memory SQLite by default; migration CI supplies MySQL settings.
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': ':memory:',
-        'USER': '',
-        'PASSWORD': '',
-        'HOST': '',
-        'PORT': '',
+        'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.sqlite3'),
+        'NAME': os.environ.get('DB_NAME', ':memory:'),
+        'USER': os.environ.get('DB_USER', ''),
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+        'HOST': os.environ.get('DB_HOST', ''),
+        'PORT': os.environ.get('DB_PORT', ''),
     },
 }
-# END IN-MEMORY TEST DATABASE
 
 # CELERY
 CELERY_TASK_ALWAYS_EAGER = True

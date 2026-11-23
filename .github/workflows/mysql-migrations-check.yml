@@ -14,8 +14,25 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-24.04 ]
+        os: [ ubuntu-latest ]
         python-version: [ 3.12 ]
+
+    services:
+      mysql:
+        image: mysql:8
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_DATABASE: edxapp
+          MYSQL_USER: edxapp001
+          MYSQL_PASSWORD: password
+          MYSQL_RANDOM_ROOT_PASSWORD: true
+        # The temporary server that creates the database and user only listens on a socket.
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
 
     steps:
     - name: Checkout repo
@@ -24,38 +41,27 @@ jobs:
     - name: Install system packages
       run: |
         sudo apt-get update
-        sudo apt-get install -y libxmlsec1-dev
+        # Avoid upgrading the runner's MySQL server along with the client libraries.
+        sudo apt-get install -y --no-upgrade libmysqlclient-dev mysql-client pkg-config
+
     - name: Install uv
       uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
       with:
         enable-cache: true
         python-version: ${{ matrix.python-version }}
 
-    - name: Ubunto and sql versions
-      run: |
-        lsb_release -a
-        mysql -V
+    - name: Verify MySQL connection
+      run: mysql -h 127.0.0.1 -uedxapp001 -ppassword -e "SELECT VERSION();" edxapp
+
     - name: Install Python Dependencies
-      run: |
-        uv sync --group production --group mysql8 --no-binary-package mysqlclient --no-binary-package xmlsec
-    - name: Initiate services
-      run: |
-        sudo /etc/init.d/mysql start
-    - name: Reset mysql password
-      run: |
-        cat <<EOF | mysql -h 127.0.0.1 -u root --password=root
-          UPDATE mysql.user SET authentication_string = null WHERE user = 'root';
-          FLUSH PRIVILEGES;
-        EOF
+      run: uv sync --locked --group production --no-binary-package mysqlclient
+
     - name: Run migrations
       env:
-        DB_ENGINE: "django.db.backends.mysql"
-        DB_NAME: "enterprise_catalog"
-        DB_USER: root
-        DB_PASSWORD:
-        DB_HOST: localhost
+        DB_ENGINE: django.db.backends.mysql
+        DB_NAME: edxapp
+        DB_USER: edxapp001
+        DB_PASSWORD: password
+        DB_HOST: 127.0.0.1
         DB_PORT: 3306
-      run: |
-        echo "CREATE DATABASE IF NOT EXISTS enterprise_catalog;" | sudo mysql -u root
-        echo "Running the migrations"
-        uv run python manage.py migrate --settings=enterprise_catalog.settings.test
+      run: uv run --no-sync python manage.py migrate --noinput --settings=enterprise_catalog.settings.test
