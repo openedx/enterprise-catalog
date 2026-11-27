@@ -1530,6 +1530,43 @@ class EnterpriseCatalogGetContentMetadataTests(APITestMixin):
         False,
         True
     )
+    def test_excludes_unpublished_courses(self, learner_portal_enabled, mock_api_client):
+    #pylint: disable=unused-argument
+        """
+        Verify that unpublished courses are never returned
+        in the content metadata API response.
+        """
+
+        unpublished_course = ContentMetadataFactory(
+            content_type=COURSE,
+            json_metadata={
+                "status": "unpublished",
+                "course_runs": [],
+            },
+        )
+
+        self.add_metadata_to_catalog(
+            self.enterprise_catalog,
+            [unpublished_course],
+        )
+
+        url = self._get_content_metadata_url(self.enterprise_catalog)
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response_data = response.json()
+
+        # Core assertions
+        self.assertEqual(response_data["count"], 0)
+        self.assertEqual(response_data["results"], [])
+
+    @mock.patch('enterprise_catalog.apps.api_client.enterprise_cache.EnterpriseApiClient')
+    @ddt.data(
+        False,
+        True
+    )
+
     def test_get_content_metadata_non_active_courses(self, learner_portal_enabled, mock_api_client):
         """
         Verify the get_content_metadata endpoint returns only active courses associated with a particular catalog
